@@ -31,18 +31,38 @@ serve(async (req) => {
 
     console.log("Generating content with tone:", tone, "audience:", audience);
 
-    // Build brand voice context
+    // Build comprehensive brand voice context
     let brandVoiceContext = "";
     if (brandVoice) {
       brandVoiceContext = `
-BRAND VOICE TO USE:
-- Name: ${brandVoice.name}
-- Writing Style: ${brandVoice.writingStyle || "Not specified"}
-- Tone: ${brandVoice.tone || "Not specified"}
-- Key Phrases to incorporate: ${brandVoice.keyPhrases?.join(", ") || "None"}
-- Target Audience: ${brandVoice.targetAudience || "General"}
+## CRITICAL: BRAND VOICE REQUIREMENTS (MUST FOLLOW)
 
-Apply this brand voice consistently across all content.
+You MUST write ALL content using the following brand voice specifications. This is non-negotiable.
+
+### Brand Identity: "${brandVoice.name}"
+
+### Writing Style Guidelines:
+${brandVoice.writingStyle ? `Apply this exact writing style throughout: "${brandVoice.writingStyle}"` : "Use a clear, engaging writing style."}
+
+### Tone of Voice:
+${brandVoice.tone ? `Maintain this tone consistently: "${brandVoice.tone}"` : "Professional yet approachable."}
+
+### Key Phrases to Incorporate:
+${brandVoice.keyPhrases?.length > 0 ? `You MUST naturally weave these signature phrases into the content:
+${brandVoice.keyPhrases.map((phrase: string, i: number) => `  ${i + 1}. "${phrase}"`).join("\n")}
+
+Incorporate at least 2-3 of these phrases across the generated content where they fit naturally.` : "No specific phrases required."}
+
+### Target Audience:
+${brandVoice.targetAudience ? `Write specifically for: "${brandVoice.targetAudience}". Tailor vocabulary, examples, and references to resonate with this audience.` : "Write for a general professional audience."}
+
+### Brand Voice Consistency Checklist:
+- Every piece of content must reflect the specified writing style
+- The tone must remain consistent across all platforms
+- Key phrases should appear naturally, not forced
+- Language complexity should match the target audience
+- Maintain the brand personality in hooks, posts, and scripts
+
 `;
     }
 
