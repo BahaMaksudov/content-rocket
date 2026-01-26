@@ -28,16 +28,26 @@ export default function Dashboard() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null);
 
-  // Fetch brand voices
+  // Fetch brand voices and auto-select default
   const { data: brandVoices } = useQuery({
     queryKey: ["brandVoices", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("brand_voices")
         .select("*")
+        .order("is_default", { ascending: false })
         .order("created_at", { ascending: false });
       
       if (error) throw error;
+      
+      // Auto-select default brand voice if none selected
+      if (data && data.length > 0 && !selectedBrandVoice) {
+        const defaultVoice = data.find(v => v.is_default);
+        if (defaultVoice) {
+          setSelectedBrandVoice(defaultVoice.id);
+        }
+      }
+      
       return data;
     },
     enabled: !!user,
