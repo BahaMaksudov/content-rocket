@@ -43,125 +43,57 @@ serve(async (req) => {
       );
     }
 
-    // Fetch video details first to get the title
-    const videoDetailsUrl = `https://youtube-v31.p.rapidapi.com/videos?part=snippet&id=${videoId}`;
-    const videoDetailsResponse = await fetch(videoDetailsUrl, {
-      method: "GET",
-      headers: {
-        "X-RapidAPI-Key": rapidApiKey,
-        "X-RapidAPI-Host": "youtube-v31.p.rapidapi.com",
-      },
-    });
-
-    let videoTitle = "Untitled Video";
-    if (videoDetailsResponse.ok) {
-      const videoData = await videoDetailsResponse.json();
-      if (videoData.items && videoData.items.length > 0) {
-        videoTitle = videoData.items[0].snippet?.title || "Untitled Video";
-      }
-    }
-
-    console.log("Video title:", videoTitle);
-
-    // Fetch transcript using RapidAPI YouTube Transcript API
-    const transcriptUrl = `https://youtube-transcriptor.p.rapidapi.com/transcript?video_id=${videoId}&lang=en`;
+    // Use Supadata YouTube Transcripts API (most reliable, free tier available)
+    // API: https://rapidapi.com/8v2FWW4H6AmKw89/api/youtube-transcripts
+    const transcriptUrl = `https://youtube-transcript.p.rapidapi.com/youtube/transcript?url=${encodeURIComponent(url)}&text=true`;
+    
+    console.log("Calling Supadata YouTube Transcript API...");
+    
     const transcriptResponse = await fetch(transcriptUrl, {
       method: "GET",
       headers: {
         "X-RapidAPI-Key": rapidApiKey,
-        "X-RapidAPI-Host": "youtube-transcriptor.p.rapidapi.com",
+        "X-RapidAPI-Host": "youtube-transcript.p.rapidapi.com",
       },
     });
 
     if (!transcriptResponse.ok) {
       const errorText = await transcriptResponse.text();
-      console.error("Transcript API error:", transcriptResponse.status, errorText);
+      console.error("Supadata Transcript API error:", transcriptResponse.status, errorText);
       
-      // Try alternative transcript API
-      const altTranscriptUrl = `https://youtube-transcript3.p.rapidapi.com/api/transcript?videoId=${videoId}`;
-      const altTranscriptResponse = await fetch(altTranscriptUrl, {
-        method: "GET",
-        headers: {
-          "X-RapidAPI-Key": rapidApiKey,
-          "X-RapidAPI-Host": "youtube-transcript3.p.rapidapi.com",
-        },
-      });
-
-      if (!altTranscriptResponse.ok) {
-        const altErrorText = await altTranscriptResponse.text();
-        console.error("Alternative transcript API error:", altTranscriptResponse.status, altErrorText);
-        return new Response(
-          JSON.stringify({ 
-            error: "No captions available for this video", 
-            transcript: null,
-            title: videoTitle 
-          }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      const altData = await altTranscriptResponse.json();
-      console.log("Alternative API response received");
-
-      // Parse alternative API response
-      let transcript = "";
-      if (Array.isArray(altData)) {
-        transcript = altData.map((item: any) => item.text || item.content || "").join(" ");
-      } else if (altData.transcript) {
-        transcript = Array.isArray(altData.transcript) 
-          ? altData.transcript.map((item: any) => item.text || "").join(" ")
-          : altData.transcript;
-      } else if (typeof altData === "string") {
-        transcript = altData;
-      }
-
-      if (!transcript) {
-        return new Response(
-          JSON.stringify({ 
-            error: "Could not extract transcript", 
-            transcript: null,
-            title: videoTitle 
-          }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      console.log("Successfully extracted transcript, length:", transcript.length);
+      // Return helpful error message
       return new Response(
-        JSON.stringify({ transcript, title: videoTitle }),
+        JSON.stringify({ 
+          error: "No captions available for this video", 
+          transcript: null,
+          title: "YouTube Video",
+          details: `API returned ${transcriptResponse.status}`
+        }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const data = await transcriptResponse.json();
-    console.log("Transcript API response received");
+    console.log("Supadata API response received, type:", typeof data);
 
-    // Parse transcript response - handle various response formats
+    // Parse the response - Supadata returns { title, transcript } when text=true
     let transcript = "";
-    
-    if (Array.isArray(data)) {
-      // Format: [{ text: "...", start: 0, duration: 1.5 }, ...]
-      transcript = data.map((item: any) => {
-        if (typeof item === "string") return item;
-        return item.text || item.content || item.subtitle || "";
-      }).filter(Boolean).join(" ");
-    } else if (data.transcription) {
-      // Format: { transcription: [{ text: "..." }, ...] }
-      transcript = Array.isArray(data.transcription)
-        ? data.transcription.map((item: any) => item.text || "").join(" ")
-        : data.transcription;
-    } else if (data.transcript) {
-      // Format: { transcript: "..." } or { transcript: [...] }
-      transcript = Array.isArray(data.transcript)
-        ? data.transcript.map((item: any) => item.text || "").join(" ")
-        : data.transcript;
-    } else if (data.subtitles) {
-      // Format: { subtitles: [...] }
-      transcript = Array.isArray(data.subtitles)
-        ? data.subtitles.map((item: any) => item.text || "").join(" ")
-        : data.subtitles;
+    let videoTitle = "YouTube Video";
+
+    if (data.title) {
+      videoTitle = data.title;
+    }
+
+    if (typeof data.transcript === "string") {
+      transcript = data.transcript;
+    } else if (Array.isArray(data.transcript)) {
+      transcript = data.transcript.map((item: any) => item.text || "").join(" ");
     } else if (typeof data === "string") {
       transcript = data;
+    } else if (data.content) {
+      transcript = typeof data.content === "string" 
+        ? data.content 
+        : JSON.stringify(data.content);
     }
 
     // Clean up transcript
@@ -171,9 +103,10 @@ serve(async (req) => {
       .trim();
 
     if (!transcript) {
+      console.log("Could not extract transcript from response:", JSON.stringify(data).substring(0, 200));
       return new Response(
         JSON.stringify({ 
-          error: "Could not extract transcript from response", 
+          error: "No captions available for this video", 
           transcript: null,
           title: videoTitle 
         }),
@@ -181,7 +114,7 @@ serve(async (req) => {
       );
     }
 
-    console.log("Successfully extracted transcript, length:", transcript.length);
+    console.log("Successfully extracted transcript, length:", transcript.length, "title:", videoTitle);
 
     return new Response(
       JSON.stringify({ transcript, title: videoTitle }),
