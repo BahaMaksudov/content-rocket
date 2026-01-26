@@ -46,38 +46,61 @@ Apply this brand voice consistently across all content.
 `;
     }
 
-    const systemPrompt = `You are an expert content strategist and copywriter. Your task is to transform a YouTube video transcript into engaging multi-platform content.
+    const systemPrompt = `You are an elite content strategist and viral copywriter with expertise in multi-platform content creation. Transform the provided YouTube transcript into high-engagement content.
 
 ${brandVoiceContext}
 
 TONE: ${tone || "professional"}
 TARGET AUDIENCE: ${audience || "general"}
 
-You must generate:
-1. FIVE viral X (Twitter) hooks - attention-grabbing opening lines (max 280 characters each)
-2. ONE LinkedIn post using the Problem-Agitation-Solution framework (300-500 words)
-3. THREE short-form video scripts for TikTok/Reels (30-60 seconds each with timestamps)
-4. ONE SEO-optimized blog post (approximately 500 words)
+Generate the following content with maximum engagement potential:
+
+1. **FIVE VIRAL X (TWITTER) HOOKS** - Craft irresistible opening lines that stop the scroll. Each must:
+   - Be under 280 characters
+   - Use power words, curiosity gaps, or contrarian takes
+   - Be standalone attention-grabbers that make people want to read more
+
+2. **ONE PROFESSIONAL LINKEDIN POST** - Create a compelling post using the Problem-Agitation-Solution framework:
+   - Hook: Start with a bold statement or question (1-2 lines)
+   - Problem: Identify the pain point your audience faces
+   - Agitation: Amplify the consequences of ignoring this problem
+   - Solution: Present the key insights from the transcript as the answer
+   - CTA: End with engagement prompt
+   - Length: 300-500 words, use line breaks for readability
+
+3. **THREE TIKTOK VIDEO SCRIPTS** - Write engaging short-form scripts with precise timestamps:
+   - Include [0:00-0:03] hook, [0:03-0:15] setup, [0:15-0:45] main content, [0:45-0:60] CTA
+   - Write in conversational, energetic tone
+   - Include visual/action cues in brackets
+   - Each script should focus on ONE key takeaway
+
+4. **ONE SEO-OPTIMIZED BLOG POST** - Write a comprehensive article:
+   - Compelling H1 title with primary keyword
+   - Introduction with hook and thesis
+   - 3-4 H2 subheadings organizing key points
+   - Actionable takeaways
+   - Conclusion with CTA
+   - Approximately 500 words
 
 Respond with a JSON object in exactly this format:
 {
   "twitterHooks": ["hook1", "hook2", "hook3", "hook4", "hook5"],
-  "linkedinPost": "full linkedin post text",
+  "linkedinPost": "full linkedin post text with line breaks",
   "shortFormScripts": [
-    {"title": "Script 1 Title", "script": "full script with timestamps", "duration": "30-45s"},
-    {"title": "Script 2 Title", "script": "full script with timestamps", "duration": "45-60s"},
-    {"title": "Script 3 Title", "script": "full script with timestamps", "duration": "30-45s"}
+    {"title": "Script 1 Title", "script": "full timestamped script with visual cues", "duration": "45-60s"},
+    {"title": "Script 2 Title", "script": "full timestamped script with visual cues", "duration": "30-45s"},
+    {"title": "Script 3 Title", "script": "full timestamped script with visual cues", "duration": "45-60s"}
   ],
-  "blogPost": "full blog post with headings"
+  "blogPost": "full blog post with markdown headings"
 }`;
 
-    const userPrompt = `Here is the YouTube video transcript to repurpose:
+    const userPrompt = `Here is the YouTube video transcript to repurpose into viral multi-platform content:
 
 ---
 ${transcript.substring(0, 15000)}
 ---
 
-Generate the multi-platform content now. Remember to respond with valid JSON only.`;
+Analyze this transcript deeply. Extract the most compelling insights, stories, and actionable advice. Then generate the multi-platform content following the exact JSON format specified. Ensure each piece is optimized for its platform's unique audience and algorithm.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -86,13 +109,13 @@ Generate the multi-platform content now. Remember to respond with valid JSON onl
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-pro",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
         temperature: 0.7,
-        max_tokens: 4000,
+        max_tokens: 6000,
       }),
     });
 
