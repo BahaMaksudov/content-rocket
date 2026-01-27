@@ -1,5 +1,5 @@
-import { ReactNode } from "react";
-import { useLocation } from "react-router-dom";
+import { ReactNode, useState, useEffect } from "react";
+import { useLocation, Link, useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import {
@@ -10,6 +10,19 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { SignOutConfirmationModal } from "@/components/SignOutConfirmationModal";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { Settings, LogOut, ChevronDown, CreditCard, User } from "lucide-react";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -20,38 +33,182 @@ const routeTitles: Record<string, string> = {
   "/history": "History",
   "/brand-voices": "Brand Voices",
   "/settings": "Settings",
+  "/billing": "Billing",
 };
 
 export function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+  const [showSignOutModal, setShowSignOutModal] = useState(false);
+  const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
+  
   const currentTitle = routeTitles[location.pathname] || "Dashboard";
+
+  // Fetch user profile in real-time
+  useEffect(() => {
+    if (user) {
+      const fetchProfile = async () => {
+        const { data } = await supabase
+          .from("profiles")
+          .select("full_name, avatar_url")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (data) setProfile(data);
+      };
+      fetchProfile();
+
+      // Subscribe to real-time changes
+      const channel = supabase
+        .channel('profile-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'profiles',
+            filter: `user_id=eq.${user.id}`,
+          },
+          (payload) => {
+            setProfile(payload.new as { full_name: string | null; avatar_url: string | null });
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    } else {
+      setProfile(null);
+    }
+  }, [user]);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
+
+  const handleSignOutClick = (e: React.MouseEvent) => {
+    if (e.shiftKey) {
+      handleSignOut();
+    } else {
+      setShowSignOutModal(true);
+    }
+  };
+
+  const getUserDisplayName = () => {
+    if (profile?.full_name) return profile.full_name;
+    if (user?.email) return user.email;
+    return "User";
+  };
+
+  const getUserInitials = () => {
+    const name = getUserDisplayName();
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  // Truncate email for mobile display
+  const getTruncatedEmail = (email: string) => {
+    const [local, domain] = email.split("@");
+    if (local.length > 4) {
+      return `${local.slice(0, 4)}...@${domain}`;
+    }
+    return email;
+  };
 
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <main className="flex-1 flex flex-col">
-          <header className="h-14 flex items-center border-b border-border px-4 bg-background/50 backdrop-blur-sm sticky top-0 z-10">
-            <SidebarTrigger className="mr-4" />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink href="/" className="text-muted-foreground hover:text-foreground">
-                    Home
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage className="font-medium">{currentTitle}</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
+          <header className="h-14 flex items-center justify-between border-b border-border px-4 bg-background/95 backdrop-blur-lg sticky top-0 z-50">
+            {/* Left side: Sidebar trigger + Breadcrumbs */}
+            <div className="flex items-center">
+              <SidebarTrigger className="mr-4" />
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild>
+                      <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
+                        Home
+                      </Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage className="font-medium">{currentTitle}</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
+
+            {/* Right side: User Menu */}
+            <div className="flex items-center">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center gap-2 pl-2 pr-3 h-9">
+                    <Avatar className="h-7 w-7">
+                      <AvatarImage src={profile?.avatar_url || undefined} alt={getUserDisplayName()} />
+                      <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                        {getUserInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                    {/* Desktop: Show name, Mobile: Hide or show icon only */}
+                    <span className="hidden sm:inline max-w-[150px] truncate text-sm font-medium">
+                      {getUserDisplayName()}
+                    </span>
+                    {/* Mobile: Show truncated email or just the avatar */}
+                    <span className="sm:hidden text-xs text-muted-foreground max-w-[100px] truncate">
+                      {user?.email ? getTruncatedEmail(user.email) : ""}
+                    </span>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 bg-popover border-border">
+                  <div className="px-3 py-2">
+                    <p className="text-sm font-medium truncate">{getUserDisplayName()}</p>
+                    <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild className="cursor-pointer">
+                    <Link to="/settings" className="flex items-center">
+                      <Settings className="mr-2 h-4 w-4" />
+                      Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="cursor-pointer">
+                    <Link to="/billing" className="flex items-center">
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      Billing
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={handleSignOutClick} 
+                    className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </header>
           <div className="flex-1 p-6 overflow-auto">
             {children}
           </div>
         </main>
       </div>
+      <SignOutConfirmationModal
+        open={showSignOutModal}
+        onOpenChange={setShowSignOutModal}
+        onConfirm={handleSignOut}
+      />
     </SidebarProvider>
   );
 }
