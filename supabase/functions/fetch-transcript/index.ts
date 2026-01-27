@@ -34,17 +34,30 @@ serve(async (req) => {
     // Common fields
     const title = typeof data.title === "string" ? data.title : undefined;
 
+    // Transcript arrays helper (must be defined before use)
+    const asText = (arr: any[]) => arr.map((i) => i?.text ?? i?.snippet ?? "").join(" ");
+
     // Supadata (text=true)
     if (typeof data.transcript === "string") return { transcript: data.transcript, title };
 
+    // Some APIs nest the transcript object
+    if (data.transcript && typeof data.transcript === "object") {
+      if (typeof data.transcript.text === "string") return { transcript: data.transcript.text, title };
+      if (Array.isArray(data.transcript.segments)) return { transcript: asText(data.transcript.segments), title };
+      if (Array.isArray(data.transcript.content)) return { transcript: asText(data.transcript.content), title };
+    }
+
     // Transcript arrays
-    const asText = (arr: any[]) => arr.map((i) => i?.text ?? i?.snippet ?? "").join(" ");
     if (Array.isArray(data.transcript)) return { transcript: asText(data.transcript), title };
     if (Array.isArray(data.segments)) return { transcript: asText(data.segments), title };
     if (Array.isArray(data)) return { transcript: asText(data), title };
 
-    // Some APIs return { content: [...] }
+    // Some APIs return { content: "..." } or { content: [...] }
+    if (typeof data.content === "string") return { transcript: data.content, title };
     if (Array.isArray(data.content)) return { transcript: asText(data.content), title };
+
+    // Some return { transcripts: [...] }
+    if (Array.isArray(data.transcripts)) return { transcript: asText(data.transcripts), title };
 
     // Some return { text: "..." }
     if (typeof data.text === "string") return { transcript: data.text, title };
@@ -80,34 +93,28 @@ serve(async (req) => {
       name: string;
       host: string;
       url: string;
-      method?: string;
-      body?: object;
       parse: (data: any) => { transcript: string; title?: string };
     }> = [
-      // youtube-transcriptor.p.rapidapi.com - User's subscribed API (try multiple endpoints)
-      {
-        name: "youtube_transcriptor_transcript",
-        host: "youtube-transcriptor.p.rapidapi.com",
-        url: `https://youtube-transcriptor.p.rapidapi.com/transcript?video_id=${encodeURIComponent(videoId)}&lang=en`,
-        parse: extractTranscriptText,
-      },
-      {
-        name: "youtube_transcriptor_v1",
-        host: "youtube-transcriptor.p.rapidapi.com",
-        url: `https://youtube-transcriptor.p.rapidapi.com/v1/transcript?video_id=${encodeURIComponent(videoId)}`,
-        parse: extractTranscriptText,
-      },
-      {
-        name: "youtube_transcriptor_get",
-        host: "youtube-transcriptor.p.rapidapi.com",
-        url: `https://youtube-transcriptor.p.rapidapi.com/get?video_id=${encodeURIComponent(videoId)}`,
-        parse: extractTranscriptText,
-      },
       // Supadata YouTube Transcripts API (with 's')
+      // RapidAPI playground commonly includes both url + videoId; include both for compatibility.
       {
         name: "youtube_transcripts_supadata",
         host: "youtube-transcripts.p.rapidapi.com",
-        url: `https://youtube-transcripts.p.rapidapi.com/youtube/transcript?url=${encodeURIComponent(url)}&text=true`,
+        url: `https://youtube-transcripts.p.rapidapi.com/youtube/transcript?url=${encodeURIComponent(url)}&videoId=${encodeURIComponent(videoId)}&text=true&lang=en`,
+        parse: extractTranscriptText,
+      },
+
+      // youtube-transcriptor.p.rapidapi.com (try common parameter conventions; avoid guessing endpoints like /get)
+      {
+        name: "youtube_transcriptor_videoId",
+        host: "youtube-transcriptor.p.rapidapi.com",
+        url: `https://youtube-transcriptor.p.rapidapi.com/transcript?videoId=${encodeURIComponent(videoId)}&lang=en`,
+        parse: extractTranscriptText,
+      },
+      {
+        name: "youtube_transcriptor_url",
+        host: "youtube-transcriptor.p.rapidapi.com",
+        url: `https://youtube-transcriptor.p.rapidapi.com/transcript?url=${encodeURIComponent(url)}&lang=en`,
         parse: extractTranscriptText,
       },
     ];
@@ -153,6 +160,12 @@ serve(async (req) => {
 
       const data = await resp.json();
       console.log(`${p.name} response received`);
+      // Log a small preview to understand provider payload shapes (avoid logging full transcripts)
+      try {
+        console.log(`${p.name} response preview:`, JSON.stringify(data).slice(0, 500));
+      } catch {
+        // ignore
+      }
 
       const extracted = p.parse(data);
       transcript = extracted.transcript;
@@ -174,6 +187,16 @@ serve(async (req) => {
         );
         return json({ transcript, title: videoTitle, provider: p.name });
       }
+
+      // If the provider returns 200 but no usable transcript, record it as the last error so
+      // the UI doesn't show a misleading earlier 404 from a different provider.
+      lastError = {
+        status: 200,
+        message: "Provider returned no transcript",
+        raw: JSON.stringify(data).slice(0, 5000),
+        provider: p.name,
+        host: p.host,
+      };
     }
 
     const notSubscribed =
