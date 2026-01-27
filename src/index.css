@@ -57,11 +57,18 @@
     --info: 199 89% 48%;
     --info-foreground: 0 0% 100%;
 
+    /* Rocket Orange Accent */
+    --rocket-orange: 24 95% 53%;
+    --rocket-orange-foreground: 0 0% 100%;
+    --electric-blue: 217 91% 60%;
+
     /* Premium Gradient Tokens */
     --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(199 89% 55%));
+    --gradient-orange: linear-gradient(135deg, hsl(24 95% 53%), hsl(38 92% 50%));
     --gradient-card: linear-gradient(180deg, hsl(222 47% 13%), hsl(222 47% 9%));
     --gradient-glow: linear-gradient(180deg, hsl(217 91% 60% / 0.15), transparent);
     --gradient-sidebar: linear-gradient(180deg, hsl(222 47% 7%), hsl(222 47% 4%));
+    --gradient-hero: radial-gradient(ellipse 80% 50% at 50% -20%, hsl(217 91% 60% / 0.3), transparent);
   }
 
   .dark {
