@@ -1,14 +1,15 @@
 import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
+import { ContactSalesModal } from "@/components/landing/ContactSalesModal";
 import { 
   Rocket, Zap, Globe, Image, Eye, ArrowRight, Check, 
   Play, Clock, Users, TrendingUp, Sparkles, Twitter,
-  Linkedin, Video, FileText, ChevronRight, Star
+  Linkedin, Video, FileText, ChevronRight, Star, Building2
 } from "lucide-react";
 
 // Animation variants
@@ -506,20 +507,22 @@ function DemoSection() {
 }
 
 // Pricing Section
-function PricingSection() {
+function PricingSection({ onContactSales }: { onContactSales: () => void }) {
   const plans = [
     {
       name: "Free",
       price: "$0",
       period: "forever",
       description: "Perfect for trying out Rocket Content",
+      highlight: null,
       features: [
         "5 generations per month",
         "X threads & LinkedIn posts",
-        "Basic brand voice",
+        "1 brand voice",
         "Community support"
       ],
       cta: "Start Free",
+      ctaAction: "auth",
       popular: false
     },
     {
@@ -527,33 +530,39 @@ function PricingSection() {
       price: "$29",
       period: "/month",
       description: "For creators serious about growth",
+      highlight: null,
       features: [
-        "Unlimited generations",
+        "50 generations per month",
         "All 4 platform outputs",
         "AI-powered visuals",
         "Global translation (3 languages)",
         "Social previews",
+        "3 brand voices",
         "Priority support",
         "API access"
       ],
       cta: "Get Pro",
+      ctaAction: "auth",
       popular: true
     },
     {
       name: "Agency",
-      price: "$99",
+      price: "$249",
       period: "/month",
-      description: "For teams managing multiple clients",
+      description: "For High-Volume Teams & Content Agencies",
+      highlight: "Enterprise",
       features: [
-        "Everything in Pro",
-        "10 team members",
+        "Unlimited AI generations",
+        "Bulk video processing",
+        "Team workspace (5 members)",
         "Unlimited brand voices",
-        "White-label exports",
+        "White-label previews",
         "Dedicated account manager",
         "Custom integrations",
         "SSO & advanced security"
       ],
       cta: "Contact Sales",
+      ctaAction: "contact",
       popular: false
     }
   ];
@@ -600,7 +609,15 @@ function PricingSection() {
                   </Badge>
                 </div>
               )}
-              <Card className={`h-full ${plan.popular ? 'border-primary ring-2 ring-primary/20' : 'border-border'} transition-all duration-300 hover:border-primary/50`}>
+              {plan.highlight && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                  <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg">
+                    <Building2 className="h-3 w-3 mr-1" />
+                    {plan.highlight}
+                  </Badge>
+                </div>
+              )}
+              <Card className={`h-full ${plan.popular ? 'border-primary ring-2 ring-primary/20' : plan.highlight ? 'border-amber-500/50 ring-2 ring-amber-500/20' : 'border-border'} transition-all duration-300 hover:border-primary/50`}>
                 <CardHeader className="text-center pb-4">
                   <CardTitle className="text-xl">{plan.name}</CardTitle>
                   <CardDescription>{plan.description}</CardDescription>
@@ -618,16 +635,26 @@ function PricingSection() {
                       </li>
                     ))}
                   </ul>
-                  <Button 
-                    asChild 
-                    className={`w-full ${plan.popular ? 'gradient-primary text-primary-foreground' : ''}`}
-                    variant={plan.popular ? "default" : "outline"}
-                  >
-                    <Link to="/auth">
+                  {plan.ctaAction === "contact" ? (
+                    <Button 
+                      onClick={onContactSales}
+                      className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+                    >
                       {plan.cta}
                       <ChevronRight className="h-4 w-4 ml-1" />
-                    </Link>
-                  </Button>
+                    </Button>
+                  ) : (
+                    <Button 
+                      asChild 
+                      className={`w-full ${plan.popular ? 'gradient-primary text-primary-foreground' : ''}`}
+                      variant={plan.popular ? "default" : "outline"}
+                    >
+                      <Link to="/auth">
+                        {plan.cta}
+                        <ChevronRight className="h-4 w-4 ml-1" />
+                      </Link>
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>
@@ -751,9 +778,9 @@ function TrustSection() {
 }
 
 // CTA Section
-function CTASection() {
+const CTASection = forwardRef<HTMLElement>((_, ref) => {
   return (
-    <section className="py-20 lg:py-32 relative overflow-hidden">
+    <section ref={ref} className="py-20 lg:py-32 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-rocket/10" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-primary/10 rounded-full blur-[100px]" />
       
@@ -788,12 +815,13 @@ function CTASection() {
       </div>
     </section>
   );
-}
+});
+CTASection.displayName = "CTASection";
 
 // Footer
-function Footer() {
+const Footer = forwardRef<HTMLElement>((_, ref) => {
   return (
-    <footer className="py-12 border-t border-border">
+    <footer ref={ref} className="py-12 border-t border-border">
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2">
@@ -814,10 +842,13 @@ function Footer() {
       </div>
     </footer>
   );
-}
+});
+Footer.displayName = "Footer";
 
 // Main Landing Page
 export default function Landing() {
+  const [contactSalesOpen, setContactSalesOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-background">
       <StickyNav />
@@ -826,10 +857,11 @@ export default function Landing() {
       <ProblemSection />
       <SolutionSection />
       <DemoSection />
-      <PricingSection />
+      <PricingSection onContactSales={() => setContactSalesOpen(true)} />
       <FAQSection />
       <CTASection />
       <Footer />
+      <ContactSalesModal open={contactSalesOpen} onOpenChange={setContactSalesOpen} />
     </div>
   );
 }

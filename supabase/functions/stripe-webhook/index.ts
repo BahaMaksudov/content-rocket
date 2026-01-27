@@ -10,7 +10,7 @@ const corsHeaders = {
 // Product IDs for subscription tiers
 const PRODUCT_IDS = {
   pro: "prod_Ts0mGYgpr7JkAX",
-  agency: "prod_Ts3jOcxQsiuSP8",
+  agency: "prod_Ts4937tu4QuFB5", // Updated Agency product ID ($249/mo)
 };
 
 const logStep = (step: string, details?: Record<string, unknown>) => {

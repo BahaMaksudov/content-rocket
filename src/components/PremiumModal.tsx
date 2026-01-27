@@ -20,17 +20,19 @@ interface PremiumModalProps {
 }
 
 const proFeatures = [
-  { icon: Youtube, text: "Unlimited YouTube transcript fetching" },
-  { icon: Mic, text: "Custom Brand Voice presets" },
-  { icon: Sparkles, text: "Priority AI generation" },
-  { icon: Check, text: "Full history access" },
+  { icon: Youtube, text: "50 AI content generations per month" },
+  { icon: Mic, text: "3 custom Brand Voice presets" },
+  { icon: Sparkles, text: "AI-powered visuals & translations" },
+  { icon: Check, text: "All 4 platform outputs" },
 ];
 
 const agencyFeatures = [
-  { icon: Check, text: "Everything in Pro" },
-  { icon: Users, text: "Team collaboration (up to 10 seats)" },
-  { icon: Building, text: "White-label solutions" },
-  { icon: Sparkles, text: "Dedicated support & priority queue" },
+  { icon: Check, text: "Unlimited AI content generations" },
+  { icon: Youtube, text: "Bulk video processing (playlists)" },
+  { icon: Users, text: "Team workspace (5 members)" },
+  { icon: Mic, text: "Unlimited brand voices" },
+  { icon: Building, text: "White-label previews" },
+  { icon: Sparkles, text: "Dedicated account manager" },
 ];
 
 export function PremiumModal({ open, onOpenChange, feature, tier = "pro" }: PremiumModalProps) {
