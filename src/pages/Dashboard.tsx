@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { YouTubeInput } from "@/components/dashboard/YouTubeInput";
@@ -37,6 +37,9 @@ export default function Dashboard() {
   // Global Reach state
   const [globalReachEnabled, setGlobalReachEnabled] = useState(false);
   const [targetLanguage, setTargetLanguage] = useState("spanish");
+  
+  // Ref for scrolling to content output
+  const contentOutputRef = useRef<HTMLDivElement>(null);
 
   // Fetch brand voices and auto-select default
   const { data: brandVoices } = useQuery({
@@ -109,6 +112,11 @@ export default function Dashboard() {
       if (error) throw error;
 
       setGeneratedContent(data);
+      
+      // Scroll to top of content output after generation
+      setTimeout(() => {
+        contentOutputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
 
       // Save to history
       await supabase.from("generations").insert({
@@ -191,7 +199,7 @@ export default function Dashboard() {
           </div>
 
           {/* Right column - Output */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2" ref={contentOutputRef}>
             <ContentOutput
               content={generatedContent}
               isGenerating={isGenerating}
