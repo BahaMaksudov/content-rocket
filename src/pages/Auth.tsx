@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate, Navigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, ArrowLeft } from "lucide-react";
 import { z } from "zod";
 
 const authSchema = z.object({
@@ -190,6 +190,14 @@ export default function Auth() {
         <p className="text-center text-sm text-muted-foreground mt-6">
           By continuing, you agree to our Terms of Service
         </p>
+
+        <Link 
+          to="/" 
+          className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mt-4"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Home
+        </Link>
       </div>
     </div>
   );
