@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Sparkles, ArrowLeft } from "lucide-react";
+import { Loader2, Rocket, ArrowLeft } from "lucide-react";
 import { z } from "zod";
 
 const authSchema = z.object({
@@ -91,19 +91,27 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl gradient-primary animate-glow">
-            <Sparkles className="h-6 w-6 text-primary-foreground" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Rocket Content</h1>
-            <p className="text-sm text-muted-foreground">Content Dashboard</p>
-          </div>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b border-border bg-card/50 backdrop-blur-lg sticky top-0 z-50">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-rocket flex items-center justify-center">
+              <Rocket className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <span className="font-bold text-lg">Rocket Content</span>
+          </Link>
+          <Button variant="ghost" asChild>
+            <Link to="/" className="flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Home
+            </Link>
+          </Button>
         </div>
+      </header>
 
+      {/* Content */}
+      <main className="container mx-auto px-4 py-16 max-w-md">
         <Card className="border-border bg-card">
           <CardHeader className="text-center">
             <CardTitle className="text-xl">Welcome</CardTitle>
@@ -190,15 +198,14 @@ export default function Auth() {
         <p className="text-center text-sm text-muted-foreground mt-6">
           By continuing, you agree to our Terms of Service
         </p>
+      </main>
 
-        <Link 
-          to="/" 
-          className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mt-4"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Home
-        </Link>
-      </div>
+      {/* Simple Footer */}
+      <footer className="border-t border-border py-8 mt-16">
+        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
+          © {new Date().getFullYear()} Rocket Content. All rights reserved.
+        </div>
+      </footer>
     </div>
   );
 }
