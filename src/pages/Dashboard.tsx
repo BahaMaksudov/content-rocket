@@ -27,6 +27,10 @@ export default function Dashboard() {
   const [audience, setAudience] = useState("general");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null);
+  
+  // Global Reach state
+  const [globalReachEnabled, setGlobalReachEnabled] = useState(false);
+  const [targetLanguage, setTargetLanguage] = useState("spanish");
 
   // Fetch brand voices and auto-select default
   const { data: brandVoices } = useQuery({
@@ -86,6 +90,7 @@ export default function Dashboard() {
             keyPhrases: selectedVoice.key_phrases,
             targetAudience: selectedVoice.target_audience,
           } : null,
+          translateTo: globalReachEnabled ? targetLanguage : null,
         },
       });
 
@@ -110,8 +115,10 @@ export default function Dashboard() {
       });
 
       toast({
-        title: "Content generated!",
-        description: "Your content has been saved to history.",
+        title: "All assets generated!",
+        description: globalReachEnabled 
+          ? `Content created and translated to ${targetLanguage}. Saved to history.`
+          : "Your multi-platform content has been saved to history.",
       });
     } catch (error: any) {
       console.error("Generation error:", error);
@@ -135,7 +142,7 @@ export default function Dashboard() {
         <div>
           <h1 className="text-3xl font-bold mb-2">Content Dashboard</h1>
           <p className="text-muted-foreground">
-            Transform your YouTube videos into multi-platform content
+            Transform your YouTube videos into multi-platform content with batch processing
           </p>
         </div>
 
@@ -161,6 +168,10 @@ export default function Dashboard() {
               onGenerate={handleGenerate}
               isGenerating={isGenerating}
               hasTranscript={!!transcript}
+              globalReachEnabled={globalReachEnabled}
+              setGlobalReachEnabled={setGlobalReachEnabled}
+              targetLanguage={targetLanguage}
+              setTargetLanguage={setTargetLanguage}
             />
           </div>
 

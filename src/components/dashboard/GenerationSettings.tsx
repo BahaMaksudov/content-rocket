@@ -3,10 +3,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Sparkles, Mic, Crown } from "lucide-react";
+import { Loader2, Sparkles, Mic, Crown, Rocket } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { PremiumModal } from "@/components/PremiumModal";
+import { GlobalReachSettings } from "./GlobalReachSettings";
 
 interface BrandVoice {
   id: string;
@@ -25,6 +26,10 @@ interface GenerationSettingsProps {
   onGenerate: () => void;
   isGenerating: boolean;
   hasTranscript: boolean;
+  globalReachEnabled: boolean;
+  setGlobalReachEnabled: (enabled: boolean) => void;
+  targetLanguage: string;
+  setTargetLanguage: (language: string) => void;
 }
 
 const tones = [
@@ -52,6 +57,10 @@ export function GenerationSettings({
   onGenerate,
   isGenerating,
   hasTranscript,
+  globalReachEnabled,
+  setGlobalReachEnabled,
+  targetLanguage,
+  setTargetLanguage,
 }: GenerationSettingsProps) {
   const { isPro } = useSubscription();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
@@ -152,6 +161,14 @@ export function GenerationSettings({
           </Select>
         </div>
 
+        {/* Global Reach Settings */}
+        <GlobalReachSettings
+          enabled={globalReachEnabled}
+          onEnabledChange={setGlobalReachEnabled}
+          language={targetLanguage}
+          onLanguageChange={setTargetLanguage}
+        />
+
         {/* Generate Button */}
         <Button
           onClick={onGenerate}
@@ -162,12 +179,12 @@ export function GenerationSettings({
           {isGenerating ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              Generating...
+              Generating All Assets...
             </>
           ) : (
             <>
-              <Sparkles className="h-4 w-4 mr-2" />
-              Generate Content
+              <Rocket className="h-4 w-4 mr-2" />
+              Generate All Assets
             </>
           )}
         </Button>

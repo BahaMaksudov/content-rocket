@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, Check, Edit2, Save, Twitter, Linkedin, Film, FileText, Download, Loader2 } from "lucide-react";
 import type { GeneratedContent } from "@/pages/Dashboard";
+import { ImageGenerator } from "./ImageGenerator";
+import { SocialPreview, SocialPreviewToggle } from "./SocialPreview";
 
 interface ContentOutputProps {
   content: GeneratedContent | null;
@@ -96,6 +98,8 @@ function EditableContent({
 
 export function ContentOutput({ content, isGenerating, onUpdateContent }: ContentOutputProps) {
   const { toast } = useToast();
+  const [showPreview, setShowPreview] = useState(false);
+  const [activeTab, setActiveTab] = useState("twitter");
 
   const handleExportAll = () => {
     if (!content) return;
@@ -139,8 +143,8 @@ ${content.blogPost}
         <div className="text-center space-y-4">
           <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
           <div>
-            <p className="font-medium">Generating your content...</p>
-            <p className="text-sm text-muted-foreground">This may take a minute</p>
+            <p className="font-medium">Generating all platform assets...</p>
+            <p className="text-sm text-muted-foreground">Creating X hooks, LinkedIn post, TikTok scripts, and blog post</p>
           </div>
         </div>
       </Card>
@@ -156,24 +160,32 @@ ${content.blogPost}
           </div>
           <p className="font-medium">No content generated yet</p>
           <p className="text-sm text-muted-foreground max-w-sm">
-            Fetch a YouTube transcript and click "Generate Content" to create multi-platform content
+            Fetch a YouTube transcript and click "Generate All Assets" to create multi-platform content
           </p>
         </div>
       </Card>
     );
   }
 
+  const currentPlatform = activeTab as "twitter" | "linkedin" | "shorts" | "blog";
+
   return (
     <Card className="border-border bg-card">
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
         <CardTitle>Generated Content</CardTitle>
-        <Button onClick={handleExportAll} variant="outline" size="sm">
-          <Download className="h-4 w-4 mr-2" />
-          Export All
-        </Button>
+        <div className="flex items-center gap-2">
+          <SocialPreviewToggle 
+            showPreview={showPreview} 
+            onToggle={() => setShowPreview(!showPreview)} 
+          />
+          <Button onClick={handleExportAll} variant="outline" size="sm">
+            <Download className="h-4 w-4 mr-2" />
+            Export All
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="twitter" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid grid-cols-4 mb-4">
             <TabsTrigger value="twitter" className="flex items-center gap-1">
               <Twitter className="h-4 w-4" />
@@ -193,8 +205,21 @@ ${content.blogPost}
             </TabsTrigger>
           </TabsList>
 
+          {/* Social Preview */}
+          {showPreview && currentPlatform !== "blog" && (
+            <div className="mb-4">
+              <SocialPreview content={content} platform={currentPlatform} />
+            </div>
+          )}
+
           {/* Twitter Hooks */}
           <TabsContent value="twitter" className="space-y-3">
+            <div className="mb-4">
+              <ImageGenerator 
+                textContent={content.twitterHooks.join(" ")} 
+                platform="twitter"
+              />
+            </div>
             {content.twitterHooks.map((hook, index) => (
               <div
                 key={index}
@@ -222,6 +247,12 @@ ${content.blogPost}
 
           {/* LinkedIn Post */}
           <TabsContent value="linkedin">
+            <div className="mb-4">
+              <ImageGenerator 
+                textContent={content.linkedinPost} 
+                platform="linkedin"
+              />
+            </div>
             <div className="p-4 rounded-lg bg-muted/50 border border-border">
               <div className="flex items-start justify-between gap-2 mb-2">
                 <Badge variant="secondary">Problem-Agitation-Solution</Badge>
@@ -236,6 +267,12 @@ ${content.blogPost}
 
           {/* Short-form Scripts */}
           <TabsContent value="shorts" className="space-y-4">
+            <div className="mb-4">
+              <ImageGenerator 
+                textContent={content.shortFormScripts.map(s => s.title).join(" ")} 
+                platform="shorts"
+              />
+            </div>
             {content.shortFormScripts.map((script, index) => (
               <div
                 key={index}
@@ -265,6 +302,12 @@ ${content.blogPost}
 
           {/* Blog Post */}
           <TabsContent value="blog">
+            <div className="mb-4">
+              <ImageGenerator 
+                textContent={content.blogPost.substring(0, 300)} 
+                platform="blog"
+              />
+            </div>
             <div className="p-4 rounded-lg bg-muted/50 border border-border">
               <div className="flex items-start justify-between gap-2 mb-2">
                 <Badge variant="secondary">SEO-Optimized Blog Post</Badge>
