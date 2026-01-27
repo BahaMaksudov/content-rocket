@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { ContactSalesModal } from "@/components/landing/ContactSalesModal";
+import { SignOutConfirmationModal } from "@/components/SignOutConfirmationModal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -42,6 +43,7 @@ const staggerContainer = {
 // Sticky Navigation
 function StickyNav() {
   const [scrolled, setScrolled] = useState(false);
+  const [showSignOutModal, setShowSignOutModal] = useState(false);
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
@@ -71,6 +73,15 @@ function StickyNav() {
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
+  };
+
+  const handleSignOutClick = (e: React.MouseEvent) => {
+    // Shift+click bypasses confirmation modal for faster exit
+    if (e.shiftKey) {
+      handleSignOut();
+    } else {
+      setShowSignOutModal(true);
+    }
   };
 
   const getUserDisplayName = () => {
@@ -161,12 +172,17 @@ function StickyNav() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive focus:text-destructive">
+                  <DropdownMenuItem onClick={handleSignOutClick} className="cursor-pointer text-destructive focus:text-destructive">
                     <LogOut className="mr-2 h-4 w-4" />
                     Sign Out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              <SignOutConfirmationModal
+                open={showSignOutModal}
+                onOpenChange={setShowSignOutModal}
+                onConfirm={handleSignOut}
+              />
             </>
           ) : (
             // Logged out state
