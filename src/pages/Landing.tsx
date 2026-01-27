@@ -49,7 +49,7 @@ function StickyNav() {
           <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-rocket flex items-center justify-center">
             <Rocket className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="font-bold text-lg">Content Rocket</span>
+          <span className="font-bold text-lg">Rocket Content</span>
         </Link>
         
         <div className="hidden md:flex items-center gap-8">
@@ -285,7 +285,7 @@ function SolutionSection() {
             <span className="text-gradient"> One Platform</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Content Rocket doesn't just repurpose—it amplifies. Every feature is designed 
+            Rocket Content doesn't just repurpose—it amplifies. Every feature is designed 
             to multiply your reach with minimal effort.
           </p>
         </motion.div>
@@ -339,7 +339,7 @@ function DemoSection() {
             <span className="text-gradient"> Viral Content</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Watch how Content Rocket transforms a single video into platform-optimized content in seconds.
+            Watch how Rocket Content transforms a single video into platform-optimized content in seconds.
           </p>
         </motion.div>
 
@@ -512,7 +512,7 @@ function PricingSection() {
       name: "Free",
       price: "$0",
       period: "forever",
-      description: "Perfect for trying out Content Rocket",
+      description: "Perfect for trying out Rocket Content",
       features: [
         "5 generations per month",
         "X threads & LinkedIn posts",
@@ -642,7 +642,7 @@ function PricingSection() {
 function FAQSection() {
   const faqs = [
     {
-      question: "How does Content Rocket work?",
+      question: "How does Rocket Content work?",
       answer: "Simply paste a YouTube URL and our AI analyzes the transcript to generate platform-optimized content. You get X threads, LinkedIn posts, TikTok scripts, and SEO blog posts—all from one video."
     },
     {
@@ -655,15 +655,15 @@ function FAQSection() {
     },
     {
       question: "Do I own the content generated?",
-      answer: "Yes, 100%. All content generated through Content Rocket is yours to use however you like—no attribution required."
+      answer: "Yes, 100%. All content generated through Rocket Content is yours to use however you like—no attribution required."
     },
     {
       question: "What if I'm not satisfied?",
-      answer: "We offer a 14-day money-back guarantee on all paid plans. If Content Rocket isn't right for you, just reach out and we'll refund you—no questions asked."
+      answer: "We offer a 14-day money-back guarantee on all paid plans. If Rocket Content isn't right for you, just reach out and we'll refund you—no questions asked."
     },
     {
       question: "Is there an API available?",
-      answer: "Yes! Pro and Agency plans include API access so you can integrate Content Rocket into your existing workflows and tools."
+      answer: "Yes! Pro and Agency plans include API access so you can integrate Rocket Content into your existing workflows and tools."
     }
   ];
 
@@ -684,7 +684,7 @@ function FAQSection() {
             Got Questions?
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Everything you need to know about Content Rocket.
+            Everything you need to know about Rocket Content.
           </p>
         </motion.div>
 
@@ -800,15 +800,15 @@ function Footer() {
             <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-rocket flex items-center justify-center">
               <Rocket className="h-4 w-4 text-white" />
             </div>
-            <span className="font-bold">Content Rocket</span>
+            <span className="font-bold">Rocket Content</span>
           </div>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
             <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
             <a href="#" className="hover:text-foreground transition-colors">Terms</a>
-            <a href="mailto:support@contentrocket.com" className="hover:text-foreground transition-colors">Contact</a>
+            <a href="mailto:support@rocketcontent.app" className="hover:text-foreground transition-colors">Contact</a>
           </div>
           <p className="text-sm text-muted-foreground">
-            © 2025 Content Rocket. All rights reserved.
+            © 2025 Rocket Content. All rights reserved.
           </p>
         </div>
       </div>

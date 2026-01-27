@@ -35,7 +35,7 @@ function getEmail1Html(userName: string, unsubscribeUrl: string): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to Content Rocket!</title>
+  <title>Welcome to Rocket Content!</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: ${baseStyles.backgroundColor}; font-family: ${baseStyles.fontFamily};">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color: ${baseStyles.backgroundColor}; padding: 40px 20px;">
@@ -58,7 +58,7 @@ function getEmail1Html(userName: string, unsubscribeUrl: string): string {
                 ${greeting}, 🎉
               </p>
               <p style="color: ${mutedText}; font-size: 16px; line-height: 1.6; margin: 0 0 25px;">
-                Welcome to <strong style="color: ${baseStyles.color};">Content Rocket</strong>! You've just joined thousands of creators who are turning their videos into viral content across every platform.
+                Welcome to <strong style="color: ${baseStyles.color};">Rocket Content</strong>! You've just joined thousands of creators who are turning their videos into viral content across every platform.
               </p>
               
               <!-- Pro Tip Box -->
@@ -81,7 +81,7 @@ function getEmail1Html(userName: string, unsubscribeUrl: string): string {
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center">
-                    <a href="https://contentrocket.app/dashboard" style="display: inline-block; background: linear-gradient(135deg, ${primaryColor}, #60a5fa); color: white; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 15px ${primaryColor}40;">
+                    <a href="https://rocketcontent.app/dashboard" style="display: inline-block; background: linear-gradient(135deg, ${primaryColor}, #60a5fa); color: white; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 15px ${primaryColor}40;">
                       🚀 Launch My First Video
                     </a>
                   </td>
@@ -97,7 +97,7 @@ function getEmail1Html(userName: string, unsubscribeUrl: string): string {
                 Questions? Just reply to this email—we read every message.
               </p>
               <p style="color: ${mutedText}; font-size: 12px; margin: 0;">
-                Content Rocket • Transform your content, amplify your reach
+                Rocket Content • Transform your content, amplify your reach
               </p>
               <p style="margin: 15px 0 0;">
                 <a href="${unsubscribeUrl}" style="color: ${mutedText}; font-size: 12px; text-decoration: underline;">Unsubscribe from emails</a>
@@ -155,7 +155,7 @@ function getEmail2Html(userName: string, unsubscribeUrl: string): string {
                   <td style="padding: 25px;">
                     <p style="color: #22c55e; font-size: 14px; font-weight: 600; margin: 0 0 15px; text-transform: uppercase; letter-spacing: 0.5px;">🌐 Global Reach Feature</p>
                     <p style="color: ${baseStyles.color}; font-size: 15px; line-height: 1.6; margin: 0 0 15px;">
-                      With Content Rocket's <strong>Global Reach</strong> toggle, you can instantly translate all your generated content into:
+                      With Rocket Content's <strong>Global Reach</strong> toggle, you can instantly translate all your generated content into:
                     </p>
                     <table width="100%" cellpadding="0" cellspacing="0">
                       <tr>
@@ -181,7 +181,7 @@ function getEmail2Html(userName: string, unsubscribeUrl: string): string {
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center">
-                    <a href="https://contentrocket.app/dashboard" style="display: inline-block; background: linear-gradient(135deg, #22c55e, #10b981); color: white; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 15px #22c55e40;">
+                    <a href="https://rocketcontent.app/dashboard" style="display: inline-block; background: linear-gradient(135deg, #22c55e, #10b981); color: white; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 15px #22c55e40;">
                       🌍 Try Global Reach Now
                     </a>
                   </td>
@@ -197,7 +197,7 @@ function getEmail2Html(userName: string, unsubscribeUrl: string): string {
                 Have a language request? Reply and let us know!
               </p>
               <p style="color: ${mutedText}; font-size: 12px; margin: 0;">
-                Content Rocket • Transform your content, amplify your reach
+                Rocket Content • Transform your content, amplify your reach
               </p>
               <p style="margin: 15px 0 0;">
                 <a href="${unsubscribeUrl}" style="color: ${mutedText}; font-size: 12px; text-decoration: underline;">Unsubscribe from emails</a>
@@ -235,7 +235,7 @@ function getEmail3Html(userName: string, unsubscribeUrl: string): string {
             <td style="padding: 40px 40px 20px; text-align: center; background: linear-gradient(135deg, ${rocketOrange}20, ${primaryColor}10);">
               <div style="display: inline-block; width: 60px; height: 60px; background: linear-gradient(135deg, ${rocketOrange}, #fb923c); border-radius: 16px; line-height: 60px; font-size: 28px; margin-bottom: 20px;">⭐</div>
               <h1 style="color: ${baseStyles.color}; font-size: 28px; margin: 0 0 10px; font-weight: 700;">How Sarah Saved 20 Hours This Week</h1>
-              <p style="color: ${mutedText}; font-size: 16px; margin: 0;">A real creator's story with Content Rocket</p>
+              <p style="color: ${mutedText}; font-size: 16px; margin: 0;">A real creator's story with Rocket Content</p>
             </td>
           </tr>
           
@@ -267,7 +267,7 @@ function getEmail3Html(userName: string, unsubscribeUrl: string): string {
                       <tr><td style="padding: 4px 0; color: ${baseStyles.color}; font-size: 14px;">✅ 1 SEO-optimized blog post</td></tr>
                     </table>
                     <p style="color: #22c55e; font-size: 16px; font-weight: 600; margin: 20px 0 0;">
-                      "I got my Sundays back. Content Rocket literally changed my life." — Sarah
+                      "I got my Sundays back. Rocket Content literally changed my life." — Sarah
                     </p>
                   </td>
                 </tr>
@@ -293,7 +293,7 @@ function getEmail3Html(userName: string, unsubscribeUrl: string): string {
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center">
-                    <a href="https://contentrocket.app/auth" style="display: inline-block; background: linear-gradient(135deg, ${rocketOrange}, #fb923c); color: white; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 15px ${rocketOrange}40;">
+                    <a href="https://rocketcontent.app/auth" style="display: inline-block; background: linear-gradient(135deg, ${rocketOrange}, #fb923c); color: white; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 15px ${rocketOrange}40;">
                       ⭐ Upgrade to Pro
                     </a>
                   </td>
@@ -306,10 +306,10 @@ function getEmail3Html(userName: string, unsubscribeUrl: string): string {
           <tr>
             <td style="padding: 30px 40px; border-top: 1px solid ${borderColor}; text-align: center;">
               <p style="color: ${mutedText}; font-size: 13px; margin: 0 0 15px;">
-                Thanks for being part of the Content Rocket community!
+                Thanks for being part of the Rocket Content community!
               </p>
               <p style="color: ${mutedText}; font-size: 12px; margin: 0;">
-                Content Rocket • Transform your content, amplify your reach
+                Rocket Content • Transform your content, amplify your reach
               </p>
               <p style="margin: 15px 0 0;">
                 <a href="${unsubscribeUrl}" style="color: ${mutedText}; font-size: 12px; text-decoration: underline;">Unsubscribe from emails</a>
@@ -357,7 +357,7 @@ serve(async (req) => {
     const { action, user_id, user_email, user_name } = await req.json();
     logStep("Request received", { action, user_id, user_email });
 
-    const origin = req.headers.get("origin") || "https://contentrocket.app";
+    const origin = req.headers.get("origin") || "https://rocketcontent.app";
 
     // Handle different actions
     if (action === "send_immediate") {
@@ -389,7 +389,7 @@ serve(async (req) => {
       const htmlContent = getEmail1Html(user_name || "", unsubscribeUrl);
 
       const { error: emailError } = await resend.emails.send({
-        from: "Content Rocket <welcome@contentrocket.app>",
+        from: "Rocket Content <welcome@rocketcontent.app>",
         to: [user_email],
         subject: "🚀 You're cleared for takeoff! (Plus a gift inside)",
         html: htmlContent,
@@ -431,7 +431,7 @@ serve(async (req) => {
           const htmlContent = getEmail2Html(user.user_name || "", unsubscribeUrl);
 
           await resend.emails.send({
-            from: "Content Rocket <welcome@contentrocket.app>",
+            from: "Rocket Content <welcome@rocketcontent.app>",
             to: [user.user_email],
             subject: "Did you know you speak 3 languages? 🌍",
             html: htmlContent,
@@ -466,7 +466,7 @@ serve(async (req) => {
           const htmlContent = getEmail3Html(user.user_name || "", unsubscribeUrl);
 
           await resend.emails.send({
-            from: "Content Rocket <welcome@contentrocket.app>",
+            from: "Rocket Content <welcome@rocketcontent.app>",
             to: [user.user_email],
             subject: "How Sarah saved 20 hours this week ⭐",
             html: htmlContent,
