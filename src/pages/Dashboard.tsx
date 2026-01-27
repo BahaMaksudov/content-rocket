@@ -4,9 +4,11 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { YouTubeInput } from "@/components/dashboard/YouTubeInput";
 import { GenerationSettings } from "@/components/dashboard/GenerationSettings";
 import { ContentOutput } from "@/components/dashboard/ContentOutput";
+import { PremiumModal } from "@/components/PremiumModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
+import { useGenerationCredits } from "@/hooks/use-generation-credits";
 
 export interface GeneratedContent {
   twitterHooks: string[];
@@ -27,6 +29,10 @@ export default function Dashboard() {
   const [audience, setAudience] = useState("general");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null);
+  const [showCreditsModal, setShowCreditsModal] = useState(false);
+  
+  // Generation credits tracking
+  const { canGenerate, incrementCredits, refreshCredits } = useGenerationCredits();
   
   // Global Reach state
   const [globalReachEnabled, setGlobalReachEnabled] = useState(false);
@@ -73,6 +79,12 @@ export default function Dashboard() {
       return;
     }
 
+    // Check if user can generate (free tier limit check)
+    if (!canGenerate) {
+      setShowCreditsModal(true);
+      return;
+    }
+
     setIsGenerating(true);
 
     try {
@@ -113,6 +125,10 @@ export default function Dashboard() {
         short_form_scripts: data.shortFormScripts,
         blog_post: data.blogPost,
       });
+
+      // Increment credits only after successful generation
+      await incrementCredits();
+      await refreshCredits();
 
       toast({
         title: "All assets generated!",
@@ -185,6 +201,13 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      
+      {/* Credits exhausted modal */}
+      <PremiumModal 
+        open={showCreditsModal} 
+        onOpenChange={setShowCreditsModal}
+        feature="generation-limit"
+      />
     </AppLayout>
   );
 }
