@@ -1,6 +1,7 @@
 import { Home, History, Mic, Settings, LogOut, Sparkles, Clock } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -17,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { UpgradeButton } from "@/components/dashboard/UpgradeButton";
 
 const mainNavItems = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
@@ -26,6 +28,7 @@ const mainNavItems = [
 
 export function AppSidebar() {
   const { user, signOut } = useAuth();
+  const { isPro } = useSubscription();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -110,8 +113,13 @@ export function AppSidebar() {
       </SidebarContent>
 
       {/* Footer with User */}
-      <SidebarFooter className="p-4 border-t border-sidebar-border">
-        <div className="flex items-center gap-3 p-2 rounded-lg bg-sidebar-accent/50 mb-3">
+      <SidebarFooter className="p-4 border-t border-sidebar-border space-y-3">
+        {/* Upgrade Button */}
+        <div className="flex justify-center">
+          <UpgradeButton />
+        </div>
+
+        <div className="flex items-center gap-3 p-2 rounded-lg bg-sidebar-accent/50">
           <Avatar className="h-9 w-9 ring-2 ring-primary/30">
             <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
               {userInitial}
@@ -121,7 +129,7 @@ export function AppSidebar() {
             <p className="text-sm font-medium text-foreground truncate">
               {user?.email}
             </p>
-            <p className="text-xs text-muted-foreground">Free Plan</p>
+            <p className="text-xs text-muted-foreground">{isPro ? "Pro Plan" : "Free Plan"}</p>
           </div>
         </div>
         <Button
