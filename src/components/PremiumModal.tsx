@@ -56,7 +56,7 @@ export function PremiumModal({ open, onOpenChange, feature, tier = "pro" }: Prem
   };
 
   const featureMessage = feature === "youtube" 
-    ? "YouTube transcript fetching"
+    ? "You've used all 5 free transcript fetches this month"
     : feature === "brand-voice"
     ? "Brand Voice customization"
     : feature === "generation-limit"
@@ -65,7 +65,7 @@ export function PremiumModal({ open, onOpenChange, feature, tier = "pro" }: Prem
     ? "Agency features"
     : "this feature";
 
-  const isLimitReached = feature === "generation-limit";
+  const isLimitReached = feature === "generation-limit" || feature === "youtube";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

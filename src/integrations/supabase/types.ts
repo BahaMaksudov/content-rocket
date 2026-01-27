@@ -126,7 +126,9 @@ export type Database = {
           full_name: string | null
           generations_this_month: number
           id: string
+          last_fetch_date: string | null
           last_generation_date: string | null
+          transcript_fetches_this_month: number
           updated_at: string
           user_id: string
         }
@@ -137,7 +139,9 @@ export type Database = {
           full_name?: string | null
           generations_this_month?: number
           id?: string
+          last_fetch_date?: string | null
           last_generation_date?: string | null
+          transcript_fetches_this_month?: number
           updated_at?: string
           user_id: string
         }
@@ -148,7 +152,9 @@ export type Database = {
           full_name?: string | null
           generations_this_month?: number
           id?: string
+          last_fetch_date?: string | null
           last_generation_date?: string | null
+          transcript_fetches_this_month?: number
           updated_at?: string
           user_id?: string
         }

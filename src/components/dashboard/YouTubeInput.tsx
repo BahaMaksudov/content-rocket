@@ -9,6 +9,7 @@ import { Loader2, Youtube, Link2, FileText, Check, Crown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/contexts/SubscriptionContext";
+import { useTranscriptCredits } from "@/hooks/use-transcript-credits";
 import { PremiumModal } from "@/components/PremiumModal";
 
 interface YouTubeInputProps {
@@ -34,12 +35,13 @@ export function YouTubeInput({
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const { toast } = useToast();
   const { isPro } = useSubscription();
+  const { canFetch, incrementFetches, creditsRemaining } = useTranscriptCredits();
 
   const isValidUrl = YOUTUBE_URL_REGEX.test(youtubeUrl);
 
   const handleFetchTranscript = async () => {
-    // Check if user is Pro before fetching
-    if (!isPro) {
+    // Check if free user has remaining fetches
+    if (!isPro && !canFetch) {
       setShowPremiumModal(true);
       return;
     }
@@ -64,6 +66,12 @@ export function YouTubeInput({
 
         if (data?.transcript) {
         onTranscriptFetched(data.transcript, "auto", data.title);
+        
+        // Only increment fetch count after successful fetch (for free users)
+        if (!isPro) {
+          await incrementFetches();
+        }
+        
         toast({
           title: "Transcript fetched!",
           description: `Got transcript for "${data.title}"`,
@@ -146,7 +154,7 @@ export function YouTubeInput({
             >
               {isFetching ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
-              ) : !isPro ? (
+              ) : !isPro && !canFetch ? (
                 <>
                   <Crown className="h-4 w-4 mr-1" />
                   Fetch
