@@ -80,27 +80,34 @@ serve(async (req) => {
       name: string;
       host: string;
       url: string;
+      method?: string;
+      body?: object;
       parse: (data: any) => { transcript: string; title?: string };
     }> = [
-      // Supadata YouTube Transcripts API
+      // youtube-transcriptor.p.rapidapi.com - User's subscribed API (try multiple endpoints)
       {
-        name: "supadata_youtube_transcripts",
-        host: "youtube-transcript.p.rapidapi.com",
-        url: `https://youtube-transcript.p.rapidapi.com/youtube/transcript?url=${encodeURIComponent(url)}&text=true`,
-        parse: extractTranscriptText,
-      },
-      // Some accounts subscribe to a similarly named RapidAPI API; try host alias as fallback.
-      {
-        name: "youtube_transcriptor_alias",
+        name: "youtube_transcriptor_transcript",
         host: "youtube-transcriptor.p.rapidapi.com",
-        url: `https://youtube-transcriptor.p.rapidapi.com/youtube/transcript?url=${encodeURIComponent(url)}&text=true`,
+        url: `https://youtube-transcriptor.p.rapidapi.com/transcript?video_id=${encodeURIComponent(videoId)}&lang=en`,
         parse: extractTranscriptText,
       },
-      // Older fallback API
       {
-        name: "youtube_transcript3",
-        host: "youtube-transcript3.p.rapidapi.com",
-        url: `https://youtube-transcript3.p.rapidapi.com/transcript?videoId=${encodeURIComponent(videoId)}`,
+        name: "youtube_transcriptor_v1",
+        host: "youtube-transcriptor.p.rapidapi.com",
+        url: `https://youtube-transcriptor.p.rapidapi.com/v1/transcript?video_id=${encodeURIComponent(videoId)}`,
+        parse: extractTranscriptText,
+      },
+      {
+        name: "youtube_transcriptor_get",
+        host: "youtube-transcriptor.p.rapidapi.com",
+        url: `https://youtube-transcriptor.p.rapidapi.com/get?video_id=${encodeURIComponent(videoId)}`,
+        parse: extractTranscriptText,
+      },
+      // Supadata YouTube Transcripts API (with 's')
+      {
+        name: "youtube_transcripts_supadata",
+        host: "youtube-transcripts.p.rapidapi.com",
+        url: `https://youtube-transcripts.p.rapidapi.com/youtube/transcript?url=${encodeURIComponent(url)}&text=true`,
         parse: extractTranscriptText,
       },
     ];
