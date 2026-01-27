@@ -949,24 +949,9 @@ CTASection.displayName = "CTASection";
 // Footer
 const Footer = forwardRef<HTMLElement>((_, ref) => {
   return (
-    <footer ref={ref} className="py-12 border-t border-border">
-      <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-rocket flex items-center justify-center">
-              <Rocket className="h-4 w-4 text-white" />
-            </div>
-            <span className="font-bold">Rocket Content</span>
-          </div>
-          <div className="flex items-center gap-6 text-sm text-muted-foreground">
-            <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
-            <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
-            <Link to="/contact" className="hover:text-foreground transition-colors">Contact</Link>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            © 2025 Rocket Content. All rights reserved.
-          </p>
-        </div>
+    <footer ref={ref} className="border-t border-border py-8">
+      <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
+        © {new Date().getFullYear()} Rocket Content. All rights reserved.
       </div>
     </footer>
   );
