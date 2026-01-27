@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { UpgradeButton } from "@/components/dashboard/UpgradeButton";
+import { CreditsRemaining } from "@/components/dashboard/CreditsRemaining";
 import { SUBSCRIPTION_TIERS } from "@/lib/subscription-tiers";
 import { SignOutConfirmationModal } from "@/components/SignOutConfirmationModal";
 
@@ -145,6 +146,9 @@ export function AppSidebar() {
 
       {/* Footer with User */}
       <SidebarFooter className="p-4 border-t border-sidebar-border space-y-3">
+        {/* Credits Remaining */}
+        <CreditsRemaining />
+        
         {/* Upgrade Button */}
         <div className="flex justify-center">
           <UpgradeButton />

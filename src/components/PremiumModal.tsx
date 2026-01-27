@@ -15,7 +15,7 @@ import { SUBSCRIPTION_TIERS } from "@/lib/subscription-tiers";
 interface PremiumModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  feature?: "youtube" | "brand-voice";
+  feature?: "youtube" | "brand-voice" | "generation-limit";
   tier?: "pro" | "agency";
 }
 
@@ -59,9 +59,13 @@ export function PremiumModal({ open, onOpenChange, feature, tier = "pro" }: Prem
     ? "YouTube transcript fetching"
     : feature === "brand-voice"
     ? "Brand Voice customization"
+    : feature === "generation-limit"
+    ? "You've reached your free tier limit of 5 generations this month"
     : isAgencyTier
     ? "Agency features"
     : "this feature";
+
+  const isLimitReached = feature === "generation-limit";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -79,10 +83,13 @@ export function PremiumModal({ open, onOpenChange, feature, tier = "pro" }: Prem
             )}
           </div>
           <DialogTitle className="text-xl">
-            Upgrade to {tierConfig.name}
+            {isLimitReached ? "Generation Limit Reached" : `Upgrade to ${tierConfig.name}`}
           </DialogTitle>
           <DialogDescription className="text-base">
-            {featureMessage} is a premium feature. Upgrade to unlock all {tierConfig.name} features.
+            {isLimitReached 
+              ? `${featureMessage}. Upgrade to unlock more generations.`
+              : `${featureMessage} is a premium feature. Upgrade to unlock all ${tierConfig.name} features.`
+            }
           </DialogDescription>
         </DialogHeader>
 
