@@ -15,6 +15,8 @@ async function translateContent(
     spanish: "Spanish",
     hindi: "Hindi",
     mandarin: "Mandarin Chinese",
+    uzbek: "Uzbek",
+    russian: "Russian",
   };
 
   const langName = languageNames[targetLanguage] || "Spanish";
