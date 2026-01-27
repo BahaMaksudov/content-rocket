@@ -36,7 +36,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <BreadcrumbLink href="/dashboard" className="text-muted-foreground hover:text-foreground">
+                  <BreadcrumbLink href="/" className="text-muted-foreground hover:text-foreground">
                     Home
                   </BreadcrumbLink>
                 </BreadcrumbItem>
