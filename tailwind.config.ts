@@ -69,6 +69,13 @@ export default {
           DEFAULT: "hsl(var(--info))",
           foreground: "hsl(var(--info-foreground))",
         },
+        rocket: {
+          DEFAULT: "hsl(var(--rocket-orange))",
+          foreground: "hsl(var(--rocket-orange-foreground))",
+        },
+        electric: {
+          DEFAULT: "hsl(var(--electric-blue))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
