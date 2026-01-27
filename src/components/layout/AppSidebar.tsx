@@ -62,17 +62,17 @@ export function AppSidebar() {
                 <SidebarMenuButton asChild>
                   <NavLink
                     to="/history"
-                    className="flex items-center gap-3 rounded-xl px-4 py-3 text-sidebar-foreground transition-all duration-200 hover:bg-primary/10 hover:text-foreground group relative overflow-hidden"
+                    className="flex items-center gap-3 rounded-xl px-3 py-3 text-sidebar-foreground transition-all duration-200 hover:bg-primary/10 hover:text-foreground group"
                     activeClassName="nav-active bg-primary/15 text-foreground font-medium"
                   >
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
                       <History className="h-5 w-5 text-primary" />
                     </div>
-                    <div className="flex-1">
-                      <span className="font-medium">History</span>
-                      <p className="text-xs text-muted-foreground">View past content</p>
+                    <div className="flex-1 min-w-0">
+                      <span className="font-medium block truncate">History</span>
+                      <p className="text-xs text-muted-foreground truncate">View past content</p>
                     </div>
-                    <Badge variant="secondary" className="bg-primary/20 text-primary border-0 text-xs">
+                    <Badge variant="secondary" className="shrink-0 bg-primary/20 text-primary border-0 text-xs">
                       <Clock className="h-3 w-3 mr-1" />
                       New
                     </Badge>
