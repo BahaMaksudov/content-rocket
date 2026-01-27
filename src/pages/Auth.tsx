@@ -99,7 +99,7 @@ export default function Auth() {
             <Sparkles className="h-6 w-6 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Repurpose</h1>
+            <h1 className="text-2xl font-bold text-foreground">Rocket Content</h1>
             <p className="text-sm text-muted-foreground">Content Dashboard</p>
           </div>
         </div>
