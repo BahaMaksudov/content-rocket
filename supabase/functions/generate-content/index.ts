@@ -5,13 +5,76 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform",
 };
 
+async function translateContent(
+  content: any,
+  targetLanguage: string,
+  brandVoice: any,
+  apiKey: string
+): Promise<any> {
+  const languageNames: Record<string, string> = {
+    spanish: "Spanish",
+    hindi: "Hindi",
+    mandarin: "Mandarin Chinese",
+  };
+
+  const langName = languageNames[targetLanguage] || "Spanish";
+  
+  const translationPrompt = `You are a professional translator. Translate the following JSON content to ${langName}.
+  
+CRITICAL RULES:
+1. Maintain the exact same JSON structure
+2. Only translate the text values, NOT the keys
+3. Preserve any brand voice characteristics: ${brandVoice ? `tone: ${brandVoice.tone}, style: ${brandVoice.writingStyle}` : "professional"}
+4. Keep hashtags in their original form but add translated equivalents
+5. Maintain emotional impact and persuasive elements
+6. Preserve formatting like line breaks
+
+Content to translate:
+${JSON.stringify(content, null, 2)}
+
+Return ONLY valid JSON with the same structure but translated values.`;
+
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-3-flash-preview",
+      messages: [
+        { role: "user", content: translationPrompt },
+      ],
+      temperature: 0.3,
+      max_tokens: 6000,
+    }),
+  });
+
+  if (!response.ok) {
+    console.error("Translation error:", await response.text());
+    throw new Error("Translation failed");
+  }
+
+  const data = await response.json();
+  const translatedContent = data.choices?.[0]?.message?.content;
+
+  // Parse the translated JSON
+  let jsonStr = translatedContent;
+  const jsonMatch = translatedContent.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (jsonMatch) {
+    jsonStr = jsonMatch[1].trim();
+  }
+
+  return JSON.parse(jsonStr);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { transcript, tone, audience, brandVoice } = await req.json();
+    const { transcript, tone, audience, brandVoice, translateTo } = await req.json();
 
     if (!transcript) {
       return new Response(
@@ -29,7 +92,7 @@ serve(async (req) => {
       );
     }
 
-    console.log("Generating content with tone:", tone, "audience:", audience);
+    console.log("Generating content with tone:", tone, "audience:", audience, "translate:", translateTo);
 
     // Build comprehensive brand voice context
     let brandVoiceContext = "";
@@ -177,7 +240,6 @@ Analyze this transcript deeply. Extract the most compelling insights, stories, a
     console.log("Raw AI response:", content.substring(0, 500));
 
     // Parse the JSON response
-    // Try to extract JSON from the response (it might be wrapped in markdown code blocks)
     let jsonStr = content;
     const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (jsonMatch) {
@@ -185,7 +247,7 @@ Analyze this transcript deeply. Extract the most compelling insights, stories, a
     }
 
     try {
-      const generatedContent = JSON.parse(jsonStr);
+      let generatedContent = JSON.parse(jsonStr);
       
       // Validate the structure
       if (!generatedContent.twitterHooks || !generatedContent.linkedinPost || 
@@ -194,6 +256,25 @@ Analyze this transcript deeply. Extract the most compelling insights, stories, a
       }
 
       console.log("Successfully generated content");
+
+      // If translation is requested, translate the content
+      if (translateTo && translateTo !== "none") {
+        console.log("Translating content to:", translateTo);
+        try {
+          generatedContent = await translateContent(generatedContent, translateTo, brandVoice, LOVABLE_API_KEY);
+          console.log("Translation successful");
+        } catch (translateError) {
+          console.error("Translation failed:", translateError);
+          // Return original content with a warning
+          return new Response(
+            JSON.stringify({ 
+              ...generatedContent, 
+              translationWarning: "Translation failed, returning original content" 
+            }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
 
       return new Response(
         JSON.stringify(generatedContent),
