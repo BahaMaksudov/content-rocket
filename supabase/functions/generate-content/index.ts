@@ -239,11 +239,23 @@ Analyze this transcript deeply. Extract the most compelling insights, stories, a
 
     console.log("Raw AI response:", content.substring(0, 500));
 
-    // Parse the JSON response
-    let jsonStr = content;
-    const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (jsonMatch) {
-      jsonStr = jsonMatch[1].trim();
+    // Parse the JSON response - strip markdown code fences if present
+    let jsonStr = content.trim();
+    
+    // Remove markdown code fences (```json ... ``` or ``` ... ```)
+    if (jsonStr.startsWith("```")) {
+      // Remove opening fence (with optional language identifier)
+      jsonStr = jsonStr.replace(/^```(?:json)?\s*\n?/, "");
+      // Remove closing fence
+      jsonStr = jsonStr.replace(/\n?```\s*$/, "");
+    }
+    
+    // Also try regex match as fallback
+    if (jsonStr.includes("```")) {
+      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch) {
+        jsonStr = jsonMatch[1].trim();
+      }
     }
 
     try {
