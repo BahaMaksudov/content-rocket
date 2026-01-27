@@ -52,7 +52,7 @@ export function YouTubeInput({
 
       if (error) throw error;
 
-      if (data.transcript) {
+        if (data?.transcript) {
         onTranscriptFetched(data.transcript, "auto", data.title);
         toast({
           title: "Transcript fetched!",
@@ -60,10 +60,19 @@ export function YouTubeInput({
         });
       } else {
         setShowManual(true);
+
+          const title = typeof data?.error === "string" && data.error
+            ? data.error
+            : "No captions available";
+
+          const description = typeof data?.details === "string" && data.details
+            ? data.details
+            : "This video doesn't have captions. Please paste the transcript manually.";
+
         toast({
           variant: "destructive",
-          title: "No captions available",
-          description: "This video doesn't have captions. Please paste the transcript manually.",
+            title,
+            description,
         });
       }
     } catch (error: any) {
