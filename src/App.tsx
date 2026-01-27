@@ -13,6 +13,7 @@ import History from "./pages/History";
 import BrandVoices from "./pages/BrandVoices";
 import Settings from "./pages/Settings";
 import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentCanceled from "./pages/PaymentCanceled";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -67,7 +68,8 @@ const App = () => (
                   <PaymentSuccess />
                 </ProtectedRoute>
               }
-            />
+              />
+            <Route path="/payment-canceled" element={<PaymentCanceled />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
