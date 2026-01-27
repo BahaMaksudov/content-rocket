@@ -144,9 +144,16 @@ export function AppSidebar() {
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">
-              {user?.email}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium text-foreground truncate">
+                {user?.email}
+              </p>
+              {tier === "agency" && (
+                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-[10px] px-1.5 py-0 shrink-0">
+                  Agency
+                </Badge>
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">{tierConfig.name} Plan</p>
           </div>
         </div>
