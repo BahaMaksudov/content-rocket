@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, forwardRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -6,10 +6,22 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { ContactSalesModal } from "@/components/landing/ContactSalesModal";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Rocket, Zap, Globe, Image, Eye, ArrowRight, Check, 
   Play, Clock, Users, TrendingUp, Sparkles, Twitter,
-  Linkedin, Video, FileText, ChevronRight, Star, Building2
+  Linkedin, Video, FileText, ChevronRight, Star, Building2,
+  Settings, LogOut, LayoutDashboard, ChevronDown
 } from "lucide-react";
 
 // Animation variants
@@ -30,12 +42,52 @@ const staggerContainer = {
 // Sticky Navigation
 function StickyNav() {
   const [scrolled, setScrolled] = useState(false);
+  const { user, loading, signOut } = useAuth();
+  const navigate = useNavigate();
+  const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Fetch user profile when authenticated
+  useEffect(() => {
+    if (user) {
+      supabase
+        .from("profiles")
+        .select("full_name, avatar_url")
+        .eq("user_id", user.id)
+        .single()
+        .then(({ data }) => {
+          if (data) setProfile(data);
+        });
+    } else {
+      setProfile(null);
+    }
+  }, [user]);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
+
+  const getUserDisplayName = () => {
+    if (profile?.full_name) return profile.full_name;
+    if (user?.email) return user.email;
+    return "User";
+  };
+
+  const getUserInitials = () => {
+    const name = getUserDisplayName();
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   return (
     <motion.nav
@@ -61,12 +113,72 @@ function StickyNav() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Button variant="ghost" asChild className="hidden sm:inline-flex">
-            <Link to="/auth">Log in</Link>
-          </Button>
-          <Button asChild className="gradient-primary text-primary-foreground shadow-lg shadow-primary/25">
-            <Link to="/auth">Get Started Free</Link>
-          </Button>
+          {loading ? (
+            // Loading state - prevents flash
+            <>
+              <Skeleton className="h-9 w-20 hidden sm:block" />
+              <Skeleton className="h-9 w-32" />
+            </>
+          ) : user ? (
+            // Logged in state
+            <>
+              <Button variant="ghost" asChild className="hidden sm:inline-flex">
+                <Link to="/dashboard" className="flex items-center gap-2">
+                  <LayoutDashboard className="h-4 w-4" />
+                  Dashboard
+                </Link>
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="flex items-center gap-2 pl-2 pr-3">
+                    <Avatar className="h-7 w-7">
+                      <AvatarImage src={profile?.avatar_url || undefined} alt={getUserDisplayName()} />
+                      <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                        {getUserInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="hidden sm:inline max-w-[120px] truncate text-sm">
+                      {getUserDisplayName()}
+                    </span>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 bg-popover border-border">
+                  <div className="px-2 py-1.5 text-sm font-medium truncate">
+                    {user.email}
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild className="cursor-pointer">
+                    <Link to="/dashboard" className="flex items-center">
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="cursor-pointer">
+                    <Link to="/settings" className="flex items-center">
+                      <Settings className="mr-2 h-4 w-4" />
+                      Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive focus:text-destructive">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          ) : (
+            // Logged out state
+            <>
+              <Button variant="ghost" asChild className="hidden sm:inline-flex">
+                <Link to="/auth">Log in</Link>
+              </Button>
+              <Button asChild className="gradient-primary text-primary-foreground shadow-lg shadow-primary/25">
+                <Link to="/auth">Get Started Free</Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </motion.nav>
