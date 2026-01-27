@@ -14,6 +14,8 @@ const languages = [
   { value: "spanish", label: "Spanish", flag: "🇪🇸" },
   { value: "hindi", label: "Hindi", flag: "🇮🇳" },
   { value: "mandarin", label: "Mandarin", flag: "🇨🇳" },
+  { value: "uzbek", label: "Uzbek", flag: "🇺🇿" },
+  { value: "russian", label: "Russian", flag: "🇷🇺" },
 ];
 
 export function GlobalReachSettings({
