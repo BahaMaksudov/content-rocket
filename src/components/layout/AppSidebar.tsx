@@ -1,10 +1,6 @@
-import { useState } from "react";
-import { Home, History, Mic, Settings, LogOut, Sparkles, Clock, ArrowLeft, CreditCard } from "lucide-react";
+import { Home, History, Mic, Settings, Sparkles, Clock, CreditCard } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { Link } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
-import { useNavigate } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -17,13 +13,10 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { UpgradeButton } from "@/components/dashboard/UpgradeButton";
 import { CreditsRemaining } from "@/components/dashboard/CreditsRemaining";
 import { SUBSCRIPTION_TIERS } from "@/lib/subscription-tiers";
-import { SignOutConfirmationModal } from "@/components/SignOutConfirmationModal";
 
 const mainNavItems = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
@@ -33,45 +26,11 @@ const mainNavItems = [
 ];
 
 export function AppSidebar() {
-  const [showSignOutModal, setShowSignOutModal] = useState(false);
-  const { user, signOut } = useAuth();
   const { tier } = useSubscription();
-  const navigate = useNavigate();
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/");
-  };
-
-  const handleSignOutClick = (e: React.MouseEvent) => {
-    // Shift+click bypasses confirmation modal for faster exit
-    if (e.shiftKey) {
-      handleSignOut();
-    } else {
-      setShowSignOutModal(true);
-    }
-  };
-
-  const userInitial = user?.email?.charAt(0).toUpperCase() || "U";
   const tierConfig = SUBSCRIPTION_TIERS[tier];
 
   return (
     <Sidebar className="border-r border-sidebar-border gradient-sidebar">
-      {/* Back to Website Link */}
-      <div className="px-4 py-3 border-b border-sidebar-border">
-        <Button
-          variant="ghost"
-          size="sm"
-          asChild
-          className="w-full justify-start text-muted-foreground hover:text-foreground"
-        >
-          <Link to="/">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Website
-          </Link>
-        </Button>
-      </div>
-
       {/* Header with Logo */}
       <SidebarHeader className="p-5 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
@@ -144,7 +103,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      {/* Footer with User */}
+      {/* Footer with Credits and Upgrade */}
       <SidebarFooter className="p-4 border-t border-sidebar-border space-y-3">
         {/* Credits Remaining */}
         <CreditsRemaining />
@@ -154,41 +113,16 @@ export function AppSidebar() {
           <UpgradeButton />
         </div>
 
-        <div className="flex items-center gap-3 p-2 rounded-lg bg-sidebar-accent/50">
-          <Avatar className="h-9 w-9 ring-2 ring-primary/30">
-            <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
-              {userInitial}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <p className="text-sm font-medium text-foreground truncate">
-                {user?.email}
-              </p>
-              {tier === "agency" && (
-                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-[10px] px-1.5 py-0 shrink-0">
-                  Agency
-                </Badge>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground">{tierConfig.name} Plan</p>
-          </div>
+        {/* Current Plan Indicator */}
+        <div className="flex items-center justify-center gap-2 p-2 rounded-lg bg-sidebar-accent/50">
+          <Badge 
+            variant="outline" 
+            className={`text-xs ${tier === "agency" ? "bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-amber-500/30 text-amber-400" : "border-primary/30 text-primary"}`}
+          >
+            {tierConfig.name} Plan
+          </Badge>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleSignOutClick}
-          className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-        >
-          <LogOut className="h-4 w-4 mr-2" />
-          Sign Out
-        </Button>
       </SidebarFooter>
-      <SignOutConfirmationModal
-        open={showSignOutModal}
-        onOpenChange={setShowSignOutModal}
-        onConfirm={handleSignOut}
-      />
     </Sidebar>
   );
 }
