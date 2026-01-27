@@ -126,9 +126,8 @@ export default function Dashboard() {
         blog_post: data.blogPost,
       });
 
-      // Increment credits only after successful generation
+      // Increment credits only after successful generation (this also refreshes UI)
       await incrementCredits();
-      await refreshCredits();
 
       toast({
         title: "All assets generated!",
