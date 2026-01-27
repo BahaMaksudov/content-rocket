@@ -4,6 +4,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { YouTubeInput } from "@/components/dashboard/YouTubeInput";
 import { GenerationSettings } from "@/components/dashboard/GenerationSettings";
 import { ContentOutput } from "@/components/dashboard/ContentOutput";
+import { WelcomeBanner } from "@/components/dashboard/WelcomeBanner";
 import { PremiumModal } from "@/components/PremiumModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -40,6 +41,8 @@ export default function Dashboard() {
   
   // Ref for scrolling to content output
   const contentOutputRef = useRef<HTMLDivElement>(null);
+  // Ref for scrolling to YouTube input
+  const youtubeInputRef = useRef<HTMLDivElement>(null);
 
   // Fetch brand voices and auto-select default
   const { data: brandVoices } = useQuery({
@@ -159,9 +162,16 @@ export default function Dashboard() {
     setGeneratedContent(updated);
   };
 
+  const scrollToYouTubeInput = () => {
+    youtubeInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+
   return (
     <AppLayout>
       <div className="max-w-6xl mx-auto space-y-8">
+        {/* Welcome Banner for Pro/Agency users */}
+        <WelcomeBanner onScrollToInput={scrollToYouTubeInput} />
+        
         <div>
           <h1 className="text-3xl font-bold mb-2">Content Dashboard</h1>
           <p className="text-muted-foreground">
@@ -172,13 +182,15 @@ export default function Dashboard() {
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Left column - Input & Settings */}
           <div className="lg:col-span-1 space-y-6">
-            <YouTubeInput
-              onTranscriptFetched={handleTranscriptFetched}
-              transcript={transcript}
-              transcriptMethod={transcriptMethod}
-              youtubeUrl={youtubeUrl}
-              setYoutubeUrl={setYoutubeUrl}
-            />
+            <div ref={youtubeInputRef}>
+              <YouTubeInput
+                onTranscriptFetched={handleTranscriptFetched}
+                transcript={transcript}
+                transcriptMethod={transcriptMethod}
+                youtubeUrl={youtubeUrl}
+                setYoutubeUrl={setYoutubeUrl}
+              />
+            </div>
             
             <GenerationSettings
               brandVoices={brandVoices || []}
