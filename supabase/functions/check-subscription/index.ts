@@ -66,16 +66,23 @@ serve(async (req) => {
       });
     }
 
-    const isPro = subscription.status === "pro";
+    // Determine tier from status: "pro", "agency", or "free"
+    const status = subscription.status || "free";
+    const isPro = status === "pro";
+    const isAgency = status === "agency";
+    const subscribed = isPro || isAgency;
+    
     logStep("Subscription found", { 
-      status: subscription.status, 
+      status, 
       isPro,
+      isAgency,
+      subscribed,
       subscriptionEnd: subscription.current_period_end 
     });
 
     return new Response(JSON.stringify({
-      subscribed: isPro,
-      status: subscription.status,
+      subscribed,
+      status,
       subscription_end: subscription.current_period_end,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

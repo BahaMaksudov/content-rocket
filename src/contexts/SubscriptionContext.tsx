@@ -1,14 +1,17 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { useAuth } from "./AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { SubscriptionTier, SUBSCRIPTION_TIERS, getTierFromStatus } from "@/lib/subscription-tiers";
 
 interface SubscriptionContextType {
   isPro: boolean;
+  isAgency: boolean;
+  tier: SubscriptionTier;
   status: string;
   subscriptionEnd: string | null;
   loading: boolean;
   checkSubscription: () => Promise<void>;
-  openCheckout: () => Promise<void>;
+  openCheckout: (tier?: "pro" | "agency") => Promise<void>;
   openCustomerPortal: () => Promise<void>;
 }
 
@@ -16,14 +19,17 @@ const SubscriptionContext = createContext<SubscriptionContextType | undefined>(u
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const { user, session } = useAuth();
-  const [isPro, setIsPro] = useState(false);
+  const [tier, setTier] = useState<SubscriptionTier>("free");
   const [status, setStatus] = useState("free");
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const isPro = tier === "pro" || tier === "agency";
+  const isAgency = tier === "agency";
+
   const checkSubscription = useCallback(async () => {
     if (!session?.access_token) {
-      setIsPro(false);
+      setTier("free");
       setStatus("free");
       setSubscriptionEnd(null);
       setLoading(false);
@@ -39,26 +45,29 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error;
 
-      setIsPro(data.subscribed);
+      const currentTier = getTierFromStatus(data.status || "free");
+      setTier(currentTier);
       setStatus(data.status || "free");
       setSubscriptionEnd(data.subscription_end);
     } catch (error) {
       console.error("Error checking subscription:", error);
-      setIsPro(false);
+      setTier("free");
       setStatus("free");
     } finally {
       setLoading(false);
     }
   }, [session?.access_token]);
 
-  const openCheckout = useCallback(async () => {
+  const openCheckout = useCallback(async (checkoutTier: "pro" | "agency" = "pro") => {
     if (!session?.access_token) return;
 
     try {
+      const priceId = SUBSCRIPTION_TIERS[checkoutTier].priceId;
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
+        body: { priceId },
       });
 
       if (error) throw error;
@@ -98,7 +107,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     if (user) {
       checkSubscription();
     } else {
-      setIsPro(false);
+      setTier("free");
       setStatus("free");
       setSubscriptionEnd(null);
       setLoading(false);
@@ -128,6 +137,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     <SubscriptionContext.Provider
       value={{
         isPro,
+        isAgency,
+        tier,
         status,
         subscriptionEnd,
         loading,
