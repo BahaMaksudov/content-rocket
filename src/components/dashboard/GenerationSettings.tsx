@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Sparkles, Mic } from "lucide-react";
+import { Loader2, Sparkles, Mic, Crown } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import { PremiumModal } from "@/components/PremiumModal";
 
 interface BrandVoice {
   id: string;
@@ -50,6 +53,17 @@ export function GenerationSettings({
   isGenerating,
   hasTranscript,
 }: GenerationSettingsProps) {
+  const { isPro } = useSubscription();
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+
+  const handleBrandVoiceChange = (value: string) => {
+    if (!isPro && value !== "none") {
+      setShowPremiumModal(true);
+      return;
+    }
+    setSelectedBrandVoice(value === "none" ? null : value);
+  };
+
   return (
     <Card className="border-border bg-card">
       <CardHeader>
@@ -67,10 +81,15 @@ export function GenerationSettings({
           <Label className="flex items-center gap-2">
             <Mic className="h-4 w-4" />
             Brand Voice
+            {!isPro && (
+              <span className="ml-auto">
+                <Crown className="h-4 w-4 text-primary" />
+              </span>
+            )}
           </Label>
           <Select
             value={selectedBrandVoice || "none"}
-            onValueChange={(v) => setSelectedBrandVoice(v === "none" ? null : v)}
+            onValueChange={handleBrandVoiceChange}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select a brand voice" />
@@ -79,7 +98,7 @@ export function GenerationSettings({
               <SelectItem value="none">No brand voice</SelectItem>
               {brandVoices.map((voice) => (
                 <SelectItem key={voice.id} value={voice.id}>
-                  {voice.name}
+                  {voice.name} {!isPro && "(Pro)"}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -91,6 +110,11 @@ export function GenerationSettings({
             >
               Create your first brand voice →
             </Link>
+          )}
+          {!isPro && brandVoices.length > 0 && (
+            <p className="text-xs text-muted-foreground">
+              Upgrade to Pro to use custom brand voices
+            </p>
           )}
         </div>
 
@@ -154,6 +178,12 @@ export function GenerationSettings({
           </p>
         )}
       </CardContent>
+
+      <PremiumModal 
+        open={showPremiumModal} 
+        onOpenChange={setShowPremiumModal}
+        feature="brand-voice"
+      />
     </Card>
   );
 }

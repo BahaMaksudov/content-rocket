@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Youtube, Link2, FileText, Check } from "lucide-react";
+import { Loader2, Youtube, Link2, FileText, Check, Crown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import { PremiumModal } from "@/components/PremiumModal";
 
 interface YouTubeInputProps {
   onTranscriptFetched: (transcript: string, method: "auto" | "manual", title?: string) => void;
@@ -29,11 +31,19 @@ export function YouTubeInput({
   const [isFetching, setIsFetching] = useState(false);
   const [manualTranscript, setManualTranscript] = useState("");
   const [showManual, setShowManual] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const { toast } = useToast();
+  const { isPro } = useSubscription();
 
   const isValidUrl = YOUTUBE_URL_REGEX.test(youtubeUrl);
 
   const handleFetchTranscript = async () => {
+    // Check if user is Pro before fetching
+    if (!isPro) {
+      setShowPremiumModal(true);
+      return;
+    }
+
     if (!isValidUrl) {
       toast({
         variant: "destructive",
@@ -136,6 +146,11 @@ export function YouTubeInput({
             >
               {isFetching ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
+              ) : !isPro ? (
+                <>
+                  <Crown className="h-4 w-4 mr-1" />
+                  Fetch
+                </>
               ) : (
                 "Fetch"
               )}
@@ -191,6 +206,12 @@ export function YouTubeInput({
           </button>
         )}
       </CardContent>
+
+      <PremiumModal 
+        open={showPremiumModal} 
+        onOpenChange={setShowPremiumModal}
+        feature="youtube"
+      />
     </Card>
   );
 }
