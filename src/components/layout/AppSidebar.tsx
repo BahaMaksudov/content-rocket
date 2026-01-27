@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Home, History, Mic, Settings, LogOut, Sparkles, Clock, ArrowLeft } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { Link } from "react-router-dom";
@@ -21,6 +22,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { UpgradeButton } from "@/components/dashboard/UpgradeButton";
 import { SUBSCRIPTION_TIERS } from "@/lib/subscription-tiers";
+import { SignOutConfirmationModal } from "@/components/SignOutConfirmationModal";
 
 const mainNavItems = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
@@ -29,6 +31,7 @@ const mainNavItems = [
 ];
 
 export function AppSidebar() {
+  const [showSignOutModal, setShowSignOutModal] = useState(false);
   const { user, signOut } = useAuth();
   const { tier } = useSubscription();
   const navigate = useNavigate();
@@ -36,6 +39,15 @@ export function AppSidebar() {
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
+  };
+
+  const handleSignOutClick = (e: React.MouseEvent) => {
+    // Shift+click bypasses confirmation modal for faster exit
+    if (e.shiftKey) {
+      handleSignOut();
+    } else {
+      setShowSignOutModal(true);
+    }
   };
 
   const userInitial = user?.email?.charAt(0).toUpperCase() || "U";
@@ -160,13 +172,18 @@ export function AppSidebar() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={handleSignOut}
+          onClick={handleSignOutClick}
           className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
         >
           <LogOut className="h-4 w-4 mr-2" />
           Sign Out
         </Button>
       </SidebarFooter>
+      <SignOutConfirmationModal
+        open={showSignOutModal}
+        onOpenChange={setShowSignOutModal}
+        onConfirm={handleSignOut}
+      />
     </Sidebar>
   );
 }
