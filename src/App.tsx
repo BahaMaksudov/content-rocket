@@ -12,6 +12,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import History from "./pages/History";
 import BrandVoices from "./pages/BrandVoices";
+import Billing from "./pages/Billing";
 import Settings from "./pages/Settings";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCanceled from "./pages/PaymentCanceled";
@@ -56,6 +57,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <BrandVoices />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/billing"
+              element={
+                <ProtectedRoute>
+                  <Billing />
                 </ProtectedRoute>
               }
             />

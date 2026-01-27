@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Home, History, Mic, Settings, LogOut, Sparkles, Clock, ArrowLeft } from "lucide-react";
+import { Home, History, Mic, Settings, LogOut, Sparkles, Clock, ArrowLeft, CreditCard } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -27,6 +27,7 @@ import { SignOutConfirmationModal } from "@/components/SignOutConfirmationModal"
 const mainNavItems = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
   { title: "Brand Voices", url: "/brand-voices", icon: Mic },
+  { title: "Billing", url: "/billing", icon: CreditCard },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 
