@@ -184,6 +184,51 @@ export type Database = {
         }
         Relationships: []
       }
+      welcome_email_tracking: {
+        Row: {
+          created_at: string
+          email_1_sent_at: string | null
+          email_2_scheduled_for: string | null
+          email_2_sent_at: string | null
+          email_3_scheduled_for: string | null
+          email_3_sent_at: string | null
+          id: string
+          unsubscribed: boolean
+          updated_at: string
+          user_email: string
+          user_id: string
+          user_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          email_1_sent_at?: string | null
+          email_2_scheduled_for?: string | null
+          email_2_sent_at?: string | null
+          email_3_scheduled_for?: string | null
+          email_3_sent_at?: string | null
+          id?: string
+          unsubscribed?: boolean
+          updated_at?: string
+          user_email: string
+          user_id: string
+          user_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          email_1_sent_at?: string | null
+          email_2_scheduled_for?: string | null
+          email_2_sent_at?: string | null
+          email_3_scheduled_for?: string | null
+          email_3_sent_at?: string | null
+          id?: string
+          unsubscribed?: boolean
+          updated_at?: string
+          user_email?: string
+          user_id?: string
+          user_name?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
