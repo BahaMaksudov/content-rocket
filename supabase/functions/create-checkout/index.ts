@@ -7,7 +7,11 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform",
 };
 
-const PRO_PRICE_ID = "price_1SuGkdBqKXDc35qoID1Z4oqJ";
+// Price IDs for subscription tiers
+const PRICE_IDS = {
+  pro: "price_1SuGkdBqKXDc35qoID1Z4oqJ",
+  agency: "price_1SuJbfBqKXDc35qoSzGf5rzv",
+};
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -40,6 +44,18 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    // Parse request body to get priceId
+    let priceId = PRICE_IDS.pro; // Default to pro
+    try {
+      const body = await req.json();
+      if (body.priceId && (body.priceId === PRICE_IDS.pro || body.priceId === PRICE_IDS.agency)) {
+        priceId = body.priceId;
+      }
+    } catch {
+      // No body or invalid JSON, use default
+    }
+    logStep("Using price", { priceId });
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     
     // Check if customer exists
@@ -57,7 +73,7 @@ serve(async (req) => {
       customer_email: customerId ? undefined : user.email,
       line_items: [
         {
-          price: PRO_PRICE_ID,
+          price: priceId,
           quantity: 1,
         },
       ],

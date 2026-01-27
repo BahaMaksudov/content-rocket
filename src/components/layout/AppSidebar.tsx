@@ -1,5 +1,6 @@
-import { Home, History, Mic, Settings, LogOut, Sparkles, Clock } from "lucide-react";
+import { Home, History, Mic, Settings, LogOut, Sparkles, Clock, ArrowLeft } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useNavigate } from "react-router-dom";
@@ -19,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { UpgradeButton } from "@/components/dashboard/UpgradeButton";
+import { SUBSCRIPTION_TIERS } from "@/lib/subscription-tiers";
 
 const mainNavItems = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
@@ -28,7 +30,7 @@ const mainNavItems = [
 
 export function AppSidebar() {
   const { user, signOut } = useAuth();
-  const { isPro } = useSubscription();
+  const { tier } = useSubscription();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -37,9 +39,25 @@ export function AppSidebar() {
   };
 
   const userInitial = user?.email?.charAt(0).toUpperCase() || "U";
+  const tierConfig = SUBSCRIPTION_TIERS[tier];
 
   return (
     <Sidebar className="border-r border-sidebar-border gradient-sidebar">
+      {/* Back to Website Link */}
+      <div className="px-4 py-3 border-b border-sidebar-border">
+        <Button
+          variant="ghost"
+          size="sm"
+          asChild
+          className="w-full justify-start text-muted-foreground hover:text-foreground"
+        >
+          <Link to="/">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Website
+          </Link>
+        </Button>
+      </div>
+
       {/* Header with Logo */}
       <SidebarHeader className="p-5 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
@@ -47,7 +65,7 @@ export function AppSidebar() {
             <Sparkles className="h-5 w-5 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-foreground">Repurpose</h1>
+            <h1 className="text-lg font-bold text-foreground">Rocket Content</h1>
             <p className="text-xs text-muted-foreground">Content Studio</p>
           </div>
         </div>
@@ -129,7 +147,7 @@ export function AppSidebar() {
             <p className="text-sm font-medium text-foreground truncate">
               {user?.email}
             </p>
-            <p className="text-xs text-muted-foreground">{isPro ? "Pro Plan" : "Free Plan"}</p>
+            <p className="text-xs text-muted-foreground">{tierConfig.name} Plan</p>
           </div>
         </div>
         <Button

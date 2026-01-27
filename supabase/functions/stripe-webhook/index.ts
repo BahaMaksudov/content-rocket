@@ -7,10 +7,22 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform",
 };
 
+// Product IDs for subscription tiers
+const PRODUCT_IDS = {
+  pro: "prod_Ts0mGYgpr7JkAX",
+  agency: "prod_Ts3jOcxQsiuSP8",
+};
+
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[STRIPE-WEBHOOK] ${step}${detailsStr}`);
 };
+
+function getTierFromProductId(productId: string): "pro" | "agency" | "free" {
+  if (productId === PRODUCT_IDS.agency) return "agency";
+  if (productId === PRODUCT_IDS.pro) return "pro";
+  return "free";
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -72,14 +84,21 @@ serve(async (req) => {
         const userId = session.metadata?.user_id;
 
         if (userId) {
+          // Get product ID to determine tier
+          const priceId = subscription.items.data[0]?.price.id;
+          const productId = subscription.items.data[0]?.price.product as string;
+          const tier = getTierFromProductId(productId);
+          
+          logStep("Determined subscription tier", { productId, tier });
+
           const { error } = await supabase
             .from("subscriptions")
             .upsert({
               user_id: userId,
               stripe_customer_id: session.customer as string,
               stripe_subscription_id: subscription.id,
-              status: "pro",
-              price_id: subscription.items.data[0]?.price.id,
+              status: tier,
+              price_id: priceId,
               current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
               updated_at: new Date().toISOString(),
             }, { onConflict: "user_id" });
@@ -87,7 +106,7 @@ serve(async (req) => {
           if (error) {
             logStep("Database update error", { error: error.message });
           } else {
-            logStep("Subscription updated to pro", { userId });
+            logStep(`Subscription updated to ${tier}`, { userId });
           }
         }
       }
@@ -104,11 +123,17 @@ serve(async (req) => {
         .maybeSingle();
 
       if (subRecord) {
-        const status = subscription.status === "active" ? "pro" : "free";
+        let status = "free";
+        if (subscription.status === "active") {
+          const productId = subscription.items.data[0]?.price.product as string;
+          status = getTierFromProductId(productId);
+        }
+        
         await supabase
           .from("subscriptions")
           .update({
             status,
+            price_id: subscription.items.data[0]?.price.id,
             current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
             updated_at: new Date().toISOString(),
           })
