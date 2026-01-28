@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { useGenerationCredits } from "@/hooks/use-generation-credits";
+import { trackGenerationStarted } from "@/lib/posthog";
 
 export interface GeneratedContent {
   twitterHooks: string[];
@@ -92,6 +93,17 @@ export default function Dashboard() {
     }
 
     setIsGenerating(true);
+    
+    // Track generation started event
+    trackGenerationStarted({
+      hasYoutubeUrl: !!youtubeUrl,
+      transcriptMethod,
+      hasBrandVoice: !!selectedBrandVoice,
+      tone,
+      audience,
+      globalReachEnabled,
+      targetLanguage: globalReachEnabled ? targetLanguage : null,
+    });
 
     try {
       const selectedVoice = brandVoices?.find(v => v.id === selectedBrandVoice);

@@ -9,6 +9,7 @@ import { Copy, Check, Edit2, Save, Twitter, Linkedin, Film, FileText, Download, 
 import type { GeneratedContent } from "@/pages/Dashboard";
 import { ImageGenerator } from "./ImageGenerator";
 import { SocialPreview, SocialPreviewToggle } from "./SocialPreview";
+import { trackCopyContent } from "@/lib/posthog";
 
 interface ContentOutputProps {
   content: GeneratedContent | null;
@@ -17,13 +18,17 @@ interface ContentOutputProps {
   targetLanguage?: string | null;
 }
 
-function CopyButton({ text }: { text: string }) {
+function CopyButton({ text, contentType, platform }: { text: string; contentType?: string; platform?: string }) {
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(text);
     setCopied(true);
+    
+    // Track copy event
+    trackCopyContent(contentType || "content", platform);
+    
     toast({ title: "Copied to clipboard!" });
     setTimeout(() => setCopied(false), 2000);
   };
@@ -240,7 +245,7 @@ ${content.blogPost}
                       }}
                     />
                   </div>
-                  <CopyButton text={hook} />
+                  <CopyButton text={hook} contentType="twitter_hook" platform="twitter" />
                 </div>
               </div>
             ))}
@@ -258,7 +263,7 @@ ${content.blogPost}
             <div className="p-4 rounded-lg bg-muted/50 border border-border">
               <div className="flex items-start justify-between gap-2 mb-2">
                 <Badge variant="secondary">Problem-Agitation-Solution</Badge>
-                <CopyButton text={content.linkedinPost} />
+                <CopyButton text={content.linkedinPost} contentType="linkedin_post" platform="linkedin" />
               </div>
               <EditableContent
                 content={content.linkedinPost}
@@ -288,7 +293,7 @@ ${content.blogPost}
                     </Badge>
                     <Badge variant="outline">{script.duration}</Badge>
                   </div>
-                  <CopyButton text={`${script.title}\n\n${script.script}`} />
+                  <CopyButton text={`${script.title}\n\n${script.script}`} contentType="short_form_script" platform="shorts" />
                 </div>
                 <h4 className="font-semibold mb-2">{script.title}</h4>
                 <EditableContent
@@ -315,7 +320,7 @@ ${content.blogPost}
             <div className="p-4 rounded-lg bg-muted/50 border border-border">
               <div className="flex items-start justify-between gap-2 mb-2">
                 <Badge variant="secondary">SEO-Optimized Blog Post</Badge>
-                <CopyButton text={content.blogPost} />
+                <CopyButton text={content.blogPost} contentType="blog_post" platform="blog" />
               </div>
               <EditableContent
                 content={content.blogPost}

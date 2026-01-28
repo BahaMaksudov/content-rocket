@@ -4,6 +4,7 @@ import { Crown, Settings, Rocket } from "lucide-react";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useState } from "react";
 import { PremiumModal } from "@/components/PremiumModal";
+import { trackUpgradeClicked } from "@/lib/posthog";
 
 export function UpgradeButton() {
   const { tier, isPro, isAgency, openCustomerPortal, loading } = useSubscription();
@@ -72,7 +73,10 @@ export function UpgradeButton() {
           </Button>
         </div>
         <Button
-          onClick={() => setShowAgencyModal(true)}
+          onClick={() => {
+            trackUpgradeClicked("agency", "sidebar_pro_user");
+            setShowAgencyModal(true);
+          }}
           className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-white"
           size="sm"
         >
@@ -92,7 +96,10 @@ export function UpgradeButton() {
   return (
     <div className="flex flex-col gap-2 w-full">
       <Button
-        onClick={() => setShowProModal(true)}
+        onClick={() => {
+          trackUpgradeClicked("pro", "sidebar_free_user");
+          setShowProModal(true);
+        }}
         className="w-full gradient-primary text-primary-foreground"
         size="sm"
       >
@@ -100,7 +107,10 @@ export function UpgradeButton() {
         Upgrade to Pro
       </Button>
       <Button
-        onClick={() => setShowAgencyModal(true)}
+        onClick={() => {
+          trackUpgradeClicked("agency", "sidebar_free_user");
+          setShowAgencyModal(true);
+        }}
         className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-white"
         size="sm"
       >
