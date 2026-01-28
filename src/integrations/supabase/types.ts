@@ -65,6 +65,7 @@ export type Database = {
           id: string
           linkedin_post: string | null
           short_form_scripts: Json | null
+          target_language: string | null
           tone: string | null
           transcript: string | null
           transcript_method: string | null
@@ -82,6 +83,7 @@ export type Database = {
           id?: string
           linkedin_post?: string | null
           short_form_scripts?: Json | null
+          target_language?: string | null
           tone?: string | null
           transcript?: string | null
           transcript_method?: string | null
@@ -99,6 +101,7 @@ export type Database = {
           id?: string
           linkedin_post?: string | null
           short_form_scripts?: Json | null
+          target_language?: string | null
           tone?: string | null
           transcript?: string | null
           transcript_method?: string | null

@@ -26,6 +26,7 @@ interface Generation {
   short_form_scripts: unknown;
   blog_post: string | null;
   created_at: string;
+  target_language: string | null;
 }
 
 function CopyButton({ text }: { text: string }) {
@@ -180,6 +181,7 @@ export default function History() {
                     <ImageGenerator 
                       textContent={(selectedGeneration.twitter_hooks as string[] | null)?.join(" ") || ""} 
                       platform="twitter"
+                      targetLanguage={selectedGeneration.target_language}
                     />
                   </div>
                   {(selectedGeneration.twitter_hooks as string[] | null)?.map((hook, i) => (
@@ -195,6 +197,7 @@ export default function History() {
                     <ImageGenerator 
                       textContent={selectedGeneration.linkedin_post || ""} 
                       platform="linkedin"
+                      targetLanguage={selectedGeneration.target_language}
                     />
                   </div>
                   <div className="p-3 rounded-lg bg-muted/50">
@@ -210,6 +213,7 @@ export default function History() {
                     <ImageGenerator 
                       textContent={(selectedGeneration.short_form_scripts as Array<{ title: string; script: string; duration: string }> | null)?.map(s => s.title).join(" ") || ""} 
                       platform="shorts"
+                      targetLanguage={selectedGeneration.target_language}
                     />
                   </div>
                   {(selectedGeneration.short_form_scripts as Array<{ title: string; script: string; duration: string }> | null)?.map((script, i) => (
@@ -231,6 +235,7 @@ export default function History() {
                     <ImageGenerator 
                       textContent={selectedGeneration.blog_post?.substring(0, 300) || ""} 
                       platform="blog"
+                      targetLanguage={selectedGeneration.target_language}
                     />
                   </div>
                   <div className="p-3 rounded-lg bg-muted/50">
