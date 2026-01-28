@@ -14,6 +14,7 @@ interface ContentOutputProps {
   content: GeneratedContent | null;
   isGenerating: boolean;
   onUpdateContent: (content: GeneratedContent) => void;
+  targetLanguage?: string | null;
 }
 
 function CopyButton({ text }: { text: string }) {
@@ -96,7 +97,7 @@ function EditableContent({
   );
 }
 
-export function ContentOutput({ content, isGenerating, onUpdateContent }: ContentOutputProps) {
+export function ContentOutput({ content, isGenerating, onUpdateContent, targetLanguage }: ContentOutputProps) {
   const { toast } = useToast();
   const [showPreview, setShowPreview] = useState(false);
   const [activeTab, setActiveTab] = useState("twitter");
@@ -212,12 +213,12 @@ ${content.blogPost}
             </div>
           )}
 
-          {/* Twitter Hooks */}
           <TabsContent value="twitter" className="space-y-3">
             <div className="mb-4">
               <ImageGenerator 
                 textContent={content.twitterHooks.join(" ")} 
                 platform="twitter"
+                targetLanguage={targetLanguage}
               />
             </div>
             {content.twitterHooks.map((hook, index) => (
@@ -251,6 +252,7 @@ ${content.blogPost}
               <ImageGenerator 
                 textContent={content.linkedinPost} 
                 platform="linkedin"
+                targetLanguage={targetLanguage}
               />
             </div>
             <div className="p-4 rounded-lg bg-muted/50 border border-border">
@@ -271,6 +273,7 @@ ${content.blogPost}
               <ImageGenerator 
                 textContent={content.shortFormScripts.map(s => s.title).join(" ")} 
                 platform="shorts"
+                targetLanguage={targetLanguage}
               />
             </div>
             {content.shortFormScripts.map((script, index) => (
@@ -306,6 +309,7 @@ ${content.blogPost}
               <ImageGenerator 
                 textContent={content.blogPost.substring(0, 300)} 
                 platform="blog"
+                targetLanguage={targetLanguage}
               />
             </div>
             <div className="p-4 rounded-lg bg-muted/50 border border-border">

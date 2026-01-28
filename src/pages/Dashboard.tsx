@@ -216,6 +216,7 @@ export default function Dashboard() {
               content={generatedContent}
               isGenerating={isGenerating}
               onUpdateContent={handleUpdateContent}
+              targetLanguage={globalReachEnabled ? targetLanguage : null}
             />
           </div>
         </div>
