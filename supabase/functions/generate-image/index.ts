@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { textContent, platform } = await req.json();
+    const { textContent, platform, targetLanguage } = await req.json();
 
     if (!textContent) {
       return new Response(
@@ -41,6 +41,19 @@ serve(async (req) => {
 
     const style = platformStyles[platform] || platformStyles.blog;
 
+    // Map language codes to full names
+    const languageNames: Record<string, string> = {
+      spanish: "Spanish",
+      hindi: "Hindi",
+      mandarin: "Mandarin Chinese",
+      uzbek: "Uzbek",
+      russian: "Russian",
+    };
+
+    const languageInstruction = targetLanguage && languageNames[targetLanguage]
+      ? `IMPORTANT: Any text or typography in the image MUST be written in ${languageNames[targetLanguage]}. Use authentic ${languageNames[targetLanguage]} script and characters.`
+      : "Any text in the image should be in English.";
+
     // First, generate an image prompt from the text content
     const promptResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -53,7 +66,7 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are an expert at creating image prompts for AI image generation. Create a detailed, visually descriptive prompt based on the given text content. The style should be: ${style}. Keep the prompt under 150 words and focus on visual elements, colors, and composition.`
+            content: `You are an expert at creating image prompts for AI image generation. Create a detailed, visually descriptive prompt based on the given text content. The style should be: ${style}. ${languageInstruction} Keep the prompt under 150 words and focus on visual elements, colors, and composition.`
           },
           {
             role: "user",

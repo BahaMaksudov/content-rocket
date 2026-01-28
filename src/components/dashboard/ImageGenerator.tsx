@@ -7,10 +7,11 @@ import { ImagePlus, Loader2, Download } from "lucide-react";
 interface ImageGeneratorProps {
   textContent: string;
   platform: "twitter" | "linkedin" | "shorts" | "blog";
+  targetLanguage?: string | null;
   onImageGenerated?: (imageUrl: string) => void;
 }
 
-export function ImageGenerator({ textContent, platform, onImageGenerated }: ImageGeneratorProps) {
+export function ImageGenerator({ textContent, platform, targetLanguage, onImageGenerated }: ImageGeneratorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const { toast } = useToast();
@@ -39,6 +40,7 @@ export function ImageGenerator({ textContent, platform, onImageGenerated }: Imag
         body: {
           textContent: textContent.substring(0, 500),
           platform,
+          targetLanguage,
         },
       });
 
