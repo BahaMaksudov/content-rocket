@@ -47,7 +47,7 @@ export const shouldEnableAnalytics = (): boolean => {
 // Initialize PostHog
 export const initPostHog = (): void => {
   if (!POSTHOG_KEY) {
-    console.warn("PostHog key not configured. Analytics disabled.");
+    // Silently disable analytics when key is not configured
     return;
   }
 
