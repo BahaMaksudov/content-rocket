@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { identifyUser, resetUser, trackSignUp, trackLogin } from "@/lib/posthog";
 
 interface AuthContextType {
   user: User | null;
@@ -25,6 +26,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Identify user for analytics when they sign in
+        if (session?.user) {
+          setTimeout(() => {
+            identifyUser(session.user.id, session.user.email || "");
+          }, 0);
+        }
       }
     );
 
@@ -33,6 +41,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      
+      // Identify existing session user
+      if (session?.user) {
+        identifyUser(session.user.id, session.user.email || "");
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -52,8 +65,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     });
     
-    // Trigger welcome email if signup was successful
+    // Track sign up and trigger welcome email if signup was successful
     if (!error && data.user) {
+      // Track sign up event
+      trackSignUp(data.user.id, email);
+      
       try {
         await supabase.functions.invoke("send-welcome-emails", {
           body: {
@@ -73,14 +89,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+    
+    // Track login event
+    if (!error && data.user) {
+      trackLogin(data.user.id, email);
+    }
+    
     return { error: error as Error | null };
   };
 
   const signOut = async () => {
+    resetUser(); // Reset PostHog user on logout
     await supabase.auth.signOut();
   };
 

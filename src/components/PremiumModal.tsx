@@ -11,6 +11,7 @@ import { Crown, Check, Sparkles, Mic, Youtube, Rocket, Users, Building } from "l
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useState } from "react";
 import { SUBSCRIPTION_TIERS } from "@/lib/subscription-tiers";
+import { trackUpgradeClicked } from "@/lib/posthog";
 
 interface PremiumModalProps {
   open: boolean;
@@ -45,6 +46,10 @@ export function PremiumModal({ open, onOpenChange, feature, tier = "pro" }: Prem
 
   const handleUpgrade = async () => {
     setIsLoading(true);
+    
+    // Track upgrade clicked from modal
+    trackUpgradeClicked(tier, feature ? `modal_${feature}` : "modal_direct");
+    
     try {
       await openCheckout(tier);
       onOpenChange(false);

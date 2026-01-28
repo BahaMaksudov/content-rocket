@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { History as HistoryIcon, ExternalLink, Trash2, Copy, Check, Twitter, Linkedin, Film, FileText } from "lucide-react";
 import { ImageGenerator } from "@/components/dashboard/ImageGenerator";
+import { trackCopyContent } from "@/lib/posthog";
 
 interface Generation {
   id: string;
@@ -29,13 +30,17 @@ interface Generation {
   target_language: string | null;
 }
 
-function CopyButton({ text }: { text: string }) {
+function CopyButton({ text, contentType, platform }: { text: string; contentType?: string; platform?: string }) {
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(text);
     setCopied(true);
+    
+    // Track copy event
+    trackCopyContent(contentType || "content", platform);
+    
     toast({ title: "Copied!" });
     setTimeout(() => setCopied(false), 2000);
   };
@@ -187,7 +192,7 @@ export default function History() {
                   {(selectedGeneration.twitter_hooks as string[] | null)?.map((hook, i) => (
                     <div key={i} className="p-3 rounded-lg bg-muted/50 flex justify-between items-start gap-2">
                       <p className="flex-1">{hook}</p>
-                      <CopyButton text={hook} />
+                      <CopyButton text={hook} contentType="twitter_hook" platform="twitter" />
                     </div>
                   ))}
                 </TabsContent>
@@ -202,7 +207,7 @@ export default function History() {
                   </div>
                   <div className="p-3 rounded-lg bg-muted/50">
                     <div className="flex justify-end mb-2">
-                      <CopyButton text={selectedGeneration.linkedin_post || ""} />
+                      <CopyButton text={selectedGeneration.linkedin_post || ""} contentType="linkedin_post" platform="linkedin" />
                     </div>
                     <p className="whitespace-pre-wrap">{selectedGeneration.linkedin_post}</p>
                   </div>
@@ -223,7 +228,7 @@ export default function History() {
                           <Badge className="mr-2">{script.title}</Badge>
                           <Badge variant="outline">{script.duration}</Badge>
                         </div>
-                        <CopyButton text={script.script} />
+                        <CopyButton text={script.script} contentType="short_form_script" platform="shorts" />
                       </div>
                       <p className="whitespace-pre-wrap">{script.script}</p>
                     </div>
@@ -240,7 +245,7 @@ export default function History() {
                   </div>
                   <div className="p-3 rounded-lg bg-muted/50">
                     <div className="flex justify-end mb-2">
-                      <CopyButton text={selectedGeneration.blog_post || ""} />
+                      <CopyButton text={selectedGeneration.blog_post || ""} contentType="blog_post" platform="blog" />
                     </div>
                     <p className="whitespace-pre-wrap">{selectedGeneration.blog_post}</p>
                   </div>
