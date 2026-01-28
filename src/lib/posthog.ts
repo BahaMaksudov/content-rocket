@@ -1,8 +1,9 @@
 import posthog from "posthog-js";
 
 // PostHog initialization and utility functions
-const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY;
-const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || "https://us.i.posthog.com";
+// Note: PostHog API keys are publishable (safe to expose client-side)
+const POSTHOG_KEY = "phc_GnVFQdvTuQpXncK5lRAiODBQYmXegchvekVKR08wlHs";
+const POSTHOG_HOST = "https://us.i.posthog.com";
 
 // Check if Do Not Track is enabled
 const isDoNotTrackEnabled = (): boolean => {
@@ -28,9 +29,9 @@ export const hasAnalyticsConsent = (): boolean => {
 
 export const setAnalyticsConsent = (consent: boolean): void => {
   localStorage.setItem("analytics_consent", consent ? "true" : "false");
-  if (consent && POSTHOG_KEY) {
+  if (consent) {
     initPostHog();
-  } else if (!consent) {
+  } else {
     posthog.opt_out_capturing();
   }
 };
@@ -44,25 +45,26 @@ export const shouldEnableAnalytics = (): boolean => {
   return hasAnalyticsConsent();
 };
 
-// Initialize PostHog
+// Initialize PostHog - always initializes, but respects opt-out
 export const initPostHog = (): void => {
-  if (!POSTHOG_KEY) {
-    // Silently disable analytics when key is not configured
-    return;
-  }
-
-  if (!shouldEnableAnalytics()) {
-    console.log("Analytics disabled due to user preferences.");
-    return;
-  }
-
+  // Initialize PostHog regardless of consent status
+  // PostHog will handle opt-out internally
   posthog.init(POSTHOG_KEY, {
     api_host: POSTHOG_HOST,
     person_profiles: "identified_only",
     capture_pageview: true,
     capture_pageleave: true,
-    autocapture: false, // We'll handle specific events manually
+    autocapture: false,
     persistence: "localStorage",
+    debug: true, // Enable debug mode to see console logs
+    loaded: (posthog) => {
+      console.log("PostHog loaded successfully");
+      // If user hasn't consented or has DNT enabled, opt out
+      if (!shouldEnableAnalytics()) {
+        console.log("Analytics disabled - opting out of capturing");
+        posthog.opt_out_capturing();
+      }
+    },
   });
 };
 
