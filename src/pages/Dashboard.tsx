@@ -135,6 +135,7 @@ export default function Dashboard() {
         linkedin_post: data.linkedinPost,
         short_form_scripts: data.shortFormScripts,
         blog_post: data.blogPost,
+        target_language: globalReachEnabled ? targetLanguage : null,
       });
 
       // Increment credits only after successful generation (this also refreshes UI)
