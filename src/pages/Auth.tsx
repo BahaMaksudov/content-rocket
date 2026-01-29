@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Navigate, Link } from "react-router-dom";
+import { useNavigate, Navigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,11 @@ export default function Auth() {
   const { signIn, signUp, user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  
+  // Get redirect and upgrade params for post-auth navigation
+  const redirectPath = searchParams.get("redirect") || "/dashboard";
+  const upgradeTier = searchParams.get("upgrade");
 
   if (loading) {
     return (
@@ -32,7 +37,9 @@ export default function Auth() {
   }
 
   if (user) {
-    return <Navigate to="/dashboard" replace />;
+    // Preserve upgrade param when redirecting logged-in users
+    const targetPath = upgradeTier ? `${redirectPath}?upgrade=${upgradeTier}` : redirectPath;
+    return <Navigate to={targetPath} replace />;
   }
 
   const handleAuth = async (action: "login" | "signup") => {
@@ -77,7 +84,9 @@ export default function Auth() {
           title: action === "login" ? "Welcome back!" : "Account created!",
           description: action === "signup" ? "Your account has been created successfully." : undefined,
         });
-        navigate("/dashboard");
+        // Navigate to redirect path, preserving upgrade param if present
+        const targetPath = upgradeTier ? `${redirectPath}?upgrade=${upgradeTier}` : redirectPath;
+        navigate(targetPath);
       }
     } catch (error) {
       toast({
