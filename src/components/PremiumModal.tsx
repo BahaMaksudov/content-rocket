@@ -12,6 +12,7 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useState } from "react";
 import { SUBSCRIPTION_TIERS } from "@/lib/subscription-tiers";
 import { trackUpgradeClicked } from "@/lib/posthog";
+import { toast } from "sonner";
 
 interface PremiumModalProps {
   open: boolean;
@@ -55,6 +56,8 @@ export function PremiumModal({ open, onOpenChange, feature, tier = "pro" }: Prem
       onOpenChange(false);
     } catch (error) {
       console.error("Checkout error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to start checkout";
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
