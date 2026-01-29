@@ -59,10 +59,15 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   }, [session?.access_token]);
 
   const openCheckout = useCallback(async (checkoutTier: "pro" | "agency" = "pro") => {
-    if (!session?.access_token) return;
+    if (!session?.access_token) {
+      console.error("No session found - user must be logged in to checkout");
+      throw new Error("Please log in to upgrade your subscription");
+    }
 
     try {
       const priceId = SUBSCRIPTION_TIERS[checkoutTier].priceId;
+      console.log("Creating checkout session for tier:", checkoutTier, "priceId:", priceId);
+      
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
@@ -70,10 +75,15 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         body: { priceId },
       });
 
+      console.log("Checkout response:", { data, error });
+
       if (error) throw error;
 
       if (data?.url) {
+        console.log("Opening checkout URL:", data.url);
         window.open(data.url, "_blank");
+      } else {
+        throw new Error("No checkout URL received from server");
       }
     } catch (error) {
       console.error("Error creating checkout:", error);

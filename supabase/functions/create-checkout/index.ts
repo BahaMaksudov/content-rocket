@@ -7,10 +7,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform",
 };
 
-// Price IDs for subscription tiers
+// Price IDs for subscription tiers - must match subscription-tiers.ts
 const PRICE_IDS = {
   pro: "price_1SuGkdBqKXDc35qoID1Z4oqJ",
-  agency: "price_1SuJbfBqKXDc35qoSzGf5rzv",
+  agency: "price_1SuK15BqKXDc35qoi2xUQewc",
 };
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
