@@ -635,7 +635,7 @@ function DemoSection() {
 }
 
 // Pricing Section
-function PricingSection({ onContactSales }: { onContactSales: () => void }) {
+function PricingSection({ onUpgradeClick }: { onUpgradeClick: (tier: "pro" | "agency") => void }) {
   const plans = [
     {
       name: "Free",
@@ -650,7 +650,8 @@ function PricingSection({ onContactSales }: { onContactSales: () => void }) {
         "Community support"
       ],
       cta: "Start Free",
-      ctaAction: "auth",
+      ctaAction: "auth" as const,
+      tier: null,
       popular: false
     },
     {
@@ -669,8 +670,9 @@ function PricingSection({ onContactSales }: { onContactSales: () => void }) {
         "Priority support",
         "API access"
       ],
-      cta: "Get Pro",
-      ctaAction: "auth",
+      cta: "Upgrade to Pro",
+      ctaAction: "upgrade" as const,
+      tier: "pro" as const,
       popular: true
     },
     {
@@ -689,8 +691,9 @@ function PricingSection({ onContactSales }: { onContactSales: () => void }) {
         "Custom integrations",
         "SSO & advanced security"
       ],
-      cta: "Contact Sales",
-      ctaAction: "contact",
+      cta: "Upgrade to Agency",
+      ctaAction: "upgrade" as const,
+      tier: "agency" as const,
       popular: false
     }
   ];
@@ -763,10 +766,13 @@ function PricingSection({ onContactSales }: { onContactSales: () => void }) {
                       </li>
                     ))}
                   </ul>
-                  {plan.ctaAction === "contact" ? (
+                  {plan.ctaAction === "upgrade" && plan.tier ? (
                     <Button 
-                      onClick={onContactSales}
-                      className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+                      onClick={() => onUpgradeClick(plan.tier!)}
+                      className={`w-full ${plan.tier === "agency" 
+                        ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white" 
+                        : "gradient-primary text-primary-foreground"
+                      }`}
                     >
                       {plan.cta}
                       <ChevronRight className="h-4 w-4 ml-1" />
@@ -976,6 +982,20 @@ Footer.displayName = "Footer";
 // Main Landing Page
 export default function Landing() {
   const [contactSalesOpen, setContactSalesOpen] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  // Handle upgrade button clicks from pricing section
+  const handleUpgradeClick = (tier: "pro" | "agency") => {
+    if (user) {
+      // User is logged in - redirect to dashboard with upgrade intent
+      // Dashboard will handle the checkout flow
+      navigate(`/dashboard?upgrade=${tier}`);
+    } else {
+      // User is logged out - redirect to auth with return state
+      navigate(`/auth?redirect=/dashboard&upgrade=${tier}`);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -985,7 +1005,7 @@ export default function Landing() {
       <ProblemSection />
       <SolutionSection />
       <DemoSection />
-      <PricingSection onContactSales={() => setContactSalesOpen(true)} />
+      <PricingSection onUpgradeClick={handleUpgradeClick} />
       <FAQSection />
       <CTASection />
       <Footer />

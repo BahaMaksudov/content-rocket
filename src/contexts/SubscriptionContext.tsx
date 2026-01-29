@@ -80,8 +80,9 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
 
       if (data?.url) {
-        console.log("Opening checkout URL:", data.url);
-        window.open(data.url, "_blank");
+        console.log("Redirecting to Stripe checkout URL:", data.url);
+        // Use direct navigation for mobile compatibility (window.open is often blocked)
+        window.location.href = data.url;
       } else {
         throw new Error("No checkout URL received from server");
       }

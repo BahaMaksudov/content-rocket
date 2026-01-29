@@ -143,7 +143,7 @@ export function PremiumModal({ open, onOpenChange, feature, tier = "pro" }: Prem
             }`}
             size="lg"
           >
-            {isLoading ? "Loading..." : `Upgrade to ${tierConfig.name}`}
+            {isLoading ? "Redirecting to Stripe..." : `Upgrade to ${tierConfig.name}`}
           </Button>
           <Button
             variant="ghost"

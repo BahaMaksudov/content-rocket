@@ -1,5 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { YouTubeInput } from "@/components/dashboard/YouTubeInput";
 import { GenerationSettings } from "@/components/dashboard/GenerationSettings";
@@ -10,7 +12,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { useGenerationCredits } from "@/hooks/use-generation-credits";
-import { trackGenerationStarted } from "@/lib/posthog";
+import { trackGenerationStarted, trackUpgradeClicked } from "@/lib/posthog";
+import { toast as sonnerToast } from "sonner";
 
 export interface GeneratedContent {
   twitterHooks: string[];
@@ -21,7 +24,9 @@ export interface GeneratedContent {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { openCheckout, loading: subscriptionLoading } = useSubscription();
   const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [transcript, setTranscript] = useState("");
   const [transcriptMethod, setTranscriptMethod] = useState<"auto" | "manual" | null>(null);
   const [videoTitle, setVideoTitle] = useState("");
@@ -32,6 +37,7 @@ export default function Dashboard() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
+  const [upgradeProcessed, setUpgradeProcessed] = useState(false);
   
   // Generation credits tracking
   const { canGenerate, incrementCredits, refreshCredits } = useGenerationCredits();
@@ -45,6 +51,27 @@ export default function Dashboard() {
   // Ref for scrolling to YouTube input
   const youtubeInputRef = useRef<HTMLDivElement>(null);
 
+  // Handle upgrade query parameter from landing page
+  useEffect(() => {
+    const upgradeTier = searchParams.get("upgrade") as "pro" | "agency" | null;
+    
+    if (upgradeTier && !subscriptionLoading && !upgradeProcessed) {
+      setUpgradeProcessed(true);
+      
+      // Clear the upgrade param from URL
+      searchParams.delete("upgrade");
+      setSearchParams(searchParams, { replace: true });
+      
+      // Track and trigger checkout
+      trackUpgradeClicked(upgradeTier, "landing_page_redirect");
+      
+      openCheckout(upgradeTier).catch((error) => {
+        console.error("Checkout error from landing redirect:", error);
+        const errorMessage = error instanceof Error ? error.message : "Failed to start checkout";
+        sonnerToast.error(errorMessage);
+      });
+    }
+  }, [searchParams, setSearchParams, subscriptionLoading, upgradeProcessed, openCheckout]);
   // Fetch brand voices and auto-select default
   const { data: brandVoices } = useQuery({
     queryKey: ["brandVoices", user?.id],
