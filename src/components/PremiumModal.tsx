@@ -68,12 +68,20 @@ export function PremiumModal({ open, onOpenChange, feature, tier = "pro" }: Prem
     : feature === "brand-voice"
     ? "Brand Voice customization"
     : feature === "generation-limit"
-    ? "You've reached your free tier limit of 5 generations this month"
+    ? "You've reached your limit! Upgrade to Pro or Agency to keep generating high-quality content"
     : isAgencyTier
     ? "Agency features"
     : "this feature";
 
   const isLimitReached = feature === "generation-limit" || feature === "youtube";
+  
+  const dialogTitle = isLimitReached 
+    ? "You've Reached Your Limit!" 
+    : `Upgrade to ${tierConfig.name}`;
+    
+  const dialogDescription = isLimitReached 
+    ? featureMessage
+    : `${featureMessage} is a premium feature. Upgrade to unlock all ${tierConfig.name} features.`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -91,13 +99,10 @@ export function PremiumModal({ open, onOpenChange, feature, tier = "pro" }: Prem
             )}
           </div>
           <DialogTitle className="text-xl">
-            {isLimitReached ? "Generation Limit Reached" : `Upgrade to ${tierConfig.name}`}
+            {dialogTitle}
           </DialogTitle>
           <DialogDescription className="text-base">
-            {isLimitReached 
-              ? `${featureMessage}. Upgrade to unlock more generations.`
-              : `${featureMessage} is a premium feature. Upgrade to unlock all ${tierConfig.name} features.`
-            }
+            {dialogDescription}
           </DialogDescription>
         </DialogHeader>
 

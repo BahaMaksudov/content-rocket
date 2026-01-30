@@ -151,7 +151,28 @@ export default function Dashboard() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Check for insufficient credits error from edge function
+        if (error.message?.includes("INSUFFICIENT_CREDITS") || 
+            error.context?.status === 402 ||
+            (typeof error.message === 'string' && error.message.includes("402"))) {
+          // Refresh credits to sync UI state
+          await refreshCredits();
+          setShowCreditsModal(true);
+          return;
+        }
+        throw error;
+      }
+
+      // Also check for error in data response (edge function might return error in body)
+      if (data?.error) {
+        if (data.code === "INSUFFICIENT_CREDITS" || data.error?.includes("INSUFFICIENT_CREDITS")) {
+          await refreshCredits();
+          setShowCreditsModal(true);
+          return;
+        }
+        throw new Error(data.error);
+      }
 
       setGeneratedContent(data);
       
@@ -188,10 +209,21 @@ export default function Dashboard() {
       });
     } catch (error: any) {
       console.error("Generation error:", error);
+      
+      // Check for 402/insufficient credits in catch block as well
+      const errorMessage = error?.message || "";
+      if (errorMessage.includes("INSUFFICIENT_CREDITS") || 
+          errorMessage.includes("402") ||
+          error?.context?.status === 402) {
+        await refreshCredits();
+        setShowCreditsModal(true);
+        return;
+      }
+      
       toast({
         variant: "destructive",
         title: "Generation failed",
-        description: error.message || "Failed to generate content. Please try again.",
+        description: errorMessage || "Failed to generate content. Please try again.",
       });
     } finally {
       setIsGenerating(false);
