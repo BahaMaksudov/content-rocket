@@ -44,7 +44,7 @@ export default function Dashboard() {
   
   // Global Reach state
   const [globalReachEnabled, setGlobalReachEnabled] = useState(false);
-  const [targetLanguage, setTargetLanguage] = useState("spanish");
+  const [targetLanguage, setTargetLanguage] = useState("english");
   
   // Ref for scrolling to content output
   const contentOutputRef = useRef<HTMLDivElement>(null);

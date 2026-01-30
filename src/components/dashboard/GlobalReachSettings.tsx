@@ -11,6 +11,7 @@ interface GlobalReachSettingsProps {
 }
 
 const languages = [
+  { value: "english", label: "English", flag: "🇺🇸" },
   { value: "spanish", label: "Spanish", flag: "🇪🇸" },
   { value: "hindi", label: "Hindi", flag: "🇮🇳" },
   { value: "mandarin", label: "Mandarin", flag: "🇨🇳" },
