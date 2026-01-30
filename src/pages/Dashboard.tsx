@@ -152,25 +152,53 @@ export default function Dashboard() {
       });
 
       if (error) {
-        // Check for insufficient credits error from edge function
-        if (error.message?.includes("INSUFFICIENT_CREDITS") || 
-            error.context?.status === 402 ||
-            (typeof error.message === 'string' && error.message.includes("402"))) {
-          // Refresh credits to sync UI state
+        const status = error?.context?.status;
+        const message = typeof error?.message === "string" ? error.message : "";
+
+        // Project-level AI gateway exhaustion (NOT user credits)
+        if (
+          status === 402 ||
+          status === 503 ||
+          message.includes("AI_CREDITS_EXHAUSTED") ||
+          message.toLowerCase().includes("ai credits exhausted")
+        ) {
+          toast({
+            variant: "destructive",
+            title: "AI service credits exhausted",
+            description:
+              "This project’s AI service has run out of credits. Please add more credits to resume generating content.",
+          });
+          return;
+        }
+
+        // (Optional) If we ever enforce user credits server-side, handle it explicitly by code.
+        if (message.includes("INSUFFICIENT_CREDITS")) {
           await refreshCredits();
           setShowCreditsModal(true);
           return;
         }
+
         throw error;
       }
 
       // Also check for error in data response (edge function might return error in body)
       if (data?.error) {
+        if (data.code === "AI_CREDITS_EXHAUSTED" || String(data.error).toLowerCase().includes("ai service credits")) {
+          toast({
+            variant: "destructive",
+            title: "AI service credits exhausted",
+            description:
+              "This project’s AI service has run out of credits. Please add more credits to resume generating content.",
+          });
+          return;
+        }
+
         if (data.code === "INSUFFICIENT_CREDITS" || data.error?.includes("INSUFFICIENT_CREDITS")) {
           await refreshCredits();
           setShowCreditsModal(true);
           return;
         }
+
         throw new Error(data.error);
       }
 
@@ -210,11 +238,26 @@ export default function Dashboard() {
     } catch (error: any) {
       console.error("Generation error:", error);
       
-      // Check for 402/insufficient credits in catch block as well
-      const errorMessage = error?.message || "";
-      if (errorMessage.includes("INSUFFICIENT_CREDITS") || 
-          errorMessage.includes("402") ||
-          error?.context?.status === 402) {
+      const status = error?.context?.status;
+      const errorMessage = typeof error?.message === "string" ? error.message : "";
+
+      // Project-level AI gateway exhaustion (NOT user credits)
+      if (
+        status === 402 ||
+        status === 503 ||
+        errorMessage.includes("AI_CREDITS_EXHAUSTED") ||
+        errorMessage.toLowerCase().includes("ai credits exhausted")
+      ) {
+        toast({
+          variant: "destructive",
+          title: "AI service credits exhausted",
+          description:
+            "This project’s AI service has run out of credits. Please add more credits to resume generating content.",
+        });
+        return;
+      }
+
+      if (errorMessage.includes("INSUFFICIENT_CREDITS")) {
         await refreshCredits();
         setShowCreditsModal(true);
         return;

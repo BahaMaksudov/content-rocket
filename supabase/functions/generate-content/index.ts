@@ -215,17 +215,22 @@ Analyze this transcript deeply. Extract the most compelling insights, stories, a
         );
       }
       
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "AI credits exhausted. Please add credits to continue." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+       // NOTE: 402 is used by the AI gateway for project-level credit exhaustion.
+       // We purposely map it to 503 so the client doesn't confuse it with *user* credit exhaustion.
+       if (response.status === 402) {
+         return new Response(
+           JSON.stringify({
+             code: "AI_CREDITS_EXHAUSTED",
+             error: "AI service credits are exhausted for this project. Please add more credits to continue.",
+           }),
+           { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+         );
+       }
 
-      return new Response(
-        JSON.stringify({ error: "AI generation failed" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+       return new Response(
+         JSON.stringify({ error: "AI generation failed" }),
+         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+       );
     }
 
     const data = await response.json();
