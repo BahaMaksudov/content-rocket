@@ -16,6 +16,7 @@ interface ContentOutputProps {
   isGenerating: boolean;
   onUpdateContent: (content: GeneratedContent) => void;
   targetLanguage?: string | null;
+  streamingText?: string;
 }
 
 function CopyButton({ text, contentType, platform }: { text: string; contentType?: string; platform?: string }) {
@@ -102,7 +103,7 @@ function EditableContent({
   );
 }
 
-export function ContentOutput({ content, isGenerating, onUpdateContent, targetLanguage }: ContentOutputProps) {
+export function ContentOutput({ content, isGenerating, onUpdateContent, targetLanguage, streamingText }: ContentOutputProps) {
   const { toast } = useToast();
   const [showPreview, setShowPreview] = useState(false);
   const [activeTab, setActiveTab] = useState("twitter");
@@ -145,14 +146,29 @@ ${content.blogPost}
 
   if (isGenerating) {
     return (
-      <Card className="border-border bg-card h-full flex items-center justify-center min-h-[500px]">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
-          <div>
-            <p className="font-medium">Generating all platform assets...</p>
-            <p className="text-sm text-muted-foreground">Creating X hooks, LinkedIn post, TikTok scripts, and blog post</p>
-          </div>
-        </div>
+      <Card className="border-border bg-card min-h-[500px]">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            Generating content...
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {streamingText ? (
+            <div className="p-4 rounded-lg bg-muted/50 border border-border">
+              <p className="text-sm text-muted-foreground mb-2">Streaming response:</p>
+              <pre className="whitespace-pre-wrap text-sm font-mono max-h-[400px] overflow-y-auto">
+                {streamingText}
+                <span className="inline-block w-2 h-4 bg-primary animate-pulse ml-1" />
+              </pre>
+            </div>
+          ) : (
+            <div className="text-center space-y-4 py-12">
+              <p className="font-medium">Starting generation...</p>
+              <p className="text-sm text-muted-foreground">Creating X hooks, LinkedIn post, TikTok scripts, and blog post</p>
+            </div>
+          )}
+        </CardContent>
       </Card>
     );
   }

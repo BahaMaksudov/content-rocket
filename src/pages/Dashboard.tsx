@@ -36,6 +36,7 @@ export default function Dashboard() {
   const [audience, setAudience] = useState("general");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null);
+  const [streamingText, setStreamingText] = useState("");
   const [showCreditsModal, setShowCreditsModal] = useState(false);
   const [upgradeProcessed, setUpgradeProcessed] = useState(false);
   
@@ -135,74 +136,107 @@ export default function Dashboard() {
     try {
       const selectedVoice = brandVoices?.find(v => v.id === selectedBrandVoice);
       
-      const { data, error } = await supabase.functions.invoke("generate-content", {
-        body: {
-          transcript,
-          tone,
-          audience,
-          brandVoice: selectedVoice ? {
-            name: selectedVoice.name,
-            writingStyle: selectedVoice.writing_style,
-            tone: selectedVoice.tone,
-            keyPhrases: selectedVoice.key_phrases,
-            targetAudience: selectedVoice.target_audience,
-          } : null,
-          translateTo: globalReachEnabled ? targetLanguage : null,
-        },
-      });
+      // Use streaming for real-time feedback
+      setStreamingText("");
+      setGeneratedContent(null);
+      
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-content`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({
+            transcript,
+            tone,
+            audience,
+            brandVoice: selectedVoice ? {
+              name: selectedVoice.name,
+              writingStyle: selectedVoice.writing_style,
+              tone: selectedVoice.tone,
+              keyPhrases: selectedVoice.key_phrases,
+              targetAudience: selectedVoice.target_audience,
+            } : null,
+            translateTo: globalReachEnabled ? targetLanguage : null,
+            stream: true,
+          }),
+        }
+      );
 
-      if (error) {
-        const status = error?.context?.status;
-        const message = typeof error?.message === "string" ? error.message : "";
-
-        // Project-level AI gateway exhaustion (NOT user credits)
-        if (
-          status === 402 ||
-          status === 503 ||
-          message.includes("AI_CREDITS_EXHAUSTED") ||
-          message.toLowerCase().includes("ai credits exhausted")
-        ) {
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        
+        if (response.status === 503 || errorData?.code === "AI_CREDITS_EXHAUSTED") {
           toast({
             variant: "destructive",
             title: "AI service credits exhausted",
-            description:
-              "This project’s AI service has run out of credits. Please add more credits to resume generating content.",
+            description: "This project's AI service has run out of credits. Please add more credits to resume generating content.",
           });
           return;
         }
-
-        // (Optional) If we ever enforce user credits server-side, handle it explicitly by code.
-        if (message.includes("INSUFFICIENT_CREDITS")) {
-          await refreshCredits();
-          setShowCreditsModal(true);
-          return;
-        }
-
-        throw error;
-      }
-
-      // Also check for error in data response (edge function might return error in body)
-      if (data?.error) {
-        if (data.code === "AI_CREDITS_EXHAUSTED" || String(data.error).toLowerCase().includes("ai service credits")) {
+        
+        if (response.status === 429) {
           toast({
             variant: "destructive",
-            title: "AI service credits exhausted",
-            description:
-              "This project’s AI service has run out of credits. Please add more credits to resume generating content.",
+            title: "Rate limit exceeded",
+            description: "Please wait a moment and try again.",
           });
           return;
         }
-
-        if (data.code === "INSUFFICIENT_CREDITS" || data.error?.includes("INSUFFICIENT_CREDITS")) {
-          await refreshCredits();
-          setShowCreditsModal(true);
-          return;
-        }
-
-        throw new Error(data.error);
+        
+        throw new Error(errorData?.error || "Generation failed");
       }
 
-      setGeneratedContent(data);
+      // Process streaming response
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let finalContent: GeneratedContent | null = null;
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split("\n");
+
+          for (const line of lines) {
+            if (line.startsWith("data: ")) {
+              const data = line.slice(6);
+              if (data === "[DONE]") continue;
+
+              try {
+                const parsed = JSON.parse(data);
+                
+                if (parsed.type === "delta") {
+                  setStreamingText(prev => prev + parsed.content);
+                } else if (parsed.type === "status") {
+                  // Show translation status
+                  sonnerToast.info(parsed.message);
+                } else if (parsed.type === "complete") {
+                  finalContent = parsed.content;
+                  setGeneratedContent(parsed.content);
+                  setStreamingText("");
+                } else if (parsed.type === "error") {
+                  throw new Error(parsed.error);
+                }
+              } catch (e) {
+                // Skip malformed JSON lines
+                if (data !== "[DONE]" && data.trim()) {
+                  console.log("Skipping non-JSON line:", data);
+                }
+              }
+            }
+          }
+        }
+      }
+
+      if (!finalContent) {
+        throw new Error("No content received from stream");
+      }
       
       // Scroll to top of content output after generation
       setTimeout(() => {
@@ -219,10 +253,10 @@ export default function Dashboard() {
         brand_voice_id: selectedBrandVoice,
         tone,
         audience,
-        twitter_hooks: data.twitterHooks,
-        linkedin_post: data.linkedinPost,
-        short_form_scripts: data.shortFormScripts,
-        blog_post: data.blogPost,
+        twitter_hooks: finalContent.twitterHooks,
+        linkedin_post: finalContent.linkedinPost,
+        short_form_scripts: finalContent.shortFormScripts,
+        blog_post: finalContent.blogPost,
         target_language: globalReachEnabled ? targetLanguage : null,
       });
 
@@ -333,6 +367,7 @@ export default function Dashboard() {
               isGenerating={isGenerating}
               onUpdateContent={handleUpdateContent}
               targetLanguage={globalReachEnabled ? targetLanguage : null}
+              streamingText={streamingText}
             />
           </div>
         </div>
