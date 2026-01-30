@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Sparkles, Mic, Crown, Rocket, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSubscription } from "@/contexts/SubscriptionContext";
-import { useCredits, FREE_TIER_LIMIT } from "@/hooks/use-credits";
+import { useCredits } from "@/hooks/use-credits";
 import { PremiumModal } from "@/components/PremiumModal";
 import { GlobalReachSettings } from "./GlobalReachSettings";
 
@@ -64,8 +64,8 @@ export function GenerationSettings({
   targetLanguage,
   setTargetLanguage,
 }: GenerationSettingsProps) {
-  const { isPro } = useSubscription();
-  const { canUseCredits, creditsAvailable, loading: creditsLoading } = useCredits();
+  const { isPro, isAgency } = useSubscription();
+  const { hasCredits, creditsUsed, creditLimit, loading: creditsLoading } = useCredits();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
 
   const handleBrandVoiceChange = (value: string) => {
@@ -76,8 +76,10 @@ export function GenerationSettings({
     setSelectedBrandVoice(value === "none" ? null : value);
   };
 
-  const isCreditsExhausted = !isPro && !canUseCredits;
-  const showCreditsWarning = !isPro && creditsAvailable <= 2 && creditsAvailable > 0;
+  // Agency users have unlimited, Pro users have 50, Free users have 5
+  const creditsRemaining = isAgency ? Infinity : Math.max(0, creditLimit - creditsUsed);
+  const isCreditsExhausted = !isAgency && !hasCredits;
+  const showCreditsWarning = !isAgency && creditsRemaining <= (isPro ? 10 : 2) && creditsRemaining > 0;
 
   return (
     <Card className="border-border bg-card">
@@ -188,7 +190,7 @@ export function GenerationSettings({
           <div className="flex items-center gap-2 p-3 rounded-lg bg-warning/10 border border-warning/30 text-warning-foreground">
             <AlertCircle className="h-4 w-4 flex-shrink-0" />
             <span className="text-sm font-medium">
-              Only {creditsAvailable} credit{creditsAvailable !== 1 ? 's' : ''} remaining
+              Only {creditsRemaining} credit{creditsRemaining !== 1 ? 's' : ''} remaining
             </span>
           </div>
         )}
@@ -223,8 +225,8 @@ export function GenerationSettings({
             )}
           </Button>
 
-          {/* Credits remaining badge for free tier */}
-          {!isPro && !creditsLoading && (
+          {/* Credits remaining badge for Free and Pro users (Agency has unlimited) */}
+          {!isAgency && !creditsLoading && (
             <div className="flex justify-center">
               <Badge 
                 variant="outline" 
@@ -236,7 +238,7 @@ export function GenerationSettings({
                       : "border-muted-foreground/30 text-muted-foreground"
                 }`}
               >
-                {creditsAvailable} credits remaining
+                {creditsRemaining} / {creditLimit} credits remaining
               </Badge>
             </div>
           )}
