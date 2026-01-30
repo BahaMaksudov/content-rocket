@@ -1,9 +1,49 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
+console.log("generate-content function loaded");
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform",
 };
+
+function extractAndParseJSON(content: string): any {
+  let jsonStr = content.trim();
+  
+  // Remove markdown code fences (```json ... ``` or ``` ... ```)
+  if (jsonStr.startsWith("```")) {
+    jsonStr = jsonStr.replace(/^```(?:json)?\s*\n?/, "");
+    jsonStr = jsonStr.replace(/\n?```\s*$/, "");
+  }
+  
+  // Also try regex match as fallback
+  if (jsonStr.includes("```")) {
+    const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (jsonMatch) {
+      jsonStr = jsonMatch[1].trim();
+    }
+  }
+  
+  // Try direct parsing first
+  try {
+    return JSON.parse(jsonStr);
+  } catch (e) {
+    console.log("Direct JSON parse failed, attempting repair...");
+  }
+  
+  // Try to fix common JSON issues
+  // 1. Fix trailing commas before closing braces/brackets
+  jsonStr = jsonStr.replace(/,(\s*[}\]])/g, '$1');
+  
+  // 2. Try to find valid JSON object boundaries
+  const firstBrace = jsonStr.indexOf('{');
+  const lastBrace = jsonStr.lastIndexOf('}');
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
+  }
+  
+  return JSON.parse(jsonStr);
+}
 
 async function translateContent(
   content: any,
@@ -34,7 +74,7 @@ CRITICAL RULES:
 Content to translate:
 ${JSON.stringify(content, null, 2)}
 
-Return ONLY valid JSON with the same structure but translated values.`;
+Return ONLY valid JSON with the same structure but translated values. Do NOT include markdown code fences.`;
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -60,17 +100,12 @@ Return ONLY valid JSON with the same structure but translated values.`;
   const data = await response.json();
   const translatedContent = data.choices?.[0]?.message?.content;
 
-  // Parse the translated JSON
-  let jsonStr = translatedContent;
-  const jsonMatch = translatedContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (jsonMatch) {
-    jsonStr = jsonMatch[1].trim();
-  }
-
-  return JSON.parse(jsonStr);
+  return extractAndParseJSON(translatedContent);
 }
 
 serve(async (req) => {
+  console.log("Function triggered - method:", req.method);
+  
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -167,7 +202,7 @@ Generate the following content with maximum engagement potential:
    - Conclusion with CTA
    - Approximately 500 words
 
-Respond with a JSON object in exactly this format:
+CRITICAL: Return ONLY a valid JSON object with NO markdown code fences. The response must be parseable JSON.
 {
   "twitterHooks": ["hook1", "hook2", "hook3", "hook4", "hook5"],
   "linkedinPost": "full linkedin post text with line breaks",
@@ -185,7 +220,9 @@ Respond with a JSON object in exactly this format:
 ${transcript.substring(0, 15000)}
 ---
 
-Analyze this transcript deeply. Extract the most compelling insights, stories, and actionable advice. Then generate the multi-platform content following the exact JSON format specified. Ensure each piece is optimized for its platform's unique audience and algorithm.`;
+Analyze this transcript deeply. Extract the most compelling insights, stories, and actionable advice. Then generate the multi-platform content following the exact JSON format specified. Return ONLY valid JSON, no code fences.`;
+
+    console.log("Calling OpenAI API with gpt-4o-mini...");
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -201,8 +238,11 @@ Analyze this transcript deeply. Extract the most compelling insights, stories, a
         ],
         temperature: 0.7,
         max_tokens: 6000,
+        response_format: { type: "json_object" },
       }),
     });
+
+    console.log("OpenAI API response status:", response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -246,27 +286,8 @@ Analyze this transcript deeply. Extract the most compelling insights, stories, a
 
     console.log("Raw AI response:", content.substring(0, 500));
 
-    // Parse the JSON response - strip markdown code fences if present
-    let jsonStr = content.trim();
-    
-    // Remove markdown code fences (```json ... ``` or ``` ... ```)
-    if (jsonStr.startsWith("```")) {
-      // Remove opening fence (with optional language identifier)
-      jsonStr = jsonStr.replace(/^```(?:json)?\s*\n?/, "");
-      // Remove closing fence
-      jsonStr = jsonStr.replace(/\n?```\s*$/, "");
-    }
-    
-    // Also try regex match as fallback
-    if (jsonStr.includes("```")) {
-      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) {
-        jsonStr = jsonMatch[1].trim();
-      }
-    }
-
     try {
-      let generatedContent = JSON.parse(jsonStr);
+      let generatedContent = extractAndParseJSON(content);
       
       // Validate the structure
       if (!generatedContent.twitterHooks || !generatedContent.linkedinPost || 
@@ -301,7 +322,7 @@ Analyze this transcript deeply. Extract the most compelling insights, stories, a
       );
     } catch (parseError) {
       console.error("Failed to parse AI response:", parseError);
-      console.error("Content was:", jsonStr);
+      console.error("Content was:", content);
       
       return new Response(
         JSON.stringify({ error: "Failed to parse generated content" }),
