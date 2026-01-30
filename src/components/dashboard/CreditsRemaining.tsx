@@ -43,18 +43,18 @@ export function CreditsRemaining() {
       isExhausted 
         ? "bg-destructive/10 border-destructive/30" 
         : isLow 
-          ? "bg-amber-500/10 border-amber-500/30" 
+          ? "bg-warning/10 border-warning/30" 
           : "bg-sidebar-accent/30 border-sidebar-border"
     }`}>
       <div className="flex items-center justify-between text-sm mb-2">
         <span className="flex items-center gap-1.5 font-medium text-foreground">
           <Zap className={`h-4 w-4 ${
-            isExhausted ? "text-destructive" : isLow ? "text-amber-500" : "text-primary"
+            isExhausted ? "text-destructive" : isLow ? "text-warning" : "text-primary"
           }`} />
           Credits Remaining
         </span>
         <span className={`font-semibold ${
-          isExhausted ? "text-destructive" : isLow ? "text-amber-500" : "text-primary"
+          isExhausted ? "text-destructive" : isLow ? "text-warning" : "text-primary"
         }`}>
           {creditsRemaining} / {FREE_TIER_LIMIT}
         </span>
@@ -65,7 +65,7 @@ export function CreditsRemaining() {
           isExhausted 
             ? "[&>div]:bg-destructive" 
             : isLow 
-              ? "[&>div]:bg-amber-500" 
+              ? "[&>div]:bg-warning" 
               : ""
         }`}
       />
