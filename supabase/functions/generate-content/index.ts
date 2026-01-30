@@ -36,14 +36,14 @@ ${JSON.stringify(content, null, 2)}
 
 Return ONLY valid JSON with the same structure but translated values.`;
 
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
+      model: "gpt-4o",
       messages: [
         { role: "user", content: translationPrompt },
       ],
@@ -85,11 +85,11 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      console.error("LOVABLE_API_KEY not configured");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_API_KEY) {
+      console.error("OPENAI_API_KEY not configured");
       return new Response(
-        JSON.stringify({ error: "AI service not configured" }),
+        JSON.stringify({ error: "OpenAI API key not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -187,14 +187,14 @@ ${transcript.substring(0, 15000)}
 
 Analyze this transcript deeply. Extract the most compelling insights, stories, and actionable advice. Then generate the multi-platform content following the exact JSON format specified. Ensure each piece is optimized for its platform's unique audience and algorithm.`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-pro",
+        model: "gpt-4o",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -280,7 +280,7 @@ Analyze this transcript deeply. Extract the most compelling insights, stories, a
       if (translateTo && translateTo !== "none") {
         console.log("Translating content to:", translateTo);
         try {
-          generatedContent = await translateContent(generatedContent, translateTo, brandVoice, LOVABLE_API_KEY);
+          generatedContent = await translateContent(generatedContent, translateTo, brandVoice, OPENAI_API_KEY);
           console.log("Translation successful");
         } catch (translateError) {
           console.error("Translation failed:", translateError);
