@@ -146,24 +146,29 @@ ${content.blogPost}
 
   if (isGenerating) {
     return (
-      <Card className="border-border bg-card min-h-[500px] flex items-center justify-center">
-        <div className="text-center space-y-6 p-8">
-          <div className="relative mx-auto w-20 h-20">
-            <div className="absolute inset-0 rounded-full border-4 border-muted" />
-            <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-          </div>
-          <div className="space-y-2">
-            <p className="text-xl font-semibold">Generating Content...</p>
-            <p className="text-sm text-muted-foreground max-w-sm">
-              Creating X hooks, LinkedIn post, TikTok scripts, and blog post
-            </p>
-            {targetLanguage && (
-              <p className="text-sm text-muted-foreground">
-                Translating to {targetLanguage}...
-              </p>
-            )}
-          </div>
-        </div>
+      <Card className="border-border bg-card min-h-[500px]">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            Generating content...
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {streamingText ? (
+            <div className="p-4 rounded-lg bg-muted/50 border border-border">
+              <p className="text-sm text-muted-foreground mb-2">Streaming response:</p>
+              <pre className="whitespace-pre-wrap text-sm font-mono max-h-[400px] overflow-y-auto">
+                {streamingText}
+                <span className="inline-block w-2 h-4 bg-primary animate-pulse ml-1" />
+              </pre>
+            </div>
+          ) : (
+            <div className="text-center space-y-4 py-12">
+              <p className="font-medium">Starting generation...</p>
+              <p className="text-sm text-muted-foreground">Creating X hooks, LinkedIn post, TikTok scripts, and blog post</p>
+            </div>
+          )}
+        </CardContent>
       </Card>
     );
   }
