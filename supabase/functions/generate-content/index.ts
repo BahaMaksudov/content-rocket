@@ -5,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform",
 };
 
-async function translateContentStreaming(
+async function translateContent(
   content: any,
   targetLanguage: string,
   brandVoice: any,
@@ -43,7 +43,7 @@ Return ONLY valid JSON with the same structure but translated values.`;
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       messages: [
         { role: "user", content: translationPrompt },
       ],
@@ -76,7 +76,7 @@ serve(async (req) => {
   }
 
   try {
-    const { transcript, tone, audience, brandVoice, translateTo, stream } = await req.json();
+    const { transcript, tone, audience, brandVoice, translateTo } = await req.json();
 
     if (!transcript) {
       return new Response(
@@ -94,7 +94,7 @@ serve(async (req) => {
       );
     }
 
-    console.log("Generating content with tone:", tone, "audience:", audience, "translate:", translateTo, "stream:", stream);
+    console.log("Generating content with tone:", tone, "audience:", audience, "translate:", translateTo);
 
     // Build comprehensive brand voice context
     let brandVoiceContext = "";
@@ -187,147 +187,6 @@ ${transcript.substring(0, 15000)}
 
 Analyze this transcript deeply. Extract the most compelling insights, stories, and actionable advice. Then generate the multi-platform content following the exact JSON format specified. Ensure each piece is optimized for its platform's unique audience and algorithm.`;
 
-    // If streaming is requested
-    if (stream) {
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userPrompt },
-          ],
-          temperature: 0.7,
-          max_tokens: 6000,
-          stream: true,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("AI gateway error:", response.status, errorText);
-        
-        if (response.status === 429) {
-          return new Response(
-            JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }),
-            { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-        
-        if (response.status === 402) {
-          return new Response(
-            JSON.stringify({
-              code: "AI_CREDITS_EXHAUSTED",
-              error: "AI service credits are exhausted for this project. Please add more credits to continue.",
-            }),
-            { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-
-        return new Response(
-          JSON.stringify({ error: "AI generation failed" }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      // Create a TransformStream to process the SSE response
-      const encoder = new TextEncoder();
-      const decoder = new TextDecoder();
-      
-      let fullContent = "";
-      
-      const transformStream = new TransformStream({
-        async transform(chunk, controller) {
-          const text = decoder.decode(chunk);
-          const lines = text.split("\n");
-          
-          for (const line of lines) {
-            if (line.startsWith("data: ")) {
-              const data = line.slice(6);
-              if (data === "[DONE]") {
-                // Stream complete - now handle translation if needed
-                if (translateTo && translateTo !== "none") {
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "status", message: "Translating content..." })}\n\n`));
-                  
-                  try {
-                    // Parse and translate the full content
-                    let jsonStr = fullContent.trim();
-                    if (jsonStr.startsWith("```")) {
-                      jsonStr = jsonStr.replace(/^```(?:json)?\s*\n?/, "");
-                      jsonStr = jsonStr.replace(/\n?```\s*$/, "");
-                    }
-                    
-                    const parsedContent = JSON.parse(jsonStr);
-                    const translatedContent = await translateContentStreaming(parsedContent, translateTo, brandVoice, OPENAI_API_KEY);
-                    
-                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "complete", content: translatedContent })}\n\n`));
-                  } catch (translateError) {
-                    console.error("Translation failed:", translateError);
-                    // Return original content with warning
-                    let jsonStr = fullContent.trim();
-                    if (jsonStr.startsWith("```")) {
-                      jsonStr = jsonStr.replace(/^```(?:json)?\s*\n?/, "");
-                      jsonStr = jsonStr.replace(/\n?```\s*$/, "");
-                    }
-                    try {
-                      const parsedContent = JSON.parse(jsonStr);
-                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "complete", content: { ...parsedContent, translationWarning: "Translation failed, returning original content" } })}\n\n`));
-                    } catch {
-                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "error", error: "Failed to parse content" })}\n\n`));
-                    }
-                  }
-                } else {
-                  // No translation needed - parse and send final content
-                  let jsonStr = fullContent.trim();
-                  if (jsonStr.startsWith("```")) {
-                    jsonStr = jsonStr.replace(/^```(?:json)?\s*\n?/, "");
-                    jsonStr = jsonStr.replace(/\n?```\s*$/, "");
-                  }
-                  try {
-                    const parsedContent = JSON.parse(jsonStr);
-                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "complete", content: parsedContent })}\n\n`));
-                  } catch {
-                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "error", error: "Failed to parse content" })}\n\n`));
-                  }
-                }
-                controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-                return;
-              }
-              
-              try {
-                const parsed = JSON.parse(data);
-                const delta = parsed.choices?.[0]?.delta?.content;
-                if (delta) {
-                  fullContent += delta;
-                  // Send the delta to the client
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "delta", content: delta })}\n\n`));
-                }
-              } catch {
-                // Skip malformed JSON
-              }
-            }
-          }
-        },
-      });
-
-      // Pipe the response through our transform
-      const streamResponse = response.body?.pipeThrough(transformStream);
-
-      return new Response(streamResponse, {
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "text/event-stream",
-          "Cache-Control": "no-cache",
-          "Connection": "keep-alive",
-        },
-      });
-    }
-
-    // Non-streaming path (original behavior)
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -335,7 +194,7 @@ Analyze this transcript deeply. Extract the most compelling insights, stories, a
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "gpt-4o",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -421,7 +280,7 @@ Analyze this transcript deeply. Extract the most compelling insights, stories, a
       if (translateTo && translateTo !== "none") {
         console.log("Translating content to:", translateTo);
         try {
-          generatedContent = await translateContentStreaming(generatedContent, translateTo, brandVoice, OPENAI_API_KEY);
+          generatedContent = await translateContent(generatedContent, translateTo, brandVoice, OPENAI_API_KEY);
           console.log("Translation successful");
         } catch (translateError) {
           console.error("Translation failed:", translateError);
