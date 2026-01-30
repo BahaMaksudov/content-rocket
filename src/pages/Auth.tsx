@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { useNavigate, Navigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Rocket, ArrowLeft } from "lucide-react";
+import { Loader2, Rocket, ArrowLeft, RefreshCw } from "lucide-react";
 import { z } from "zod";
+import { VerificationPending } from "@/components/auth/VerificationPending";
 
 const authSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -19,6 +21,11 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isResendingVerification, setIsResendingVerification] = useState(false);
+  const [showVerificationPending, setShowVerificationPending] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [showResendOption, setShowResendOption] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState("");
   const { signIn, signUp, user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -42,6 +49,45 @@ export default function Auth() {
     return <Navigate to={targetPath} replace />;
   }
 
+  const handleResendVerification = async () => {
+    if (!unverifiedEmail) return;
+    
+    setIsResendingVerification(true);
+    try {
+      const redirectUrl = `${window.location.origin}/auth/callback`;
+      
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: unverifiedEmail,
+        options: {
+          emailRedirectTo: redirectUrl,
+        },
+      });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Failed to resend email",
+          description: error.message,
+        });
+      } else {
+        toast({
+          title: "Verification email sent!",
+          description: "Please check your inbox and spam folder.",
+        });
+        setShowResendOption(false);
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An unexpected error occurred.",
+      });
+    } finally {
+      setIsResendingVerification(false);
+    }
+  };
+
   const handleAuth = async (action: "login" | "signup") => {
     const validation = authSchema.safeParse({ email, password });
     
@@ -55,38 +101,69 @@ export default function Auth() {
     }
 
     setIsLoading(true);
+    setShowResendOption(false);
 
     try {
-      let result;
-      if (action === "login") {
-        result = await signIn(email, password);
-      } else {
-        result = await signUp(email, password);
-      }
+      if (action === "signup") {
+        const result = await signUp(email, password);
 
-      if (result.error) {
-        let errorMessage = result.error.message;
-        
-        // Handle specific error cases with friendly messages
-        if (errorMessage.includes("User already registered")) {
-          errorMessage = "This email is already registered. Please sign in instead.";
-        } else if (errorMessage.includes("Invalid login credentials")) {
-          errorMessage = "Invalid email or password. Please try again.";
+        if (result.error) {
+          let errorMessage = result.error.message;
+          
+          if (errorMessage.includes("User already registered")) {
+            errorMessage = "This email is already registered. Please sign in instead.";
+          }
+
+          toast({
+            variant: "destructive",
+            title: "Sign Up Failed",
+            description: errorMessage,
+          });
+        } else {
+          // Show verification pending screen instead of redirecting
+          setPendingEmail(email);
+          setShowVerificationPending(true);
         }
-
-        toast({
-          variant: "destructive",
-          title: action === "login" ? "Sign In Failed" : "Sign Up Failed",
-          description: errorMessage,
-        });
       } else {
-        toast({
-          title: action === "login" ? "Welcome back!" : "Account created!",
-          description: action === "signup" ? "Your account has been created successfully." : undefined,
-        });
-        // Navigate to redirect path, preserving upgrade param if present
-        const targetPath = upgradeTier ? `${redirectPath}?upgrade=${upgradeTier}` : redirectPath;
-        navigate(targetPath);
+        // Login flow
+        const result = await signIn(email, password);
+
+        if (result.error) {
+          let errorMessage = result.error.message;
+          
+          // Check for unconfirmed email error
+          if (errorMessage.includes("Email not confirmed") || 
+              errorMessage.includes("email not confirmed") ||
+              errorMessage.includes("not confirmed")) {
+            setUnverifiedEmail(email);
+            setShowResendOption(true);
+            toast({
+              variant: "destructive",
+              title: "Email Not Verified",
+              description: "Please confirm your email address before logging in.",
+            });
+          } else if (errorMessage.includes("Invalid login credentials")) {
+            errorMessage = "Invalid email or password. Please try again.";
+            toast({
+              variant: "destructive",
+              title: "Sign In Failed",
+              description: errorMessage,
+            });
+          } else {
+            toast({
+              variant: "destructive",
+              title: "Sign In Failed",
+              description: errorMessage,
+            });
+          }
+        } else {
+          toast({
+            title: "Welcome back!",
+          });
+          // Navigate to redirect path, preserving upgrade param if present
+          const targetPath = upgradeTier ? `${redirectPath}?upgrade=${upgradeTier}` : redirectPath;
+          navigate(targetPath);
+        }
       }
     } catch (error) {
       toast({
@@ -98,6 +175,20 @@ export default function Auth() {
       setIsLoading(false);
     }
   };
+
+  // Show verification pending screen if user just signed up
+  if (showVerificationPending) {
+    return (
+      <VerificationPending 
+        email={pendingEmail} 
+        onBack={() => {
+          setShowVerificationPending(false);
+          setEmail("");
+          setPassword("");
+        }} 
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -166,6 +257,34 @@ export default function Auth() {
                 >
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign In"}
                 </Button>
+                
+                {/* Resend verification email option */}
+                {showResendOption && (
+                  <div className="mt-4 p-4 rounded-lg bg-muted/50 border border-border">
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Haven't received the verification email?
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleResendVerification}
+                      disabled={isResendingVerification}
+                      className="w-full"
+                    >
+                      {isResendingVerification ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                          Resend Verification Email
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
               </TabsContent>
 
               <TabsContent value="signup" className="space-y-4">
