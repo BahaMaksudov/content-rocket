@@ -4,12 +4,16 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+// Credit limits per tier
 export const FREE_TIER_LIMIT = 5;
+export const PRO_TIER_LIMIT = 50;
+// Agency has unlimited (we use Infinity)
 
 interface Credits {
   creditsAvailable: number;
   creditsUsed: number;
   creditsLastReset: string | null;
+  creditLimit: number;
   /** Single source of truth for "out of credits" state */
   hasCredits: boolean;
   /** Back-compat alias for hasCredits */
@@ -37,13 +41,20 @@ function monthKey(dateIso: string) {
   return `${d.getFullYear()}-${d.getMonth()}`;
 }
 
+function getCreditLimit(tier: string): number {
+  if (tier === "agency") return Infinity;
+  if (tier === "pro") return PRO_TIER_LIMIT;
+  return FREE_TIER_LIMIT;
+}
+
 export function useCredits(): Credits {
   const { user } = useAuth();
   const { tier } = useSubscription();
   const queryClient = useQueryClient();
 
-  // Pro and Agency users have unlimited credits
-  const isUnlimited = tier === "pro" || tier === "agency";
+  // Only Agency users have truly unlimited credits
+  const isUnlimited = tier === "agency";
+  const creditLimit = getCreditLimit(tier);
 
   const computeEffectiveUsed = (profile: {
     credits_used: number | null;
@@ -57,9 +68,14 @@ export function useCredits(): Credits {
 
   // Use React Query to fetch and cache credits with refetchOnWindowFocus for real-time sync
   const { data, isLoading, refetch } = useQuery<CreditsQueryData>({
-    queryKey: ["credits", user?.id],
+    queryKey: ["credits", user?.id, tier],
     queryFn: async () => {
-      if (!user?.id) return { creditsAvailable: FREE_TIER_LIMIT, creditsUsed: 0, creditsLastReset: null };
+      // Agency users have unlimited - no need to track
+      if (isUnlimited) {
+        return { creditsAvailable: Infinity, creditsUsed: 0, creditsLastReset: null };
+      }
+
+      if (!user?.id) return { creditsAvailable: creditLimit, creditsUsed: 0, creditsLastReset: null };
 
       const { data: profile, error } = await supabase
         .from("profiles")
@@ -71,24 +87,23 @@ export function useCredits(): Credits {
 
       if (error) {
         console.error("Error fetching credits:", error);
-        return { creditsAvailable: FREE_TIER_LIMIT, creditsUsed: 0, creditsLastReset: null };
+        return { creditsAvailable: creditLimit, creditsUsed: 0, creditsLastReset: null };
       }
 
       if (!profile) {
-        return { creditsAvailable: FREE_TIER_LIMIT, creditsUsed: 0, creditsLastReset: null };
+        return { creditsAvailable: creditLimit, creditsUsed: 0, creditsLastReset: null };
       }
 
       const lastReset = profile.credits_last_reset;
       const nowIso = new Date().toISOString();
-      const needsMonthlyReset =
-        !lastReset || monthKey(lastReset) !== monthKey(nowIso);
+      const needsMonthlyReset = !lastReset || monthKey(lastReset) !== monthKey(nowIso);
 
       if (needsMonthlyReset) {
-        // Reset *all* relevant counters to keep legacy + unified fields aligned
+        // Reset credits to tier limit for new month
         await supabase
           .from("profiles")
           .update({
-            credits_available: FREE_TIER_LIMIT,
+            credits_available: creditLimit,
             credits_used: 0,
             credits_last_reset: nowIso,
             generations_this_month: 0,
@@ -97,17 +112,17 @@ export function useCredits(): Credits {
           .eq("user_id", user.id);
 
         return {
-          creditsAvailable: FREE_TIER_LIMIT,
+          creditsAvailable: creditLimit,
           creditsUsed: 0,
           creditsLastReset: nowIso,
         };
       }
 
-      // Canonical UI calculation: remaining = TOTAL - USED
+      // Canonical UI calculation: remaining = LIMIT - USED
       const effectiveUsed = computeEffectiveUsed(profile);
-      const effectiveAvailable = Math.max(0, FREE_TIER_LIMIT - effectiveUsed);
+      const effectiveAvailable = Math.max(0, creditLimit - effectiveUsed);
 
-      // Self-heal if stored values drift (prevents UI showing credits when actions block)
+      // Self-heal if stored values drift
       const storedAvailable = profile.credits_available ?? effectiveAvailable;
       const storedUsed = profile.credits_used ?? effectiveUsed;
       const shouldHeal = storedAvailable !== effectiveAvailable || storedUsed !== effectiveUsed;
@@ -129,22 +144,38 @@ export function useCredits(): Credits {
       };
     },
     enabled: !!user,
-    staleTime: 0, // Always consider data stale - refetch when needed
-    refetchOnWindowFocus: true, // Refetch when window is focused
-    refetchOnMount: true, // Refetch when component mounts
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
 
   // Calculate derived values from fresh data
-  const creditsAvailable = data?.creditsAvailable ?? FREE_TIER_LIMIT;
+  const creditsAvailable = data?.creditsAvailable ?? creditLimit;
   const creditsUsed = data?.creditsUsed ?? 0;
   const creditsLastReset = data?.creditsLastReset ?? null;
-  
+
   // Single source of truth for hasCredits
   const hasCredits = isUnlimited || creditsAvailable > 0;
   const canUseCredits = hasCredits;
 
+  // Force refresh credits from server
+  const refreshCredits = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ["credits", user?.id, tier] });
+    await refetch();
+  }, [queryClient, user?.id, tier, refetch]);
+
   const getLatestCredits = useCallback(async () => {
     if (!user?.id) return null;
+
+    // Agency users always have credits
+    if (isUnlimited) {
+      return {
+        creditsAvailable: Infinity,
+        creditsUsed: 0,
+        creditsLastReset: null,
+        hasCredits: true,
+      };
+    }
 
     const { data: profile, error } = await supabase
       .from("profiles")
@@ -160,15 +191,16 @@ export function useCredits(): Credits {
     }
 
     const effectiveUsed = computeEffectiveUsed(profile);
-    const effectiveAvailable = Math.max(0, FREE_TIER_LIMIT - effectiveUsed);
+    const effectiveAvailable = Math.max(0, creditLimit - effectiveUsed);
     const snapshot: CreditsQueryData = {
       creditsAvailable: effectiveAvailable,
       creditsUsed: effectiveUsed,
       creditsLastReset: profile.credits_last_reset ?? null,
     };
 
-    queryClient.setQueryData(["credits", user.id], snapshot);
-    // Keep the DB's derived field in sync (best-effort)
+    queryClient.setQueryData(["credits", user.id, tier], snapshot);
+    
+    // Keep the DB's derived field in sync
     await supabase
       .from("profiles")
       .update({
@@ -179,22 +211,15 @@ export function useCredits(): Credits {
 
     return {
       ...snapshot,
-      hasCredits: isUnlimited || snapshot.creditsAvailable > 0,
+      hasCredits: effectiveAvailable > 0,
     };
-  }, [user?.id, queryClient, isUnlimited]);
-
-  // Force refresh credits from server
-  const refreshCredits = useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: ["credits", user?.id] });
-    await refetch();
-  }, [queryClient, user?.id, refetch]);
+  }, [user?.id, queryClient, isUnlimited, creditLimit, tier]);
 
   // Use one credit after a successful action
-  // IMPORTANT: Fetches fresh data from DB to avoid stale closure issues
   const useCredit = useCallback(async (): Promise<boolean> => {
     if (!user?.id) return false;
 
-    // Pro/Agency users don't need to track
+    // Agency users don't need to track - always allow
     if (isUnlimited) return true;
 
     // Fetch the LATEST credits from the database to avoid stale data
@@ -212,7 +237,7 @@ export function useCredits(): Credits {
     }
 
     const currentUsed = computeEffectiveUsed(freshProfile);
-    const currentAvailable = Math.max(0, FREE_TIER_LIMIT - currentUsed);
+    const currentAvailable = Math.max(0, creditLimit - currentUsed);
 
     // Check if user has credits before using (using fresh data)
     if (currentAvailable <= 0) {
@@ -222,7 +247,7 @@ export function useCredits(): Credits {
     }
 
     const newUsed = currentUsed + 1;
-    const newAvailable = Math.max(0, FREE_TIER_LIMIT - newUsed);
+    const newAvailable = Math.max(0, creditLimit - newUsed);
 
     const { error } = await supabase
       .from("profiles")
@@ -238,20 +263,21 @@ export function useCredits(): Credits {
     }
 
     // Update cache immediately (instant UI), then refetch in background
-    queryClient.setQueryData(["credits", user.id], {
+    queryClient.setQueryData(["credits", user.id, tier], {
       creditsAvailable: newAvailable,
       creditsUsed: newUsed,
       creditsLastReset: freshProfile.credits_last_reset ?? null,
     } satisfies CreditsQueryData);
     void refreshCredits();
-    
+
     return true;
-  }, [user?.id, isUnlimited, refreshCredits, queryClient]);
+  }, [user?.id, isUnlimited, refreshCredits, queryClient, creditLimit, tier]);
 
   return {
     creditsAvailable,
     creditsUsed,
     creditsLastReset,
+    creditLimit,
     hasCredits,
     canUseCredits,
     loading: isLoading,
