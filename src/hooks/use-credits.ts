@@ -49,7 +49,7 @@ function getCreditLimit(tier: string): number {
 
 export function useCredits(): Credits {
   const { user } = useAuth();
-  const { tier } = useSubscription();
+  const { tier, loading: subscriptionLoading } = useSubscription();
   const queryClient = useQueryClient();
 
   // Only Agency users have truly unlimited credits
@@ -67,6 +67,7 @@ export function useCredits(): Credits {
   };
 
   // Use React Query to fetch and cache credits with refetchOnWindowFocus for real-time sync
+  // IMPORTANT: Wait for subscription to load before fetching credits to get correct tier limit
   const { data, isLoading, refetch } = useQuery<CreditsQueryData>({
     queryKey: ["credits", user?.id, tier],
     queryFn: async () => {
@@ -140,14 +141,16 @@ export function useCredits(): Credits {
       return {
         creditsAvailable: effectiveAvailable,
         creditsUsed: effectiveUsed,
-        creditsLastReset: lastReset,
-      };
-    },
-    enabled: !!user,
-    staleTime: 0,
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-  });
+      creditsLastReset: lastReset,
+    };
+  },
+  // Wait for both user AND subscription to be loaded before fetching credits
+  // This ensures we use the correct tier limit (5 for free, 50 for pro, Infinity for agency)
+  enabled: !!user && !subscriptionLoading,
+  staleTime: 0,
+  refetchOnWindowFocus: true,
+  refetchOnMount: true,
+});
 
   // Calculate derived values from fresh data
   const creditsAvailable = data?.creditsAvailable ?? creditLimit;
@@ -280,7 +283,8 @@ export function useCredits(): Credits {
     creditLimit,
     hasCredits,
     canUseCredits,
-    loading: isLoading,
+    // Include subscription loading in the overall loading state
+    loading: isLoading || subscriptionLoading,
     useCredit,
     refreshCredits,
     getLatestCredits,
