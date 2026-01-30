@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 
 export function CreditsRemaining() {
   const { tier } = useSubscription();
-  const { creditsAvailable, creditsUsed, loading } = useCredits();
+  const { creditsUsed, hasCredits, loading } = useCredits();
   
   const isUnlimited = tier === "pro" || tier === "agency";
 
@@ -35,9 +35,11 @@ export function CreditsRemaining() {
     );
   }
 
-  const progressValue = (creditsUsed / FREE_TIER_LIMIT) * 100;
-  const isLow = creditsAvailable <= 2 && creditsAvailable > 0;
-  const isExhausted = creditsAvailable === 0;
+  // Canonical UI calculation: remaining = total - used
+  const creditsRemaining = Math.max(0, FREE_TIER_LIMIT - creditsUsed);
+  const progressValue = Math.min(100, (creditsUsed / FREE_TIER_LIMIT) * 100);
+  const isLow = creditsRemaining <= 2 && creditsRemaining > 0;
+  const isExhausted = !hasCredits;
 
   return (
     <div className={`px-4 py-3 rounded-lg border ${
@@ -80,7 +82,7 @@ export function CreditsRemaining() {
             <ArrowUpRight className="h-3 w-3" />
           </Link>
         ) : (
-          `${creditsAvailable} credits remaining`
+          `${creditsRemaining} credits remaining`
         )}
       </p>
     </div>
