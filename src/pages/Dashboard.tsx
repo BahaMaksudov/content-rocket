@@ -11,7 +11,7 @@ import { PremiumModal } from "@/components/PremiumModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import { useGenerationCredits } from "@/hooks/use-generation-credits";
+import { useCredits } from "@/hooks/use-credits";
 import { trackGenerationStarted, trackUpgradeClicked } from "@/lib/posthog";
 import { toast as sonnerToast } from "sonner";
 
@@ -39,8 +39,8 @@ export default function Dashboard() {
   const [showCreditsModal, setShowCreditsModal] = useState(false);
   const [upgradeProcessed, setUpgradeProcessed] = useState(false);
   
-  // Generation credits tracking
-  const { canGenerate, incrementCredits, refreshCredits } = useGenerationCredits();
+  // Unified credits tracking
+  const { canUseCredits, useCredit, refreshCredits } = useCredits();
   
   // Global Reach state
   const [globalReachEnabled, setGlobalReachEnabled] = useState(false);
@@ -113,8 +113,8 @@ export default function Dashboard() {
       return;
     }
 
-    // Check if user can generate (free tier limit check)
-    if (!canGenerate) {
+    // Check if user can generate (credit check)
+    if (!canUseCredits) {
       setShowCreditsModal(true);
       return;
     }
@@ -198,8 +198,8 @@ export default function Dashboard() {
         target_language: globalReachEnabled ? targetLanguage : null,
       });
 
-      // Increment credits only after successful generation (this also refreshes UI)
-      await incrementCredits();
+      // Use one credit after successful generation (this also refreshes UI)
+      await useCredit();
 
       toast({
         title: "All assets generated!",
@@ -261,6 +261,7 @@ export default function Dashboard() {
                 transcriptMethod={transcriptMethod}
                 youtubeUrl={youtubeUrl}
                 setYoutubeUrl={setYoutubeUrl}
+                onCreditUsed={refreshCredits}
               />
             </div>
             

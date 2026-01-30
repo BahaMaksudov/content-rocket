@@ -125,6 +125,9 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          credits_available: number
+          credits_last_reset: string | null
+          credits_used: number
           email: string | null
           full_name: string | null
           generations_this_month: number
@@ -138,6 +141,9 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          credits_available?: number
+          credits_last_reset?: string | null
+          credits_used?: number
           email?: string | null
           full_name?: string | null
           generations_this_month?: number
@@ -151,6 +157,9 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          credits_available?: number
+          credits_last_reset?: string | null
+          credits_used?: number
           email?: string | null
           full_name?: string | null
           generations_this_month?: number

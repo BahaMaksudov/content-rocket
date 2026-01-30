@@ -1,11 +1,12 @@
 import { Progress } from "@/components/ui/progress";
-import { useGenerationCredits, FREE_TIER_LIMIT } from "@/hooks/use-generation-credits";
+import { useCredits, FREE_TIER_LIMIT } from "@/hooks/use-credits";
 import { useSubscription } from "@/contexts/SubscriptionContext";
-import { Zap, Infinity } from "lucide-react";
+import { BarChart3, Infinity, ArrowUpRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export function CreditsRemaining() {
   const { tier } = useSubscription();
-  const { generationsThisMonth, creditsRemaining, loading } = useGenerationCredits();
+  const { creditsAvailable, creditsUsed, loading } = useCredits();
   
   const isUnlimited = tier === "pro" || tier === "agency";
 
@@ -24,7 +25,7 @@ export function CreditsRemaining() {
         <div className="flex items-center justify-between text-sm mb-1">
           <span className="flex items-center gap-1.5 font-medium text-foreground">
             <Infinity className="h-4 w-4 text-primary" />
-            Unlimited Generations
+            Unlimited Credits
           </span>
         </div>
         <p className="text-xs text-muted-foreground">
@@ -34,9 +35,9 @@ export function CreditsRemaining() {
     );
   }
 
-  const progressValue = ((FREE_TIER_LIMIT - creditsRemaining) / FREE_TIER_LIMIT) * 100;
-  const isLow = creditsRemaining <= 2;
-  const isExhausted = creditsRemaining === 0;
+  const progressValue = (creditsUsed / FREE_TIER_LIMIT) * 100;
+  const isLow = creditsAvailable <= 2 && creditsAvailable > 0;
+  const isExhausted = creditsAvailable === 0;
 
   return (
     <div className={`px-4 py-3 rounded-lg border ${
@@ -48,15 +49,15 @@ export function CreditsRemaining() {
     }`}>
       <div className="flex items-center justify-between text-sm mb-2">
         <span className="flex items-center gap-1.5 font-medium text-foreground">
-          <Zap className={`h-4 w-4 ${
+          <BarChart3 className={`h-4 w-4 ${
             isExhausted ? "text-destructive" : isLow ? "text-warning" : "text-primary"
           }`} />
-          Credits Remaining
+          Monthly Usage
         </span>
-        <span className={`font-semibold ${
-          isExhausted ? "text-destructive" : isLow ? "text-warning" : "text-primary"
+        <span className={`text-xs ${
+          isExhausted ? "text-destructive" : isLow ? "text-warning" : "text-muted-foreground"
         }`}>
-          {creditsRemaining} / {FREE_TIER_LIMIT}
+          {creditsUsed} / {FREE_TIER_LIMIT} used
         </span>
       </div>
       <Progress 
@@ -69,11 +70,18 @@ export function CreditsRemaining() {
               : ""
         }`}
       />
-      <p className="text-xs text-muted-foreground mt-2">
-        {isExhausted 
-          ? "Upgrade to continue creating content"
-          : `${generationsThisMonth} generations used this month`
-        }
+      <p className={`text-xs mt-2 ${isExhausted ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+        {isExhausted ? (
+          <Link 
+            to="/billing" 
+            className="flex items-center gap-1 hover:underline"
+          >
+            0 credits left — Upgrade to Pro
+            <ArrowUpRight className="h-3 w-3" />
+          </Link>
+        ) : (
+          `${creditsAvailable} credits remaining`
+        )}
       </p>
     </div>
   );

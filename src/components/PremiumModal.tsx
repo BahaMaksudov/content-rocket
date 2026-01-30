@@ -64,11 +64,11 @@ export function PremiumModal({ open, onOpenChange, feature, tier = "pro" }: Prem
   };
 
   const featureMessage = feature === "youtube" 
-    ? "You've used all 5 free transcript fetches this month"
+    ? "You have run out of credits. Please upgrade your plan to continue."
     : feature === "brand-voice"
     ? "Brand Voice customization"
     : feature === "generation-limit"
-    ? "You've reached your limit! Upgrade to Pro or Agency to keep generating high-quality content"
+    ? "You have run out of credits. Please upgrade your plan to continue."
     : isAgencyTier
     ? "Agency features"
     : "this feature";
@@ -76,7 +76,7 @@ export function PremiumModal({ open, onOpenChange, feature, tier = "pro" }: Prem
   const isLimitReached = feature === "generation-limit" || feature === "youtube";
   
   const dialogTitle = isLimitReached 
-    ? "You've Reached Your Limit!" 
+    ? "Out of Credits" 
     : `Upgrade to ${tierConfig.name}`;
     
   const dialogDescription = isLimitReached 
