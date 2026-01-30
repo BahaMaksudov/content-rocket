@@ -43,7 +43,7 @@ Return ONLY valid JSON with the same structure but translated values.`;
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "gpt-4o",
+      model: "gpt-4o-mini",
       messages: [
         { role: "user", content: translationPrompt },
       ],
@@ -194,7 +194,7 @@ Analyze this transcript deeply. Extract the most compelling insights, stories, a
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o",
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
