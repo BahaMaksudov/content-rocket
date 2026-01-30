@@ -18,26 +18,45 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  Rocket, Zap, Globe, Image, Eye, ArrowRight, Check, 
-  Play, Clock, Users, TrendingUp, Sparkles, Twitter,
-  Linkedin, Video, FileText, ChevronRight, Star, Building2,
-  Settings, LogOut, LayoutDashboard, ChevronDown
+import {
+  Rocket,
+  Zap,
+  Globe,
+  Image,
+  Eye,
+  ArrowRight,
+  Check,
+  Play,
+  Clock,
+  Users,
+  TrendingUp,
+  Sparkles,
+  Twitter,
+  Linkedin,
+  Video,
+  FileText,
+  ChevronRight,
+  Star,
+  Building2,
+  Settings,
+  LogOut,
+  LayoutDashboard,
+  ChevronDown,
 } from "lucide-react";
 
 // Animation variants
 const fadeInUp = {
   initial: { opacity: 0, y: 30 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.5 }
+  transition: { duration: 0.5 },
 };
 
 const staggerContainer = {
   animate: {
     transition: {
-      staggerChildren: 0.1
-    }
-  }
+      staggerChildren: 0.1,
+    },
+  },
 };
 
 // Sticky Navigation
@@ -115,12 +134,20 @@ function StickyNav() {
           </div>
           <span className="font-bold text-lg">Rocket Content</span>
         </Link>
-        
+
         <div className="hidden md:flex items-center gap-8">
-          <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</a>
-          <a href="#demo" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Demo</a>
-          <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
-          <a href="#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">FAQ</a>
+          <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            Features
+          </a>
+          <a href="#demo" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            Demo
+          </a>
+          <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            Pricing
+          </a>
+          <a href="#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            FAQ
+          </a>
         </div>
 
         <div className="flex items-center gap-3">
@@ -148,16 +175,12 @@ function StickyNav() {
                         {getUserInitials()}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="hidden sm:inline max-w-[120px] truncate text-sm">
-                      {getUserDisplayName()}
-                    </span>
+                    <span className="hidden sm:inline max-w-[120px] truncate text-sm">{getUserDisplayName()}</span>
                     <ChevronDown className="h-4 w-4 text-muted-foreground" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 bg-popover border-border">
-                  <div className="px-2 py-1.5 text-sm font-medium truncate">
-                    {user.email}
-                  </div>
+                  <div className="px-2 py-1.5 text-sm font-medium truncate">{user.email}</div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild className="cursor-pointer">
                     <Link to="/dashboard" className="flex items-center">
@@ -172,7 +195,10 @@ function StickyNav() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOutClick} className="cursor-pointer text-destructive focus:text-destructive">
+                  <DropdownMenuItem
+                    onClick={handleSignOutClick}
+                    className="cursor-pointer text-destructive focus:text-destructive"
+                  >
                     <LogOut className="mr-2 h-4 w-4" />
                     Sign Out
                   </DropdownMenuItem>
@@ -209,12 +235,12 @@ function HeroSection() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,hsl(217_91%_60%_/_0.3),transparent)]" />
       <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] animate-pulse-slow" />
       <div className="absolute bottom-1/3 right-1/4 w-[400px] h-[400px] bg-rocket/15 rounded-full blur-[100px] animate-pulse-slow" />
-      
+
       {/* Grid pattern */}
       <div className="absolute inset-0 bg-[linear-gradient(hsl(var(--border))_1px,transparent_1px),linear-gradient(90deg,hsl(var(--border))_1px,transparent_1px)] bg-[size:60px_60px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,black_40%,transparent_100%)] opacity-20" />
 
       <div className="relative container mx-auto px-4 py-20 lg:py-32">
-        <motion.div 
+        <motion.div
           className="max-w-4xl mx-auto text-center"
           initial="initial"
           animate="animate"
@@ -222,36 +248,40 @@ function HeroSection() {
         >
           {/* Trust badge */}
           <motion.div variants={fadeInUp} className="mb-6">
-            <Badge variant="secondary" className="px-4 py-2 text-sm font-medium bg-primary/10 text-primary border-primary/20">
+            <Badge
+              variant="secondary"
+              className="px-4 py-2 text-sm font-medium bg-primary/10 text-primary border-primary/20"
+            >
               <Sparkles className="h-4 w-4 mr-2" />
               Trusted by 10,000+ creators worldwide
             </Badge>
           </motion.div>
 
           {/* Main headline */}
-          <motion.h1 
-            variants={fadeInUp}
-            className="text-4xl sm:text-5xl lg:text-7xl font-bold mb-6 tracking-tight"
-          >
+          <motion.h1 variants={fadeInUp} className="text-4xl sm:text-5xl lg:text-7xl font-bold mb-6 tracking-tight">
             Turn 1 Video into a
             <span className="block mt-2 bg-gradient-to-r from-primary via-electric to-rocket bg-clip-text text-transparent">
               Month of Content
             </span>
             <span className="block mt-2">in 60 Seconds</span>
           </motion.h1>
-          
+
           {/* Subheadline */}
-          <motion.p 
+          <motion.p
             variants={fadeInUp}
             className="text-lg sm:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed"
           >
-            Stop spending hours writing threads, posts, and blogs. Our AI transforms any YouTube video 
-            into viral-ready content for every platform—automatically.
+            Stop spending hours writing threads, posts, and blogs. Our AI transforms any YouTube video into viral-ready
+            content for every platform—automatically.
           </motion.p>
 
           {/* CTA buttons */}
           <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
-            <Button asChild size="lg" className="gradient-primary text-primary-foreground text-lg px-8 h-14 shadow-xl shadow-primary/25 hover:shadow-primary/40 transition-shadow">
+            <Button
+              asChild
+              size="lg"
+              className="gradient-primary text-primary-foreground text-lg px-8 h-14 shadow-xl shadow-primary/25 hover:shadow-primary/40 transition-shadow"
+            >
               <Link to="/auth" className="flex items-center gap-2">
                 Get Started Free
                 <ArrowRight className="h-5 w-5" />
@@ -271,10 +301,7 @@ function HeroSection() {
           </motion.p>
 
           {/* Stats */}
-          <motion.div 
-            variants={fadeInUp}
-            className="mt-16 grid grid-cols-3 gap-8 max-w-lg mx-auto"
-          >
+          <motion.div variants={fadeInUp} className="mt-16 grid grid-cols-3 gap-8 max-w-lg mx-auto">
             {[
               { value: "10K+", label: "Creators" },
               { value: "1M+", label: "Content Pieces" },
@@ -290,7 +317,7 @@ function HeroSection() {
       </div>
 
       {/* Scroll indicator */}
-      <motion.div 
+      <motion.div
         className="absolute bottom-8 left-1/2 -translate-x-1/2"
         animate={{ y: [0, 10, 0] }}
         transition={{ repeat: Infinity, duration: 2 }}
@@ -306,7 +333,11 @@ function HeroSection() {
 // Problem Section
 function ProblemSection() {
   const problems = [
-    { icon: Clock, title: "Hours of Manual Work", desc: "Writing threads, posts, and blogs from scratch takes forever" },
+    {
+      icon: Clock,
+      title: "Hours of Manual Work",
+      desc: "Writing threads, posts, and blogs from scratch takes forever",
+    },
     { icon: Users, title: "Inconsistent Posting", desc: "Running out of content ideas leads to weeks of silence" },
     { icon: TrendingUp, title: "Missed Opportunities", desc: "Your videos have goldmine content going to waste" },
   ];
@@ -314,7 +345,7 @@ function ProblemSection() {
   return (
     <section className="py-20 lg:py-32 relative">
       <div className="container mx-auto px-4">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -325,12 +356,11 @@ function ProblemSection() {
             The Problem
           </Badge>
           <h2 className="text-3xl lg:text-5xl font-bold mb-6">
-            Creating Content is a
-            <span className="text-rocket"> Full-Time Job</span>
+            Creating Content is a<span className="text-rocket"> Full-Time Job</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            You spend hours recording videos, but then spend even more hours turning that content 
-            into posts, threads, and articles. Sound familiar?
+            You spend hours recording videos, but then spend even more hours turning that content into posts, threads,
+            and articles. Sound familiar?
           </p>
         </motion.div>
 
@@ -368,28 +398,28 @@ function SolutionSection() {
       title: "Batch Processing",
       description: "One click generates X threads, LinkedIn posts, TikTok scripts, and SEO blogs simultaneously.",
       color: "primary",
-      gradient: "from-primary to-electric"
+      gradient: "from-primary to-electric",
     },
     {
       icon: Globe,
       title: "Global Reach",
       description: "Instantly translate all content to Spanish, Hindi, or Mandarin while keeping your brand voice.",
       color: "success",
-      gradient: "from-success to-emerald-400"
+      gradient: "from-success to-emerald-400",
     },
     {
       icon: Image,
       title: "AI Visuals",
       description: "Generate scroll-stopping thumbnails and hero images that match your content perfectly.",
       color: "rocket",
-      gradient: "from-rocket to-warning"
+      gradient: "from-rocket to-warning",
     },
     {
       icon: Eye,
       title: "Social Previews",
       description: "See exactly how your content looks on X, LinkedIn, and TikTok before you post.",
       color: "info",
-      gradient: "from-info to-primary"
+      gradient: "from-info to-primary",
     },
   ];
 
@@ -397,9 +427,9 @@ function SolutionSection() {
     <section id="features" className="py-20 lg:py-32 bg-card/30 relative">
       {/* Background accent */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/5 rounded-full blur-[100px]" />
-      
+
       <div className="container mx-auto px-4 relative">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -414,8 +444,8 @@ function SolutionSection() {
             <span className="text-gradient"> One Platform</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Rocket Content doesn't just repurpose—it amplifies. Every feature is designed 
-            to multiply your reach with minimal effort.
+            Rocket Content doesn't just repurpose—it amplifies. Every feature is designed to multiply your reach with
+            minimal effort.
           </p>
         </motion.div>
 
@@ -431,7 +461,9 @@ function SolutionSection() {
             >
               <Card className="h-full border-border hover:border-primary/50 transition-all duration-300 group overflow-hidden">
                 <CardContent className="p-8">
-                  <div className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                  <div
+                    className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}
+                  >
                     <feature.icon className="h-7 w-7 text-white" />
                   </div>
                   <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
@@ -453,7 +485,7 @@ function DemoSection() {
   return (
     <section id="demo" className="py-20 lg:py-32 relative overflow-hidden">
       <div className="container mx-auto px-4">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -473,7 +505,7 @@ function DemoSection() {
         </motion.div>
 
         {/* Demo mockup */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -488,17 +520,14 @@ function DemoSection() {
                   <Play className="h-5 w-5 text-destructive" />
                 </div>
                 <div className="flex-1">
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     readOnly
                     value="https://youtube.com/watch?v=your-awesome-video"
                     className="w-full bg-transparent text-foreground text-sm lg:text-base focus:outline-none"
                   />
                 </div>
-                <Button 
-                  onClick={() => setShowOutput(true)}
-                  className="gradient-primary text-primary-foreground"
-                >
+                <Button onClick={() => setShowOutput(true)} className="gradient-primary text-primary-foreground">
                   <Rocket className="h-4 w-4 mr-2" />
                   Generate All
                 </Button>
@@ -506,7 +535,7 @@ function DemoSection() {
             </div>
 
             {/* Output preview */}
-            <motion.div 
+            <motion.div
               initial={false}
               animate={{ opacity: showOutput ? 1 : 0.3 }}
               className="grid lg:grid-cols-2 gap-6"
@@ -524,9 +553,9 @@ function DemoSection() {
                   {[
                     "🧵 The secret to 10x productivity that nobody talks about...",
                     "1/ Most people think working harder is the answer. They're wrong.",
-                    "2/ After interviewing 100+ top performers, I found ONE thing in common..."
+                    "2/ After interviewing 100+ top performers, I found ONE thing in common...",
                   ].map((tweet, i) => (
-                    <motion.div 
+                    <motion.div
                       key={i}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: showOutput ? 1 : 0.5, x: 0 }}
@@ -548,7 +577,7 @@ function DemoSection() {
                     <Badge className="ml-auto bg-success/10 text-success border-success/30">Generated</Badge>
                   )}
                 </div>
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: showOutput ? 1 : 0.5 }}
                   transition={{ delay: showOutput ? 0.4 : 0 }}
@@ -557,9 +586,7 @@ function DemoSection() {
                   <p className="mb-3">
                     <strong>I used to work 80-hour weeks.</strong>
                   </p>
-                  <p className="mb-3">
-                    Then I discovered a system that changed everything.
-                  </p>
+                  <p className="mb-3">Then I discovered a system that changed everything.</p>
                   <p className="text-primary">... see more</p>
                 </motion.div>
               </div>
@@ -573,18 +600,22 @@ function DemoSection() {
                     <Badge className="ml-auto bg-success/10 text-success border-success/30">Generated</Badge>
                   )}
                 </div>
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: showOutput ? 1 : 0.5 }}
                   transition={{ delay: showOutput ? 0.6 : 0 }}
                   className="text-sm space-y-2"
                 >
                   <div className="flex gap-2">
-                    <Badge variant="outline" className="text-xs">0:00</Badge>
+                    <Badge variant="outline" className="text-xs">
+                      0:00
+                    </Badge>
                     <span className="text-muted-foreground">Hook: "Stop scrolling. This changed my life."</span>
                   </div>
                   <div className="flex gap-2">
-                    <Badge variant="outline" className="text-xs">0:05</Badge>
+                    <Badge variant="outline" className="text-xs">
+                      0:05
+                    </Badge>
                     <span className="text-muted-foreground">Point 1: The productivity myth...</span>
                   </div>
                 </motion.div>
@@ -599,17 +630,16 @@ function DemoSection() {
                     <Badge className="ml-auto bg-success/10 text-success border-success/30">Generated</Badge>
                   )}
                 </div>
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: showOutput ? 1 : 0.5 }}
                   transition={{ delay: showOutput ? 0.8 : 0 }}
                   className="text-sm text-muted-foreground"
                 >
-                  <h4 className="font-semibold text-foreground mb-2">
-                    The Ultimate Guide to 10x Productivity
-                  </h4>
+                  <h4 className="font-semibold text-foreground mb-2">The Ultimate Guide to 10x Productivity</h4>
                   <p>
-                    In today's fast-paced world, productivity isn't just about working harder—it's about working smarter...
+                    In today's fast-paced world, productivity isn't just about working harder—it's about working
+                    smarter...
                   </p>
                 </motion.div>
               </div>
@@ -617,7 +647,7 @@ function DemoSection() {
 
             {!showOutput && (
               <div className="text-center mt-8">
-                <Button 
+                <Button
                   size="lg"
                   onClick={() => setShowOutput(true)}
                   className="gradient-primary text-primary-foreground"
@@ -643,16 +673,11 @@ function PricingSection({ onUpgradeClick }: { onUpgradeClick: (tier: "pro" | "ag
       period: "forever",
       description: "Perfect for trying out Rocket Content",
       highlight: null,
-      features: [
-        "5 generations per month",
-        "X threads & LinkedIn posts",
-        "1 brand voice",
-        "Community support"
-      ],
+      features: ["5 generations per month", "X threads & LinkedIn posts", "1 brand voice", "Community support"],
       cta: "Start Free",
       ctaAction: "auth" as const,
       tier: null,
-      popular: false
+      popular: false,
     },
     {
       name: "Pro",
@@ -664,16 +689,16 @@ function PricingSection({ onUpgradeClick }: { onUpgradeClick: (tier: "pro" | "ag
         "50 generations per month",
         "All 4 platform outputs",
         "AI-powered visuals",
-        "Global translation (3 languages)",
+        "Global translation (6 languages)",
         "Social previews",
         "3 brand voices",
         "Priority support",
-        "API access"
+        "API access",
       ],
       cta: "Upgrade to Pro",
       ctaAction: "upgrade" as const,
       tier: "pro" as const,
-      popular: true
+      popular: true,
     },
     {
       name: "Agency",
@@ -689,21 +714,21 @@ function PricingSection({ onUpgradeClick }: { onUpgradeClick: (tier: "pro" | "ag
         "White-label previews",
         "Dedicated account manager",
         "Custom integrations",
-        "SSO & advanced security"
+        "SSO & advanced security",
       ],
       cta: "Upgrade to Agency",
       ctaAction: "upgrade" as const,
       tier: "agency" as const,
-      popular: false
-    }
+      popular: false,
+    },
   ];
 
   return (
     <section id="pricing" className="py-20 lg:py-32 bg-card/30 relative">
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px]" />
-      
+
       <div className="container mx-auto px-4 relative">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -748,7 +773,9 @@ function PricingSection({ onUpgradeClick }: { onUpgradeClick: (tier: "pro" | "ag
                   </Badge>
                 </div>
               )}
-              <Card className={`h-full ${plan.popular ? 'border-primary ring-2 ring-primary/20' : plan.highlight ? 'border-amber-500/50 ring-2 ring-amber-500/20' : 'border-border'} transition-all duration-300 hover:border-primary/50`}>
+              <Card
+                className={`h-full ${plan.popular ? "border-primary ring-2 ring-primary/20" : plan.highlight ? "border-amber-500/50 ring-2 ring-amber-500/20" : "border-border"} transition-all duration-300 hover:border-primary/50`}
+              >
                 <CardHeader className="text-center pb-4">
                   <CardTitle className="text-xl">{plan.name}</CardTitle>
                   <CardDescription>{plan.description}</CardDescription>
@@ -767,20 +794,21 @@ function PricingSection({ onUpgradeClick }: { onUpgradeClick: (tier: "pro" | "ag
                     ))}
                   </ul>
                   {plan.ctaAction === "upgrade" && plan.tier ? (
-                    <Button 
+                    <Button
                       onClick={() => onUpgradeClick(plan.tier!)}
-                      className={`w-full ${plan.tier === "agency" 
-                        ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white" 
-                        : "gradient-primary text-primary-foreground"
+                      className={`w-full ${
+                        plan.tier === "agency"
+                          ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+                          : "gradient-primary text-primary-foreground"
                       }`}
                     >
                       {plan.cta}
                       <ChevronRight className="h-4 w-4 ml-1" />
                     </Button>
                   ) : (
-                    <Button 
-                      asChild 
-                      className={`w-full ${plan.popular ? 'gradient-primary text-primary-foreground' : ''}`}
+                    <Button
+                      asChild
+                      className={`w-full ${plan.popular ? "gradient-primary text-primary-foreground" : ""}`}
                       variant={plan.popular ? "default" : "outline"}
                     >
                       <Link to="/auth">
@@ -804,34 +832,40 @@ function FAQSection() {
   const faqs = [
     {
       question: "How does Rocket Content work?",
-      answer: "Simply paste a YouTube URL and our AI analyzes the transcript to generate platform-optimized content. You get X threads, LinkedIn posts, TikTok scripts, and SEO blog posts—all from one video."
+      answer:
+        "Simply paste a YouTube URL and our AI analyzes the transcript to generate platform-optimized content. You get X threads, LinkedIn posts, TikTok scripts, and SEO blog posts—all from one video.",
     },
     {
       question: "What languages do you support for translation?",
-      answer: "Currently, we support translation to Spanish, Hindi, and Mandarin. More languages are coming soon. Our AI maintains your brand voice across all translations."
+      answer:
+        "Currently, we support translation to Spanish, Hindi, and Mandarin. More languages are coming soon. Our AI maintains your brand voice across all translations.",
     },
     {
       question: "Can I customize the generated content?",
-      answer: "Absolutely! All generated content is fully editable. You can also save Brand Voices to ensure consistent tone and style across all your content."
+      answer:
+        "Absolutely! All generated content is fully editable. You can also save Brand Voices to ensure consistent tone and style across all your content.",
     },
     {
       question: "Do I own the content generated?",
-      answer: "Yes, 100%. All content generated through Rocket Content is yours to use however you like—no attribution required."
+      answer:
+        "Yes, 100%. All content generated through Rocket Content is yours to use however you like—no attribution required.",
     },
     {
       question: "What if I'm not satisfied?",
-      answer: "We offer a 14-day money-back guarantee on all paid plans. If Rocket Content isn't right for you, just reach out and we'll refund you—no questions asked."
+      answer:
+        "We offer a 14-day money-back guarantee on all paid plans. If Rocket Content isn't right for you, just reach out and we'll refund you—no questions asked.",
     },
     {
       question: "Is there an API available?",
-      answer: "Yes! Pro and Agency plans include API access so you can integrate Rocket Content into your existing workflows and tools."
-    }
+      answer:
+        "Yes! Pro and Agency plans include API access so you can integrate Rocket Content into your existing workflows and tools.",
+    },
   ];
 
   return (
     <section id="faq" className="py-20 lg:py-32 relative">
       <div className="container mx-auto px-4">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -841,15 +875,13 @@ function FAQSection() {
           <Badge variant="outline" className="mb-4 text-primary border-primary/30">
             FAQ
           </Badge>
-          <h2 className="text-3xl lg:text-5xl font-bold mb-6">
-            Got Questions?
-          </h2>
+          <h2 className="text-3xl lg:text-5xl font-bold mb-6">Got Questions?</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Everything you need to know about Rocket Content.
           </p>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -858,17 +890,15 @@ function FAQSection() {
         >
           <Accordion type="single" collapsible className="space-y-4">
             {faqs.map((faq, index) => (
-              <AccordionItem 
-                key={index} 
+              <AccordionItem
+                key={index}
                 value={`item-${index}`}
                 className="border border-border rounded-xl px-6 data-[state=open]:border-primary/50 transition-colors"
               >
                 <AccordionTrigger className="text-left hover:no-underline py-5">
                   <span className="font-medium">{faq.question}</span>
                 </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground pb-5">
-                  {faq.answer}
-                </AccordionContent>
+                <AccordionContent className="text-muted-foreground pb-5">{faq.answer}</AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
@@ -880,14 +910,12 @@ function FAQSection() {
 
 // Trust Section
 function TrustSection() {
-  const logos = [
-    "Creator Academy", "Social Surge", "Content Labs", "Viral Media", "Growth Hub"
-  ];
+  const logos = ["Creator Academy", "Social Surge", "Content Labs", "Viral Media", "Growth Hub"];
 
   return (
     <section className="py-16 border-t border-b border-border bg-card/30">
       <div className="container mx-auto px-4">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
@@ -897,8 +925,8 @@ function TrustSection() {
           <p className="text-sm text-muted-foreground mb-8">TRUSTED BY LEADING CREATORS AND AGENCIES</p>
           <div className="flex flex-wrap justify-center items-center gap-8 lg:gap-16">
             {logos.map((logo) => (
-              <div 
-                key={logo} 
+              <div
+                key={logo}
                 className="text-xl font-bold text-muted-foreground/40 hover:text-muted-foreground transition-colors"
               >
                 {logo}
@@ -917,9 +945,9 @@ const CTASection = forwardRef<HTMLElement>((_, ref) => {
     <section ref={ref} className="py-20 lg:py-32 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-rocket/10" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-primary/10 rounded-full blur-[100px]" />
-      
+
       <div className="container mx-auto px-4 relative">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -931,11 +959,14 @@ const CTASection = forwardRef<HTMLElement>((_, ref) => {
             <span className="text-gradient"> Content Output?</span>
           </h2>
           <p className="text-lg text-muted-foreground mb-10">
-            Join thousands of creators who are saving hours every week. 
-            Start for free—no credit card required.
+            Join thousands of creators who are saving hours every week. Start for free—no credit card required.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="gradient-primary text-primary-foreground text-lg px-10 h-14 shadow-xl shadow-primary/25">
+            <Button
+              asChild
+              size="lg"
+              className="gradient-primary text-primary-foreground text-lg px-10 h-14 shadow-xl shadow-primary/25"
+            >
               <Link to="/auth" className="flex items-center gap-2">
                 Get Started Free
                 <Rocket className="h-5 w-5" />
@@ -965,9 +996,15 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
             <span className="font-bold">Rocket Content</span>
           </div>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
-            <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
-            <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
-            <Link to="/contact" className="hover:text-foreground transition-colors">Contact</Link>
+            <Link to="/privacy" className="hover:text-foreground transition-colors">
+              Privacy
+            </Link>
+            <Link to="/terms" className="hover:text-foreground transition-colors">
+              Terms
+            </Link>
+            <Link to="/contact" className="hover:text-foreground transition-colors">
+              Contact
+            </Link>
           </div>
           <p className="text-sm text-muted-foreground">
             © {new Date().getFullYear()} Rocket Content. All rights reserved.
