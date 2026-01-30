@@ -20,11 +20,11 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      console.error("LOVABLE_API_KEY not configured");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_API_KEY) {
+      console.error("OPENAI_API_KEY not configured");
       return new Response(
-        JSON.stringify({ error: "AI service not configured" }),
+        JSON.stringify({ error: "OpenAI API key not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -55,14 +55,14 @@ serve(async (req) => {
       : "Any text in the image should be in English.";
 
     // First, generate an image prompt from the text content
-    const promptResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const promptResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "gpt-4o-mini",
         messages: [
           {
             role: "system",
@@ -88,22 +88,19 @@ serve(async (req) => {
 
     console.log("Generated image prompt:", imagePrompt);
 
-    // Now generate the actual image
-    const imageResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    // Now generate the actual image using DALL-E 3
+    const imageResponse = await fetch("https://api.openai.com/v1/images/generations", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-image",
-        messages: [
-          {
-            role: "user",
-            content: imagePrompt
-          }
-        ],
-        modalities: ["image", "text"]
+        model: "dall-e-3",
+        prompt: imagePrompt,
+        n: 1,
+        size: "1024x1024",
+        quality: "standard",
       }),
     });
 
@@ -118,10 +115,10 @@ serve(async (req) => {
         );
       }
       
-      if (imageResponse.status === 402) {
+      if (imageResponse.status === 401) {
         return new Response(
-          JSON.stringify({ error: "AI credits exhausted. Please add credits to continue." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          JSON.stringify({ error: "Invalid OpenAI API key. Please check your configuration." }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
@@ -129,7 +126,7 @@ serve(async (req) => {
     }
 
     const imageData = await imageResponse.json();
-    const imageUrl = imageData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    const imageUrl = imageData.data?.[0]?.url;
 
     if (!imageUrl) {
       console.error("No image in response:", JSON.stringify(imageData));
