@@ -75,7 +75,7 @@ serve(async (req) => {
     console.log("Fetching transcript for:", url);
 
     // Extract video ID from YouTube URL
-    const videoIdMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+    const videoIdMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/live\/)([a-zA-Z0-9_-]{11})/);
     if (!videoIdMatch) {
       return json({ error: "Invalid YouTube URL" }, { status: 400 });
     }
