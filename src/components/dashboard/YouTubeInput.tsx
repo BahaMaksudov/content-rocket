@@ -9,7 +9,7 @@ import { Loader2, Youtube, Link2, FileText, Check, Crown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/contexts/SubscriptionContext";
-import { useTranscriptCredits } from "@/hooks/use-transcript-credits";
+import { useCredits } from "@/hooks/use-credits";
 import { PremiumModal } from "@/components/PremiumModal";
 
 interface YouTubeInputProps {
@@ -18,6 +18,7 @@ interface YouTubeInputProps {
   transcriptMethod: "auto" | "manual" | null;
   youtubeUrl: string;
   setYoutubeUrl: (url: string) => void;
+  onCreditUsed?: () => Promise<void>;
 }
 
 const YOUTUBE_URL_REGEX = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/;
@@ -28,6 +29,7 @@ export function YouTubeInput({
   transcriptMethod,
   youtubeUrl,
   setYoutubeUrl,
+  onCreditUsed,
 }: YouTubeInputProps) {
   const [isFetching, setIsFetching] = useState(false);
   const [manualTranscript, setManualTranscript] = useState("");
@@ -35,13 +37,13 @@ export function YouTubeInput({
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const { toast } = useToast();
   const { isPro } = useSubscription();
-  const { canFetch, incrementFetches, creditsRemaining } = useTranscriptCredits();
+  const { canUseCredits, useCredit, creditsAvailable } = useCredits();
 
   const isValidUrl = YOUTUBE_URL_REGEX.test(youtubeUrl);
 
   const handleFetchTranscript = async () => {
-    // Check if free user has remaining fetches
-    if (!isPro && !canFetch) {
+    // Check if free user has remaining credits
+    if (!isPro && !canUseCredits) {
       setShowPremiumModal(true);
       return;
     }
@@ -67,9 +69,10 @@ export function YouTubeInput({
         if (data?.transcript) {
         onTranscriptFetched(data.transcript, "auto", data.title);
         
-        // Only increment fetch count after successful fetch (for free users)
+        // Use one credit after successful fetch (for free users)
         if (!isPro) {
-          await incrementFetches();
+          await useCredit();
+          onCreditUsed?.();
         }
         
         toast({
@@ -154,7 +157,7 @@ export function YouTubeInput({
             >
               {isFetching ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
-              ) : !isPro && !canFetch ? (
+              ) : !isPro && !canUseCredits ? (
                 <>
                   <Crown className="h-4 w-4 mr-1" />
                   Fetch

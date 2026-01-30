@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Sparkles, Mic, Crown, Rocket, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSubscription } from "@/contexts/SubscriptionContext";
-import { useGenerationCredits, FREE_TIER_LIMIT } from "@/hooks/use-generation-credits";
+import { useCredits, FREE_TIER_LIMIT } from "@/hooks/use-credits";
 import { PremiumModal } from "@/components/PremiumModal";
 import { GlobalReachSettings } from "./GlobalReachSettings";
 
@@ -65,7 +65,7 @@ export function GenerationSettings({
   setTargetLanguage,
 }: GenerationSettingsProps) {
   const { isPro } = useSubscription();
-  const { canGenerate, creditsRemaining, loading: creditsLoading } = useGenerationCredits();
+  const { canUseCredits, creditsAvailable, loading: creditsLoading } = useCredits();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
 
   const handleBrandVoiceChange = (value: string) => {
@@ -76,8 +76,8 @@ export function GenerationSettings({
     setSelectedBrandVoice(value === "none" ? null : value);
   };
 
-  const isCreditsExhausted = !isPro && !canGenerate;
-  const showCreditsWarning = !isPro && creditsRemaining <= 2 && creditsRemaining > 0;
+  const isCreditsExhausted = !isPro && !canUseCredits;
+  const showCreditsWarning = !isPro && creditsAvailable <= 2 && creditsAvailable > 0;
 
   return (
     <Card className="border-border bg-card">
@@ -188,7 +188,7 @@ export function GenerationSettings({
           <div className="flex items-center gap-2 p-3 rounded-lg bg-warning/10 border border-warning/30 text-warning-foreground">
             <AlertCircle className="h-4 w-4 flex-shrink-0" />
             <span className="text-sm font-medium">
-              Only {creditsRemaining} credit{creditsRemaining !== 1 ? 's' : ''} remaining
+              Only {creditsAvailable} credit{creditsAvailable !== 1 ? 's' : ''} remaining
             </span>
           </div>
         )}
@@ -236,7 +236,7 @@ export function GenerationSettings({
                       : "border-muted-foreground/30 text-muted-foreground"
                 }`}
               >
-                {creditsRemaining} / {FREE_TIER_LIMIT} credits remaining
+                {creditsAvailable} credits remaining
               </Badge>
             </div>
           )}
