@@ -134,14 +134,15 @@ serve(async (req) => {
       return json({ error: "API key not configured. Please add your RapidAPI key." }, { status: 500 });
     }
 
+    // Provider priority: youtube-transcripts.p.rapidapi.com has more quota remaining (47%)
+    // so it should be tried FIRST before youtube-transcriptor which is at 100% usage
     const providers: Array<{
       name: string;
       host: string;
       url: string;
       parse: (data: any) => { transcript: string; title?: string };
     }> = [
-      // Supadata YouTube Transcripts API (with 's')
-      // RapidAPI playground commonly includes both url + videoId; include both for compatibility.
+      // PRIMARY: Supadata YouTube Transcripts API - has remaining quota
       {
         name: "youtube_transcripts_supadata",
         host: "youtube-transcripts.p.rapidapi.com",
@@ -149,17 +150,18 @@ serve(async (req) => {
         parse: extractTranscriptText,
       },
 
-      // youtube-transcriptor.p.rapidapi.com (try common parameter conventions; avoid guessing endpoints like /get)
+      // FALLBACK: youtube-transcriptor.p.rapidapi.com - at capacity but try as backup
+      // Using updated parameters per RapidAPI docs
       {
         name: "youtube_transcriptor_videoId",
         host: "youtube-transcriptor.p.rapidapi.com",
-        url: `https://youtube-transcriptor.p.rapidapi.com/transcript?videoId=${encodeURIComponent(videoId)}&lang=en`,
+        url: `https://youtube-transcriptor.p.rapidapi.com/transcript?video_id=${encodeURIComponent(videoId)}&lang=en`,
         parse: extractTranscriptText,
       },
       {
-        name: "youtube_transcriptor_url",
+        name: "youtube_transcriptor_video_url",
         host: "youtube-transcriptor.p.rapidapi.com",
-        url: `https://youtube-transcriptor.p.rapidapi.com/transcript?url=${encodeURIComponent(url)}&lang=en`,
+        url: `https://youtube-transcriptor.p.rapidapi.com/transcript?video_url=${encodeURIComponent(url)}&lang=en`,
         parse: extractTranscriptText,
       },
     ];
@@ -184,7 +186,8 @@ serve(async (req) => {
 
       if (!resp.ok) {
         const errorText = await resp.text();
-        console.error(`${p.name} error:`, resp.status, errorText);
+        // Log quietly for debugging - don't expose to users
+        console.warn(`[${p.name}] HTTP ${resp.status} - trying next provider`);
 
         const parsed = tryParseJson(errorText);
         const gatewayMessage =
@@ -198,19 +201,12 @@ serve(async (req) => {
           host: p.host,
         };
 
-        // 403 often means subscription missing; try next provider.
-        // 429 means rate limit; try next provider as well.
+        // 403 = subscription missing, 429 = rate limit - both should try next provider
         continue;
       }
 
       const data = await resp.json();
-      console.log(`${p.name} response received`);
-      // Log a small preview to understand provider payload shapes (avoid logging full transcripts)
-      try {
-        console.log(`${p.name} response preview:`, JSON.stringify(data).slice(0, 500));
-      } catch {
-        // ignore
-      }
+      console.log(`[${p.name}] Response received successfully`);
 
       const extracted = p.parse(data);
       transcript = extracted.transcript;
@@ -265,7 +261,7 @@ serve(async (req) => {
       lastError = {
         status: 200,
         message: "Provider returned no transcript",
-        raw: JSON.stringify(data).slice(0, 5000),
+        raw: "Empty response",
         provider: p.name,
         host: p.host,
       };
@@ -297,18 +293,22 @@ serve(async (req) => {
       });
     }
 
+    // All providers failed - return user-friendly message
     return json({
-      error: "No captions available for this video",
+      error: "Service at capacity",
+      errorCode: "ALL_PROVIDERS_FAILED",
       transcript: null,
       title: "YouTube Video",
-      details: lastError
-        ? `Provider ${lastError.provider} returned ${lastError.status}: ${String(lastError.message).slice(0, 160)}`
-        : "No transcript returned",
+      details: "Our automated service is at capacity. Please use the Manual Paste option below to continue!",
     });
 
   } catch (error) {
-    console.error("Error fetching transcript:", error);
+    console.error("Unexpected error in fetch-transcript:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return json({ error: "Failed to fetch transcript", details: errorMessage }, { status: 500 });
+    return json({ 
+      error: "Service temporarily unavailable", 
+      errorCode: "UNEXPECTED_ERROR",
+      details: "Our automated service is at capacity. Please use the Manual Paste option below to continue!" 
+    }, { status: 500 });
   }
 });
