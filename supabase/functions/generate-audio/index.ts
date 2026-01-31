@@ -216,6 +216,16 @@ serve(async (req) => {
     
     console.log(`Text after sanitization: ${sanitizedText.length} characters`);
 
+    // Safety net: Remove any visual/non-audio tags that ElevenLabs cannot perform
+    // These would be read aloud instead of performed
+    sanitizedText = sanitizedText
+      .replace(/\[(smiling|winks?|gestures?|nods?|looks?|points?|leans?|walks?|waves?|shrugs?|raises?|tilts?|crosses?|stands?|sits?|turns?|faces?|stares?|glances?|blinks?|frowns?|grins?|beams?|sneers?|pouts?|rolls eyes?|eye roll|thumbs up|thumbs down|air quotes?|finger guns?|claps?|applauds?|dances?|jumps?|spins?|bows?|curtsies?|salutes?|flexes?)(\s+\w+)*\]/gi, '')
+      // Clean up any resulting double spaces
+      .replace(/\s+/g, ' ')
+      .trim();
+    
+    console.log(`Text after visual tag removal: ${sanitizedText.length} characters`);
+
     // Final validation after sanitization
     if (sanitizedText.length < 10) {
       console.error("Text too short after sanitization");
