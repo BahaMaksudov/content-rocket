@@ -51,8 +51,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Helper to check if running on a custom domain (not Lovable preview)
+  const isCustomDomain = () => {
+    const hostname = window.location.hostname;
+    return !hostname.includes("lovable.app") && 
+           !hostname.includes("lovableproject.com") && 
+           !hostname.includes("localhost");
+  };
+
   const signUp = async (email: string, password: string, fullName?: string) => {
-    const redirectUrl = `${window.location.origin}/auth/callback`;
+    // Always use the current origin for redirects - this ensures custom domains work correctly
+    const currentOrigin = window.location.origin;
+    const redirectUrl = `${currentOrigin}/auth/callback`;
+    
+    console.log(`[Auth] SignUp redirect configured for: ${redirectUrl} (Custom domain: ${isCustomDomain()})`);
     
     const { data, error } = await supabase.auth.signUp({
       email,
