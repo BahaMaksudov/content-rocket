@@ -111,11 +111,44 @@ serve(async (req) => {
   }
 
   try {
-    const { transcript, tone, audience, brandVoice, translateTo } = await req.json();
+    const { transcript, tone, audience, brandVoice, translateTo, videoTitle } = await req.json();
 
     if (!transcript) {
       return new Response(
         JSON.stringify({ error: "Transcript is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Advertisement detection patterns
+    const AD_PATTERNS = [
+      /apple\s*watch/i,
+      /iphone\s*\d*/i,
+      /learn\s*more\s*at\s*apple\.com/i,
+      /sponsored\s*(by|content)?/i,
+      /this\s*(video|content)\s*is\s*sponsored/i,
+      /brought\s*to\s*you\s*by/i,
+      /available\s*at\s*apple\.com/i,
+    ];
+
+    // Pre-check for obvious advertisement content
+    const transcriptLower = transcript.toLowerCase();
+    let adMatchCount = 0;
+    for (const pattern of AD_PATTERNS) {
+      if (pattern.test(transcript)) {
+        adMatchCount++;
+      }
+    }
+
+    // If the transcript is very short and contains ad patterns, reject it
+    if (transcript.length < 500 && adMatchCount >= 2) {
+      console.error("Transcript appears to be advertisement content");
+      return new Response(
+        JSON.stringify({ 
+          error: "Invalid transcript data",
+          errorCode: "INVALID_TRANSCRIPT_DATA",
+          details: "The transcript appears to contain advertisement content rather than the video's actual content. Please paste the transcript manually."
+        }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -175,6 +208,8 @@ CRITICAL RULES - MUST FOLLOW:
 4. If the transcript is empty, unclear, or doesn't provide enough content, respond with an error
 5. Every hook, post, script, and blog must be directly derived from the transcript content
 6. Stay true to the speaker's actual words, ideas, and message
+7. SUBJECT MATCH CHECK: Before generating, verify the transcript relates to the expected topic.${videoTitle ? ` The video title is: "${videoTitle}".` : ""} If the transcript appears to be an advertisement for an unrelated product (like Apple Watch, iPhone, etc.) or doesn't match the expected topic, return ONLY this JSON: {"error": "INVALID_TRANSCRIPT_DATA", "message": "The transcript appears to be advertisement content and does not match the video topic."}
+8. Do NOT use outside knowledge or generate generic marketing text about products not mentioned in the transcript
 
 ${brandVoiceContext}
 
