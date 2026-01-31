@@ -67,6 +67,51 @@ serve(async (req) => {
     return { transcript: "", title };
   };
 
+  // Advertisement detection keywords (case-insensitive patterns)
+  const AD_PATTERNS = [
+    /apple\s*watch/i,
+    /iphone\s*\d*/i,
+    /learn\s*more\s*at\s*apple\.com/i,
+    /sponsored\s*(by|content)?/i,
+    /this\s*(video|content)\s*is\s*sponsored/i,
+    /brought\s*to\s*you\s*by/i,
+    /available\s*at\s*apple\.com/i,
+    /order\s*now\s*at/i,
+    /get\s*yours\s*(today|now)\s*at/i,
+    /limited\s*time\s*offer/i,
+    /subscribe\s*and\s*save/i,
+    /use\s*code\s*[A-Z0-9]+\s*(for|to\s*get)/i,
+    /promo\s*code/i,
+  ];
+
+  const detectAdvertisement = (text: string): { isAd: boolean; matchedPattern?: string } => {
+    if (!text || text.length < 50) return { isAd: false };
+    
+    // Count how many ad patterns match
+    let matchCount = 0;
+    let matchedPattern: string | undefined;
+    
+    for (const pattern of AD_PATTERNS) {
+      if (pattern.test(text)) {
+        matchCount++;
+        if (!matchedPattern) {
+          matchedPattern = text.match(pattern)?.[0];
+        }
+      }
+    }
+    
+    // Consider it an ad if:
+    // 1. Multiple ad patterns match, OR
+    // 2. The transcript is very short AND contains ad keywords
+    const isShortAndSuspicious = text.length < 500 && matchCount >= 1;
+    const hasMultipleAdPatterns = matchCount >= 2;
+    
+    return { 
+      isAd: isShortAndSuspicious || hasMultipleAdPatterns,
+      matchedPattern 
+    };
+  };
+
   try {
     const { url } = await req.json();
     
@@ -189,6 +234,20 @@ serve(async (req) => {
         continue;
       }
 
+      // Advertisement detection
+      const adCheck = detectAdvertisement(transcript);
+      if (adCheck.isAd) {
+        console.log(`${p.name} returned advertisement content: "${adCheck.matchedPattern}", trying next provider`);
+        lastError = {
+          status: 200,
+          message: `Advertisement detected: "${adCheck.matchedPattern}"`,
+          raw: transcript.slice(0, 500),
+          provider: p.name,
+          host: p.host,
+        };
+        continue;
+      }
+
       if (transcript) {
         console.log(
           "Successfully extracted transcript, length:",
@@ -223,6 +282,18 @@ serve(async (req) => {
         transcript: null,
         title: "YouTube Video",
         details: `Your RapidAPI key is not subscribed to the transcript API (last: ${lastError?.host}). Please subscribe to that API in RapidAPI, or tell me which transcript API you subscribed to so I can align the host.`,
+      });
+    }
+
+    // Check if the last error was an advertisement detection
+    const isAdDetection = lastError?.message?.startsWith("Advertisement detected");
+    if (isAdDetection) {
+      return json({
+        error: "Advertisement detected",
+        errorCode: "AD_DETECTED",
+        transcript: null,
+        title: "YouTube Video",
+        details: "We detected an advertisement instead of the video transcript. Please try again or paste the transcript manually.",
       });
     }
 

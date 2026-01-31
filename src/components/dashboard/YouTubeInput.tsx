@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, Youtube, Link2, FileText, Check, Crown, Eye, Copy } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, Youtube, Link2, FileText, Check, Crown, Eye, Copy, Pencil, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -38,6 +39,9 @@ export function YouTubeInput({
   const [showManual, setShowManual] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editableTranscript, setEditableTranscript] = useState("");
+  const [adWarning, setAdWarning] = useState<string | null>(null);
   const { toast } = useToast();
   const { isPro } = useSubscription();
   const { canUseCredits, useCredit, creditsAvailable } = useCredits();
@@ -57,6 +61,28 @@ export function YouTubeInput({
         description: "Could not copy to clipboard.",
       });
     }
+  };
+
+  const handleEditClick = () => {
+    setEditableTranscript(transcript);
+    setIsEditMode(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (editableTranscript.trim()) {
+      onTranscriptFetched(editableTranscript.trim(), "manual");
+      setIsEditMode(false);
+      setAdWarning(null);
+      toast({
+        title: "Transcript updated!",
+        description: "Your edited transcript has been saved.",
+      });
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditMode(false);
+    setEditableTranscript("");
   };
 
   const isValidUrl = YOUTUBE_URL_REGEX.test(youtubeUrl);
@@ -88,6 +114,7 @@ export function YouTubeInput({
 
         if (data?.transcript) {
         onTranscriptFetched(data.transcript, "auto", data.title);
+        setAdWarning(null);
         
         // Use one credit after successful fetch (for free users)
         if (!isPro) {
@@ -101,6 +128,17 @@ export function YouTubeInput({
         });
       } else {
         setShowManual(true);
+
+        // Check for advertisement detection
+        if (data?.errorCode === "AD_DETECTED") {
+          setAdWarning(data.details || "We detected an advertisement instead of the video transcript.");
+          toast({
+            variant: "destructive",
+            title: "Advertisement Detected",
+            description: data.details || "Please try again or paste the transcript manually.",
+          });
+          return;
+        }
 
           const title = typeof data?.error === "string" && data.error
             ? data.error
@@ -201,6 +239,16 @@ export function YouTubeInput({
           )}
         </div>
 
+        {/* Advertisement Warning */}
+        {adWarning && (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              {adWarning}
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Transcript status */}
         {transcript && (
           <div className="p-3 rounded-lg bg-success/10 border border-success/20 flex items-center gap-2">
@@ -254,36 +302,69 @@ export function YouTubeInput({
       />
 
       {/* Preview Transcript Modal */}
-      <Dialog open={showPreviewModal} onOpenChange={setShowPreviewModal}>
+      <Dialog open={showPreviewModal} onOpenChange={(open) => {
+        setShowPreviewModal(open);
+        if (!open) {
+          setIsEditMode(false);
+          setEditableTranscript("");
+        }
+      }}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              Transcript Preview
+              {isEditMode ? "Edit Transcript" : "Transcript Preview"}
             </DialogTitle>
             <DialogDescription>
-              Review the fetched transcript before generating content.
+              {isEditMode 
+                ? "Edit the transcript to remove ads or fix errors before generating content."
+                : "Review the fetched transcript before generating content."}
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4">
-            {transcript ? (
+            {transcript || isEditMode ? (
               <>
-                <ScrollArea className="h-[400px] w-full rounded-md border border-border bg-muted/30 p-4">
-                  <pre className="font-mono text-sm whitespace-pre-wrap break-words text-foreground leading-relaxed">
-                    {transcript}
-                  </pre>
-                </ScrollArea>
+                {isEditMode ? (
+                  <Textarea
+                    value={editableTranscript}
+                    onChange={(e) => setEditableTranscript(e.target.value)}
+                    className="h-[400px] font-mono text-sm resize-none"
+                    placeholder="Paste or edit the transcript here..."
+                  />
+                ) : (
+                  <ScrollArea className="h-[400px] w-full rounded-md border border-border bg-muted/30 p-4">
+                    <pre className="font-mono text-sm whitespace-pre-wrap break-words text-foreground leading-relaxed">
+                      {transcript}
+                    </pre>
+                  </ScrollArea>
+                )}
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>{transcript.length.toLocaleString()} characters</span>
-                  <Button
-                    onClick={handleCopyTranscript}
-                    variant="outline"
-                    size="sm"
-                  >
-                    <Copy className="h-4 w-4 mr-1" />
-                    Copy to Clipboard
-                  </Button>
+                  <span>
+                    {(isEditMode ? editableTranscript : transcript).length.toLocaleString()} characters
+                  </span>
+                  <div className="flex gap-2">
+                    {!isEditMode && (
+                      <>
+                        <Button
+                          onClick={handleEditClick}
+                          variant="outline"
+                          size="sm"
+                        >
+                          <Pencil className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                        <Button
+                          onClick={handleCopyTranscript}
+                          variant="outline"
+                          size="sm"
+                        >
+                          <Copy className="h-4 w-4 mr-1" />
+                          Copy
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
               </>
             ) : (
@@ -292,6 +373,17 @@ export function YouTubeInput({
               </div>
             )}
           </div>
+
+          {isEditMode && (
+            <DialogFooter>
+              <Button variant="outline" onClick={handleCancelEdit}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveEdit} disabled={!editableTranscript.trim()}>
+                Save Changes
+              </Button>
+            </DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
     </Card>
