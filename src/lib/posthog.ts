@@ -45,8 +45,19 @@ export const shouldEnableAnalytics = (): boolean => {
   return hasAnalyticsConsent();
 };
 
+// Track if PostHog has been initialized to prevent duplicate initialization
+let isInitialized = false;
+
 // Initialize PostHog - always initializes, but respects opt-out
 export const initPostHog = (): void => {
+  // Prevent duplicate initialization
+  if (isInitialized) {
+    console.log("PostHog already initialized, skipping");
+    return;
+  }
+  
+  isInitialized = true;
+  
   // Initialize PostHog regardless of consent status
   // PostHog will handle opt-out internally
   posthog.init(POSTHOG_KEY, {
@@ -56,12 +67,10 @@ export const initPostHog = (): void => {
     capture_pageleave: true,
     autocapture: false,
     persistence: "localStorage",
-    debug: true, // Enable debug mode to see console logs
+    debug: false, // Disable debug mode to clean up console logs
     loaded: (posthog) => {
-      console.log("PostHog loaded successfully");
       // If user hasn't consented or has DNT enabled, opt out
       if (!shouldEnableAnalytics()) {
-        console.log("Analytics disabled - opting out of capturing");
         posthog.opt_out_capturing();
       }
     },

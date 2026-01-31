@@ -234,16 +234,20 @@ export default function Dashboard() {
         contentOutputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 100);
 
-      // Save to history
+      // Save to history - ensure brand_voice_id is a valid UUID or null
+      // Default voice IDs (like "default_friendly_peer") are not in the database
+      const isDefaultVoice = selectedBrandVoice && isDefaultVoiceId(selectedBrandVoice);
+      const brandVoiceIdForDb = isDefaultVoice ? null : selectedBrandVoice;
+      
       await supabase.from("generations").insert({
         user_id: user!.id,
-        youtube_url: youtubeUrl,
-        video_title: videoTitle,
-        transcript,
-        transcript_method: transcriptMethod,
-        brand_voice_id: selectedBrandVoice,
-        tone,
-        audience,
+        youtube_url: youtubeUrl || null,
+        video_title: videoTitle || null,
+        transcript: transcript || null,
+        transcript_method: transcriptMethod || null,
+        brand_voice_id: brandVoiceIdForDb,
+        tone: tone || null,
+        audience: audience || null,
         twitter_hooks: data.twitterHooks,
         linkedin_post: data.linkedinPost,
         short_form_scripts: data.shortFormScripts,

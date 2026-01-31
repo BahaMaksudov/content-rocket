@@ -20,6 +20,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Track whether we've already identified the user to prevent duplicate calls
+    let hasIdentified = false;
+    
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -27,11 +30,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
         setLoading(false);
         
-        // Identify user for analytics when they sign in
-        if (session?.user) {
+        // Only identify user once per session to prevent duplicate PostHog calls
+        if (session?.user && !hasIdentified) {
+          hasIdentified = true;
+          // Use setTimeout to avoid calling during render
           setTimeout(() => {
             identifyUser(session.user.id, session.user.email || "");
           }, 0);
+        }
+        
+        // Reset if user signs out
+        if (!session?.user) {
+          hasIdentified = false;
         }
       }
     );
@@ -42,8 +52,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       setLoading(false);
       
-      // Identify existing session user
-      if (session?.user) {
+      // Only identify if not already done by auth state change
+      if (session?.user && !hasIdentified) {
+        hasIdentified = true;
         identifyUser(session.user.id, session.user.email || "");
       }
     });
