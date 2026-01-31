@@ -69,8 +69,9 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } }
     });
     
-    // Verify the JWT using getUser
-    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
+    // Verify the JWT (Edge Functions don't have persisted sessions, so pass the JWT explicitly)
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token);
     
     if (authError || !user) {
       console.error("Auth error:", authError);

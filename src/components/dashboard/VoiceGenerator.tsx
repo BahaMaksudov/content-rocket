@@ -15,6 +15,7 @@ import { Volume2, Loader2, Lock, Crown, Rocket } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   getVoiceById, 
   getDefaultVoice, 
@@ -93,8 +94,12 @@ export function VoiceGenerator({ scriptText }: VoiceGeneratorProps) {
     }, 500);
 
     try {
-      // Ensure we have a valid session token
-      if (!session?.access_token) {
+      // Always re-read the session right before calling a backend function
+      // so we don't accidentally use a stale access token.
+      const { data: sessionData } = await supabase.auth.getSession();
+      let accessToken = sessionData.session?.access_token || session?.access_token;
+
+      if (!accessToken) {
         toast({
           title: "Authentication required",
           description: "Please sign in to use voice generation.",
@@ -103,35 +108,65 @@ export function VoiceGenerator({ scriptText }: VoiceGeneratorProps) {
         return;
       }
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-audio`,
-        {
+      const makeRequest = async (token: string) =>
+        fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-audio`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            Authorization: `Bearer ${session.access_token}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             text: scriptText,
             voiceId: voice.voiceId,
             performancePrompt: voice.performancePrompt,
           }),
-        }
-      );
+        });
 
-      clearInterval(progressInterval);
+      let response = await makeRequest(accessToken);
+      let errorData: any = null;
+
+      // If we get an auth error, refresh session and retry once.
+      // 401 is always treated as an auth/session problem.
+      // 403 is only retried when it looks like a token/JWT issue (NOT tier gating).
+      if (!response.ok && (response.status === 401 || response.status === 403)) {
+        errorData = await response.json().catch(() => ({}));
+
+        const isTierError =
+          errorData?.code === "SUBSCRIPTION_REQUIRED" || errorData?.code === "AGENCY_REQUIRED";
+
+        const looksLikeTokenError =
+          !isTierError &&
+          (typeof errorData?.error !== "string" || /token|jwt|expired|invalid/i.test(errorData.error));
+
+        const shouldRefreshAndRetry = response.status === 401 || (response.status === 403 && looksLikeTokenError);
+
+        if (shouldRefreshAndRetry) {
+          const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+          const refreshedToken = refreshed?.session?.access_token;
+          if (!refreshError && refreshedToken) {
+            accessToken = refreshedToken;
+            response = await makeRequest(accessToken);
+            // If retry also fails, read the latest error body for messaging.
+            if (!response.ok) {
+              errorData = await response.json().catch(() => ({}));
+            }
+          }
+        }
+      }
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        
-        // Handle 403 specifically for subscription errors
-        if (response.status === 403) {
+        if (!errorData) {
+          errorData = await response.json().catch(() => ({}));
+        }
+
+        // Subscription/tier errors should not trigger token refresh.
+        if (response.status === 403 && errorData?.code === "SUBSCRIPTION_REQUIRED") {
           setShowUpgradeModal(true);
           throw new Error("Upgrade required to use voice generation");
         }
-        
-        throw new Error(errorData.error || "Failed to generate audio");
+
+        throw new Error(errorData?.error || "Failed to generate audio");
       }
 
       const audioBlob = await response.blob();
@@ -146,7 +181,6 @@ export function VoiceGenerator({ scriptText }: VoiceGeneratorProps) {
       });
 
     } catch (error) {
-      clearInterval(progressInterval);
       console.error("Audio generation error:", error);
       
       // Don't show toast if we're showing upgrade modal
@@ -158,6 +192,7 @@ export function VoiceGenerator({ scriptText }: VoiceGeneratorProps) {
         });
       }
     } finally {
+      clearInterval(progressInterval);
       setIsGenerating(false);
     }
   };
