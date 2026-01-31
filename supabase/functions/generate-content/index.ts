@@ -162,7 +162,7 @@ serve(async (req) => {
       );
     }
 
-    console.log("Generating content with tone:", tone, "audience:", audience, "translate:", translateTo);
+    console.log("Generating content with tone:", tone, "audience:", audience, "translate:", translateTo, "brandVoice:", brandVoice?.name);
 
     // Build comprehensive brand voice context
     let brandVoiceContext = "";
@@ -170,24 +170,28 @@ serve(async (req) => {
       brandVoiceContext = `
 ## CRITICAL: BRAND VOICE REQUIREMENTS (MUST FOLLOW)
 
-You MUST write ALL content using the following brand voice specifications. This is non-negotiable.
+You are a professional content creator. You MUST write ALL content using this specific Brand Voice. This is non-negotiable.
 
 ### Brand Identity: "${brandVoice.name}"
 
-### Writing Style Guidelines:
-${brandVoice.writingStyle ? `Apply this exact writing style throughout: "${brandVoice.writingStyle}"` : "Use a clear, engaging writing style."}
+### Writing Style & Voice Description:
+${brandVoice.writingStyle ? `You MUST follow these exact writing style instructions throughout ALL content you generate:
 
+"${brandVoice.writingStyle}"
+
+Apply this voice consistently to every hook, post, script, and blog you create. The output MUST match this tone strictly.` : "Use a clear, engaging writing style."}
+${brandVoice.tone ? `
 ### Tone of Voice:
-${brandVoice.tone ? `Maintain this tone consistently: "${brandVoice.tone}"` : "Professional yet approachable."}
-
+Maintain this tone consistently: "${brandVoice.tone}"` : ""}
+${brandVoice.keyPhrases?.length > 0 ? `
 ### Key Phrases to Incorporate:
-${brandVoice.keyPhrases?.length > 0 ? `You MUST naturally weave these signature phrases into the content:
+You MUST naturally weave these signature phrases into the content:
 ${brandVoice.keyPhrases.map((phrase: string, i: number) => `  ${i + 1}. "${phrase}"`).join("\n")}
 
-Incorporate at least 2-3 of these phrases across the generated content where they fit naturally.` : "No specific phrases required."}
-
+Incorporate at least 2-3 of these phrases across the generated content where they fit naturally.` : ""}
+${brandVoice.targetAudience ? `
 ### Target Audience:
-${brandVoice.targetAudience ? `Write specifically for: "${brandVoice.targetAudience}". Tailor vocabulary, examples, and references to resonate with this audience.` : "Write for a general professional audience."}
+Write specifically for: "${brandVoice.targetAudience}". Tailor vocabulary, examples, and references to resonate with this audience.` : ""}
 
 ### Brand Voice Consistency Checklist:
 - Every piece of content must reflect the specified writing style

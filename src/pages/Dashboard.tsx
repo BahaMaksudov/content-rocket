@@ -14,6 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useCredits } from "@/hooks/use-credits";
 import { trackGenerationStarted, trackUpgradeClicked } from "@/lib/posthog";
 import { toast as sonnerToast } from "sonner";
+import { DEFAULT_BRAND_VOICES, isDefaultVoiceId, getDefaultVoiceById } from "@/lib/default-brand-voices";
 
 export interface GeneratedContent {
   twitterHooks: string[];
@@ -31,7 +32,8 @@ export default function Dashboard() {
   const [transcriptMethod, setTranscriptMethod] = useState<"auto" | "manual" | null>(null);
   const [videoTitle, setVideoTitle] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
-  const [selectedBrandVoice, setSelectedBrandVoice] = useState<string | null>(null);
+  // Default to "The Friendly Peer" preset
+  const [selectedBrandVoice, setSelectedBrandVoice] = useState<string | null>("default_friendly_peer");
   const [tone, setTone] = useState("professional");
   const [audience, setAudience] = useState("general");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -133,20 +135,43 @@ export default function Dashboard() {
     });
 
     try {
-      const selectedVoice = brandVoices?.find(v => v.id === selectedBrandVoice);
+      // Build brand voice data - check if it's a default voice or user voice
+      let brandVoiceData = null;
+      
+      if (selectedBrandVoice) {
+        if (isDefaultVoiceId(selectedBrandVoice)) {
+          // Use the default voice description
+          const defaultVoice = getDefaultVoiceById(selectedBrandVoice);
+          if (defaultVoice) {
+            brandVoiceData = {
+              name: defaultVoice.name,
+              writingStyle: defaultVoice.description, // The full description becomes the writing style
+              tone: null,
+              keyPhrases: null,
+              targetAudience: null,
+            };
+          }
+        } else {
+          // Use the user's custom voice from database
+          const selectedVoice = brandVoices?.find(v => v.id === selectedBrandVoice);
+          if (selectedVoice) {
+            brandVoiceData = {
+              name: selectedVoice.name,
+              writingStyle: selectedVoice.writing_style || selectedVoice.description,
+              tone: selectedVoice.tone,
+              keyPhrases: selectedVoice.key_phrases,
+              targetAudience: selectedVoice.target_audience,
+            };
+          }
+        }
+      }
       
       const { data, error } = await supabase.functions.invoke("generate-content", {
         body: {
           transcript,
           tone,
           audience,
-          brandVoice: selectedVoice ? {
-            name: selectedVoice.name,
-            writingStyle: selectedVoice.writing_style,
-            tone: selectedVoice.tone,
-            keyPhrases: selectedVoice.key_phrases,
-            targetAudience: selectedVoice.target_audience,
-          } : null,
+          brandVoice: brandVoiceData,
           translateTo: globalReachEnabled ? targetLanguage : null,
         },
       });
