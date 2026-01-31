@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Loader2, Youtube, Link2, FileText, Check, Crown, Eye, Copy, Pencil, AlertTriangle, HelpCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, Youtube, Link2, FileText, Check, Crown, Eye, Copy, Pencil, AlertTriangle, HelpCircle, ChevronDown, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -45,6 +45,8 @@ export function YouTubeInput({
   const [isEditMode, setIsEditMode] = useState(false);
   const [editableTranscript, setEditableTranscript] = useState("");
   const [adWarning, setAdWarning] = useState<string | null>(null);
+  const [showHighDemandModal, setShowHighDemandModal] = useState(false);
+  const manualSectionRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { isPro } = useSubscription();
   const { canUseCredits, useCredit, creditsAvailable } = useCredits();
@@ -55,6 +57,15 @@ export function YouTubeInput({
       setManualTranscript("");
     }
   }, [youtubeUrl]);
+
+  // Scroll to manual section helper
+  const scrollToManualSection = () => {
+    setShowManual(true);
+    setShowHighDemandModal(false);
+    setTimeout(() => {
+      manualSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 100);
+  };
 
   const handleCopyTranscript = async () => {
     if (!transcript) return;
@@ -115,6 +126,7 @@ export function YouTubeInput({
     }
 
     setIsFetching(true);
+    setAdWarning(null);
 
     try {
       const { data, error } = await supabase.functions.invoke("fetch-transcript", {
@@ -123,7 +135,7 @@ export function YouTubeInput({
 
       if (error) throw error;
 
-        if (data?.transcript) {
+      if (data?.transcript) {
         onTranscriptFetched(data.transcript, "auto", data.title);
         setAdWarning(null);
         
@@ -138,41 +150,69 @@ export function YouTubeInput({
           description: `Got transcript for "${data.title}"`,
         });
       } else {
+        // Auto-expand manual section on any failure
         setShowManual(true);
+        
+        // Log technical details for developers only
+        if (data?.details) {
+          console.log("Transcript fetch details:", data.details);
+        }
 
         // Check for advertisement detection
         if (data?.errorCode === "AD_DETECTED") {
-          setAdWarning(data.details || "We detected an advertisement instead of the video transcript.");
-          toast({
-            variant: "destructive",
-            title: "Advertisement Detected",
-            description: data.details || "Please try again or paste the transcript manually.",
-          });
+          setAdWarning("We detected an advertisement instead of the video transcript.");
+          scrollToManualSection();
           return;
         }
 
-          const title = typeof data?.error === "string" && data.error
-            ? data.error
-            : "No captions available";
+        // Check for quota/rate limit errors (429) - show friendly modal
+        const isQuotaError = data?.details?.includes("429") || 
+                            data?.error?.toLowerCase().includes("rate limit") ||
+                            data?.error?.toLowerCase().includes("quota");
+        
+        if (isQuotaError) {
+          setShowHighDemandModal(true);
+          return;
+        }
 
-          const description = typeof data?.details === "string" && data.details
-            ? data.details
-            : "This video doesn't have captions. Please paste the transcript manually.";
-
+        // Generic "no captions" message without technical details
         toast({
-          variant: "destructive",
-            title,
-            description,
+          title: "Transcript not available",
+          description: "This video's captions couldn't be fetched. Try pasting the transcript manually.",
         });
+        
+        // Scroll to manual section
+        setTimeout(() => {
+          manualSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 100);
       }
     } catch (error: any) {
       console.error("Fetch error:", error);
+      
+      // Auto-expand manual section on any failure
       setShowManual(true);
+      
+      // Check if it's a quota/rate limit error
+      const errorMessage = error?.message?.toLowerCase() || "";
+      const isQuotaError = errorMessage.includes("429") || 
+                          errorMessage.includes("rate limit") ||
+                          errorMessage.includes("quota") ||
+                          errorMessage.includes("too many requests");
+      
+      if (isQuotaError) {
+        setShowHighDemandModal(true);
+        return;
+      }
+      
       toast({
-        variant: "destructive",
-        title: "Failed to fetch transcript",
-        description: "Please paste the transcript manually below.",
+        title: "Couldn't fetch transcript",
+        description: "No worries! You can paste the transcript manually below.",
       });
+      
+      // Scroll to manual section
+      setTimeout(() => {
+        manualSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
     } finally {
       setIsFetching(false);
     }
@@ -300,7 +340,7 @@ export function YouTubeInput({
 
         {/* Manual transcript entry */}
         {showManual && !transcript && (
-          <div className="space-y-3 p-4 rounded-lg border border-border bg-muted/30">
+          <div ref={manualSectionRef} className="space-y-3 p-4 rounded-lg border border-border bg-muted/30">
             <div className="flex items-center justify-between">
               <Label htmlFor="manual-transcript" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
@@ -476,6 +516,30 @@ export function YouTubeInput({
               </Button>
             </DialogFooter>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* High Demand Modal */}
+      <Dialog open={showHighDemandModal} onOpenChange={setShowHighDemandModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Info className="h-5 w-5 text-primary" />
+              Automated Fetching Busy
+            </DialogTitle>
+            <DialogDescription className="pt-2 text-base leading-relaxed">
+              We are currently experiencing high demand for automated transcripts. To skip the wait, please use the "Paste Transcript Manually" section below!
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setShowHighDemandModal(false)}>
+              Maybe Later
+            </Button>
+            <Button onClick={scrollToManualSection}>
+              <ChevronDown className="h-4 w-4 mr-1" />
+              Show me how to paste manually
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </Card>
