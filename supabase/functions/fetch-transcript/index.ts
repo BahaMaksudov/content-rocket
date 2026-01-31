@@ -176,6 +176,19 @@ serve(async (req) => {
         .replace(/\s+/g, " ")
         .trim();
 
+      // Validation: transcript must be at least 100 characters to be considered valid
+      if (transcript && transcript.length < 100) {
+        console.log(`${p.name} returned too short transcript (${transcript.length} chars), trying next provider`);
+        lastError = {
+          status: 200,
+          message: "Transcript too short - likely a failed fetch",
+          raw: transcript,
+          provider: p.name,
+          host: p.host,
+        };
+        continue;
+      }
+
       if (transcript) {
         console.log(
           "Successfully extracted transcript, length:",
