@@ -237,15 +237,15 @@ Generate the following content based STRICTLY on the transcript:
 
 3. **THREE TIKTOK VIDEO SCRIPTS** - Write scripts based on transcript content:
    - Do NOT include timestamps like [0:00-0:03] or time markers
-   - Do NOT include speaker labels like "Speaker A:" or "Host:"
-   - CRITICAL AUDIO PERFORMANCE RULES (You are an Audio Performance Director):
-     * ONLY USE these valid audio tags that ElevenLabs v3 can PERFORM as sounds:
-       - Reactions: [laughs], [chuckle], [sighs], [gasp], [clears throat], [gulp]
-       - Emotions: [excited], [whispering], [cheerful], [sarcastic], [reflective], [shouting]
-       - Pacing: [pause], [hesitates], [rushed], [slows down]
-     * NEVER USE visual action tags - the AI will READ these words aloud:
-       - FORBIDDEN: [gestures], [smiling], [winks], [nods], [points], [leans], [walks], [waves], [looks], [stares], [grins], [frowns], [shrugs]
-       - If you want a 'smiling' tone, use [cheerful] instead
+   - Do NOT include speaker labels like "Speaker A:", "Speaker 1:", "Host:", or any name followed by colon
+   - Do NOT include hashtags in the script text
+   - CRITICAL AUDIO PERFORMANCE RULES (You are an Audio Performance Director for ElevenLabs v3):
+     * ONLY USE these valid audio tags that the voice AI can PERFORM as actual sounds:
+       - Reactions: [laughs], [chuckle], [sighs], [gasp], [clears throat]
+       - Emotions: [excited], [whispering]
+     * NEVER USE visual action tags - the AI will literally READ these words aloud instead of performing them:
+       - FORBIDDEN: [gestures], [smiling], [winks], [nods], [points], [leans], [walks], [waves], [looks], [stares], [grins], [frowns], [shrugs], [gestures wildly]
+       - If you want a 'smiling' tone, describe it in the dialogue itself or use [cheerful] delivery
      * Use ellipses (...) for natural pauses and dashes (—) for abrupt breaks
      * Use ALL CAPS for words needing extra emphasis
      * Place laughter tags AFTER the funny line: "I can't believe I did that! [laughs]"
