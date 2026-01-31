@@ -222,6 +222,9 @@ serve(async (req) => {
     // These would be read aloud instead of performed
     sanitizedText = sanitizedText
       .replace(/\[(smiling|winks?|gestures?|nods?|looks?|points?|leans?|walks?|waves?|shrugs?|raises?|tilts?|crosses?|stands?|sits?|turns?|faces?|stares?|glances?|blinks?|frowns?|grins?|beams?|sneers?|pouts?|rolls eyes?|eye roll|thumbs up|thumbs down|air quotes?|finger guns?|claps?|applauds?|dances?|jumps?|spins?|bows?|curtsies?|salutes?|flexes?|gestures wildly)(\s+\w+)*\]/gi, '')
+      // Normalize multi-word tags to single-word versions for v3 compatibility
+      .replace(/\[chuckles?\]/gi, '[giggle]')
+      .replace(/\[laughs\]/gi, '[laugh]')
       // Clean up any resulting double spaces
       .replace(/\s+/g, ' ')
       .trim();
@@ -242,9 +245,9 @@ serve(async (req) => {
       ? `[${performancePrompt}] ${sanitizedText}`
       : sanitizedText;
 
-    // Voice settings for custom voices (stability 0.35, style 0.80 for emotional freedom)
+    // Voice settings for custom voices (stability 0.32 for maximum emotional range)
     const customVoiceSettings = {
-      stability: 0.35,
+      stability: 0.32,
       similarity_boost: 0.75,
       style: 0.80,
       use_speaker_boost: true,

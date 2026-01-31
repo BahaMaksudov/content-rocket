@@ -240,15 +240,16 @@ Generate the following content based STRICTLY on the transcript:
    - Do NOT include speaker labels like "Speaker A:", "Speaker 1:", "Host:", or any name followed by colon
    - Do NOT include hashtags in the script text
    - CRITICAL AUDIO PERFORMANCE RULES (You are an Audio Performance Director for ElevenLabs v3):
-     * ONLY USE these valid audio tags that the voice AI can PERFORM as actual sounds:
-       - Reactions: [laughs], [chuckle], [sighs], [gasp], [clears throat]
-       - Emotions: [excited], [whispering]
+     * ONLY USE single-word audio tags that the voice AI can PERFORM:
+       - Reactions: [laugh], [giggle], [sigh], [gasp], [gulp]
+       - Emotions: [excited], [whisper]
+     * NEVER use [laughs], [chuckles], [sighs] - always use single-word forms: [laugh], [giggle], [sigh]
      * NEVER USE visual action tags - the AI will literally READ these words aloud instead of performing them:
        - FORBIDDEN: [gestures], [smiling], [winks], [nods], [points], [leans], [walks], [waves], [looks], [stares], [grins], [frowns], [shrugs], [gestures wildly]
        - If you want a 'smiling' tone, describe it in the dialogue itself or use [cheerful] delivery
      * Use ellipses (...) for natural pauses and dashes (—) for abrupt breaks
      * Use ALL CAPS for words needing extra emphasis
-     * Place laughter tags AFTER the funny line: "I can't believe I did that! [laughs]"
+     * Place laughter tags AFTER the funny line: "I can't believe I did that! [laugh]"
    - Write in conversational, energetic tone
    - Each script should focus on ONE key takeaway FROM THE TRANSCRIPT
    - The script should read naturally as spoken dialogue, optimized for text-to-speech conversion
