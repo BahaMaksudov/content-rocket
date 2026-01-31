@@ -853,7 +853,7 @@ function FAQSection() {
     {
       question: "What if I'm not satisfied?",
       answer:
-        "We offer a 14-day money-back guarantee on all paid plans. If Rocket Content isn't right for you, just reach out and we'll refund you—no questions asked.",
+        "We offer a 7-day money-back guarantee on all paid plans. If Rocket Content isn't right for you, just reach out and we'll refund you—no questions asked.",
     },
     {
       question: "Is there an API available?",
