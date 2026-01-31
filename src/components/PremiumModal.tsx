@@ -17,7 +17,8 @@ import { toast } from "sonner";
 interface PremiumModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  feature?: "youtube" | "brand-voice" | "generation-limit";
+  feature?: "youtube" | "brand-voice" | "generation-limit" | "voice-generation";
+  description?: string;
   tier?: "pro" | "agency";
 }
 
@@ -37,7 +38,7 @@ const agencyFeatures = [
   { icon: Sparkles, text: "Dedicated account manager" },
 ];
 
-export function PremiumModal({ open, onOpenChange, feature, tier = "pro" }: PremiumModalProps) {
+export function PremiumModal({ open, onOpenChange, feature, description, tier = "pro" }: PremiumModalProps) {
   const { openCheckout } = useSubscription();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -63,12 +64,16 @@ export function PremiumModal({ open, onOpenChange, feature, tier = "pro" }: Prem
     }
   };
 
-  const featureMessage = feature === "youtube" 
+  const featureMessage = description 
+    ? description
+    : feature === "youtube" 
     ? "You have run out of credits. Please upgrade your plan to continue."
     : feature === "brand-voice"
     ? "Brand Voice customization"
     : feature === "generation-limit"
     ? "You have run out of credits. Please upgrade your plan to continue."
+    : feature === "voice-generation"
+    ? "Voice generation lets you convert scripts to professional AI audio"
     : isAgencyTier
     ? "Agency features"
     : "this feature";

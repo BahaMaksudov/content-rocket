@@ -4,14 +4,24 @@ import { Progress } from "@/components/ui/progress";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Volume2, Loader2 } from "lucide-react";
+import { Volume2, Loader2, Lock, Crown, Rocket } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { VOICE_ARCHETYPES, getVoiceById, getDefaultVoice } from "@/lib/voice-archetypes";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { 
+  getVoiceById, 
+  getDefaultVoice, 
+  getVoicesForTier,
+} from "@/lib/voice-archetypes";
 import { AudioPlayer } from "./AudioPlayer";
+import { PremiumModal } from "@/components/PremiumModal";
 
 interface VoiceGeneratorProps {
   scriptText: string;
@@ -19,12 +29,25 @@ interface VoiceGeneratorProps {
 
 export function VoiceGenerator({ scriptText }: VoiceGeneratorProps) {
   const { toast } = useToast();
+  const { session } = useAuth();
+  const { tier, isPro, isAgency, loading: subscriptionLoading } = useSubscription();
+  
   const [selectedVoiceId, setSelectedVoiceId] = useState(getDefaultVoice().id);
   const [isGenerating, setIsGenerating] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  const isFreeUser = tier === "free";
+  const voices = getVoicesForTier(tier);
 
   const handleGenerateAudio = async () => {
+    // Gate free users
+    if (isFreeUser) {
+      setShowUpgradeModal(true);
+      return;
+    }
+
     if (!scriptText.trim()) {
       toast({
         title: "No script content",
@@ -39,6 +62,16 @@ export function VoiceGenerator({ scriptText }: VoiceGeneratorProps) {
       toast({
         title: "Voice not found",
         description: "Please select a valid voice.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if user has access to this voice tier
+    if (voice.tier === "agency" && !isAgency) {
+      toast({
+        title: "Agency voice",
+        description: "This voice is only available to Agency users.",
         variant: "destructive",
       });
       return;
@@ -67,7 +100,7 @@ export function VoiceGenerator({ scriptText }: VoiceGeneratorProps) {
           headers: {
             "Content-Type": "application/json",
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            Authorization: `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
           body: JSON.stringify({
             text: scriptText,
@@ -81,6 +114,13 @@ export function VoiceGenerator({ scriptText }: VoiceGeneratorProps) {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        
+        // Handle 403 specifically for subscription errors
+        if (response.status === 403) {
+          setShowUpgradeModal(true);
+          throw new Error("Upgrade required to use voice generation");
+        }
+        
         throw new Error(errorData.error || "Failed to generate audio");
       }
 
@@ -98,11 +138,15 @@ export function VoiceGenerator({ scriptText }: VoiceGeneratorProps) {
     } catch (error) {
       clearInterval(progressInterval);
       console.error("Audio generation error:", error);
-      toast({
-        title: "Audio generation failed",
-        description: error instanceof Error ? error.message : "Please try again later.",
-        variant: "destructive",
-      });
+      
+      // Don't show toast if we're showing upgrade modal
+      if (error instanceof Error && !error.message.includes("Upgrade")) {
+        toast({
+          title: "Audio generation failed",
+          description: error.message || "Please try again later.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -131,53 +175,120 @@ export function VoiceGenerator({ scriptText }: VoiceGeneratorProps) {
 
   // Show generation controls
   return (
-    <div className="space-y-3">
-      {/* Voice Selection & Generate Button */}
-      <div className="flex flex-wrap items-center gap-3">
-        <Select value={selectedVoiceId} onValueChange={setSelectedVoiceId}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Select Voice" />
-          </SelectTrigger>
-          <SelectContent>
-            {VOICE_ARCHETYPES.map((voice) => (
-              <SelectItem key={voice.id} value={voice.id}>
-                <div className="flex flex-col">
-                  <span className="font-medium">{voice.name}</span>
-                  <span className="text-xs text-muted-foreground">{voice.description}</span>
-                </div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+    <>
+      <div className="space-y-3">
+        {/* Voice Selection & Generate Button */}
+        <div className="flex flex-wrap items-center gap-3">
+          <Select 
+            value={selectedVoiceId} 
+            onValueChange={setSelectedVoiceId}
+            disabled={isFreeUser}
+          >
+            <SelectTrigger className={`w-[200px] ${isFreeUser ? 'opacity-50' : ''}`}>
+              <SelectValue placeholder="Select Voice" />
+            </SelectTrigger>
+            <SelectContent>
+              {/* Standard Voices - Pro & Agency */}
+              <SelectGroup>
+                <SelectLabel className="flex items-center gap-1">
+                  <Crown className="h-3 w-3 text-primary" />
+                  Character Voices
+                </SelectLabel>
+                {voices.standard.map((voice) => (
+                  <SelectItem key={voice.id} value={voice.id}>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{voice.name}</span>
+                      <span className="text-xs text-muted-foreground">{voice.description}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectGroup>
 
-        <Button
-          onClick={handleGenerateAudio}
-          disabled={isGenerating || !scriptText.trim()}
-          variant="secondary"
-        >
-          {isGenerating ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Generating...
-            </>
-          ) : (
-            <>
-              <Volume2 className="h-4 w-4 mr-2" />
-              Convert to Audio
-            </>
-          )}
-        </Button>
+              {/* Cloned Voices - Agency Only */}
+              {isAgency && voices.cloned.length > 0 && (
+                <>
+                  <SelectSeparator />
+                  <SelectGroup>
+                    <SelectLabel className="flex items-center gap-1">
+                      <Rocket className="h-3 w-3 text-amber-500" />
+                      Premium Cloned Voices
+                    </SelectLabel>
+                    {voices.cloned.map((voice) => (
+                      <SelectItem key={voice.id} value={voice.id}>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{voice.name}</span>
+                          <span className="text-xs text-muted-foreground">{voice.description}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </>
+              )}
+
+              {/* Show locked message for Pro users */}
+              {isPro && !isAgency && (
+                <>
+                  <SelectSeparator />
+                  <div className="px-2 py-2 text-xs text-muted-foreground flex items-center gap-1">
+                    <Lock className="h-3 w-3" />
+                    <span>Cloned voices available with Agency</span>
+                  </div>
+                </>
+              )}
+            </SelectContent>
+          </Select>
+
+          <Button
+            onClick={handleGenerateAudio}
+            disabled={isGenerating || !scriptText.trim() || subscriptionLoading}
+            variant={isFreeUser ? "outline" : "secondary"}
+            className={isFreeUser ? "opacity-75" : ""}
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Generating...
+              </>
+            ) : isFreeUser ? (
+              <>
+                <Lock className="h-4 w-4 mr-2" />
+                Convert to Audio
+              </>
+            ) : (
+              <>
+                <Volume2 className="h-4 w-4 mr-2" />
+                Convert to Audio
+              </>
+            )}
+          </Button>
+        </div>
+
+        {/* Free user hint */}
+        {isFreeUser && (
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <Lock className="h-3 w-3" />
+            Voice generation is a Pro feature
+          </p>
+        )}
+
+        {/* Progress Bar during generation */}
+        {isGenerating && (
+          <div className="space-y-2">
+            <Progress value={progress} className="h-2" />
+            <p className="text-xs text-muted-foreground text-center">
+              Generating audio... {progress}%
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* Progress Bar during generation */}
-      {isGenerating && (
-        <div className="space-y-2">
-          <Progress value={progress} className="h-2" />
-          <p className="text-xs text-muted-foreground text-center">
-            Generating audio... {progress}%
-          </p>
-        </div>
-      )}
-    </div>
+      {/* Upgrade Modal */}
+      <PremiumModal
+        open={showUpgradeModal}
+        onOpenChange={setShowUpgradeModal}
+        feature="voice-generation"
+        description="Convert your scripts into professional AI-powered audio with 5 unique character voices. Upgrade to Pro to unlock this feature!"
+      />
+    </>
   );
 }
