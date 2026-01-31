@@ -157,12 +157,30 @@ serve(async (req) => {
     console.log(`Generating audio for voice: ${voiceId}, tier: ${tier}`);
     console.log(`Text length: ${text.length} characters`);
 
+    // Sanitize text: remove timestamps and speaker labels for cleaner TTS output
+    let sanitizedText = text
+      // Remove timestamps like [0:00], [00:00], [0:00-0:03], etc.
+      .replace(/\[\d{1,2}:\d{2}(?:-\d{1,2}:\d{2})?\]/g, '')
+      // Remove timestamps without brackets like 0:00, 00:00
+      .replace(/\b\d{1,2}:\d{2}\b/g, '')
+      // Remove speaker labels like "Speaker A:", "Host:", "Guest 1:"
+      .replace(/\b(?:Speaker\s*[A-Z0-9]+|Host|Guest\s*\d*|Narrator):\s*/gi, '')
+      // Remove section markers like "[HOOK]", "[INTRO]", "[CTA]"
+      .replace(/\[(HOOK|INTRO|SETUP|MAIN|CTA|OUTRO|CONCLUSION)\]/gi, '')
+      // Clean up extra whitespace
+      .replace(/\s+/g, ' ')
+      .trim();
+    
+    console.log(`Text after sanitization: ${sanitizedText.length} characters`);
+
     // Prepend the performance prompt to guide the AI's delivery
     const enhancedText = performancePrompt 
-      ? `[${performancePrompt}] ${text}`
-      : text;
+      ? `[${performancePrompt}] ${sanitizedText}`
+      : sanitizedText;
 
-    // Call ElevenLabs TTS API
+    // Call ElevenLabs TTS API with optimized voice settings
+    // Stability at 40% (0.4) = more emotional/expressive voice
+    // Style at 75% (0.75) = higher style exaggeration for natural emotion
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
       {
@@ -175,9 +193,9 @@ serve(async (req) => {
           text: enhancedText,
           model_id: "eleven_multilingual_v2",
           voice_settings: {
-            stability: 0.5,
+            stability: 0.4,           // Lower = more emotional, less robotic
             similarity_boost: 0.75,
-            style: 0.5,
+            style: 0.75,              // Higher = more style exaggeration
             use_speaker_boost: true,
             speed: 1.0,
           },
