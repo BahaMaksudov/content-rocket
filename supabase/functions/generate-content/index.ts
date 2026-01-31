@@ -236,10 +236,12 @@ Generate the following content based STRICTLY on the transcript:
    - Length: 300-500 words, use line breaks for readability
 
 3. **THREE TIKTOK VIDEO SCRIPTS** - Write scripts based on transcript content:
-   - Include [0:00-0:03] hook, [0:03-0:15] setup, [0:15-0:45] main content, [0:45-0:60] CTA
+   - Do NOT include timestamps like [0:00-0:03] or time markers
+   - Instead, use square bracket emotion/delivery tags like [laughs], [excited], [thoughtful], [whispers], [intense] to guide vocal performance
    - Write in conversational, energetic tone
-   - Include visual/action cues in brackets
+   - Include visual/action cues in brackets (e.g., [points to camera], [leans in])
    - Each script should focus on ONE key takeaway FROM THE TRANSCRIPT
+   - The script should read naturally as spoken dialogue, optimized for text-to-speech conversion
 
 4. **ONE SEO-OPTIMIZED BLOG POST** - Write an article based on transcript content:
    - Compelling H1 title with primary keyword from the topic
