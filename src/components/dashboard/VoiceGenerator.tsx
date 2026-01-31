@@ -42,6 +42,40 @@ export function VoiceGenerator({ scriptText }: VoiceGeneratorProps) {
   const isFreeUser = tier === "free";
   const voices = getVoicesForTier(tier);
 
+  // Validate and clean the script text - ensure it's a string
+  const getCleanScriptText = (): string => {
+    if (!scriptText) return '';
+    
+    // If it's already a string, return it trimmed
+    if (typeof scriptText === 'string') {
+      return scriptText.trim();
+    }
+    
+    // If it's an array, flatten it
+    if (Array.isArray(scriptText)) {
+      return (scriptText as unknown[])
+        .map((item) => {
+          if (typeof item === 'string') return item;
+          if (item && typeof item === 'object') {
+            const obj = item as Record<string, unknown>;
+            return String(obj.text || obj.snippet || obj.content || '');
+          }
+          return '';
+        })
+        .filter(Boolean)
+        .join(' ')
+        .trim();
+    }
+    
+    // If it's an object with text property
+    if (typeof scriptText === 'object') {
+      const obj = scriptText as Record<string, unknown>;
+      return String(obj.text || obj.snippet || obj.content || '').trim();
+    }
+    
+    return '';
+  };
+
   const handleGenerateAudio = async () => {
     // Gate free users
     if (isFreeUser) {
@@ -49,7 +83,9 @@ export function VoiceGenerator({ scriptText }: VoiceGeneratorProps) {
       return;
     }
 
-    if (!scriptText.trim()) {
+    const cleanText = getCleanScriptText();
+    
+    if (!cleanText || cleanText.length < 10) {
       toast({
         title: "No script content",
         description: "Please generate a script first before converting to audio.",
@@ -117,7 +153,8 @@ export function VoiceGenerator({ scriptText }: VoiceGeneratorProps) {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            text: scriptText,
+            // Always send the cleaned script text as a string
+            text: cleanText,
             voiceId: voice.voiceId,
             performancePrompt: voice.performancePrompt,
           }),
@@ -285,7 +322,7 @@ export function VoiceGenerator({ scriptText }: VoiceGeneratorProps) {
 
           <Button
             onClick={handleGenerateAudio}
-            disabled={isGenerating || !scriptText.trim() || subscriptionLoading}
+            disabled={isGenerating || getCleanScriptText().length < 10 || subscriptionLoading}
             variant={isFreeUser ? "outline" : "secondary"}
             className={isFreeUser ? "opacity-75" : ""}
           >
