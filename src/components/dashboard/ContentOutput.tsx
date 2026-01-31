@@ -9,6 +9,7 @@ import { Copy, Check, Edit2, Save, Twitter, Linkedin, Film, FileText, Download, 
 import type { GeneratedContent } from "@/pages/Dashboard";
 import { ImageGenerator } from "./ImageGenerator";
 import { SocialPreview, SocialPreviewToggle } from "./SocialPreview";
+import { VoiceGenerator } from "./VoiceGenerator";
 import { trackCopyContent } from "@/lib/posthog";
 
 interface ContentOutputProps {
@@ -284,9 +285,9 @@ ${content.blogPost}
             {content.shortFormScripts.map((script, index) => (
               <div
                 key={index}
-                className="p-4 rounded-lg bg-muted/50 border border-border"
+                className="p-4 rounded-lg bg-muted/50 border border-border space-y-4"
               >
-                <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="flex items-start justify-between gap-2">
                   <div>
                     <Badge variant="secondary" className="mr-2">
                       Script {index + 1}
@@ -295,7 +296,7 @@ ${content.blogPost}
                   </div>
                   <CopyButton text={`${script.title}\n\n${script.script}`} contentType="short_form_script" platform="shorts" />
                 </div>
-                <h4 className="font-semibold mb-2">{script.title}</h4>
+                <h4 className="font-semibold">{script.title}</h4>
                 <EditableContent
                   content={script.script}
                   onSave={(value) => {
@@ -304,6 +305,11 @@ ${content.blogPost}
                     onUpdateContent({ ...content, shortFormScripts: updated });
                   }}
                 />
+                
+                {/* Voice Generator for this script */}
+                <div className="pt-3 border-t border-border">
+                  <VoiceGenerator scriptText={script.script} />
+                </div>
               </div>
             ))}
           </TabsContent>

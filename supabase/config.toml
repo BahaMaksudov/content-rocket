@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.api-gateway]
 verify_jwt = false
+
+[functions.generate-audio]
+verify_jwt = false
