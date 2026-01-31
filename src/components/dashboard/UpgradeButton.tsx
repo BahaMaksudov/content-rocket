@@ -1,16 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Crown, Settings, Rocket } from "lucide-react";
+import { Crown, Rocket } from "lucide-react";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useState } from "react";
 import { PremiumModal } from "@/components/PremiumModal";
 import { trackUpgradeClicked } from "@/lib/posthog";
 
 export function UpgradeButton() {
-  const { tier, isPro, isAgency, openCustomerPortal, loading } = useSubscription();
+  const { isPro, isAgency, loading } = useSubscription();
   const [showProModal, setShowProModal] = useState(false);
   const [showAgencyModal, setShowAgencyModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   if (loading) {
     return (
@@ -18,60 +17,24 @@ export function UpgradeButton() {
     );
   }
 
-  // Agency users - show badge and manage button
+  // Agency users - show badge only
   if (isAgency) {
     return (
-      <div className="flex items-center gap-2">
-        <Badge className="bg-gradient-to-r from-amber-500 to-yellow-400 text-white border-0 px-3 py-1">
-          <Rocket className="h-3 w-3 mr-1" />
-          Agency
-        </Badge>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={async () => {
-            setIsLoading(true);
-            try {
-              await openCustomerPortal();
-            } finally {
-              setIsLoading(false);
-            }
-          }}
-          disabled={isLoading}
-        >
-          <Settings className="h-4 w-4 mr-1" />
-          Manage
-        </Button>
-      </div>
+      <Badge className="bg-gradient-to-r from-amber-500 to-yellow-400 text-white border-0 px-3 py-1">
+        <Rocket className="h-3 w-3 mr-1" />
+        Agency
+      </Badge>
     );
   }
 
-  // Pro users - show badge, manage button, and upgrade to Agency
+  // Pro users - show badge and upgrade to Agency option
   if (isPro) {
     return (
       <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-2">
-          <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground border-0 px-3 py-1">
-            <Crown className="h-3 w-3 mr-1" />
-            Pro
-          </Badge>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={async () => {
-              setIsLoading(true);
-              try {
-                await openCustomerPortal();
-              } finally {
-                setIsLoading(false);
-              }
-            }}
-            disabled={isLoading}
-          >
-            <Settings className="h-4 w-4 mr-1" />
-            Manage
-          </Button>
-        </div>
+        <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground border-0 px-3 py-1">
+          <Crown className="h-3 w-3 mr-1" />
+          Pro
+        </Badge>
         <Button
           onClick={() => {
             trackUpgradeClicked("agency", "sidebar_pro_user");
