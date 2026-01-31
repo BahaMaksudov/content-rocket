@@ -166,39 +166,47 @@ ${brandVoice.targetAudience ? `Write specifically for: "${brandVoice.targetAudie
 `;
     }
 
-    const systemPrompt = `You are an elite content strategist and viral copywriter with expertise in multi-platform content creation. Transform the provided YouTube transcript into high-engagement content.
+    const systemPrompt = `You are a content repurposing assistant. Your ONLY job is to transform the provided YouTube transcript into multi-platform content.
+
+CRITICAL RULES - MUST FOLLOW:
+1. You must ONLY use information from the provided transcript text below
+2. Do NOT invent facts, statistics, quotes, or claims not in the transcript
+3. Do NOT add generic marketing language about unrelated products (like iPhones, watches, apps, etc.)
+4. If the transcript is empty, unclear, or doesn't provide enough content, respond with an error
+5. Every hook, post, script, and blog must be directly derived from the transcript content
+6. Stay true to the speaker's actual words, ideas, and message
 
 ${brandVoiceContext}
 
 TONE: ${tone || "professional"}
 TARGET AUDIENCE: ${audience || "general"}
 
-Generate the following content with maximum engagement potential:
+Generate the following content based STRICTLY on the transcript:
 
-1. **FIVE VIRAL X (TWITTER) HOOKS** - Craft irresistible opening lines that stop the scroll. Each must:
+1. **FIVE VIRAL X (TWITTER) HOOKS** - Craft opening lines using actual insights from the transcript:
    - Be under 280 characters
-   - Use power words, curiosity gaps, or contrarian takes
-   - Be standalone attention-grabbers that make people want to read more
+   - Use power words, curiosity gaps, or contrarian takes FROM THE TRANSCRIPT
+   - Must reflect the actual topic discussed
 
-2. **ONE PROFESSIONAL LINKEDIN POST** - Create a compelling post using the Problem-Agitation-Solution framework:
-   - Hook: Start with a bold statement or question (1-2 lines)
-   - Problem: Identify the pain point your audience faces
-   - Agitation: Amplify the consequences of ignoring this problem
+2. **ONE PROFESSIONAL LINKEDIN POST** - Create a post using the Problem-Agitation-Solution framework:
+   - Hook: Start with a bold statement or question FROM THE TRANSCRIPT (1-2 lines)
+   - Problem: Identify the pain point discussed in the video
+   - Agitation: Amplify the consequences mentioned by the speaker
    - Solution: Present the key insights from the transcript as the answer
    - CTA: End with engagement prompt
    - Length: 300-500 words, use line breaks for readability
 
-3. **THREE TIKTOK VIDEO SCRIPTS** - Write engaging short-form scripts with precise timestamps:
+3. **THREE TIKTOK VIDEO SCRIPTS** - Write scripts based on transcript content:
    - Include [0:00-0:03] hook, [0:03-0:15] setup, [0:15-0:45] main content, [0:45-0:60] CTA
    - Write in conversational, energetic tone
    - Include visual/action cues in brackets
-   - Each script should focus on ONE key takeaway
+   - Each script should focus on ONE key takeaway FROM THE TRANSCRIPT
 
-4. **ONE SEO-OPTIMIZED BLOG POST** - Write a comprehensive article:
-   - Compelling H1 title with primary keyword
-   - Introduction with hook and thesis
-   - 3-4 H2 subheadings organizing key points
-   - Actionable takeaways
+4. **ONE SEO-OPTIMIZED BLOG POST** - Write an article based on transcript content:
+   - Compelling H1 title with primary keyword from the topic
+   - Introduction with hook and thesis FROM THE TRANSCRIPT
+   - 3-4 H2 subheadings organizing key points discussed
+   - Actionable takeaways mentioned by the speaker
    - Conclusion with CTA
    - Approximately 500 words
 
@@ -214,13 +222,26 @@ CRITICAL: Return ONLY a valid JSON object with NO markdown code fences. The resp
   "blogPost": "full blog post with markdown headings"
 }`;
 
-    const userPrompt = `Here is the YouTube video transcript to repurpose into viral multi-platform content:
+    // Smart transcript truncation for long videos
+    // If transcript > 10,000 chars, take first 5,000 + last 5,000 to capture intro and conclusion
+    let processedTranscript = transcript;
+    const MAX_TOTAL_LENGTH = 10000;
+    const CHUNK_SIZE = 5000;
+    
+    if (transcript.length > MAX_TOTAL_LENGTH) {
+      const firstPart = transcript.substring(0, CHUNK_SIZE);
+      const lastPart = transcript.substring(transcript.length - CHUNK_SIZE);
+      processedTranscript = `${firstPart}\n\n[... middle portion omitted for length - this is a ${Math.round(transcript.length / 1000)}k character transcript ...]\n\n${lastPart}`;
+      console.log(`Transcript truncated: ${transcript.length} -> ${processedTranscript.length} chars`);
+    }
+
+    const userPrompt = `Here is the YouTube video transcript to repurpose. Generate content ONLY from this text - do not add external information:
 
 ---
-${transcript.substring(0, 15000)}
+${processedTranscript}
 ---
 
-Analyze this transcript deeply. Extract the most compelling insights, stories, and actionable advice. Then generate the multi-platform content following the exact JSON format specified. Return ONLY valid JSON, no code fences.`;
+Extract the most compelling insights, stories, and actionable advice FROM THIS TRANSCRIPT ONLY. Generate the multi-platform content following the exact JSON format specified. Return ONLY valid JSON, no code fences.`;
 
     console.log("Calling OpenAI API with gpt-4o-mini...");
 
