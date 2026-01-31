@@ -202,10 +202,12 @@ serve(async (req) => {
       .replace(/\[\d{1,2}:\d{2}(?:-\d{1,2}:\d{2})?\]/g, '')
       // Remove timestamps without brackets like 0:00, 00:00
       .replace(/\b\d{1,2}:\d{2}\b/g, '')
-      // Remove speaker labels like "Speaker A:", "Host:", "Guest 1:"
-      .replace(/\b(?:Speaker\s*[A-Z0-9]+|Host|Guest\s*\d*|Narrator):\s*/gi, '')
+      // Remove speaker labels like "Speaker A:", "Host:", "Guest 1:", "Speaker 1:"
+      .replace(/\b(?:Speaker\s*[A-Z0-9]+|Host|Guest\s*\d*|Narrator|Speaker\s*\d+):\s*/gi, '')
       // Remove section markers like "[HOOK]", "[INTRO]", "[CTA]"
       .replace(/\[(HOOK|INTRO|SETUP|MAIN|CTA|OUTRO|CONCLUSION)\]/gi, '')
+      // Remove hashtags
+      .replace(/#\w+/g, '')
       // Remove JSON-like artifacts that might leak through
       .replace(/[{}"\[\]]/g, '')
       // Remove common JSON keys that might appear
@@ -219,7 +221,7 @@ serve(async (req) => {
     // Safety net: Remove any visual/non-audio tags that ElevenLabs cannot perform
     // These would be read aloud instead of performed
     sanitizedText = sanitizedText
-      .replace(/\[(smiling|winks?|gestures?|nods?|looks?|points?|leans?|walks?|waves?|shrugs?|raises?|tilts?|crosses?|stands?|sits?|turns?|faces?|stares?|glances?|blinks?|frowns?|grins?|beams?|sneers?|pouts?|rolls eyes?|eye roll|thumbs up|thumbs down|air quotes?|finger guns?|claps?|applauds?|dances?|jumps?|spins?|bows?|curtsies?|salutes?|flexes?)(\s+\w+)*\]/gi, '')
+      .replace(/\[(smiling|winks?|gestures?|nods?|looks?|points?|leans?|walks?|waves?|shrugs?|raises?|tilts?|crosses?|stands?|sits?|turns?|faces?|stares?|glances?|blinks?|frowns?|grins?|beams?|sneers?|pouts?|rolls eyes?|eye roll|thumbs up|thumbs down|air quotes?|finger guns?|claps?|applauds?|dances?|jumps?|spins?|bows?|curtsies?|salutes?|flexes?|gestures wildly)(\s+\w+)*\]/gi, '')
       // Clean up any resulting double spaces
       .replace(/\s+/g, ' ')
       .trim();
@@ -232,17 +234,17 @@ serve(async (req) => {
       sanitizedText = "Hello, welcome to the show.";
     }
 
+    // Prime the model with a small pause at the beginning for better delivery
+    sanitizedText = "... " + sanitizedText;
+
     // Prepend the performance prompt to guide the AI's delivery
     const enhancedText = performancePrompt 
       ? `[${performancePrompt}] ${sanitizedText}`
       : sanitizedText;
 
-    // ElevenLabs v3 Alpha requires stability to be exactly 0.0, 0.5, or 1.0
-    // 0.0 = Creative (most emotional freedom for laughter/expressions)
-    // 0.5 = Natural (balanced)
-    // 1.0 = Robust (most consistent)
-    const v3AlphaSettings = {
-      stability: 0.0,  // Creative mode for maximum emotional performance
+    // Voice settings for custom voices (stability 0.35, style 0.80 for emotional freedom)
+    const customVoiceSettings = {
+      stability: 0.35,
       similarity_boost: 0.75,
       style: 0.80,
       use_speaker_boost: true,
@@ -256,13 +258,31 @@ serve(async (req) => {
       use_speaker_boost: true,
     };
 
+    // Check if this is a "default" voice - for default voices, we omit voice_settings entirely
+    // to avoid 400 errors from ElevenLabs v3 when settings don't match voice capabilities
+    const DEFAULT_VOICE_IDS = [
+      "EXAVITQu4vr4xnSDxMaL", // Sarah - Friendly Guide (commonly used as default)
+    ];
+    const isDefaultVoice = DEFAULT_VOICE_IDS.includes(voiceId);
+
     // Try v3 Alpha first, fallback to turbo if it fails
     let audioBuffer: ArrayBuffer | null = null;
     let lastError: string = "";
 
     // Attempt 1: eleven_v3_alpha
-    console.log(`Attempting audio generation with eleven_v3_alpha...`);
+    console.log(`Attempting audio generation with eleven_v3_alpha (isDefaultVoice: ${isDefaultVoice})...`);
     try {
+      // Build the request body - omit voice_settings for default voices
+      const v3RequestBody: Record<string, unknown> = {
+        text: enhancedText,
+        model_id: "eleven_v3_alpha",
+      };
+      
+      // Only add voice_settings for custom voices
+      if (!isDefaultVoice) {
+        v3RequestBody.voice_settings = customVoiceSettings;
+      }
+
       const response = await fetch(
         `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
         {
@@ -271,11 +291,7 @@ serve(async (req) => {
             "xi-api-key": ELEVENLABS_API_KEY,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            text: enhancedText,
-            model_id: "eleven_v3_alpha",
-            voice_settings: v3AlphaSettings,
-          }),
+          body: JSON.stringify(v3RequestBody),
         }
       );
 
@@ -285,7 +301,16 @@ serve(async (req) => {
       } else {
         const errorText = await response.text();
         lastError = errorText;
-        console.error(`ElevenLabs v3_alpha error: ${response.status} - ${errorText}`);
+        console.error(`ElevenLabs v3_alpha error: ${response.status}`);
+        console.error(`Full ElevenLabs v3_alpha response: ${errorText}`);
+        
+        // Try to parse the JSON error for better logging
+        try {
+          const errorJson = JSON.parse(errorText);
+          console.error(`ElevenLabs v3_alpha error message: ${errorJson.detail?.message || errorJson.message || errorJson.detail || 'Unknown'}`);
+        } catch {
+          console.error(`ElevenLabs v3_alpha raw error: ${errorText}`);
+        }
         
         // Check for auth errors
         if (response.status === 401) {
