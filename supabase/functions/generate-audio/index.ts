@@ -208,8 +208,8 @@ serve(async (req) => {
       .replace(/\[(HOOK|INTRO|SETUP|MAIN|CTA|OUTRO|CONCLUSION)\]/gi, '')
       // Remove hashtags
       .replace(/#\w+/g, '')
-      // Remove JSON-like artifacts that might leak through
-      .replace(/[{}"\[\]]/g, '')
+      // Remove JSON-like artifacts that might leak through (keep square brackets so we can strip tags safely later)
+      .replace(/[{}"]/g, '')
       // Remove common JSON keys that might appear
       .replace(/\b(text|snippet|content|transcript|duration|offset|start|end):\s*/gi, '')
       // Clean up extra whitespace
@@ -250,6 +250,26 @@ serve(async (req) => {
       ? `[${performancePrompt}] ${sanitizedText}`
       : sanitizedText;
 
+    // DEFINITIVE FIX: Keep tags in the UI script, but remove ALL bracketed tags from the audio payload
+    // This prevents the model from reading tag words aloud.
+    const originalText = enhancedText;
+    const tagStripped = originalText.replace(/\[.*?\]/g, '').replace(/\s+/g, ' ').trim();
+    const speakableCore = tagStripped.replace(/^\.\.\.\s*/, '').trim();
+
+    // Safety check: if nothing remains after stripping tags, do not call ElevenLabs
+    if (!speakableCore) {
+      return new Response(
+        JSON.stringify({
+          error: "No speakable text found.",
+          code: "NO_SPEAKABLE_TEXT",
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Prime Trick: always prefix with a clean leading pause
+    const cleanText = `... ${speakableCore}`;
+
     // Voice settings for custom voices (stability 0.32, style 0.85 for maximum emotional range)
     const customVoiceSettings = {
       stability: 0.32,
@@ -282,7 +302,7 @@ serve(async (req) => {
     try {
       // Build the request body - omit voice_settings for default voices
       const v3RequestBody: Record<string, unknown> = {
-        text: enhancedText,
+        text: cleanText,
         model_id: "eleven_v3_alpha",
       };
       
@@ -349,7 +369,7 @@ serve(async (req) => {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              text: enhancedText,
+              text: cleanText,
               model_id: "eleven_turbo_v2_5",
               voice_settings: turboSettings,
             }),
