@@ -127,12 +127,52 @@ serve(async (req) => {
 
     const { text, voiceId, performancePrompt } = await req.json();
     
-    if (!text || !voiceId) {
+    // Flatten text if it's an array (handle various transcript formats)
+    let processedText: string;
+    if (Array.isArray(text)) {
+      console.log(`Received array input with ${text.length} items, flattening...`);
+      processedText = text
+        .map((item: unknown) => {
+          if (typeof item === 'string') return item;
+          if (item && typeof item === 'object') {
+            // Handle common transcript object formats
+            const obj = item as Record<string, unknown>;
+            return obj.text || obj.snippet || obj.content || obj.transcript || '';
+          }
+          return '';
+        })
+        .filter(Boolean)
+        .join(' ');
+    } else if (typeof text === 'string') {
+      processedText = text;
+    } else if (text && typeof text === 'object') {
+      // Handle single object with text property
+      const obj = text as Record<string, unknown>;
+      processedText = String(obj.text || obj.snippet || obj.content || obj.transcript || '');
+    } else {
+      processedText = '';
+    }
+
+    // Validate that we have actual text content
+    if (!processedText || processedText.trim().length === 0) {
+      console.error("No valid text content found in input");
       return new Response(
-        JSON.stringify({ error: "Missing required fields: text and voiceId" }),
+        JSON.stringify({ 
+          error: "No text content to convert. Please generate a script first.",
+          code: "INVALID_TRANSCRIPT_DATA"
+        }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    
+    if (!voiceId) {
+      return new Response(
+        JSON.stringify({ error: "Missing required field: voiceId" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`Processed text length: ${processedText.length} characters`);
 
     // Validate voice ID
     if (!VALID_VOICE_IDS.includes(voiceId)) {
@@ -155,10 +195,9 @@ serve(async (req) => {
     }
 
     console.log(`Generating audio for voice: ${voiceId}, tier: ${tier}`);
-    console.log(`Text length: ${text.length} characters`);
 
-    // Sanitize text: remove timestamps and speaker labels for cleaner TTS output
-    let sanitizedText = text
+    // Sanitize text: remove timestamps, speaker labels, and JSON artifacts for cleaner TTS output
+    let sanitizedText = processedText
       // Remove timestamps like [0:00], [00:00], [0:00-0:03], etc.
       .replace(/\[\d{1,2}:\d{2}(?:-\d{1,2}:\d{2})?\]/g, '')
       // Remove timestamps without brackets like 0:00, 00:00
@@ -167,11 +206,27 @@ serve(async (req) => {
       .replace(/\b(?:Speaker\s*[A-Z0-9]+|Host|Guest\s*\d*|Narrator):\s*/gi, '')
       // Remove section markers like "[HOOK]", "[INTRO]", "[CTA]"
       .replace(/\[(HOOK|INTRO|SETUP|MAIN|CTA|OUTRO|CONCLUSION)\]/gi, '')
+      // Remove JSON-like artifacts that might leak through
+      .replace(/[{}"\[\]]/g, '')
+      // Remove common JSON keys that might appear
+      .replace(/\b(text|snippet|content|transcript|duration|offset|start|end):\s*/gi, '')
       // Clean up extra whitespace
       .replace(/\s+/g, ' ')
       .trim();
     
     console.log(`Text after sanitization: ${sanitizedText.length} characters`);
+
+    // Final validation after sanitization
+    if (sanitizedText.length < 10) {
+      console.error("Text too short after sanitization");
+      return new Response(
+        JSON.stringify({ 
+          error: "Script content is too short. Please generate a longer script first.",
+          code: "INVALID_TRANSCRIPT_DATA"
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Prepend the performance prompt to guide the AI's delivery
     const enhancedText = performancePrompt 
