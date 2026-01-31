@@ -13,6 +13,9 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
+        const currentOrigin = window.location.origin;
+        console.log(`[AuthCallback] Processing callback on: ${currentOrigin}`);
+        
         // Get the hash fragment from the URL (Supabase sends tokens in the hash)
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const accessToken = hashParams.get("access_token");
@@ -21,12 +24,14 @@ export default function AuthCallback() {
         const errorDescription = hashParams.get("error_description");
 
         if (error) {
+          console.error(`[AuthCallback] Error received: ${error} - ${errorDescription}`);
           setStatus("error");
           setErrorMessage(errorDescription || "Email verification failed");
           return;
         }
 
         if (accessToken && refreshToken) {
+          console.log("[AuthCallback] Setting session from tokens");
           // Set the session with the tokens from the URL
           const { error: sessionError } = await supabase.auth.setSession({
             access_token: accessToken,
@@ -34,31 +39,38 @@ export default function AuthCallback() {
           });
 
           if (sessionError) {
+            console.error("[AuthCallback] Session error:", sessionError.message);
             setStatus("error");
             setErrorMessage(sessionError.message);
             return;
           }
 
           setStatus("success");
+          console.log("[AuthCallback] Success - redirecting to dashboard");
           // Redirect to dashboard after showing success message
+          // Using replace to ensure we stay on the current domain
           setTimeout(() => {
             navigate("/dashboard", { replace: true });
           }, 2000);
         } else {
           // Try to get existing session (user might already be verified)
+          console.log("[AuthCallback] No tokens in URL, checking existing session");
           const { data: { session } } = await supabase.auth.getSession();
           
           if (session) {
+            console.log("[AuthCallback] Existing session found - redirecting to dashboard");
             setStatus("success");
             setTimeout(() => {
               navigate("/dashboard", { replace: true });
             }, 2000);
           } else {
+            console.error("[AuthCallback] No session found - invalid verification link");
             setStatus("error");
             setErrorMessage("Invalid or expired verification link");
           }
         }
       } catch (err) {
+        console.error("[AuthCallback] Unexpected error:", err);
         setStatus("error");
         setErrorMessage("An unexpected error occurred");
       }
