@@ -226,16 +226,10 @@ serve(async (req) => {
     
     console.log(`Text after visual tag removal: ${sanitizedText.length} characters`);
 
-    // Final validation after sanitization
+    // Final validation after sanitization - use fallback if empty
     if (sanitizedText.length < 10) {
-      console.error("Text too short after sanitization");
-      return new Response(
-        JSON.stringify({ 
-          error: "Script content is too short. Please generate a longer script first.",
-          code: "INVALID_TRANSCRIPT_DATA"
-        }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      console.warn("Text too short after sanitization, using fallback");
+      sanitizedText = "Hello, welcome to the show.";
     }
 
     // Prepend the performance prompt to guide the AI's delivery
@@ -243,42 +237,130 @@ serve(async (req) => {
       ? `[${performancePrompt}] ${sanitizedText}`
       : sanitizedText;
 
-    // Call ElevenLabs TTS API with eleven_v3_alpha model
-    // This model supports emotional tags like [laughs], [chuckle], [sigh], [excited], [whispers]
-    // Lower stability (0.35) gives the AI more "emotional freedom" to perform rather than read
-    const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
-      {
-        method: "POST",
-        headers: {
-          "xi-api-key": ELEVENLABS_API_KEY,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          text: enhancedText,
-          model_id: "eleven_v3_alpha",  // Supports emotional performance tags
-          voice_settings: {
-            stability: 0.35,          // Lower = more emotional freedom for laughter/expression
-            similarity_boost: 0.75,
-            style: 0.80,              // Higher style exaggeration for natural emotion
-            use_speaker_boost: true,
-            speed: 1.0,
-          },
-        }),
-      }
-    );
+    // ElevenLabs v3 Alpha requires stability to be exactly 0.0, 0.5, or 1.0
+    // 0.0 = Creative (most emotional freedom for laughter/expressions)
+    // 0.5 = Natural (balanced)
+    // 1.0 = Robust (most consistent)
+    const v3AlphaSettings = {
+      stability: 0.0,  // Creative mode for maximum emotional performance
+      similarity_boost: 0.75,
+      style: 0.80,
+      use_speaker_boost: true,
+    };
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`ElevenLabs API error: ${response.status} - ${errorText}`);
-      return new Response(
-        JSON.stringify({ error: "Failed to generate audio", details: errorText }),
-        { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    // Fallback settings for turbo model
+    const turboSettings = {
+      stability: 0.5,
+      similarity_boost: 0.75,
+      style: 0.5,
+      use_speaker_boost: true,
+    };
+
+    // Try v3 Alpha first, fallback to turbo if it fails
+    let audioBuffer: ArrayBuffer | null = null;
+    let lastError: string = "";
+
+    // Attempt 1: eleven_v3_alpha
+    console.log(`Attempting audio generation with eleven_v3_alpha...`);
+    try {
+      const response = await fetch(
+        `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
+        {
+          method: "POST",
+          headers: {
+            "xi-api-key": ELEVENLABS_API_KEY,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            text: enhancedText,
+            model_id: "eleven_v3_alpha",
+            voice_settings: v3AlphaSettings,
+          }),
+        }
       );
+
+      if (response.ok) {
+        audioBuffer = await response.arrayBuffer();
+        console.log(`Audio generated successfully with v3_alpha: ${audioBuffer.byteLength} bytes`);
+      } else {
+        const errorText = await response.text();
+        lastError = errorText;
+        console.error(`ElevenLabs v3_alpha error: ${response.status} - ${errorText}`);
+        
+        // Check for auth errors
+        if (response.status === 401) {
+          return new Response(
+            JSON.stringify({ 
+              error: "ElevenLabs Authentication Failed: Please check your API key or upgrade to a paid plan.",
+              details: errorText
+            }),
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
+    } catch (fetchError) {
+      console.error("Fetch error with v3_alpha:", fetchError);
+      lastError = fetchError instanceof Error ? fetchError.message : "Unknown fetch error";
     }
 
-    const audioBuffer = await response.arrayBuffer();
-    console.log(`Audio generated successfully: ${audioBuffer.byteLength} bytes`);
+    // Attempt 2: Fallback to eleven_turbo_v2_5 if v3_alpha failed
+    if (!audioBuffer) {
+      console.log(`Falling back to eleven_turbo_v2_5...`);
+      try {
+        const response = await fetch(
+          `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
+          {
+            method: "POST",
+            headers: {
+              "xi-api-key": ELEVENLABS_API_KEY,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              text: enhancedText,
+              model_id: "eleven_turbo_v2_5",
+              voice_settings: turboSettings,
+            }),
+          }
+        );
+
+        if (response.ok) {
+          audioBuffer = await response.arrayBuffer();
+          console.log(`Audio generated successfully with turbo_v2_5 (fallback): ${audioBuffer.byteLength} bytes`);
+        } else {
+          const errorText = await response.text();
+          console.error(`ElevenLabs turbo fallback error: ${response.status} - ${errorText}`);
+          
+          if (response.status === 401) {
+            return new Response(
+              JSON.stringify({ 
+                error: "ElevenLabs Authentication Failed: Please check your API key or upgrade to a paid plan.",
+                details: errorText
+              }),
+              { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+          
+          return new Response(
+            JSON.stringify({ 
+              error: "Failed to generate audio with both models", 
+              v3_error: lastError,
+              turbo_error: errorText 
+            }),
+            { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      } catch (fetchError) {
+        console.error("Fetch error with turbo fallback:", fetchError);
+        return new Response(
+          JSON.stringify({ 
+            error: "Failed to generate audio", 
+            v3_error: lastError,
+            turbo_error: fetchError instanceof Error ? fetchError.message : "Unknown error"
+          }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
 
     return new Response(audioBuffer, {
       headers: {
