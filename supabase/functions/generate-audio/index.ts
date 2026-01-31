@@ -233,9 +233,9 @@ serve(async (req) => {
       ? `[${performancePrompt}] ${sanitizedText}`
       : sanitizedText;
 
-    // Call ElevenLabs TTS API with optimized voice settings
-    // Stability at 40% (0.4) = more emotional/expressive voice
-    // Style at 75% (0.75) = higher style exaggeration for natural emotion
+    // Call ElevenLabs TTS API with eleven_v3_alpha model
+    // This model supports emotional tags like [laughs], [chuckle], [sigh], [excited], [whispers]
+    // Lower stability (0.35) gives the AI more "emotional freedom" to perform rather than read
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
       {
@@ -246,11 +246,11 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           text: enhancedText,
-          model_id: "eleven_multilingual_v2",
+          model_id: "eleven_v3_alpha",  // Supports emotional performance tags
           voice_settings: {
-            stability: 0.4,           // Lower = more emotional, less robotic
+            stability: 0.35,          // Lower = more emotional freedom for laughter/expression
             similarity_boost: 0.75,
-            style: 0.75,              // Higher = more style exaggeration
+            style: 0.80,              // Higher style exaggeration for natural emotion
             use_speaker_boost: true,
             speed: 1.0,
           },
