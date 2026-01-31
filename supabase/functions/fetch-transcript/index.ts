@@ -134,15 +134,17 @@ serve(async (req) => {
       return json({ error: "API key not configured. Please add your RapidAPI key." }, { status: 500 });
     }
 
-    // Provider priority: youtube-transcripts.p.rapidapi.com has more quota remaining (47%)
-    // so it should be tried FIRST before youtube-transcriptor which is at 100% usage
+    // Provider priority order: healthiest quota first
+    // 1. youtube-transcripts.p.rapidapi.com (47% remaining)
+    // 2. youtube-api-free.p.rapidapi.com (new backup)
+    // 3. youtube-transcriptor.p.rapidapi.com (at 100% usage)
     const providers: Array<{
       name: string;
       host: string;
       url: string;
       parse: (data: any) => { transcript: string; title?: string };
     }> = [
-      // PRIMARY: Supadata YouTube Transcripts API - has remaining quota
+      // PRIMARY: Supadata YouTube Transcripts API - has remaining quota (47%)
       {
         name: "youtube_transcripts_supadata",
         host: "youtube-transcripts.p.rapidapi.com",
@@ -150,8 +152,15 @@ serve(async (req) => {
         parse: extractTranscriptText,
       },
 
-      // FALLBACK: youtube-transcriptor.p.rapidapi.com - at capacity but try as backup
-      // Using updated parameters per RapidAPI docs
+      // BACKUP: YouTube API Free - additional free tier quota
+      {
+        name: "youtube_api_free",
+        host: "youtube-api-free.p.rapidapi.com",
+        url: `https://youtube-api-free.p.rapidapi.com/youtube/transcript?videoId=${encodeURIComponent(videoId)}`,
+        parse: extractTranscriptText,
+      },
+
+      // FALLBACK: youtube-transcriptor.p.rapidapi.com - at capacity but try as last resort
       {
         name: "youtube_transcriptor_videoId",
         host: "youtube-transcriptor.p.rapidapi.com",
@@ -201,7 +210,7 @@ serve(async (req) => {
           host: p.host,
         };
 
-        // 403 = subscription missing, 429 = rate limit - both should try next provider
+        // 403 = subscription missing, 429 = rate limit, 404 = not found - all should try next provider
         continue;
       }
 
@@ -295,11 +304,11 @@ serve(async (req) => {
 
     // All providers failed - return user-friendly message
     return json({
-      error: "Service at capacity",
+      error: "All automated lines are busy",
       errorCode: "ALL_PROVIDERS_FAILED",
       transcript: null,
       title: "YouTube Video",
-      details: "Our automated service is at capacity. Please use the Manual Paste option below to continue!",
+      details: "All automated lines are busy. Please use the Manual Paste option or try again in an hour.",
     });
 
   } catch (error) {
