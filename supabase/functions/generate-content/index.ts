@@ -237,9 +237,10 @@ Generate the following content based STRICTLY on the transcript:
 
 3. **THREE TIKTOK VIDEO SCRIPTS** - Write scripts based on transcript content:
    - Do NOT include timestamps like [0:00-0:03] or time markers
-   - Instead, use square bracket emotion/delivery tags like [laughs], [excited], [thoughtful], [whispers], [intense] to guide vocal performance
+   - CRITICAL FOR VOICE GENERATION: Only use emotion/delivery tags that ElevenLabs v3 can PERFORM:
+     * ALLOWED tags: [laughs], [chuckle], [sigh], [excited], [whispers], [gasps], [clears throat]
+     * FORBIDDEN tags: Do NOT use visual actions like [gestures wildly], [smiling], [winks], [points to camera], [leans in], [nods] - the AI will read these words aloud instead of performing them
    - Write in conversational, energetic tone
-   - Include visual/action cues in brackets (e.g., [points to camera], [leans in])
    - Each script should focus on ONE key takeaway FROM THE TRANSCRIPT
    - The script should read naturally as spoken dialogue, optimized for text-to-speech conversion
 
