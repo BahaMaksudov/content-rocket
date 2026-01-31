@@ -16,6 +16,7 @@ import History from "./pages/History";
 import BrandVoices from "./pages/BrandVoices";
 import Billing from "./pages/Billing";
 import Settings from "./pages/Settings";
+import Developer from "./pages/Developer";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCanceled from "./pages/PaymentCanceled";
 import Unsubscribe from "./pages/Unsubscribe";
@@ -76,6 +77,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Settings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/developer"
+              element={
+                <ProtectedRoute>
+                  <Developer />
                 </ProtectedRoute>
               }
             />

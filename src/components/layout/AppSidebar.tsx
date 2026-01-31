@@ -1,4 +1,4 @@
-import { Home, History, Mic, Settings, Sparkles, Clock, CreditCard } from "lucide-react";
+import { Home, History, Mic, Settings, Sparkles, Clock, CreditCard, Code } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import {
@@ -23,6 +23,10 @@ const mainNavItems = [
   { title: "Brand Voices", url: "/brand-voices", icon: Mic },
   { title: "Billing", url: "/billing", icon: CreditCard },
   { title: "Settings", url: "/settings", icon: Settings },
+];
+
+const proNavItems = [
+  { title: "Developer API", url: "/developer", icon: Code },
 ];
 
 export function AppSidebar() {
@@ -101,6 +105,36 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Pro Features Navigation */}
+        {(tier === "pro" || tier === "agency") && (
+          <SidebarGroup className="px-3">
+            <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              Pro Features
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {proNavItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to={item.url}
+                        className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sidebar-foreground transition-all duration-200 hover:bg-sidebar-accent hover:text-foreground"
+                        activeClassName="nav-active bg-sidebar-accent text-foreground font-medium"
+                      >
+                        <item.icon className="h-4 w-4 text-primary" />
+                        <span>{item.title}</span>
+                        <Badge variant="secondary" className="ml-auto text-xs bg-primary/20 text-primary border-0">
+                          Pro
+                        </Badge>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       {/* Footer with Credits and Upgrade */}

@@ -34,6 +34,7 @@ const routeTitles: Record<string, string> = {
   "/brand-voices": "Brand Voices",
   "/settings": "Settings",
   "/billing": "Billing",
+  "/developer": "Developer API",
 };
 
 export function AppLayout({ children }: AppLayoutProps) {
