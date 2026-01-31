@@ -838,7 +838,7 @@ function FAQSection() {
     {
       question: "What languages do you support for translation?",
       answer:
-        "Currently, we support translation to Spanish, Hindi, and Mandarin. More languages are coming soon. Our AI maintains your brand voice across all translations.",
+        "Currently, we support translation to Spanish, Hindi, Mandarin, Uzbek and Russian. More languages are coming soon. Our AI maintains your brand voice across all translations.",
     },
     {
       question: "Can I customize the generated content?",
