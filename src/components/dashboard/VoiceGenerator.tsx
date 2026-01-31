@@ -93,6 +93,16 @@ export function VoiceGenerator({ scriptText }: VoiceGeneratorProps) {
     }, 500);
 
     try {
+      // Ensure we have a valid session token
+      if (!session?.access_token) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to use voice generation.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-audio`,
         {
@@ -100,7 +110,7 @@ export function VoiceGenerator({ scriptText }: VoiceGeneratorProps) {
           headers: {
             "Content-Type": "application/json",
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            Authorization: `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            Authorization: `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({
             text: scriptText,
