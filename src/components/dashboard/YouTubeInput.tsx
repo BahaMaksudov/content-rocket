@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Youtube, Link2, FileText, Check, Crown, Eye, Copy, Pencil, AlertTriangle } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Loader2, Youtube, Link2, FileText, Check, Crown, Eye, Copy, Pencil, AlertTriangle, HelpCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -25,6 +26,7 @@ interface YouTubeInputProps {
 }
 
 const YOUTUBE_URL_REGEX = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/live\/)([a-zA-Z0-9_-]{11})/;
+const MAX_TRANSCRIPT_LENGTH = 20000;
 
 export function YouTubeInput({
   onTranscriptFetched,
@@ -37,6 +39,7 @@ export function YouTubeInput({
   const [isFetching, setIsFetching] = useState(false);
   const [manualTranscript, setManualTranscript] = useState("");
   const [showManual, setShowManual] = useState(false);
+  const [showHelpGuide, setShowHelpGuide] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -45,6 +48,13 @@ export function YouTubeInput({
   const { toast } = useToast();
   const { isPro } = useSubscription();
   const { canUseCredits, useCredit, creditsAvailable } = useCredits();
+
+  // Clear manual transcript when URL changes
+  useEffect(() => {
+    if (youtubeUrl) {
+      setManualTranscript("");
+    }
+  }, [youtubeUrl]);
 
   const handleCopyTranscript = async () => {
     if (!transcript) return;
@@ -86,6 +96,7 @@ export function YouTubeInput({
   };
 
   const isValidUrl = YOUTUBE_URL_REGEX.test(youtubeUrl);
+  const isOverLimit = manualTranscript.length > MAX_TRANSCRIPT_LENGTH;
 
   const handleFetchTranscript = async () => {
     // Check if free user has remaining credits
@@ -176,11 +187,27 @@ export function YouTubeInput({
       });
       return;
     }
-    onTranscriptFetched(manualTranscript, "manual");
+    if (isOverLimit) {
+      toast({
+        variant: "destructive",
+        title: "Transcript too long",
+        description: `Please reduce to ${MAX_TRANSCRIPT_LENGTH.toLocaleString()} characters or less.`,
+      });
+      return;
+    }
+    onTranscriptFetched(manualTranscript.trim(), "manual");
     toast({
       title: "Transcript added!",
       description: "You can now generate content.",
     });
+  };
+
+  const handleUrlChange = (value: string) => {
+    setYoutubeUrl(value);
+    // Clear any existing manual transcript when entering a new URL
+    if (value !== youtubeUrl) {
+      setManualTranscript("");
+    }
   };
 
   return (
@@ -204,7 +231,7 @@ export function YouTubeInput({
                 id="youtube-url"
                 placeholder="https://youtube.com/watch?v=..."
                 value={youtubeUrl}
-                onChange={(e) => setYoutubeUrl(e.target.value)}
+                onChange={(e) => handleUrlChange(e.target.value)}
                 className="pl-10"
               />
             </div>
@@ -260,38 +287,103 @@ export function YouTubeInput({
           </div>
         )}
 
-        {/* Manual fallback */}
-        {(showManual || transcriptMethod === "manual") && !transcript && (
-          <div className="space-y-2 pt-2 border-t border-border">
-            <Label htmlFor="manual-transcript" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Paste Transcript Manually
-            </Label>
-            <Textarea
-              id="manual-transcript"
-              placeholder="Paste the video transcript here..."
-              value={manualTranscript}
-              onChange={(e) => setManualTranscript(e.target.value)}
-              rows={6}
-            />
+        {/* Manual transcript toggle */}
+        {!transcript && (
+          <button
+            onClick={() => setShowManual(!showManual)}
+            className="text-sm text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
+          >
+            <FileText className="h-3.5 w-3.5" />
+            {showManual ? "Hide manual entry" : "Don't have a transcript? Paste it manually."}
+          </button>
+        )}
+
+        {/* Manual transcript entry */}
+        {showManual && !transcript && (
+          <div className="space-y-3 p-4 rounded-lg border border-border bg-muted/30">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="manual-transcript" className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Paste Transcript Manually
+              </Label>
+              <button
+                onClick={() => setShowHelpGuide(!showHelpGuide)}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+              >
+                <HelpCircle className="h-3.5 w-3.5" />
+                How to get a transcript
+              </button>
+            </div>
+
+            {/* Help Guide */}
+            <Collapsible open={showHelpGuide} onOpenChange={setShowHelpGuide}>
+              <CollapsibleContent>
+                <div className="p-3 rounded-md bg-background border border-border text-sm space-y-3 mb-3">
+                  <p className="font-medium text-foreground">How to copy a YouTube transcript:</p>
+                  <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
+                    <li>Open the video on YouTube in your browser</li>
+                    <li>
+                      Click the <strong className="text-foreground">⋯</strong> (three dots) button below the video, next to "Share"
+                    </li>
+                    <li>
+                      Select <strong className="text-foreground">"Show transcript"</strong> from the menu
+                    </li>
+                    <li>
+                      A transcript panel will appear on the right side of the video
+                    </li>
+                    <li>
+                      Click the <strong className="text-foreground">⋮</strong> (three dots) in the transcript panel and select <strong className="text-foreground">"Toggle timestamps"</strong> to hide timestamps (optional)
+                    </li>
+                    <li>
+                      Select all text in the transcript panel (<kbd className="px-1.5 py-0.5 rounded bg-muted text-xs">Ctrl+A</kbd> or <kbd className="px-1.5 py-0.5 rounded bg-muted text-xs">⌘+A</kbd>) and copy it
+                    </li>
+                    <li>Paste it in the box below</li>
+                  </ol>
+                  <div className="p-2 rounded bg-muted/50 border border-border">
+                    <p className="text-xs text-muted-foreground flex items-start gap-2">
+                      <span className="text-primary">💡</span>
+                      <span>
+                        <strong>Tip:</strong> Not all videos have transcripts. If you don't see "Show transcript" in the menu, the video's creator hasn't enabled captions.
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            <div className="relative">
+              <Textarea
+                id="manual-transcript"
+                placeholder="Paste the video transcript here..."
+                value={manualTranscript}
+                onChange={(e) => setManualTranscript(e.target.value)}
+                rows={6}
+                className={isOverLimit ? "border-destructive focus-visible:ring-destructive" : ""}
+              />
+            </div>
+            
+            {/* Character counter */}
+            <div className="flex items-center justify-between">
+              <span className={`text-xs ${isOverLimit ? "text-destructive" : "text-muted-foreground"}`}>
+                {manualTranscript.length.toLocaleString()} / {MAX_TRANSCRIPT_LENGTH.toLocaleString()} characters
+                {isOverLimit && " (over limit)"}
+              </span>
+              {manualTranscript.length > 0 && (
+                <span className="text-xs text-muted-foreground">
+                  ~{Math.ceil(manualTranscript.split(/\s+/).filter(Boolean).length).toLocaleString()} words
+                </span>
+              )}
+            </div>
+
             <Button
               onClick={handleManualSubmit}
               variant="secondary"
               className="w-full"
-              disabled={!manualTranscript.trim()}
+              disabled={!manualTranscript.trim() || isOverLimit}
             >
               Use This Transcript
             </Button>
           </div>
-        )}
-
-        {!showManual && !transcript && (
-          <button
-            onClick={() => setShowManual(true)}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Or paste transcript manually →
-          </button>
         )}
       </CardContent>
 
