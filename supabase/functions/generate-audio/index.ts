@@ -36,6 +36,7 @@ serve(async (req) => {
   try {
     const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     
     if (!ELEVENLABS_API_KEY) {
@@ -46,7 +47,7 @@ serve(async (req) => {
       );
     }
 
-    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
       console.error("Supabase configuration missing");
       return new Response(
         JSON.stringify({ error: "Server configuration error" }),
@@ -56,19 +57,20 @@ serve(async (req) => {
 
     // Get the authorization header
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
+    if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
         JSON.stringify({ error: "Authorization header required" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Create Supabase client with user's token
-    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    // Create Supabase client with user's token for JWT validation
+    const supabaseAuth = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      global: { headers: { Authorization: authHeader } }
+    });
     
-    // Verify the JWT and get user
-    const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
+    // Verify the JWT using getUser
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
     
     if (authError || !user) {
       console.error("Auth error:", authError);
@@ -78,13 +80,17 @@ serve(async (req) => {
       );
     }
 
-    console.log(`User ${user.id} requesting audio generation`);
+    const userId = user.id;
+    console.log(`User ${userId} requesting audio generation`);
+    
+    // Create admin client for database queries
+    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // CRITICAL: Verify user's subscription tier from database (do not trust frontend)
-    const { data: subscription, error: subError } = await supabaseClient
+    const { data: subscription, error: subError } = await supabaseAdmin
       .from("subscriptions")
       .select("status")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .single();
 
     if (subError) {
@@ -108,7 +114,7 @@ serve(async (req) => {
 
     // Block free users
     if (tier === "free") {
-      console.log(`Blocking free user ${user.id} from voice generation`);
+      console.log(`Blocking free user ${userId} from voice generation`);
       return new Response(
         JSON.stringify({ 
           error: "Voice generation is a Pro feature",
@@ -137,7 +143,7 @@ serve(async (req) => {
 
     // Check if user is trying to use agency-only voice without agency tier
     if (AGENCY_ONLY_VOICE_IDS.includes(voiceId) && tier !== "agency") {
-      console.log(`Blocking pro user ${user.id} from agency-only voice`);
+      console.log(`Blocking pro user ${userId} from agency-only voice`);
       return new Response(
         JSON.stringify({ 
           error: "This voice is only available to Agency users",
