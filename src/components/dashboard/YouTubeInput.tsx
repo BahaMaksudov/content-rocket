@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Youtube, Link2, FileText, Check, Crown } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Loader2, Youtube, Link2, FileText, Check, Crown, Eye, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -35,9 +37,27 @@ export function YouTubeInput({
   const [manualTranscript, setManualTranscript] = useState("");
   const [showManual, setShowManual] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
   const { toast } = useToast();
   const { isPro } = useSubscription();
   const { canUseCredits, useCredit, creditsAvailable } = useCredits();
+
+  const handleCopyTranscript = async () => {
+    if (!transcript) return;
+    try {
+      await navigator.clipboard.writeText(transcript);
+      toast({
+        title: "Copied!",
+        description: "Transcript copied to clipboard.",
+      });
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Copy failed",
+        description: "Could not copy to clipboard.",
+      });
+    }
+  };
 
   const isValidUrl = YOUTUBE_URL_REGEX.test(youtubeUrl);
 
@@ -166,6 +186,15 @@ export function YouTubeInput({
                 "Fetch"
               )}
             </Button>
+            <Button
+              onClick={() => setShowPreviewModal(true)}
+              disabled={!transcript}
+              variant="outline"
+              className="shrink-0"
+            >
+              <Eye className="h-4 w-4 mr-1" />
+              Preview
+            </Button>
           </div>
           {youtubeUrl && !isValidUrl && (
             <p className="text-sm text-destructive">Please enter a valid YouTube URL</p>
@@ -223,6 +252,48 @@ export function YouTubeInput({
         onOpenChange={setShowPremiumModal}
         feature="youtube"
       />
+
+      {/* Preview Transcript Modal */}
+      <Dialog open={showPreviewModal} onOpenChange={setShowPreviewModal}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Transcript Preview
+            </DialogTitle>
+            <DialogDescription>
+              Review the fetched transcript before generating content.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {transcript ? (
+              <>
+                <ScrollArea className="h-[400px] w-full rounded-md border border-border bg-muted/30 p-4">
+                  <pre className="font-mono text-sm whitespace-pre-wrap break-words text-foreground leading-relaxed">
+                    {transcript}
+                  </pre>
+                </ScrollArea>
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <span>{transcript.length.toLocaleString()} characters</span>
+                  <Button
+                    onClick={handleCopyTranscript}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Copy className="h-4 w-4 mr-1" />
+                    Copy to Clipboard
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <div className="h-[400px] flex items-center justify-center text-muted-foreground">
+                <p>No transcript available for this video. Please try another link.</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
