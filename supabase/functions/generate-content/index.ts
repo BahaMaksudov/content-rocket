@@ -240,16 +240,20 @@ Generate the following content based STRICTLY on the transcript:
    - Do NOT include speaker labels like "Speaker A:", "Speaker 1:", "Host:", or any name followed by colon
    - Do NOT include hashtags in the script text
    - CRITICAL AUDIO PERFORMANCE RULES (You are an Audio Performance Director for ElevenLabs v3):
-     * ONLY USE single-word audio tags that the voice AI can PERFORM:
-       - Reactions: [laugh], [giggle], [sigh], [gasp], [gulp]
-       - Emotions: [excited], [whisper]
-     * NEVER use [laughs], [chuckles], [sighs] - always use single-word forms: [laugh], [giggle], [sigh]
-     * NEVER USE visual action tags - the AI will literally READ these words aloud instead of performing them:
-       - FORBIDDEN: [gestures], [smiling], [winks], [nods], [points], [leans], [walks], [waves], [looks], [stares], [grins], [frowns], [shrugs], [gestures wildly]
-       - If you want a 'smiling' tone, describe it in the dialogue itself or use [cheerful] delivery
+     * ONLY USE these EXACT single-word audio tags (the voice AI performs these as sounds):
+       - [laugh] - for laughter
+       - [giggle] - for light laughter
+       - [sigh] - for sighing
+       - [gasp] - for surprise/shock
+       - [excited] - for energetic delivery
+       - [whisper] - for quiet/intimate delivery
+     * NEVER use plural forms like [laughs], [chuckles], [sighs] - ONLY use: [laugh], [giggle], [sigh], [gasp], [excited], [whisper]
+     * NEVER USE visual action tags - the AI will literally READ these words aloud:
+       - FORBIDDEN: [gestures], [smiling], [winks], [nods], [points], [leans], [walks], [waves], [looks], [stares], [grins], [frowns], [shrugs], [gestures wildly], [chuckles], [laughs], [sighs]
      * Use ellipses (...) for natural pauses and dashes (—) for abrupt breaks
      * Use ALL CAPS for words needing extra emphasis
-     * Place laughter tags AFTER the funny line: "I can't believe I did that! [laugh]"
+     * Place tags AFTER the line: "I can't believe I did that! [laugh]"
+   - Start every script with ... to prime the v3 model for better first-word delivery
    - Write in conversational, energetic tone
    - Each script should focus on ONE key takeaway FROM THE TRANSCRIPT
    - The script should read naturally as spoken dialogue, optimized for text-to-speech conversion
