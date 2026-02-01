@@ -32,3 +32,12 @@ verify_jwt = false
 
 [functions.generate-audio]
 verify_jwt = false
+
+[functions.sync-payment-history]
+verify_jwt = false
+
+[functions.check-refund-eligibility]
+verify_jwt = false
+
+[functions.process-refund]
+verify_jwt = false
