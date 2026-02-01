@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { CancelSubscriptionModal } from "@/components/billing/CancelSubscriptionModal";
 import { 
   CreditCard, 
   Crown, 
@@ -21,7 +22,8 @@ import {
   Calendar,
   Check,
   ArrowRight,
-  Download
+  Download,
+  XCircle
 } from "lucide-react";
 
 interface PaymentHistoryItem {
@@ -42,6 +44,7 @@ export default function Billing() {
   const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [syncLoading, setSyncLoading] = useState(false);
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
 
   const fetchPaymentHistory = useCallback(async () => {
     if (!user) {
@@ -260,23 +263,33 @@ export default function Billing() {
                 {/* Action Buttons */}
                 <div className="pt-4 flex flex-col sm:flex-row gap-3">
                   {isPaidPlan ? (
-                    <Button
-                      onClick={handleManageSubscription}
-                      disabled={portalLoading}
-                      className="gradient-primary text-primary-foreground"
-                    >
-                      {portalLoading ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          Opening Portal...
-                        </>
-                      ) : (
-                        <>
-                          <ExternalLink className="h-4 w-4 mr-2" />
-                          Manage Subscription
-                        </>
-                      )}
-                    </Button>
+                    <>
+                      <Button
+                        onClick={handleManageSubscription}
+                        disabled={portalLoading}
+                        className="gradient-primary text-primary-foreground"
+                      >
+                        {portalLoading ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            Opening Portal...
+                          </>
+                        ) : (
+                          <>
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            Manage Subscription
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setCancelModalOpen(true)}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <XCircle className="h-4 w-4 mr-2" />
+                        Cancel Subscription
+                      </Button>
+                    </>
                   ) : (
                     <Button asChild className="gradient-primary text-primary-foreground">
                       <Link to="/#pricing" className="flex items-center gap-2">
@@ -450,6 +463,16 @@ export default function Billing() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Cancel/Refund Modal */}
+      <CancelSubscriptionModal
+        open={cancelModalOpen}
+        onOpenChange={setCancelModalOpen}
+        onCanceled={() => {
+          // Refresh page data after cancellation
+          fetchPaymentHistory();
+        }}
+      />
     </AppLayout>
   );
 }
