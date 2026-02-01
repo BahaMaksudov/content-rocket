@@ -15,7 +15,7 @@ export const SUBSCRIPTION_TIERS = {
   pro: {
     name: "Pro",
     price: 29,
-    priceId: "price_1SuGkdBqKXDc35qoID1Z4oqJ",
+    priceId: "price_1Sw8YLBqKXDc35qoCAep9wJo",
     productId: "prod_Ts0mGYgpr7JkAX",
     features: [
       "50 AI content generations per month",
