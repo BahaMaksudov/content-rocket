@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Rocket, CheckCircle, Mic2, Youtube, LayoutDashboard } from "lucide-react";
+import { Rocket, CheckCircle, Mic2, Youtube, LayoutDashboard, Loader2 } from "lucide-react";
 import confetti from "canvas-confetti";
 
 type VerificationStatus = "verifying" | "success" | "pending" | "error";
@@ -15,12 +15,24 @@ export default function PaymentSuccess() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
-  const { checkSubscription, isPro } = useSubscription();
+  const { checkSubscription, isPro, isAgency } = useSubscription();
   
   const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>("verifying");
   const [displayName, setDisplayName] = useState<string>("");
+  const [isRedirecting, setIsRedirecting] = useState(false);
   
   const sessionId = searchParams.get("session_id");
+
+  // Check if user has an active paid subscription
+  const hasPaidSubscription = isPro || isAgency;
+
+  // Redirect to dashboard
+  const redirectToDashboard = useCallback(() => {
+    if (isRedirecting) return;
+    setIsRedirecting(true);
+    console.log("[PaymentSuccess] Redirecting to dashboard...");
+    navigate("/dashboard", { replace: true });
+  }, [navigate, isRedirecting]);
 
   // Fire confetti on mount
   useEffect(() => {
@@ -40,7 +52,6 @@ export default function PaymentSuccess() {
       }
     };
 
-    // Small delay for dramatic effect
     setTimeout(fireConfetti, 300);
   }, []);
 
@@ -74,56 +85,104 @@ export default function PaymentSuccess() {
     fetchProfile();
   }, [user]);
 
-  // Verify subscription status with polling
+  // If already pro/agency on mount, show success immediately
+  useEffect(() => {
+    if (hasPaidSubscription) {
+      console.log("[PaymentSuccess] Already has paid subscription, showing success");
+      setVerificationStatus("success");
+    }
+  }, [hasPaidSubscription]);
+
+  // Set up Realtime subscription to detect when subscription status changes
+  useEffect(() => {
+    if (!user) return;
+
+    console.log("[PaymentSuccess] Setting up Realtime subscription for user:", user.id);
+
+    const channel = supabase
+      .channel(`subscription-changes-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "subscriptions",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log("[PaymentSuccess] Subscription update received:", payload);
+          const newStatus = payload.new?.status;
+          
+          if (newStatus === "pro" || newStatus === "agency") {
+            console.log("[PaymentSuccess] Subscription upgraded to:", newStatus);
+            setVerificationStatus("success");
+            // Refresh subscription context
+            checkSubscription();
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log("[PaymentSuccess] Realtime channel status:", status);
+      });
+
+    return () => {
+      console.log("[PaymentSuccess] Cleaning up Realtime subscription");
+      supabase.removeChannel(channel);
+    };
+  }, [user, checkSubscription]);
+
+  // Polling fallback with longer timeout (webhook may take a few seconds)
   useEffect(() => {
     if (!user || !sessionId) return;
-
-    // If already pro, show success immediately
-    if (isPro) {
-      setVerificationStatus("success");
-      return;
-    }
+    if (hasPaidSubscription) return; // Already paid, skip polling
 
     let attempts = 0;
-    const maxAttempts = 10; // 5 seconds total (500ms intervals)
+    const maxAttempts = 20; // 10 seconds total (500ms intervals)
+    let timeoutId: NodeJS.Timeout;
 
     const verifySubscription = async () => {
       attempts++;
+      console.log(`[PaymentSuccess] Polling attempt ${attempts}/${maxAttempts}`);
       
       try {
         await checkSubscription();
         
-        // Check if now pro after refresh
         const { data } = await supabase
           .from("subscriptions")
           .select("status")
           .eq("user_id", user.id)
           .maybeSingle();
 
-        if (data?.status === "pro" || data?.status === "active") {
+        console.log("[PaymentSuccess] Current subscription status:", data?.status);
+
+        if (data?.status === "pro" || data?.status === "agency") {
           setVerificationStatus("success");
           return;
         }
 
         if (attempts >= maxAttempts) {
+          console.log("[PaymentSuccess] Max attempts reached, showing pending state");
           setVerificationStatus("pending");
           return;
         }
 
-        // Keep polling
-        setTimeout(verifySubscription, 500);
+        timeoutId = setTimeout(verifySubscription, 500);
       } catch (error) {
-        console.error("Error verifying subscription:", error);
+        console.error("[PaymentSuccess] Error verifying subscription:", error);
         if (attempts >= maxAttempts) {
           setVerificationStatus("error");
         } else {
-          setTimeout(verifySubscription, 500);
+          timeoutId = setTimeout(verifySubscription, 500);
         }
       }
     };
 
     verifySubscription();
-  }, [user, sessionId, isPro, checkSubscription]);
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [user, sessionId, hasPaidSubscription, checkSubscription]);
 
   const handleLaunchDashboard = () => {
     navigate("/dashboard");
@@ -149,21 +208,45 @@ export default function PaymentSuccess() {
     );
   }
 
-  // Pending state - webhook hasn't processed yet
+  // Pending state - webhook hasn't processed yet, but show dashboard button if already pro
   if (verificationStatus === "pending") {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="max-w-md w-full space-y-6 text-center">
           <div className="h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-            <Rocket className="h-12 w-12 text-primary animate-bounce" />
+            {hasPaidSubscription ? (
+              <CheckCircle className="h-12 w-12 text-primary" />
+            ) : (
+              <Loader2 className="h-12 w-12 text-primary animate-spin" />
+            )}
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Almost There!</h1>
+          <h1 className="text-2xl font-bold text-foreground">
+            {hasPaidSubscription ? "Upgrade Complete!" : "Processing Payment..."}
+          </h1>
           <p className="text-muted-foreground">
-            Your account is being upgraded! Please refresh in a moment.
+            {hasPaidSubscription 
+              ? "Your account has been upgraded. Click below to access your dashboard."
+              : "Your payment is being processed. This usually takes a few seconds."
+            }
           </p>
-          <Button onClick={handleRefresh} variant="outline" className="mt-4">
-            Refresh Page
-          </Button>
+          <div className="flex flex-col gap-3">
+            {hasPaidSubscription ? (
+              <Button onClick={redirectToDashboard} className="w-full">
+                <Rocket className="mr-2 h-4 w-4" />
+                Go to Dashboard
+              </Button>
+            ) : (
+              <>
+                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Waiting for confirmation...
+                </div>
+                <Button onClick={handleRefresh} variant="outline" className="w-full">
+                  Refresh Page
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     );
