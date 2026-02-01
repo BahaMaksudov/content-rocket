@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Rocket, ArrowLeft, RefreshCw, Bug } from "lucide-react";
 import { z } from "zod";
 import { VerificationPending } from "@/components/auth/VerificationPending";
+import { getEmailRedirectTo } from "@/lib/auth-redirect";
 
 const authSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -55,7 +56,7 @@ export default function Auth() {
     
     setIsResendingVerification(true);
     try {
-      const redirectUrl = `${window.location.origin}/auth/callback`;
+      const redirectUrl = getEmailRedirectTo("/auth/callback");
       
       const { error } = await supabase.auth.resend({
         type: "signup",

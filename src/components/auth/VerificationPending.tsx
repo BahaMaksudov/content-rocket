@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Loader2, ArrowLeft, Rocket, RefreshCw } from "lucide-react";
+import { getEmailRedirectTo } from "@/lib/auth-redirect";
 
 interface VerificationPendingProps {
   email: string;
@@ -18,7 +19,7 @@ export function VerificationPending({ email, onBack }: VerificationPendingProps)
   const handleResendEmail = async () => {
     setIsResending(true);
     try {
-      const redirectUrl = `${window.location.origin}/auth/callback`;
+      const redirectUrl = getEmailRedirectTo("/auth/callback");
       
       const { error } = await supabase.auth.resend({
         type: "signup",

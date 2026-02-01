@@ -3,6 +3,7 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { identifyUser, resetUser, trackSignUp, trackLogin } from "@/lib/posthog";
 import { toast } from "@/hooks/use-toast";
+import { getEmailRedirectTo } from "@/lib/auth-redirect";
 
 interface AuthContextType {
   user: User | null;
@@ -114,11 +115,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, fullName?: string) => {
-    // Always use the current origin for redirects - this ensures custom domains work correctly
-    const currentOrigin = window.location.origin;
-    const redirectUrl = `${currentOrigin}/auth/callback`;
-    
-    console.log(`[Auth] SignUp redirect configured for: ${redirectUrl} (Custom domain: ${isCustomDomain()})`);
+    // Use a redirect URL that works both in editor preview and on mobile.
+    const redirectUrl = getEmailRedirectTo("/auth/callback");
+
+    console.log(
+      `[Auth] SignUp redirect configured for: ${redirectUrl} (Custom domain: ${isCustomDomain()})`
+    );
     
     const { data, error } = await supabase.auth.signUp({
       email,
