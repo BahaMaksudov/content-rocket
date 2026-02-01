@@ -22,11 +22,9 @@ export default function PaymentCanceled() {
               HOLD
             </div>
           </div>
-          
+
           <div className="space-y-3">
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-              Not quite ready to launch?
-            </h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground">Not quite ready to launch?</h1>
             <p className="text-lg text-muted-foreground max-w-md mx-auto">
               No worries! Your rocket is still on the launchpad, ready when you are.
             </p>
@@ -42,11 +40,7 @@ export default function PaymentCanceled() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center">
-            <Button 
-              onClick={handleRetryCheckout} 
-              size="lg" 
-              className="gap-2"
-            >
+            <Button onClick={handleRetryCheckout} size="lg" className="gap-2">
               <RefreshCw className="h-4 w-4" />
               Try Again
             </Button>
@@ -98,10 +92,10 @@ export default function PaymentCanceled() {
           </Card>
         </div>
 
-        {/* Back to Home */}
+        {/* Back to Dashboard */}
         <div className="text-center">
           <Button variant="ghost" asChild>
-            <Link to="/">← Back to Home</Link>
+            <Link to="/">← Back to Dashboard</Link>
           </Button>
         </div>
       </div>
