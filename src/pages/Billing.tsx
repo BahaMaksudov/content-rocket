@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,14 +20,57 @@ import {
   Receipt,
   Calendar,
   Check,
-  ArrowRight
+  ArrowRight,
+  Download
 } from "lucide-react";
+
+interface PaymentHistoryItem {
+  id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  payment_date: string;
+  invoice_pdf_url: string | null;
+  description: string | null;
+}
 
 export default function Billing() {
   const { user, session } = useAuth();
   const { tier, loading: subscriptionLoading, subscriptionEnd } = useSubscription();
   const { toast } = useToast();
   const [portalLoading, setPortalLoading] = useState(false);
+  const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryItem[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
+
+  // Fetch payment history
+  useEffect(() => {
+    const fetchPaymentHistory = async () => {
+      if (!user) {
+        setPaymentHistory([]);
+        setHistoryLoading(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("payment_history")
+          .select("id, amount, currency, status, payment_date, invoice_pdf_url, description")
+          .eq("user_id", user.id)
+          .order("payment_date", { ascending: false })
+          .limit(10);
+
+        if (error) throw error;
+        setPaymentHistory(data || []);
+      } catch (error) {
+        console.error("Error fetching payment history:", error);
+        setPaymentHistory([]);
+      } finally {
+        setHistoryLoading(false);
+      }
+    };
+
+    fetchPaymentHistory();
+  }, [user]);
 
   const tierConfig = SUBSCRIPTION_TIERS[tier];
   const isPaidPlan = tier === "pro" || tier === "agency";
@@ -234,38 +277,83 @@ export default function Billing() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {!isPaidPlan ? (
+            {historyLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+              </div>
+            ) : paymentHistory.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <Receipt className="h-12 w-12 mx-auto mb-3 opacity-30" />
                 <p className="text-sm">No payment history available</p>
-                <p className="text-xs mt-1">Subscribe to Pro or Agency to get started</p>
+                <p className="text-xs mt-1">
+                  {isPaidPlan 
+                    ? "Your first invoice will appear after billing" 
+                    : "Subscribe to Pro or Agency to get started"
+                  }
+                </p>
               </div>
             ) : (
-              <div className="text-center py-6">
-                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                  <Receipt className="h-6 w-6 text-primary" />
-                </div>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Access your complete invoice history, download receipts, and manage payment methods in the Stripe Customer Portal.
-                </p>
-                <Button
-                  onClick={handleManageSubscription}
-                  disabled={portalLoading}
-                  variant="outline"
-                  className="w-full sm:w-auto"
-                >
-                  {portalLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      Opening Portal...
-                    </>
-                  ) : (
-                    <>
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      View Invoices in Stripe
-                    </>
-                  )}
-                </Button>
+              <div className="space-y-3">
+                {paymentHistory.map((payment) => (
+                  <div
+                    key={payment.id}
+                    className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Calendar className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">
+                          {new Date(payment.payment_date).toLocaleDateString("en-US", {
+                            month: "long",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {payment.description || "Subscription payment"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <p className="text-sm font-medium">
+                          ${(payment.amount / 100).toFixed(2)}
+                        </p>
+                        <Badge variant="secondary" className="text-xs bg-success/10 text-success border-0">
+                          {payment.status}
+                        </Badge>
+                      </div>
+                      {payment.invoice_pdf_url && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          asChild
+                          className="h-8 w-8"
+                        >
+                          <a href={payment.invoice_pdf_url} target="_blank" rel="noopener noreferrer">
+                            <Download className="h-4 w-4" />
+                          </a>
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                
+                {isPaidPlan && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleManageSubscription}
+                    disabled={portalLoading}
+                    className="w-full mt-2 text-muted-foreground hover:text-foreground"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    View All Invoices in Stripe
+                  </Button>
+                )}
               </div>
             )}
           </CardContent>
