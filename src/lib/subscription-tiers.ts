@@ -21,7 +21,7 @@ export const SUBSCRIPTION_TIERS = {
       "50 AI content generations per month",
       "All 4 platform outputs",
       "AI-powered visuals",
-      "Global translation (3 languages)",
+      "Global translation (multiple languages supported)",
       "Social previews",
       "3 brand voices",
       "Priority support",

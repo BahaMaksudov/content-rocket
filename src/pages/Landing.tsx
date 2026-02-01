@@ -690,7 +690,7 @@ function PricingSection({ onUpgradeClick }: { onUpgradeClick: (tier: "pro" | "ag
         "50 generations per month",
         "All 4 platform outputs",
         "AI-powered visuals",
-        "Global translation (6 languages)",
+        "Global translation (multiple languages supported)",
         "Social previews",
         "3 brand voices",
         "Priority support",
