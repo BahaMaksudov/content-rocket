@@ -9,7 +9,7 @@ const corsHeaders = {
 
 // Price IDs for subscription tiers - must match subscription-tiers.ts
 const PRICE_IDS = {
-  pro: "price_1SuGkdBqKXDc35qoID1Z4oqJ",
+  pro: "price_1Sw8YLBqKXDc35qoCAep9wJo",
   agency: "price_1SuK15BqKXDc35qoi2xUQewc",
 };
 
