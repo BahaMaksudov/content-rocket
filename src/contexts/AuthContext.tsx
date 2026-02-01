@@ -133,8 +133,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     });
     
+    // Detect duplicate signup: when email confirmation is enabled,
+    // Supabase returns a user with empty identities array instead of an error
+    if (!error && data.user && data.user.identities?.length === 0) {
+      console.log("[Auth] Detected duplicate signup - user already exists");
+      return { 
+        error: new Error("user_already_registered") as Error 
+      };
+    }
+    
     // Track sign up and trigger welcome email if signup was successful
-    if (!error && data.user) {
+    if (!error && data.user && data.user.identities && data.user.identities.length > 0) {
       // Track sign up event
       trackSignUp(data.user.id, email);
       
