@@ -92,22 +92,42 @@ serve(async (req) => {
           
           logStep("Determined subscription tier", { productId, tier });
 
-          const { error } = await supabase
-            .from("subscriptions")
-            .upsert({
-              user_id: userId,
-              stripe_customer_id: session.customer as string,
-              stripe_subscription_id: subscription.id,
-              status: tier,
-              price_id: priceId,
-              current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-              updated_at: new Date().toISOString(),
-            }, { onConflict: "user_id" });
+          try {
+            // Convert Unix timestamps to ISO strings for database compatibility
+            const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
+            const updatedAt = new Date().toISOString();
+            
+            logStep("Timestamp conversion", { 
+              rawCurrentPeriodEnd: subscription.current_period_end,
+              convertedCurrentPeriodEnd: currentPeriodEnd,
+              updatedAt 
+            });
 
-          if (error) {
-            logStep("Database update error", { error: error.message });
-          } else {
-            logStep(`Subscription updated to ${tier}`, { userId });
+            const { error } = await supabase
+              .from("subscriptions")
+              .upsert({
+                user_id: userId,
+                stripe_customer_id: session.customer as string,
+                stripe_subscription_id: subscription.id,
+                status: tier,
+                price_id: priceId,
+                current_period_end: currentPeriodEnd,
+                updated_at: updatedAt,
+              }, { onConflict: "user_id" });
+
+            if (error) {
+              logStep("Database update error", { error: error.message });
+            } else {
+              logStep(`Subscription updated to ${tier}`, { userId });
+            }
+          } catch (dbError) {
+            const errorMessage = dbError instanceof Error ? dbError.message : String(dbError);
+            logStep("Database operation failed", { 
+              error: errorMessage,
+              rawTimestamp: subscription.current_period_end,
+              userId 
+            });
+            throw dbError;
           }
         }
       }
@@ -130,17 +150,40 @@ serve(async (req) => {
           status = getTierFromProductId(productId);
         }
         
-        await supabase
-          .from("subscriptions")
-          .update({
-            status,
-            price_id: subscription.items.data[0]?.price.id,
-            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-            updated_at: new Date().toISOString(),
-          })
-          .eq("user_id", subRecord.user_id);
+        try {
+          // Convert Unix timestamps to ISO strings for database compatibility
+          const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
+          const updatedAt = new Date().toISOString();
+          
+          logStep("Timestamp conversion for update", { 
+            rawCurrentPeriodEnd: subscription.current_period_end,
+            convertedCurrentPeriodEnd: currentPeriodEnd 
+          });
 
-        logStep("Subscription status updated", { userId: subRecord.user_id, status });
+          const { error } = await supabase
+            .from("subscriptions")
+            .update({
+              status,
+              price_id: subscription.items.data[0]?.price.id,
+              current_period_end: currentPeriodEnd,
+              updated_at: updatedAt,
+            })
+            .eq("user_id", subRecord.user_id);
+
+          if (error) {
+            logStep("Database update error", { error: error.message });
+          } else {
+            logStep("Subscription status updated", { userId: subRecord.user_id, status });
+          }
+        } catch (dbError) {
+          const errorMessage = dbError instanceof Error ? dbError.message : String(dbError);
+          logStep("Database update operation failed", { 
+            error: errorMessage,
+            rawTimestamp: subscription.current_period_end,
+            userId: subRecord.user_id 
+          });
+          throw dbError;
+        }
       }
     }
 
