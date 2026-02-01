@@ -262,19 +262,24 @@ export function YouTubeInput({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2">
+        <div className="space-y-3">
           <Label htmlFor="youtube-url">Video URL</Label>
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="youtube-url"
-                placeholder="https://youtube.com/watch?v=..."
-                value={youtubeUrl}
-                onChange={(e) => handleUrlChange(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+          {/* Full-width URL input */}
+          <div className="relative w-full">
+            <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="youtube-url"
+              placeholder="https://youtube.com/watch?v=..."
+              value={youtubeUrl}
+              onChange={(e) => handleUrlChange(e.target.value)}
+              className="pl-10 w-full"
+            />
+          </div>
+          {youtubeUrl && !isValidUrl && (
+            <p className="text-sm text-destructive">Please enter a valid YouTube URL</p>
+          )}
+          {/* Buttons row below input */}
+          <div className="flex flex-wrap gap-2 mt-2">
             <Button
               onClick={handleFetchTranscript}
               disabled={!isValidUrl || isFetching}
@@ -301,9 +306,6 @@ export function YouTubeInput({
               Preview
             </Button>
           </div>
-          {youtubeUrl && !isValidUrl && (
-            <p className="text-sm text-destructive">Please enter a valid YouTube URL</p>
-          )}
         </div>
 
         {/* Advertisement Warning */}
