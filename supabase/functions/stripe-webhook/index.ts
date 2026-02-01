@@ -9,10 +9,10 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Product IDs for subscription tiers
+// Product IDs for subscription tiers - UPDATED to match new Stripe products
 const PRODUCT_IDS = {
-  pro: "prod_Ts0mGYgpr7JkAX",
-  agency: "prod_Ts4937tu4QuFB5", // Updated Agency product ID ($249/mo)
+  pro: "prod_TtwRuGNynEpRHz",    // New Pro product ID ($29/mo)
+  agency: "prod_TtwRuGNynEpRHz", // Using Pro for now - update when Agency product is created
 };
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
