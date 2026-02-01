@@ -49,8 +49,7 @@ export default function Dashboard() {
   // Unified credits tracking
   const { canUseCredits, useCredit, refreshCredits } = useCredits();
   
-  // Global Reach state
-  const [globalReachEnabled, setGlobalReachEnabled] = useState(false);
+  // Target language state (always used now)
   const [targetLanguage, setTargetLanguage] = useState("english");
   
   // Ref for scrolling to content output
@@ -135,8 +134,7 @@ export default function Dashboard() {
       hasBrandVoice: !!selectedBrandVoice,
       tone,
       audience,
-      globalReachEnabled,
-      targetLanguage: globalReachEnabled ? targetLanguage : null,
+      targetLanguage,
     });
 
     try {
@@ -177,7 +175,7 @@ export default function Dashboard() {
           tone,
           audience,
           brandVoice: brandVoiceData,
-          translateTo: globalReachEnabled ? targetLanguage : null,
+          translateTo: targetLanguage !== "english" ? targetLanguage : null,
         },
       });
 
@@ -257,7 +255,7 @@ export default function Dashboard() {
         linkedin_post: data.linkedinPost,
         short_form_scripts: data.shortFormScripts,
         blog_post: data.blogPost,
-        target_language: globalReachEnabled ? targetLanguage : null,
+        target_language: targetLanguage !== "english" ? targetLanguage : null,
       });
 
       // Use one credit after successful generation (this also refreshes UI)
@@ -265,8 +263,8 @@ export default function Dashboard() {
 
       toast({
         title: "All assets generated!",
-        description: globalReachEnabled 
-          ? `Content created and translated to ${targetLanguage}. Saved to history.`
+        description: targetLanguage !== "english"
+          ? `Content created in ${targetLanguage}. Saved to history.`
           : "Your multi-platform content has been saved to history.",
       });
     } catch (error: any) {
@@ -353,8 +351,6 @@ export default function Dashboard() {
               onGenerate={handleGenerate}
               isGenerating={isGenerating}
               hasTranscript={!!transcript}
-              globalReachEnabled={globalReachEnabled}
-              setGlobalReachEnabled={setGlobalReachEnabled}
               targetLanguage={targetLanguage}
               setTargetLanguage={setTargetLanguage}
             />
@@ -366,7 +362,7 @@ export default function Dashboard() {
               content={generatedContent}
               isGenerating={isGenerating}
               onUpdateContent={handleUpdateContent}
-              targetLanguage={globalReachEnabled ? targetLanguage : null}
+              targetLanguage={targetLanguage !== "english" ? targetLanguage : null}
             />
           </div>
         </div>
