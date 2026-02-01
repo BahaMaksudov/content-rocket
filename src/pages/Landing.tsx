@@ -403,7 +403,8 @@ function SolutionSection() {
     {
       icon: Globe,
       title: "Global Reach",
-      description: "Instantly translate all content to Spanish, Hindi, or Mandarin while keeping your brand voice.",
+      description:
+        "Instantly translate all content to Spanish, Hindi, Mandarin and many other languages while keeping your brand voice.",
       color: "success",
       gradient: "from-success to-emerald-400",
     },
