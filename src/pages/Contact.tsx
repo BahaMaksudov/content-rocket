@@ -13,8 +13,16 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const contactSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
-  email: z.string().trim().email("Please enter a valid email address").max(255, "Email must be less than 255 characters"),
-  message: z.string().trim().min(10, "Message must be at least 10 characters").max(2000, "Message must be less than 2000 characters"),
+  email: z
+    .string()
+    .trim()
+    .email("Please enter a valid email address")
+    .max(255, "Email must be less than 255 characters"),
+  message: z
+    .string()
+    .trim()
+    .min(10, "Message must be at least 10 characters")
+    .max(2000, "Message must be less than 2000 characters"),
 });
 
 export default function Contact() {
@@ -55,7 +63,7 @@ export default function Contact() {
 
       // Show success state
       setIsSuccess(true);
-      
+
       // Reset form
       setName("");
       setEmail("");
@@ -111,9 +119,7 @@ export default function Contact() {
               <Mail className="h-5 w-5 text-primary" />
               Send us a Message
             </CardTitle>
-            <CardDescription>
-              Fill out the form below and we'll respond within 24-48 hours.
-            </CardDescription>
+            <CardDescription>Fill out the form below and we'll respond within 24-48 hours.</CardDescription>
           </CardHeader>
           <CardContent>
             <AnimatePresence mode="wait">
@@ -170,9 +176,7 @@ export default function Contact() {
                       className={errors.name ? "border-destructive" : ""}
                       disabled={isSubmitting}
                     />
-                    {errors.name && (
-                      <p className="text-sm text-destructive">{errors.name}</p>
-                    )}
+                    {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -186,9 +190,7 @@ export default function Contact() {
                       className={errors.email ? "border-destructive" : ""}
                       disabled={isSubmitting}
                     />
-                    {errors.email && (
-                      <p className="text-sm text-destructive">{errors.email}</p>
-                    )}
+                    {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -202,9 +204,7 @@ export default function Contact() {
                       className={errors.message ? "border-destructive" : ""}
                       disabled={isSubmitting}
                     />
-                    {errors.message && (
-                      <p className="text-sm text-destructive">{errors.message}</p>
-                    )}
+                    {errors.message && <p className="text-sm text-destructive">{errors.message}</p>}
                   </div>
 
                   <Button
@@ -230,7 +230,7 @@ export default function Contact() {
         </Card>
 
         {/* Alternative contact info */}
-        <div className="mt-12 text-center">
+        {/* <div className="mt-12 text-center">
           <p className="text-muted-foreground mb-2">
             Prefer email? Reach us directly at
           </p>
@@ -240,7 +240,7 @@ export default function Contact() {
           >
             support@rocketcontentpro.io
           </a>
-        </div>
+        </div> */}
       </main>
 
       {/* Simple Footer */}
