@@ -257,6 +257,62 @@ serve(async (req) => {
       }
     }
 
+    // Handle successful payments - insert into payment_history
+    if (event.type === "invoice.paid") {
+      const invoice = event.data.object as Stripe.Invoice;
+      logStep("Invoice paid", { invoiceId: invoice.id, customerId: invoice.customer });
+
+      try {
+        // Get user_id from subscription record using stripe_customer_id
+        const customerId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id;
+        
+        if (customerId) {
+          const { data: subRecord } = await supabase
+            .from("subscriptions")
+            .select("user_id")
+            .eq("stripe_customer_id", customerId)
+            .maybeSingle();
+
+          if (subRecord?.user_id) {
+            const paymentDate = toTimestamp(invoice.created);
+            const amount = invoice.amount_paid || invoice.total || 0;
+            
+            const { error: insertError } = await supabase
+              .from("payment_history")
+              .insert({
+                user_id: subRecord.user_id,
+                stripe_invoice_id: invoice.id,
+                stripe_payment_intent_id: typeof invoice.payment_intent === 'string' 
+                  ? invoice.payment_intent 
+                  : invoice.payment_intent?.id || null,
+                amount: amount,
+                currency: invoice.currency || 'usd',
+                status: invoice.status || 'paid',
+                payment_date: paymentDate,
+                invoice_pdf_url: invoice.invoice_pdf || invoice.hosted_invoice_url || null,
+                description: invoice.lines?.data?.[0]?.description || 'Subscription payment',
+              });
+
+            if (insertError) {
+              logStep("Error inserting payment history", { error: insertError.message });
+            } else {
+              logStep("Payment history recorded", { 
+                userId: subRecord.user_id, 
+                amount,
+                invoiceId: invoice.id 
+              });
+            }
+          } else {
+            logStep("No subscription found for customer", { customerId });
+          }
+        }
+      } catch (paymentError) {
+        const errorMessage = paymentError instanceof Error ? paymentError.message : String(paymentError);
+        logStep("Error processing invoice.paid", { error: errorMessage });
+        // Don't throw - we still want to return 200 to Stripe
+      }
+    }
+
     return new Response(JSON.stringify({ received: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

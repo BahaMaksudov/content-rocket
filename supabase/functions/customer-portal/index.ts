@@ -40,16 +40,49 @@ serve(async (req) => {
     logStep("User authenticated", { userId: user.id, email: user.email });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     
-    if (customers.data.length === 0) {
-      throw new Error("No Stripe customer found for this user");
-    }
-    
-    const customerId = customers.data[0].id;
-    logStep("Found Stripe customer", { customerId });
+    // First check if we have a stripe_customer_id in our subscriptions table
+    const { data: subRecord } = await supabaseClient
+      .from("subscriptions")
+      .select("stripe_customer_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
 
-    const origin = req.headers.get("origin") || "https://lovable.dev";
+    let customerId = subRecord?.stripe_customer_id;
+    
+    if (!customerId) {
+      // Look up customer in Stripe by email
+      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+      
+      if (customers.data.length > 0) {
+        customerId = customers.data[0].id;
+        logStep("Found existing Stripe customer by email", { customerId });
+        
+        // Update our subscription record with the customer ID
+        await supabaseClient
+          .from("subscriptions")
+          .update({ stripe_customer_id: customerId })
+          .eq("user_id", user.id);
+      } else {
+        // Create new Stripe customer
+        const newCustomer = await stripe.customers.create({
+          email: user.email,
+          metadata: { supabase_user_id: user.id },
+        });
+        customerId = newCustomer.id;
+        logStep("Created new Stripe customer", { customerId });
+        
+        // Update our subscription record with the new customer ID
+        await supabaseClient
+          .from("subscriptions")
+          .update({ stripe_customer_id: customerId })
+          .eq("user_id", user.id);
+      }
+    } else {
+      logStep("Found Stripe customer from database", { customerId });
+    }
+
+    const origin = req.headers.get("origin") || "https://rocketcontentpro.io";
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customerId,
       return_url: `${origin}/dashboard`,
