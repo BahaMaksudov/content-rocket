@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { Loader2, Rocket, ArrowLeft, RefreshCw, AlertCircle, UserPlus, Info } from "lucide-react";
+import { Loader2, Rocket, ArrowLeft, RefreshCw, AlertCircle, UserPlus, Info, LogIn, KeyRound } from "lucide-react";
 import { z } from "zod";
 import { VerificationPending } from "@/components/auth/VerificationPending";
 import { getEmailRedirectTo } from "@/lib/auth-redirect";
@@ -28,6 +28,10 @@ type AuthError = {
   title: string;
   message: string;
   action?: {
+    label: string;
+    onClick: () => void;
+  };
+  secondaryAction?: {
     label: string;
     onClick: () => void;
   };
@@ -165,12 +169,18 @@ export default function Auth() {
             setAuthError({
               type: "info",
               title: "Account Already Exists",
-              message: "This email is already registered. Try signing in, or check your inbox for a verification email.",
+              message: "An account with this email already exists.",
               action: {
-                label: "Switch to Sign In",
+                label: "Go to Sign In",
                 onClick: () => {
                   setActiveTab("login");
                   setAuthError(null);
+                },
+              },
+              secondaryAction: {
+                label: "Forgot Password?",
+                onClick: () => {
+                  navigate("/forgot-password");
                 },
               },
             });
@@ -329,26 +339,41 @@ export default function Auth() {
                       <AlertDescription className="mt-1 text-sm opacity-90">
                         {authError.message}
                       </AlertDescription>
-                      {authError.action && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={authError.action.onClick}
-                          disabled={isResendingVerification}
-                          className="mt-2 h-8 px-3 text-xs font-medium hover:bg-white/10"
-                        >
-                          {isResendingVerification ? (
-                            <>
-                              <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />
-                              Sending...
-                            </>
-                          ) : (
-                            <>
-                              <UserPlus className="mr-1.5 h-3 w-3" />
-                              {authError.action.label}
-                            </>
+                      {(authError.action || authError.secondaryAction) && (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {authError.action && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={authError.action.onClick}
+                              disabled={isResendingVerification}
+                              className="h-8 px-3 text-xs font-medium hover:bg-white/10"
+                            >
+                              {isResendingVerification ? (
+                                <>
+                                  <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />
+                                  Sending...
+                                </>
+                              ) : (
+                                <>
+                                  <LogIn className="mr-1.5 h-3 w-3" />
+                                  {authError.action.label}
+                                </>
+                              )}
+                            </Button>
                           )}
-                        </Button>
+                          {authError.secondaryAction && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={authError.secondaryAction.onClick}
+                              className="h-8 px-3 text-xs font-medium hover:bg-white/10"
+                            >
+                              <KeyRound className="mr-1.5 h-3 w-3" />
+                              {authError.secondaryAction.label}
+                            </Button>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -382,6 +407,14 @@ export default function Auth() {
                     disabled={isLoading}
                     onKeyDown={(e) => e.key === "Enter" && isFormValid && handleAuth("login")}
                   />
+                </div>
+                <div className="flex justify-end">
+                  <Link 
+                    to="/forgot-password" 
+                    className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    Forgot password?
+                  </Link>
                 </div>
                 <Button
                   className="w-full gradient-primary text-primary-foreground"
