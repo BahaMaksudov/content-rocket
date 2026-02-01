@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, AlertTriangle, CheckCircle, XCircle, Info } from "lucide-react";
+import { Loader2, AlertTriangle, CheckCircle, XCircle, Info, Calendar } from "lucide-react";
 
 interface CancelSubscriptionModalProps {
   open: boolean;
@@ -24,45 +24,116 @@ export function CancelSubscriptionModal({
   onOpenChange,
   onCanceled,
 }: CancelSubscriptionModalProps) {
-  const { openCustomerPortal, subscriptionEnd, checkSubscription } = useSubscription();
-  const { eligibility, loading, refundLoading, checkEligibility, processRefund } = useRefundWorkflow();
-  const [portalLoading, setPortalLoading] = useState(false);
+  const { subscriptionEnd, checkSubscription } = useSubscription();
+  const { 
+    eligibility, 
+    loading, 
+    refundLoading, 
+    cancelLoading,
+    checkEligibility, 
+    processRefund,
+    cancelAtPeriodEnd 
+  } = useRefundWorkflow();
+  
+  const [cancellationResult, setCancellationResult] = useState<{
+    success: boolean;
+    immediate: boolean;
+    periodEnd?: string;
+  } | null>(null);
 
   // Check eligibility when modal opens
   useEffect(() => {
     if (open) {
       checkEligibility();
+      setCancellationResult(null);
     }
   }, [open, checkEligibility]);
 
   const handleRefund = async () => {
-    const success = await processRefund();
-    if (success) {
+    const result = await processRefund();
+    if (result.success) {
+      setCancellationResult({ success: true, immediate: true });
       await checkSubscription();
-      onOpenChange(false);
       onCanceled?.();
     }
   };
 
   const handleStandardCancel = async () => {
-    setPortalLoading(true);
-    try {
-      await openCustomerPortal();
-      onOpenChange(false);
-    } catch (error) {
-      console.error("Error opening portal:", error);
-    } finally {
-      setPortalLoading(false);
+    const result = await cancelAtPeriodEnd();
+    if (result.success) {
+      setCancellationResult({ 
+        success: true, 
+        immediate: false, 
+        periodEnd: result.periodEnd 
+      });
+      await checkSubscription();
+      onCanceled?.();
     }
   };
 
-  const formattedEndDate = subscriptionEnd
-    ? new Date(subscriptionEnd).toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      })
-    : null;
+  const formattedEndDate = (date?: string | null) => {
+    if (!date) return null;
+    return new Date(date).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  // Show success state after cancellation
+  if (cancellationResult?.success) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-success" />
+              Subscription Canceled
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {cancellationResult.immediate ? (
+              <div className="rounded-lg bg-success/10 border border-success/30 p-4">
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="h-5 w-5 text-success shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-success">Access Removed Immediately</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Your subscription has been canceled and you've received a full refund.
+                      Your account has been downgraded to the free tier.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-lg bg-primary/10 border border-primary/30 p-4">
+                <div className="flex items-start gap-3">
+                  <Calendar className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-primary">Pro Access Until Period End</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      You'll continue to have Pro access until{" "}
+                      <span className="font-semibold">
+                        {formattedEndDate(cancellationResult.periodEnd)}
+                      </span>
+                      . After that, your account will be downgraded to the free tier.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button onClick={() => onOpenChange(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -82,7 +153,7 @@ export function CancelSubscriptionModal({
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : eligibility?.eligible ? (
-          // Eligible for refund
+          // Eligible for refund - immediate cancellation
           <div className="space-y-4">
             <div className="rounded-lg bg-success/10 border border-success/30 p-4">
               <div className="flex items-start gap-3">
@@ -91,7 +162,7 @@ export function CancelSubscriptionModal({
                   <p className="font-medium text-success">Eligible for Full Refund</p>
                   <p className="text-sm text-muted-foreground mt-1">
                     You qualify for our 7-Day Satisfaction Guarantee. Your subscription will be canceled 
-                    immediately and you'll receive a full refund.
+                    <span className="font-semibold"> immediately</span> and you'll receive a full refund.
                   </p>
                 </div>
               </div>
@@ -110,6 +181,12 @@ export function CancelSubscriptionModal({
                 <span className="text-muted-foreground">First-time subscriber:</span>
                 <Badge variant="secondary">{eligibility.isFirstSubscription ? "Yes" : "No"}</Badge>
               </div>
+            </div>
+
+            <div className="rounded-lg bg-warning/10 border border-warning/30 p-3">
+              <p className="text-sm text-warning font-medium">
+                ⚠️ Access will be removed immediately upon refund
+              </p>
             </div>
 
             <DialogFooter className="flex flex-col sm:flex-row gap-2">
@@ -133,7 +210,7 @@ export function CancelSubscriptionModal({
             </DialogFooter>
           </div>
         ) : eligibility?.canCancel ? (
-          // Not eligible for refund but can cancel
+          // Not eligible for refund - cancel at period end
           <div className="space-y-4">
             <div className="rounded-lg bg-muted p-4">
               <div className="flex items-start gap-3">
@@ -160,10 +237,16 @@ export function CancelSubscriptionModal({
               </div>
             </div>
 
-            {formattedEndDate && (
-              <p className="text-sm text-center text-muted-foreground">
-                Your access will continue until <span className="font-medium">{formattedEndDate}</span>
-              </p>
+            {subscriptionEnd && (
+              <div className="rounded-lg bg-primary/10 border border-primary/30 p-4">
+                <div className="flex items-center gap-3">
+                  <Calendar className="h-5 w-5 text-primary shrink-0" />
+                  <p className="text-sm">
+                    <span className="font-medium text-primary">You'll have Pro access until </span>
+                    <span className="font-semibold">{formattedEndDate(subscriptionEnd)}</span>
+                  </p>
+                </div>
+              </div>
             )}
 
             <DialogFooter className="flex flex-col sm:flex-row gap-2">
@@ -173,12 +256,12 @@ export function CancelSubscriptionModal({
               <Button
                 variant="destructive"
                 onClick={handleStandardCancel}
-                disabled={portalLoading}
+                disabled={cancelLoading}
               >
-                {portalLoading ? (
+                {cancelLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Opening Portal...
+                    Canceling...
                   </>
                 ) : (
                   "Cancel Subscription"
