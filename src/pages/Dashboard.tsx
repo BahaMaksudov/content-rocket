@@ -15,6 +15,7 @@ import { useCredits } from "@/hooks/use-credits";
 import { trackGenerationStarted, trackUpgradeClicked } from "@/lib/posthog";
 import { toast as sonnerToast } from "sonner";
 import { DEFAULT_BRAND_VOICES, isDefaultVoiceId, getDefaultVoiceById } from "@/lib/default-brand-voices";
+import { useSyncPaymentHistoryOnce } from "@/hooks/use-sync-payment-history";
 
 export interface GeneratedContent {
   twitterHooks: string[];
@@ -40,6 +41,10 @@ export default function Dashboard() {
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
   const [upgradeProcessed, setUpgradeProcessed] = useState(false);
+
+  // One-time backfill so Billing shows historical invoices (e.g. Feb 1) even if the webhook
+  // wasn't configured at the time of payment.
+  useSyncPaymentHistoryOnce();
   
   // Unified credits tracking
   const { canUseCredits, useCredit, refreshCredits } = useCredits();
@@ -376,3 +381,4 @@ export default function Dashboard() {
     </AppLayout>
   );
 }
+

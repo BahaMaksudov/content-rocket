@@ -4,7 +4,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform",
+  // Not required for Stripe->server calls, but keeps browser tooling / local testing happy.
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 // Product IDs for subscription tiers
@@ -258,15 +260,30 @@ serve(async (req) => {
     }
 
     // Handle successful payments - insert into payment_history
-    if (event.type === "invoice.paid") {
+    if (event.type === "invoice.paid" || event.type === "invoice.payment_succeeded") {
       const invoice = event.data.object as Stripe.Invoice;
-      logStep("Invoice paid", { invoiceId: invoice.id, customerId: invoice.customer });
+      logStep("Invoice payment success", { type: event.type, invoiceId: invoice.id, customerId: invoice.customer });
 
       try {
         // Get user_id from subscription record using stripe_customer_id
         const customerId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id;
         
         if (customerId) {
+          // Idempotency: webhooks can be retried.
+          const { data: existing } = await supabase
+            .from("payment_history")
+            .select("id")
+            .eq("stripe_invoice_id", invoice.id)
+            .maybeSingle();
+
+          if (existing?.id) {
+            logStep("Payment history already exists for invoice; skipping", { invoiceId: invoice.id });
+            return new Response(JSON.stringify({ received: true }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+              status: 200,
+            });
+          }
+
           const { data: subRecord } = await supabase
             .from("subscriptions")
             .select("user_id")
@@ -274,8 +291,9 @@ serve(async (req) => {
             .maybeSingle();
 
           if (subRecord?.user_id) {
-            const paymentDate = toTimestamp(invoice.created);
-            const amount = invoice.amount_paid || invoice.total || 0;
+            const paidAt = (invoice as any).status_transitions?.paid_at;
+            const paymentDate = toTimestamp(paidAt ?? invoice.created);
+            const amount = invoice.amount_paid || invoice.amount_due || invoice.total || 0;
             
             const { error: insertError } = await supabase
               .from("payment_history")
