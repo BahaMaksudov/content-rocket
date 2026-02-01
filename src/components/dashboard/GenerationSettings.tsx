@@ -30,8 +30,6 @@ interface GenerationSettingsProps {
   onGenerate: () => void;
   isGenerating: boolean;
   hasTranscript: boolean;
-  globalReachEnabled: boolean;
-  setGlobalReachEnabled: (enabled: boolean) => void;
   targetLanguage: string;
   setTargetLanguage: (language: string) => void;
 }
@@ -61,8 +59,6 @@ export function GenerationSettings({
   onGenerate,
   isGenerating,
   hasTranscript,
-  globalReachEnabled,
-  setGlobalReachEnabled,
   targetLanguage,
   setTargetLanguage,
 }: GenerationSettingsProps) {
@@ -248,10 +244,8 @@ export function GenerationSettings({
           </Select>
         </div>
 
-        {/* Global Reach Settings */}
+        {/* Target Language */}
         <GlobalReachSettings
-          enabled={globalReachEnabled}
-          onEnabledChange={setGlobalReachEnabled}
           language={targetLanguage}
           onLanguageChange={setTargetLanguage}
         />
