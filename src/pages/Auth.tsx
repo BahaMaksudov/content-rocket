@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate, Navigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,16 +7,31 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2, Rocket, ArrowLeft, RefreshCw, Bug } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast } from "sonner";
+import { Loader2, Rocket, ArrowLeft, RefreshCw, AlertCircle, UserPlus, Info } from "lucide-react";
 import { z } from "zod";
 import { VerificationPending } from "@/components/auth/VerificationPending";
 import { getEmailRedirectTo } from "@/lib/auth-redirect";
 
+const emailSchema = z.string().email("Please enter a valid email address");
+const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
+
 const authSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  email: emailSchema,
+  password: passwordSchema,
 });
+
+// Error type for better UX
+type AuthError = {
+  type: "error" | "warning" | "info";
+  title: string;
+  message: string;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
+};
 
 export default function Auth() {
   const [email, setEmail] = useState("");
@@ -25,17 +40,48 @@ export default function Auth() {
   const [isResendingVerification, setIsResendingVerification] = useState(false);
   const [showVerificationPending, setShowVerificationPending] = useState(false);
   const [pendingEmail, setPendingEmail] = useState("");
-  const [showResendOption, setShowResendOption] = useState(false);
-  const [unverifiedEmail, setUnverifiedEmail] = useState("");
-  const [isTestingResend, setIsTestingResend] = useState(false);
+  const [authError, setAuthError] = useState<AuthError | null>(null);
+  const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
   const { signIn, signUp, user, loading } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [searchParams] = useSearchParams();
   
   // Get redirect and upgrade params for post-auth navigation
   const redirectPath = searchParams.get("redirect") || "/dashboard";
   const upgradeTier = searchParams.get("upgrade");
+
+  // Client-side validation
+  const isEmailValid = useMemo(() => {
+    return emailSchema.safeParse(email).success;
+  }, [email]);
+
+  const isPasswordValid = useMemo(() => {
+    return password.length >= 6;
+  }, [password]);
+
+  const isFormValid = isEmailValid && isPasswordValid;
+
+  // Clear error when switching tabs or changing inputs
+  const handleTabChange = (value: string) => {
+    setActiveTab(value as "login" | "signup");
+    setAuthError(null);
+  };
+
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+    if (authError) setAuthError(null);
+  };
+
+  const handlePasswordChange = (value: string) => {
+    setPassword(value);
+    if (authError) setAuthError(null);
+  };
+
+  // Switch to signup with pre-filled email
+  const switchToSignup = () => {
+    setActiveTab("signup");
+    setAuthError(null);
+  };
 
   if (loading) {
     return (
@@ -46,13 +92,12 @@ export default function Auth() {
   }
 
   if (user) {
-    // Preserve upgrade param when redirecting logged-in users
     const targetPath = upgradeTier ? `${redirectPath}?upgrade=${upgradeTier}` : redirectPath;
     return <Navigate to={targetPath} replace />;
   }
 
   const handleResendVerification = async () => {
-    if (!unverifiedEmail) return;
+    if (!email) return;
     
     setIsResendingVerification(true);
     try {
@@ -60,150 +105,84 @@ export default function Auth() {
       
       const { error } = await supabase.auth.resend({
         type: "signup",
-        email: unverifiedEmail,
+        email: email,
         options: {
           emailRedirectTo: redirectUrl,
         },
       });
 
       if (error) {
-        toast({
-          variant: "destructive",
-          title: "Failed to resend email",
+        toast.error("Failed to resend email", {
           description: error.message,
         });
       } else {
-        toast({
-          title: "Verification email sent!",
+        toast.success("Verification email sent!", {
           description: "Please check your inbox and spam folder.",
         });
-        setShowResendOption(false);
+        setAuthError(null);
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "An unexpected error occurred.",
-      });
+      toast.error("An unexpected error occurred");
     } finally {
       setIsResendingVerification(false);
     }
   };
 
-  // Debug function to test Resend connection independently
-  const handleTestResend = async () => {
-    if (!email) {
-      toast({
-        variant: "destructive",
-        title: "Email Required",
-        description: "Please enter an email address to send the test to.",
-      });
-      return;
-    }
-
-    setIsTestingResend(true);
-    console.log("[Auth] Testing Resend connection to:", email);
-
-    try {
-      const { data, error } = await supabase.functions.invoke("test-resend", {
-        body: {
-          to: email,
-          subject: "🧪 Resend Connection Test - Rocket Content",
-          message: "This test confirms your Resend API key and domain are working correctly!"
-        }
-      });
-
-      console.log("[Auth] Test Resend response:", { data, error });
-
-      if (error) {
-        console.error("[Auth] Test Resend function error:", error);
-        toast({
-          variant: "destructive",
-          title: "Resend Test Failed",
-          description: `Function error: ${error.message}`,
-        });
-        return;
-      }
-
-      if (data?.success) {
-        toast({
-          title: "✅ Resend Test Successful!",
-          description: `Test email sent to ${email}. Check your inbox!`,
-        });
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Resend Test Failed",
-          description: data?.error || "Unknown error from Resend API",
-        });
-        console.error("[Auth] Resend API error details:", data);
-      }
-    } catch (err) {
-      console.error("[Auth] Test Resend unexpected error:", err);
-      toast({
-        variant: "destructive",
-        title: "Test Failed",
-        description: err instanceof Error ? err.message : "Unexpected error occurred",
-      });
-    } finally {
-      setIsTestingResend(false);
-    }
-  };
-
   const handleAuth = async (action: "login" | "signup") => {
+    // Clear any previous error
+    setAuthError(null);
+
     const validation = authSchema.safeParse({ email, password });
     
     if (!validation.success) {
-      toast({
-        variant: "destructive",
+      setAuthError({
+        type: "error",
         title: "Validation Error",
-        description: validation.error.errors[0].message,
+        message: validation.error.errors[0].message,
       });
       return;
     }
 
     setIsLoading(true);
-    setShowResendOption(false);
 
     try {
       if (action === "signup") {
         console.log("[Auth] Attempting signup for:", email);
         const result = await signUp(email, password);
-        console.log("[Auth] Signup result:", { 
-          hasError: !!result.error, 
-          errorMessage: result.error?.message,
-          errorName: result.error?.name
-        });
 
         if (result.error) {
           let errorMessage = result.error.message;
-          const errorDetails = JSON.stringify(result.error, null, 2);
-          console.error("[Auth] Signup error details:", errorDetails);
+          console.error("[Auth] Signup error:", errorMessage);
           
-          // Check for rate limiting (429)
+          // Map errors to friendly messages
           if (errorMessage.includes("rate limit") || errorMessage.includes("429")) {
-            errorMessage = "Too many signup attempts. Please wait a few minutes and try again.";
+            setAuthError({
+              type: "warning",
+              title: "Too Many Attempts",
+              message: "Please wait a few minutes before trying again.",
+            });
+          } else if (errorMessage.includes("User already registered")) {
+            setAuthError({
+              type: "info",
+              title: "Account Already Exists",
+              message: "This email is already registered. Try signing in, or check your inbox for a verification email.",
+              action: {
+                label: "Switch to Sign In",
+                onClick: () => {
+                  setActiveTab("login");
+                  setAuthError(null);
+                },
+              },
+            });
+          } else {
+            setAuthError({
+              type: "error",
+              title: "Sign Up Failed",
+              message: errorMessage,
+            });
           }
-          // Check for user already registered
-          else if (errorMessage.includes("User already registered")) {
-            errorMessage = "This email is already registered. Please sign in instead, or check your inbox for a verification email.";
-          }
-          // Check for validation errors (400)
-          else if (errorMessage.includes("Invalid") || errorMessage.includes("validation")) {
-            errorMessage = `Validation error: ${result.error.message}`;
-          }
-
-          toast({
-            variant: "destructive",
-            title: "Sign Up Failed",
-            description: errorMessage,
-          });
-          
-          // Also show the raw error in console for debugging
-          console.error("[Auth] Full error object:", result.error);
         } else {
           console.log("[Auth] Signup successful, showing verification pending screen");
-          // Show verification pending screen instead of redirecting
           setPendingEmail(email);
           setShowVerificationPending(true);
         }
@@ -213,46 +192,50 @@ export default function Auth() {
 
         if (result.error) {
           let errorMessage = result.error.message;
+          console.error("[Auth] Sign in error:", errorMessage);
           
-          // Check for unconfirmed email error
+          // Map errors to friendly messages with actions
           if (errorMessage.includes("Email not confirmed") || 
               errorMessage.includes("email not confirmed") ||
               errorMessage.includes("not confirmed")) {
-            setUnverifiedEmail(email);
-            setShowResendOption(true);
-            toast({
-              variant: "destructive",
+            setAuthError({
+              type: "warning",
               title: "Email Not Verified",
-              description: "Please confirm your email address before logging in.",
+              message: "Please verify your email address before signing in. Check your inbox or request a new verification email.",
+              action: {
+                label: "Resend Verification Email",
+                onClick: handleResendVerification,
+              },
             });
           } else if (errorMessage.includes("Invalid login credentials")) {
-            errorMessage = "Invalid email or password. Please try again.";
-            toast({
-              variant: "destructive",
-              title: "Sign In Failed",
-              description: errorMessage,
+            // Check if we should suggest signup
+            setAuthError({
+              type: "info",
+              title: "Account Not Found",
+              message: "We couldn't find an account with this email. Would you like to create one?",
+              action: {
+                label: "Sign Up Instead",
+                onClick: switchToSignup,
+              },
             });
           } else {
-            toast({
-              variant: "destructive",
+            setAuthError({
+              type: "error",
               title: "Sign In Failed",
-              description: errorMessage,
+              message: errorMessage,
             });
           }
         } else {
-          toast({
-            title: "Welcome back!",
-          });
-          // Navigate to redirect path, preserving upgrade param if present
+          toast.success("Welcome back!");
           const targetPath = upgradeTier ? `${redirectPath}?upgrade=${upgradeTier}` : redirectPath;
           navigate(targetPath);
         }
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+      setAuthError({
+        type: "error",
+        title: "Unexpected Error",
+        message: "Something went wrong. Please try again.",
       });
     } finally {
       setIsLoading(false);
@@ -272,6 +255,33 @@ export default function Auth() {
       />
     );
   }
+
+  // Get alert styling based on error type
+  const getAlertStyles = (type: AuthError["type"]) => {
+    switch (type) {
+      case "error":
+        return "border-destructive/50 bg-destructive/10 text-destructive";
+      case "warning":
+        return "border-amber-500/50 bg-amber-500/10 text-amber-400";
+      case "info":
+        return "border-primary/50 bg-primary/10 text-primary";
+      default:
+        return "";
+    }
+  };
+
+  const getAlertIcon = (type: AuthError["type"]) => {
+    switch (type) {
+      case "error":
+        return <AlertCircle className="h-4 w-4" />;
+      case "warning":
+        return <AlertCircle className="h-4 w-4" />;
+      case "info":
+        return <Info className="h-4 w-4" />;
+      default:
+        return <AlertCircle className="h-4 w-4" />;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -303,11 +313,47 @@ export default function Auth() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="login" className="w-full">
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="login">Sign In</TabsTrigger>
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>
               </TabsList>
+
+              {/* Inline Alert for errors */}
+              {authError && (
+                <Alert className={`mb-4 ${getAlertStyles(authError.type)}`}>
+                  <div className="flex items-start gap-3">
+                    {getAlertIcon(authError.type)}
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">{authError.title}</p>
+                      <AlertDescription className="mt-1 text-sm opacity-90">
+                        {authError.message}
+                      </AlertDescription>
+                      {authError.action && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={authError.action.onClick}
+                          disabled={isResendingVerification}
+                          className="mt-2 h-8 px-3 text-xs font-medium hover:bg-white/10"
+                        >
+                          {isResendingVerification ? (
+                            <>
+                              <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />
+                              Sending...
+                            </>
+                          ) : (
+                            <>
+                              <UserPlus className="mr-1.5 h-3 w-3" />
+                              {authError.action.label}
+                            </>
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </Alert>
+              )}
 
               <TabsContent value="login" className="space-y-4">
                 <div className="space-y-2">
@@ -317,9 +363,13 @@ export default function Auth() {
                     type="email"
                     placeholder="you@example.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => handleEmailChange(e.target.value)}
                     disabled={isLoading}
+                    className={email && !isEmailValid ? "border-destructive/50" : ""}
                   />
+                  {email && !isEmailValid && (
+                    <p className="text-xs text-destructive">Please enter a valid email</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="login-password">Password</Label>
@@ -328,46 +378,25 @@ export default function Auth() {
                     type="password"
                     placeholder="••••••••"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => handlePasswordChange(e.target.value)}
                     disabled={isLoading}
-                    onKeyDown={(e) => e.key === "Enter" && handleAuth("login")}
+                    onKeyDown={(e) => e.key === "Enter" && isFormValid && handleAuth("login")}
                   />
                 </div>
                 <Button
                   className="w-full gradient-primary text-primary-foreground"
                   onClick={() => handleAuth("login")}
-                  disabled={isLoading}
+                  disabled={isLoading || !isFormValid}
                 >
-                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign In"}
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Signing in...
+                    </>
+                  ) : (
+                    "Sign In"
+                  )}
                 </Button>
-                
-                {/* Resend verification email option */}
-                {showResendOption && (
-                  <div className="mt-4 p-4 rounded-lg bg-muted/50 border border-border">
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Haven't received the verification email?
-                    </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleResendVerification}
-                      disabled={isResendingVerification}
-                      className="w-full"
-                    >
-                      {isResendingVerification ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Sending...
-                        </>
-                      ) : (
-                        <>
-                          <RefreshCw className="mr-2 h-4 w-4" />
-                          Resend Verification Email
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                )}
               </TabsContent>
 
               <TabsContent value="signup" className="space-y-4">
@@ -378,9 +407,13 @@ export default function Auth() {
                     type="email"
                     placeholder="you@example.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => handleEmailChange(e.target.value)}
                     disabled={isLoading}
+                    className={email && !isEmailValid ? "border-destructive/50" : ""}
                   />
+                  {email && !isEmailValid && (
+                    <p className="text-xs text-destructive">Please enter a valid email</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Password</Label>
@@ -389,49 +422,38 @@ export default function Auth() {
                     type="password"
                     placeholder="••••••••"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => handlePasswordChange(e.target.value)}
                     disabled={isLoading}
-                    onKeyDown={(e) => e.key === "Enter" && handleAuth("signup")}
+                    onKeyDown={(e) => e.key === "Enter" && isFormValid && handleAuth("signup")}
                   />
+                  {password && !isPasswordValid && (
+                    <p className="text-xs text-destructive">Password must be at least 6 characters</p>
+                  )}
                 </div>
                 <Button
                   className="w-full gradient-primary text-primary-foreground"
                   onClick={() => handleAuth("signup")}
-                  disabled={isLoading}
+                  disabled={isLoading || !isFormValid}
                 >
-                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Account"}
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating account...
+                    </>
+                  ) : (
+                    "Create Account"
+                  )}
                 </Button>
-                
-                {/* Debug: Test Resend Connection */}
-                <div className="mt-4 p-3 rounded-lg bg-muted/30 border border-dashed border-border">
-                  <p className="text-xs text-muted-foreground mb-2">🔧 Debug: Test email delivery</p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleTestResend}
-                    disabled={isTestingResend || !email}
-                    className="w-full"
-                  >
-                    {isTestingResend ? (
-                      <>
-                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                        Testing Resend...
-                      </>
-                    ) : (
-                      <>
-                        <Bug className="mr-2 h-3 w-3" />
-                        Send Test Email
-                      </>
-                    )}
-                  </Button>
-                </div>
               </TabsContent>
             </Tabs>
           </CardContent>
         </Card>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
-          By continuing, you agree to our Terms of Service
+          By continuing, you agree to our{" "}
+          <Link to="/terms" className="underline hover:text-foreground">
+            Terms of Service
+          </Link>
         </p>
       </main>
 
