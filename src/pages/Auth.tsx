@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Rocket, ArrowLeft, RefreshCw } from "lucide-react";
+import { Loader2, Rocket, ArrowLeft, RefreshCw, Bug } from "lucide-react";
 import { z } from "zod";
 import { VerificationPending } from "@/components/auth/VerificationPending";
 
@@ -26,6 +26,7 @@ export default function Auth() {
   const [pendingEmail, setPendingEmail] = useState("");
   const [showResendOption, setShowResendOption] = useState(false);
   const [unverifiedEmail, setUnverifiedEmail] = useState("");
+  const [isTestingResend, setIsTestingResend] = useState(false);
   const { signIn, signUp, user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -88,6 +89,66 @@ export default function Auth() {
     }
   };
 
+  // Debug function to test Resend connection independently
+  const handleTestResend = async () => {
+    if (!email) {
+      toast({
+        variant: "destructive",
+        title: "Email Required",
+        description: "Please enter an email address to send the test to.",
+      });
+      return;
+    }
+
+    setIsTestingResend(true);
+    console.log("[Auth] Testing Resend connection to:", email);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("test-resend", {
+        body: {
+          to: email,
+          subject: "🧪 Resend Connection Test - Rocket Content",
+          message: "This test confirms your Resend API key and domain are working correctly!"
+        }
+      });
+
+      console.log("[Auth] Test Resend response:", { data, error });
+
+      if (error) {
+        console.error("[Auth] Test Resend function error:", error);
+        toast({
+          variant: "destructive",
+          title: "Resend Test Failed",
+          description: `Function error: ${error.message}`,
+        });
+        return;
+      }
+
+      if (data?.success) {
+        toast({
+          title: "✅ Resend Test Successful!",
+          description: `Test email sent to ${email}. Check your inbox!`,
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Resend Test Failed",
+          description: data?.error || "Unknown error from Resend API",
+        });
+        console.error("[Auth] Resend API error details:", data);
+      }
+    } catch (err) {
+      console.error("[Auth] Test Resend unexpected error:", err);
+      toast({
+        variant: "destructive",
+        title: "Test Failed",
+        description: err instanceof Error ? err.message : "Unexpected error occurred",
+      });
+    } finally {
+      setIsTestingResend(false);
+    }
+  };
+
   const handleAuth = async (action: "login" | "signup") => {
     const validation = authSchema.safeParse({ email, password });
     
@@ -105,13 +166,30 @@ export default function Auth() {
 
     try {
       if (action === "signup") {
+        console.log("[Auth] Attempting signup for:", email);
         const result = await signUp(email, password);
+        console.log("[Auth] Signup result:", { 
+          hasError: !!result.error, 
+          errorMessage: result.error?.message,
+          errorName: result.error?.name
+        });
 
         if (result.error) {
           let errorMessage = result.error.message;
+          const errorDetails = JSON.stringify(result.error, null, 2);
+          console.error("[Auth] Signup error details:", errorDetails);
           
-          if (errorMessage.includes("User already registered")) {
-            errorMessage = "This email is already registered. Please sign in instead.";
+          // Check for rate limiting (429)
+          if (errorMessage.includes("rate limit") || errorMessage.includes("429")) {
+            errorMessage = "Too many signup attempts. Please wait a few minutes and try again.";
+          }
+          // Check for user already registered
+          else if (errorMessage.includes("User already registered")) {
+            errorMessage = "This email is already registered. Please sign in instead, or check your inbox for a verification email.";
+          }
+          // Check for validation errors (400)
+          else if (errorMessage.includes("Invalid") || errorMessage.includes("validation")) {
+            errorMessage = `Validation error: ${result.error.message}`;
           }
 
           toast({
@@ -119,7 +197,11 @@ export default function Auth() {
             title: "Sign Up Failed",
             description: errorMessage,
           });
+          
+          // Also show the raw error in console for debugging
+          console.error("[Auth] Full error object:", result.error);
         } else {
+          console.log("[Auth] Signup successful, showing verification pending screen");
           // Show verification pending screen instead of redirecting
           setPendingEmail(email);
           setShowVerificationPending(true);
@@ -318,6 +400,30 @@ export default function Auth() {
                 >
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Account"}
                 </Button>
+                
+                {/* Debug: Test Resend Connection */}
+                <div className="mt-4 p-3 rounded-lg bg-muted/30 border border-dashed border-border">
+                  <p className="text-xs text-muted-foreground mb-2">🔧 Debug: Test email delivery</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleTestResend}
+                    disabled={isTestingResend || !email}
+                    className="w-full"
+                  >
+                    {isTestingResend ? (
+                      <>
+                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                        Testing Resend...
+                      </>
+                    ) : (
+                      <>
+                        <Bug className="mr-2 h-3 w-3" />
+                        Send Test Email
+                      </>
+                    )}
+                  </Button>
+                </div>
               </TabsContent>
             </Tabs>
           </CardContent>
