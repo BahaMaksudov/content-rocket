@@ -10,7 +10,7 @@ const corsHeaders = {
 // Price IDs for subscription tiers - must match subscription-tiers.ts
 const PRICE_IDS = {
   pro: "price_1Sw8YLBqKXDc35qoCAep9wJo",
-  agency: "price_1SuK15BqKXDc35qoi2xUQewc",
+  agency: "price_1Sw9LXBqKXDc35qouka1dA67",  // Updated Agency price
 };
 
 const logStep = (step: string, details?: Record<string, unknown>) => {

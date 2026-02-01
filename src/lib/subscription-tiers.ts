@@ -31,8 +31,8 @@ export const SUBSCRIPTION_TIERS = {
   agency: {
     name: "Agency",
     price: 249,
-    priceId: "price_1SuK15BqKXDc35qoi2xUQewc",
-    productId: "prod_Ts4937tu4QuFB5",
+    priceId: "price_1Sw9LXBqKXDc35qouka1dA67",  // Updated Agency price
+    productId: "prod_TtxGA6pKTbpMoM",  // Updated Agency product
     features: [
       "Unlimited AI content generations",
       "Bulk video processing (playlists)",
