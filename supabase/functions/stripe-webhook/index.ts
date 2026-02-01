@@ -265,10 +265,24 @@ serve(async (req) => {
       logStep("Invoice payment success", { type: event.type, invoiceId: invoice.id, customerId: invoice.customer });
 
       try {
-        // Get user_id from subscription record using stripe_customer_id
+        // Resolve the user_id for this invoice. Prefer customer id, but fall back to subscription id
+        // since some Stripe setups can produce invoices that don't match our stored customer mapping.
         const customerId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id;
-        
-        if (customerId) {
+        const subscriptionId = typeof invoice.subscription === 'string'
+          ? invoice.subscription
+          : (invoice.subscription as any)?.id;
+
+        if (!customerId && !subscriptionId) {
+          logStep("Invoice missing customer/subscription id; skipping", { invoiceId: invoice.id });
+          return new Response(JSON.stringify({ received: true }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          });
+        }
+
+        logStep("Invoice identifiers", { invoiceId: invoice.id, customerId, subscriptionId });
+
+        if (customerId || subscriptionId) {
           // Idempotency: webhooks can be retried.
           const { data: existing } = await supabase
             .from("payment_history")
@@ -284,13 +298,29 @@ serve(async (req) => {
             });
           }
 
-          const { data: subRecord } = await supabase
-            .from("subscriptions")
-            .select("user_id")
-            .eq("stripe_customer_id", customerId)
-            .maybeSingle();
+          let resolvedUserId: string | null = null;
+          if (customerId) {
+            const { data: subByCustomer } = await supabase
+              .from("subscriptions")
+              .select("user_id")
+              .eq("stripe_customer_id", customerId)
+              .maybeSingle();
+            resolvedUserId = subByCustomer?.user_id ?? null;
+          }
 
-          if (subRecord?.user_id) {
+          if (!resolvedUserId && subscriptionId) {
+            const { data: subBySubscription } = await supabase
+              .from("subscriptions")
+              .select("user_id")
+              .eq("stripe_subscription_id", subscriptionId)
+              .maybeSingle();
+            resolvedUserId = subBySubscription?.user_id ?? null;
+            if (resolvedUserId) {
+              logStep("Resolved invoice user via stripe_subscription_id", { subscriptionId, userId: resolvedUserId });
+            }
+          }
+
+          if (resolvedUserId) {
             const paidAt = (invoice as any).status_transitions?.paid_at;
             const paymentDate = toTimestamp(paidAt ?? invoice.created);
             const amount = invoice.amount_paid || invoice.amount_due || invoice.total || 0;
@@ -298,7 +328,7 @@ serve(async (req) => {
             const { error: insertError } = await supabase
               .from("payment_history")
               .insert({
-                user_id: subRecord.user_id,
+                user_id: resolvedUserId,
                 stripe_invoice_id: invoice.id,
                 stripe_payment_intent_id: typeof invoice.payment_intent === 'string' 
                   ? invoice.payment_intent 
@@ -315,13 +345,13 @@ serve(async (req) => {
               logStep("Error inserting payment history", { error: insertError.message });
             } else {
               logStep("Payment history recorded", { 
-                userId: subRecord.user_id, 
+                userId: resolvedUserId, 
                 amount,
                 invoiceId: invoice.id 
               });
             }
           } else {
-            logStep("No subscription found for customer", { customerId });
+            logStep("No subscription found for invoice", { customerId, subscriptionId, invoiceId: invoice.id });
           }
         }
       } catch (paymentError) {
