@@ -135,11 +135,13 @@ serve(async (req) => {
       logStep("Subscription canceled in Stripe");
     }
 
-    // Update subscription status in Supabase
+    // Update subscription status to 'free' in Supabase - immediate downgrade
     const { error: updateError } = await supabaseClient
       .from("subscriptions")
       .update({
-        status: "canceled",
+        status: "free",
+        stripe_subscription_id: null,
+        current_period_end: null,
         updated_at: new Date().toISOString(),
       })
       .eq("user_id", user.id);
@@ -147,7 +149,7 @@ serve(async (req) => {
     if (updateError) {
       logStep("Error updating subscription status", { error: updateError.message });
     } else {
-      logStep("Subscription status updated to canceled");
+      logStep("Subscription downgraded to free tier immediately");
     }
 
     // Update payment history to show refund
