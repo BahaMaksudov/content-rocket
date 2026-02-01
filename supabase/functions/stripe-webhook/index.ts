@@ -11,8 +11,8 @@ const corsHeaders = {
 
 // Product IDs for subscription tiers - UPDATED to match new Stripe products
 const PRODUCT_IDS = {
-  pro: "prod_TtwRuGNynEpRHz",    // New Pro product ID ($29/mo)
-  agency: "prod_TtwRuGNynEpRHz", // Using Pro for now - update when Agency product is created
+  pro: "prod_TtwRuGNynEpRHz",    // Pro product ID ($29/mo)
+  agency: "prod_TtxGA6pKTbpMoM", // Agency product ID ($249/mo)
 };
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
