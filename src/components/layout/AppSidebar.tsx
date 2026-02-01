@@ -1,4 +1,4 @@
-import { Home, History, Mic, Settings, Sparkles, Clock, CreditCard, Code } from "lucide-react";
+import { Home, History, Mic, Sparkles, Clock, Code } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import {
@@ -21,8 +21,6 @@ import { SUBSCRIPTION_TIERS } from "@/lib/subscription-tiers";
 const mainNavItems = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
   { title: "Brand Voices", url: "/brand-voices", icon: Mic },
-  { title: "Billing", url: "/billing", icon: CreditCard },
-  { title: "Settings", url: "/settings", icon: Settings },
 ];
 
 const proNavItems = [
