@@ -120,23 +120,19 @@ serve(async (req) => {
           logStep("Determined subscription tier", { productId, tier });
 
           try {
-            const createdAt = toTimestamp(event.created);
-            const subscriptionStart = toTimestamp((session as any).created || (session as any).start_date);
-            const currentPeriodEnd = toTimestamp(subscription.current_period_end);
+            // CRITICAL: Use subscription.current_period_end for next billing date
+            // This is a Unix timestamp (seconds) from Stripe - convert to ISO string
+            const rawPeriodEnd = subscription.current_period_end;
+            const currentPeriodEnd = toTimestamp(rawPeriodEnd);
             const updatedAt = toTimestamp(undefined);
 
-            logStep("Timestamp conversion", {
-              rawEventCreated: event.created,
-              createdAt,
-              rawSessionStart: (session as any).created || (session as any).start_date,
-              subscriptionStart,
-              rawCurrentPeriodEnd: subscription.current_period_end,
+            logStep("Timestamp conversion for checkout", {
+              rawCurrentPeriodEnd: rawPeriodEnd,
               currentPeriodEnd,
               updatedAt,
+              subscriptionId: subscription.id,
             });
 
-            // Note: `subscriptions` table does not have `subscription_start`/`trial_end` columns in this project.
-            // We compute them above for debugging parity, but only persist known columns.
             const { error } = await supabase
               .from("subscriptions")
               .upsert(
@@ -147,8 +143,6 @@ serve(async (req) => {
                   status: tier,
                   price_id: priceId,
                   current_period_end: currentPeriodEnd,
-                  // Ensure DB always receives ISO strings for timestamp columns
-                  created_at: createdAt,
                   updated_at: updatedAt,
                 },
                 { onConflict: "user_id" }
@@ -157,18 +151,16 @@ serve(async (req) => {
             if (error) {
               logStep("Database update error", { error: error.message });
             } else {
-              logStep(`Subscription updated to ${tier}`, { userId });
+              logStep(`Subscription updated to ${tier}`, { 
+                userId, 
+                nextBillingDate: currentPeriodEnd 
+              });
             }
           } catch (dbError) {
             const errorMessage = dbError instanceof Error ? dbError.message : String(dbError);
             logStep("Database operation failed", {
               error: errorMessage,
-              timestampInputs: {
-                eventCreated: event.created,
-                sessionCreated: (session as any).created,
-                sessionStartDate: (session as any).start_date,
-                currentPeriodEnd: subscription.current_period_end,
-              },
+              rawCurrentPeriodEnd: subscription.current_period_end,
               userId,
             });
             throw dbError;
