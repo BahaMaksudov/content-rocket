@@ -260,25 +260,25 @@ export function VoiceGenerator({ scriptText }: VoiceGeneratorProps) {
     <>
       <div className="space-y-3">
         {/* Voice Selection & Generate Button */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-4">
           <Select 
             value={selectedVoiceId} 
             onValueChange={setSelectedVoiceId}
             disabled={isFreeUser}
           >
-            <SelectTrigger className={`w-[200px] ${isFreeUser ? 'opacity-50' : ''}`}>
+            <SelectTrigger className={`w-[260px] ${isFreeUser ? 'opacity-50' : ''}`}>
               <SelectValue placeholder="Select Voice" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-[100] min-w-[280px]">
               {/* Standard Voices - Pro & Agency */}
               <SelectGroup>
-                <SelectLabel className="flex items-center gap-1">
+                <SelectLabel className="flex items-center gap-1 py-2">
                   <Crown className="h-3 w-3 text-primary" />
                   Character Voices
                 </SelectLabel>
                 {voices.standard.map((voice) => (
-                  <SelectItem key={voice.id} value={voice.id}>
-                    <div className="flex flex-col">
+                  <SelectItem key={voice.id} value={voice.id} className="py-2.5">
+                    <div className="flex flex-col gap-0.5">
                       <span className="font-medium">{voice.name}</span>
                       <span className="text-xs text-muted-foreground">{voice.description}</span>
                     </div>
@@ -289,15 +289,15 @@ export function VoiceGenerator({ scriptText }: VoiceGeneratorProps) {
               {/* Cloned Voices - Agency Only */}
               {isAgency && voices.cloned.length > 0 && (
                 <>
-                  <SelectSeparator />
+                  <SelectSeparator className="my-2" />
                   <SelectGroup>
-                    <SelectLabel className="flex items-center gap-1">
+                    <SelectLabel className="flex items-center gap-1 py-2">
                       <Rocket className="h-3 w-3 text-amber-500" />
                       Premium Cloned Voices
                     </SelectLabel>
                     {voices.cloned.map((voice) => (
-                      <SelectItem key={voice.id} value={voice.id}>
-                        <div className="flex flex-col">
+                      <SelectItem key={voice.id} value={voice.id} className="py-2.5">
+                        <div className="flex flex-col gap-0.5">
                           <span className="font-medium">{voice.name}</span>
                           <span className="text-xs text-muted-foreground">{voice.description}</span>
                         </div>
@@ -310,8 +310,8 @@ export function VoiceGenerator({ scriptText }: VoiceGeneratorProps) {
               {/* Show locked message for Pro users */}
               {isPro && !isAgency && (
                 <>
-                  <SelectSeparator />
-                  <div className="px-2 py-2 text-xs text-muted-foreground flex items-center gap-1">
+                  <SelectSeparator className="my-2" />
+                  <div className="px-2 py-3 text-xs text-muted-foreground flex items-center gap-1">
                     <Lock className="h-3 w-3" />
                     <span>Cloned voices available with Agency</span>
                   </div>

@@ -19,10 +19,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { SignOutConfirmationModal } from "@/components/SignOutConfirmationModal";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Settings, LogOut, ChevronDown, CreditCard, User } from "lucide-react";
+import { SUBSCRIPTION_TIERS } from "@/lib/subscription-tiers";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -41,10 +44,12 @@ export function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { tier } = useSubscription();
   const [showSignOutModal, setShowSignOutModal] = useState(false);
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
   
   const currentTitle = routeTitles[location.pathname] || "Dashboard";
+  const tierConfig = SUBSCRIPTION_TIERS[tier];
 
   // Fetch user profile in real-time
   useEffect(() => {
@@ -170,10 +175,22 @@ export function AppLayout({ children }: AppLayoutProps) {
                     <ChevronDown className="h-4 w-4 text-muted-foreground" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-popover border-border">
-                  <div className="px-3 py-2">
+                <DropdownMenuContent align="end" className="w-56 bg-popover border-border z-[100]">
+                  <div className="px-3 py-2 space-y-1">
                     <p className="text-sm font-medium truncate">{getUserDisplayName()}</p>
                     <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                    <Badge 
+                      variant="outline" 
+                      className={`text-xs mt-1 ${
+                        tier === "agency" 
+                          ? "bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-amber-500/30 text-amber-400" 
+                          : tier === "pro"
+                          ? "bg-primary/10 border-primary/30 text-primary"
+                          : "bg-muted border-border text-muted-foreground"
+                      }`}
+                    >
+                      {tierConfig.name} Plan
+                    </Badge>
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild className="cursor-pointer">
