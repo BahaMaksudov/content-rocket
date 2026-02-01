@@ -165,20 +165,20 @@ export default function Auth() {
               title: "Too Many Attempts",
               message: "Please wait a few minutes before trying again.",
             });
-          } else if (errorMessage.includes("User already registered")) {
+          } else if (errorMessage.includes("User already registered") || errorMessage.includes("user_already_registered")) {
             setAuthError({
               type: "info",
-              title: "Account Already Exists",
-              message: "An account with this email already exists.",
+              title: "Welcome Back!",
+              message: "It looks like you already have an account with us.",
               action: {
-                label: "Go to Sign In",
+                label: "Sign in here",
                 onClick: () => {
                   setActiveTab("login");
                   setAuthError(null);
                 },
               },
               secondaryAction: {
-                label: "Forgot Password?",
+                label: "Forgot password?",
                 onClick: () => {
                   navigate("/forgot-password");
                 },
