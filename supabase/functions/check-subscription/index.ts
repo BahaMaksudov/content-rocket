@@ -49,9 +49,29 @@ serve(async (req) => {
       throw new Error(subError.message);
     }
 
-    // If no subscription record exists, create one (for existing users)
+    // If no subscription record exists, only create one if user has a profile
+    // This prevents auto-creating subscriptions for deleted users
     if (!subscription) {
-      logStep("No subscription found, creating free record");
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!profile) {
+        logStep("No profile found - user may have been deleted, skipping subscription creation");
+        return new Response(JSON.stringify({
+          subscribed: false,
+          status: "free",
+          subscription_end: null,
+          error: "User profile not found"
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+
+      logStep("No subscription found but profile exists, creating free record");
       await supabase
         .from("subscriptions")
         .insert({ user_id: user.id, status: "free" });
