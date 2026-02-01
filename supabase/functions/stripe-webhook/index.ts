@@ -18,6 +18,33 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[STRIPE-WEBHOOK] ${step}${detailsStr}`);
 };
 
+// Stripe timestamps are usually Unix seconds, but some objects/versions can surface strings.
+// Always normalize to an ISO string for DB timestamp columns.
+const toTimestamp = (v: any) => {
+  try {
+    if (!v) return new Date().toISOString();
+
+    // If it's already a date-ish string (e.g., ISO), parse directly.
+    if (typeof v === "string" && v.includes("-")) {
+      const d = new Date(v);
+      if (Number.isNaN(d.getTime())) throw new Error("Unparseable date string");
+      return d.toISOString();
+    }
+
+    // Default: treat as Unix seconds.
+    const n = typeof v === "number" ? v : Number(v);
+    if (!Number.isFinite(n)) throw new Error("Non-numeric timestamp");
+
+    // Heuristic: if it's already in ms, don't multiply again.
+    const ms = n > 1e12 ? n : n * 1000;
+    return new Date(ms).toISOString();
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    logStep("Invalid timestamp encountered; defaulting to now()", { value: v, message });
+    return new Date().toISOString();
+  }
+};
+
 function getTierFromProductId(productId: string): "pro" | "agency" | "free" {
   if (productId === PRODUCT_IDS.agency) return "agency";
   if (productId === PRODUCT_IDS.pro) return "pro";
@@ -42,7 +69,7 @@ serve(async (req) => {
     return new Response("Webhook secret not configured", { status: 500 });
   }
 
-  const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+   const stripe = new Stripe(stripeKey, { apiVersion: "2025-12-15.clover" });
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
@@ -93,27 +120,39 @@ serve(async (req) => {
           logStep("Determined subscription tier", { productId, tier });
 
           try {
-            // Convert Unix timestamps to ISO strings for database compatibility
-            const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
-            const updatedAt = new Date().toISOString();
-            
-            logStep("Timestamp conversion", { 
+            const createdAt = toTimestamp(event.created);
+            const subscriptionStart = toTimestamp((session as any).created || (session as any).start_date);
+            const currentPeriodEnd = toTimestamp(subscription.current_period_end);
+            const updatedAt = toTimestamp(undefined);
+
+            logStep("Timestamp conversion", {
+              rawEventCreated: event.created,
+              createdAt,
+              rawSessionStart: (session as any).created || (session as any).start_date,
+              subscriptionStart,
               rawCurrentPeriodEnd: subscription.current_period_end,
-              convertedCurrentPeriodEnd: currentPeriodEnd,
-              updatedAt 
+              currentPeriodEnd,
+              updatedAt,
             });
 
+            // Note: `subscriptions` table does not have `subscription_start`/`trial_end` columns in this project.
+            // We compute them above for debugging parity, but only persist known columns.
             const { error } = await supabase
               .from("subscriptions")
-              .upsert({
-                user_id: userId,
-                stripe_customer_id: session.customer as string,
-                stripe_subscription_id: subscription.id,
-                status: tier,
-                price_id: priceId,
-                current_period_end: currentPeriodEnd,
-                updated_at: updatedAt,
-              }, { onConflict: "user_id" });
+              .upsert(
+                {
+                  user_id: userId,
+                  stripe_customer_id: session.customer as string,
+                  stripe_subscription_id: subscription.id,
+                  status: tier,
+                  price_id: priceId,
+                  current_period_end: currentPeriodEnd,
+                  // Ensure DB always receives ISO strings for timestamp columns
+                  created_at: createdAt,
+                  updated_at: updatedAt,
+                },
+                { onConflict: "user_id" }
+              );
 
             if (error) {
               logStep("Database update error", { error: error.message });
@@ -122,10 +161,15 @@ serve(async (req) => {
             }
           } catch (dbError) {
             const errorMessage = dbError instanceof Error ? dbError.message : String(dbError);
-            logStep("Database operation failed", { 
+            logStep("Database operation failed", {
               error: errorMessage,
-              rawTimestamp: subscription.current_period_end,
-              userId 
+              timestampInputs: {
+                eventCreated: event.created,
+                sessionCreated: (session as any).created,
+                sessionStartDate: (session as any).start_date,
+                currentPeriodEnd: subscription.current_period_end,
+              },
+              userId,
             });
             throw dbError;
           }
@@ -151,14 +195,14 @@ serve(async (req) => {
         }
         
         try {
-          // Convert Unix timestamps to ISO strings for database compatibility
-          const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
-          const updatedAt = new Date().toISOString();
-          
-          logStep("Timestamp conversion for update", { 
-            rawCurrentPeriodEnd: subscription.current_period_end,
-            convertedCurrentPeriodEnd: currentPeriodEnd 
-          });
+           const currentPeriodEnd = toTimestamp(subscription.current_period_end);
+           const updatedAt = toTimestamp(undefined);
+           
+           logStep("Timestamp conversion for update", { 
+             rawCurrentPeriodEnd: subscription.current_period_end,
+             currentPeriodEnd,
+             updatedAt,
+           });
 
           const { error } = await supabase
             .from("subscriptions")
@@ -179,7 +223,10 @@ serve(async (req) => {
           const errorMessage = dbError instanceof Error ? dbError.message : String(dbError);
           logStep("Database update operation failed", { 
             error: errorMessage,
-            rawTimestamp: subscription.current_period_end,
+            timestampInputs: {
+              currentPeriodEnd: subscription.current_period_end,
+              eventCreated: event.created,
+            },
             userId: subRecord.user_id 
           });
           throw dbError;
@@ -191,17 +238,31 @@ serve(async (req) => {
       const subscription = event.data.object as Stripe.Subscription;
       logStep("Subscription canceled", { subscriptionId: subscription.id });
 
-      await supabase
-        .from("subscriptions")
-        .update({
-          status: "free",
-          stripe_subscription_id: null,
-          current_period_end: null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("stripe_subscription_id", subscription.id);
+      try {
+        const { error } = await supabase
+          .from("subscriptions")
+          .update({
+            status: "free",
+            stripe_subscription_id: null,
+            current_period_end: null,
+            updated_at: toTimestamp(undefined),
+          })
+          .eq("stripe_subscription_id", subscription.id);
 
-      logStep("Subscription set to free");
+        if (error) {
+          logStep("Database update error (cancel)", { error: error.message });
+        } else {
+          logStep("Subscription set to free");
+        }
+      } catch (dbError) {
+        const errorMessage = dbError instanceof Error ? dbError.message : String(dbError);
+        logStep("Database cancel operation failed", {
+          error: errorMessage,
+          timestampInputs: { eventCreated: event.created },
+          subscriptionId: subscription.id,
+        });
+        throw dbError;
+      }
     }
 
     return new Response(JSON.stringify({ received: true }), {
