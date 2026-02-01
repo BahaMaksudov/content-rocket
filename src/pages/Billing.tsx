@@ -153,7 +153,11 @@ export default function Billing() {
                   <div className="p-4 rounded-lg bg-muted/50">
                     <p className="text-2xl font-bold text-foreground flex items-center gap-2">
                       {isPaidPlan && subscriptionEnd ? (
-                        new Date(subscriptionEnd).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                        new Date(subscriptionEnd).toLocaleDateString("en-US", { 
+                          month: "short", 
+                          day: "numeric",
+                          year: "numeric"
+                        })
                       ) : (
                         "—"
                       )}
