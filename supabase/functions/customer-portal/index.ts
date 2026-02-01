@@ -4,7 +4,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
@@ -57,12 +58,11 @@ serve(async (req) => {
       if (customers.data.length > 0) {
         customerId = customers.data[0].id;
         logStep("Found existing Stripe customer by email", { customerId });
-        
-        // Update our subscription record with the customer ID
+
+        // IMPORTANT: upsert so we persist even if a subscriptions row doesn't exist yet
         await supabaseClient
           .from("subscriptions")
-          .update({ stripe_customer_id: customerId })
-          .eq("user_id", user.id);
+          .upsert({ user_id: user.id, stripe_customer_id: customerId }, { onConflict: "user_id" });
       } else {
         // Create new Stripe customer
         const newCustomer = await stripe.customers.create({
@@ -71,18 +71,19 @@ serve(async (req) => {
         });
         customerId = newCustomer.id;
         logStep("Created new Stripe customer", { customerId });
-        
-        // Update our subscription record with the new customer ID
+
+        // IMPORTANT: upsert so we persist even if a subscriptions row doesn't exist yet
         await supabaseClient
           .from("subscriptions")
-          .update({ stripe_customer_id: customerId })
-          .eq("user_id", user.id);
+          .upsert({ user_id: user.id, stripe_customer_id: customerId }, { onConflict: "user_id" });
       }
     } else {
       logStep("Found Stripe customer from database", { customerId });
     }
 
     const origin = req.headers.get("origin") || "https://rocketcontentpro.io";
+    if (!customerId) throw new Error("Unable to determine Stripe customer id");
+
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customerId,
       return_url: `${origin}/dashboard`,
