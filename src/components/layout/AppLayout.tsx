@@ -140,15 +140,19 @@ export function AppLayout({ children }: AppLayoutProps) {
                 <BreadcrumbList>
                   <BreadcrumbItem>
                     <BreadcrumbLink asChild>
-                      <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
-                        Home
+                      <Link to="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
+                        Dashboard
                       </Link>
                     </BreadcrumbLink>
                   </BreadcrumbItem>
-                  <BreadcrumbSeparator />
-                  <BreadcrumbItem>
-                    <BreadcrumbPage className="font-medium">{currentTitle}</BreadcrumbPage>
-                  </BreadcrumbItem>
+                  {location.pathname !== "/dashboard" && (
+                    <>
+                      <BreadcrumbSeparator />
+                      <BreadcrumbItem>
+                        <BreadcrumbPage className="font-medium">{currentTitle}</BreadcrumbPage>
+                      </BreadcrumbItem>
+                    </>
+                  )}
                 </BreadcrumbList>
               </Breadcrumb>
             </div>

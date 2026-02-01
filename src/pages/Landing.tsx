@@ -128,27 +128,30 @@ function StickyNav() {
       }`}
     >
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
+        <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2">
           <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-rocket flex items-center justify-center">
             <Rocket className="h-5 w-5 text-primary-foreground" />
           </div>
           <span className="font-bold text-lg">Rocket Content</span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-8">
-          <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            Features
-          </a>
-          <a href="#demo" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            Demo
-          </a>
-          <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            Pricing
-          </a>
-          <a href="#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            FAQ
-          </a>
-        </div>
+        {/* Only show navigation links for logged-out users */}
+        {!user && (
+          <div className="hidden md:flex items-center gap-8">
+            <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Features
+            </a>
+            <a href="#demo" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Demo
+            </a>
+            <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Pricing
+            </a>
+            <a href="#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              FAQ
+            </a>
+          </div>
+        )}
 
         <div className="flex items-center gap-3">
           {loading ? (
@@ -1020,8 +1023,15 @@ Footer.displayName = "Footer";
 // Main Landing Page
 export default function Landing() {
   const [contactSalesOpen, setContactSalesOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect authenticated users to dashboard immediately
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [user, loading, navigate]);
 
   // Handle upgrade button clicks from pricing section
   const handleUpgradeClick = (tier: "pro" | "agency") => {
@@ -1034,6 +1044,22 @@ export default function Landing() {
       navigate(`/auth?redirect=/dashboard&upgrade=${tier}`);
     }
   };
+
+  // Show loading state while checking auth to prevent flash
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-rocket flex items-center justify-center animate-pulse">
+          <Rocket className="h-5 w-5 text-primary-foreground" />
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render landing page for authenticated users (redirect will happen)
+  if (user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background">
