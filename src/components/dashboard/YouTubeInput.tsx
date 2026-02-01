@@ -5,11 +5,32 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Loader2, Youtube, Link2, FileText, Check, Crown, Eye, Copy, Pencil, AlertTriangle, HelpCircle, ChevronDown, Info } from "lucide-react";
+import {
+  Loader2,
+  Youtube,
+  Link2,
+  FileText,
+  Check,
+  Crown,
+  Eye,
+  Copy,
+  Pencil,
+  AlertTriangle,
+  HelpCircle,
+  ChevronDown,
+  Info,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -25,7 +46,8 @@ interface YouTubeInputProps {
   onCreditUsed?: () => Promise<void>;
 }
 
-const YOUTUBE_URL_REGEX = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/live\/)([a-zA-Z0-9_-]{11})/;
+const YOUTUBE_URL_REGEX =
+  /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/live\/)([a-zA-Z0-9_-]{11})/;
 const MAX_TRANSCRIPT_LENGTH = 20000;
 
 export function YouTubeInput({
@@ -138,13 +160,13 @@ export function YouTubeInput({
       if (data?.transcript) {
         onTranscriptFetched(data.transcript, "auto", data.title);
         setAdWarning(null);
-        
+
         // Use one credit after successful fetch (for free users)
         if (!isPro) {
           await useCredit();
           onCreditUsed?.();
         }
-        
+
         toast({
           title: "Transcript fetched!",
           description: `Got transcript for "${data.title}"`,
@@ -152,7 +174,7 @@ export function YouTubeInput({
       } else {
         // Auto-expand manual section on any failure
         setShowManual(true);
-        
+
         // Log technical details for developers only
         if (data?.details) {
           console.log("Transcript fetch details:", data.details);
@@ -166,10 +188,11 @@ export function YouTubeInput({
         }
 
         // Check for quota/rate limit errors (429) - show friendly modal
-        const isQuotaError = data?.details?.includes("429") || 
-                            data?.error?.toLowerCase().includes("rate limit") ||
-                            data?.error?.toLowerCase().includes("quota");
-        
+        const isQuotaError =
+          data?.details?.includes("429") ||
+          data?.error?.toLowerCase().includes("rate limit") ||
+          data?.error?.toLowerCase().includes("quota");
+
         if (isQuotaError) {
           setShowHighDemandModal(true);
           return;
@@ -180,7 +203,7 @@ export function YouTubeInput({
           title: "Transcript not available",
           description: "This video's captions couldn't be fetched. Try pasting the transcript manually.",
         });
-        
+
         // Scroll to manual section
         setTimeout(() => {
           manualSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -188,27 +211,28 @@ export function YouTubeInput({
       }
     } catch (error: any) {
       console.error("Fetch error:", error);
-      
+
       // Auto-expand manual section on any failure
       setShowManual(true);
-      
+
       // Check if it's a quota/rate limit error
       const errorMessage = error?.message?.toLowerCase() || "";
-      const isQuotaError = errorMessage.includes("429") || 
-                          errorMessage.includes("rate limit") ||
-                          errorMessage.includes("quota") ||
-                          errorMessage.includes("too many requests");
-      
+      const isQuotaError =
+        errorMessage.includes("429") ||
+        errorMessage.includes("rate limit") ||
+        errorMessage.includes("quota") ||
+        errorMessage.includes("too many requests");
+
       if (isQuotaError) {
         setShowHighDemandModal(true);
         return;
       }
-      
+
       toast({
         title: "Couldn't fetch transcript",
         description: "No worries! You can paste the transcript manually below.",
       });
-      
+
       // Scroll to manual section
       setTimeout(() => {
         manualSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -257,9 +281,7 @@ export function YouTubeInput({
           <Youtube className="h-5 w-5 text-destructive" />
           YouTube Video
         </CardTitle>
-        <CardDescription>
-          Enter a YouTube URL to extract the transcript
-        </CardDescription>
+        <CardDescription>Enter a YouTube URL to extract the transcript</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-3">
@@ -275,16 +297,10 @@ export function YouTubeInput({
               className="pl-10 w-full"
             />
           </div>
-          {youtubeUrl && !isValidUrl && (
-            <p className="text-sm text-destructive">Please enter a valid YouTube URL</p>
-          )}
+          {youtubeUrl && !isValidUrl && <p className="text-sm text-destructive">Please enter a valid YouTube URL</p>}
           {/* Buttons row below input */}
           <div className="flex flex-wrap gap-2 mt-2">
-            <Button
-              onClick={handleFetchTranscript}
-              disabled={!isValidUrl || isFetching}
-              className="shrink-0"
-            >
+            <Button onClick={handleFetchTranscript} disabled={!isValidUrl || isFetching} className="shrink-0">
               {isFetching ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : !isPro && !canUseCredits ? (
@@ -312,9 +328,7 @@ export function YouTubeInput({
         {adWarning && (
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              {adWarning}
-            </AlertDescription>
+            <AlertDescription>{adWarning}</AlertDescription>
           </Alert>
         )}
 
@@ -365,19 +379,22 @@ export function YouTubeInput({
                   <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
                     <li>Open the video on YouTube in your browser</li>
                     <li>
-                      Click the <strong className="text-foreground">⋯</strong> (three dots) button below the video, next to "Share"
+                      Click the <strong className="text-foreground">"...more" in the description</strong> button below
+                      the video
                     </li>
                     <li>
                       Select <strong className="text-foreground">"Show transcript"</strong> from the menu
                     </li>
+                    <li>A transcript panel will appear on the right side of the video</li>
                     <li>
-                      A transcript panel will appear on the right side of the video
+                      Click the <strong className="text-foreground">⋮</strong> (three dots) in the transcript panel and
+                      select <strong className="text-foreground">"Toggle timestamps"</strong> to hide timestamps
+                      (optional)
                     </li>
                     <li>
-                      Click the <strong className="text-foreground">⋮</strong> (three dots) in the transcript panel and select <strong className="text-foreground">"Toggle timestamps"</strong> to hide timestamps (optional)
-                    </li>
-                    <li>
-                      Select all text in the transcript panel (<kbd className="px-1.5 py-0.5 rounded bg-muted text-xs">Ctrl+A</kbd> or <kbd className="px-1.5 py-0.5 rounded bg-muted text-xs">⌘+A</kbd>) and copy it
+                      Select all text in the transcript panel (
+                      <kbd className="px-1.5 py-0.5 rounded bg-muted text-xs">Ctrl+A</kbd> or{" "}
+                      <kbd className="px-1.5 py-0.5 rounded bg-muted text-xs">⌘+A</kbd>) and copy it
                     </li>
                     <li>Paste it in the box below</li>
                   </ol>
@@ -385,7 +402,8 @@ export function YouTubeInput({
                     <p className="text-xs text-muted-foreground flex items-start gap-2">
                       <span className="text-primary">💡</span>
                       <span>
-                        <strong>Tip:</strong> Not all videos have transcripts. If you don't see "Show transcript" in the menu, the video's creator hasn't enabled captions.
+                        <strong>Tip:</strong> Not all videos have transcripts. If you don't see "Show transcript" in the
+                        menu, the video's creator hasn't enabled captions.
                       </span>
                     </p>
                   </div>
@@ -403,7 +421,7 @@ export function YouTubeInput({
                 className={isOverLimit ? "border-destructive focus-visible:ring-destructive" : ""}
               />
             </div>
-            
+
             {/* Character counter */}
             <div className="flex items-center justify-between">
               <span className={`text-xs ${isOverLimit ? "text-destructive" : "text-muted-foreground"}`}>
@@ -429,20 +447,19 @@ export function YouTubeInput({
         )}
       </CardContent>
 
-      <PremiumModal 
-        open={showPremiumModal} 
-        onOpenChange={setShowPremiumModal}
-        feature="youtube"
-      />
+      <PremiumModal open={showPremiumModal} onOpenChange={setShowPremiumModal} feature="youtube" />
 
       {/* Preview Transcript Modal */}
-      <Dialog open={showPreviewModal} onOpenChange={(open) => {
-        setShowPreviewModal(open);
-        if (!open) {
-          setIsEditMode(false);
-          setEditableTranscript("");
-        }
-      }}>
+      <Dialog
+        open={showPreviewModal}
+        onOpenChange={(open) => {
+          setShowPreviewModal(open);
+          if (!open) {
+            setIsEditMode(false);
+            setEditableTranscript("");
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-2xl max-h-[90vh]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -450,12 +467,12 @@ export function YouTubeInput({
               {isEditMode ? "Edit Transcript" : "Transcript Preview"}
             </DialogTitle>
             <DialogDescription>
-              {isEditMode 
+              {isEditMode
                 ? "Edit the transcript to remove ads or fix errors before generating content."
                 : "Review the fetched transcript before generating content."}
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4">
             {transcript || isEditMode ? (
               <>
@@ -474,25 +491,15 @@ export function YouTubeInput({
                   </ScrollArea>
                 )}
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>
-                    {(isEditMode ? editableTranscript : transcript).length.toLocaleString()} characters
-                  </span>
+                  <span>{(isEditMode ? editableTranscript : transcript).length.toLocaleString()} characters</span>
                   <div className="flex gap-2">
                     {!isEditMode && (
                       <>
-                        <Button
-                          onClick={handleEditClick}
-                          variant="outline"
-                          size="sm"
-                        >
+                        <Button onClick={handleEditClick} variant="outline" size="sm">
                           <Pencil className="h-4 w-4 mr-1" />
                           Edit
                         </Button>
-                        <Button
-                          onClick={handleCopyTranscript}
-                          variant="outline"
-                          size="sm"
-                        >
+                        <Button onClick={handleCopyTranscript} variant="outline" size="sm">
                           <Copy className="h-4 w-4 mr-1" />
                           Copy
                         </Button>
@@ -530,7 +537,8 @@ export function YouTubeInput({
               Automated Fetching Busy
             </DialogTitle>
             <DialogDescription className="pt-2 text-base leading-relaxed">
-              We are currently experiencing high demand for automated transcripts. To skip the wait, please use the "Paste Transcript Manually" section below!
+              We are currently experiencing high demand for automated transcripts. To skip the wait, please use the
+              "Paste Transcript Manually" section below!
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col sm:flex-row gap-2">
