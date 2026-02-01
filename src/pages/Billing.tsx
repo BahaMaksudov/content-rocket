@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -41,36 +41,75 @@ export default function Billing() {
   const [portalLoading, setPortalLoading] = useState(false);
   const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
+  const [syncLoading, setSyncLoading] = useState(false);
+
+  const fetchPaymentHistory = useCallback(async () => {
+    if (!user) {
+      setPaymentHistory([]);
+      setHistoryLoading(false);
+      return;
+    }
+
+    setHistoryLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("payment_history")
+        .select("id, amount, currency, status, payment_date, invoice_pdf_url, description")
+        .eq("user_id", user.id)
+        .order("payment_date", { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setPaymentHistory(data || []);
+    } catch (error) {
+      console.error("Error fetching payment history:", error);
+      setPaymentHistory([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, [user]);
 
   // Fetch payment history
   useEffect(() => {
-    const fetchPaymentHistory = async () => {
-      if (!user) {
-        setPaymentHistory([]);
-        setHistoryLoading(false);
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from("payment_history")
-          .select("id, amount, currency, status, payment_date, invoice_pdf_url, description")
-          .eq("user_id", user.id)
-          .order("payment_date", { ascending: false })
-          .limit(10);
-
-        if (error) throw error;
-        setPaymentHistory(data || []);
-      } catch (error) {
-        console.error("Error fetching payment history:", error);
-        setPaymentHistory([]);
-      } finally {
-        setHistoryLoading(false);
-      }
-    };
-
     fetchPaymentHistory();
-  }, [user]);
+  }, [fetchPaymentHistory]);
+
+  const handleSyncPaymentHistory = async () => {
+    if (!session) {
+      toast({ variant: "destructive", title: "Please log in to sync invoices" });
+      return;
+    }
+
+    setSyncLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("sync-payment-history", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+
+      await fetchPaymentHistory();
+
+      toast({
+        title: "Invoices synced",
+        description:
+          typeof data?.inserted === "number"
+            ? `Added ${data.inserted} invoice(s) to your history.`
+            : "Your payment history has been refreshed.",
+      });
+    } catch (error: any) {
+      console.error("Sync payment history error:", error);
+      toast({
+        variant: "destructive",
+        title: "Unable to sync invoices",
+        description: error?.message || "Please try again.",
+      });
+    } finally {
+      setSyncLoading(false);
+    }
+  };
 
   const tierConfig = SUBSCRIPTION_TIERS[tier];
   const isPaidPlan = tier === "pro" || tier === "agency";
@@ -292,6 +331,29 @@ export default function Billing() {
                     : "Subscribe to Pro or Agency to get started"
                   }
                 </p>
+                {isPaidPlan && (
+                  <div className="mt-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSyncPaymentHistory}
+                      disabled={syncLoading}
+                      className="gap-2"
+                    >
+                      {syncLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Syncing…
+                        </>
+                      ) : (
+                        <>
+                          <Receipt className="h-4 w-4" />
+                          Sync invoices now
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="space-y-3">

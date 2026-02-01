@@ -84,12 +84,30 @@ serve(async (req) => {
     const origin = req.headers.get("origin") || "https://rocketcontentpro.io";
     if (!customerId) throw new Error("Unable to determine Stripe customer id");
 
-    const portalSession = await stripe.billingPortal.sessions.create({
-      customer: customerId,
-      return_url: `${origin}/dashboard`,
-    });
-    
-    logStep("Portal session created", { sessionId: portalSession.id });
+    let portalSession: Stripe.BillingPortal.Session;
+    try {
+      portalSession = await stripe.billingPortal.sessions.create({
+        customer: customerId,
+        return_url: `${origin}/dashboard`,
+      });
+    } catch (err) {
+      const e: any = err;
+      // Stripe errors can carry structured fields depending on library/runtime.
+      logStep("Portal session create failed", {
+        customerId,
+        origin,
+        message: e?.message,
+        type: e?.type,
+        code: e?.code,
+        statusCode: e?.statusCode,
+        requestId: e?.requestId,
+        rawType: e?.raw?.type,
+        rawMessage: e?.raw?.message,
+      });
+      throw err;
+    }
+
+    logStep("Portal session created", { sessionId: portalSession.id, customerId });
 
     return new Response(JSON.stringify({ url: portalSession.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
