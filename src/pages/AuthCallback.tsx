@@ -14,14 +14,16 @@ export default function AuthCallback() {
     const handleAuthCallback = async () => {
       try {
         const currentOrigin = window.location.origin;
+        const currentUrl = window.location.href;
         console.log(`[AuthCallback] Processing callback on: ${currentOrigin}`);
+        console.log(`[AuthCallback] Full URL: ${currentUrl}`);
         
-        // Get the hash fragment from the URL (Supabase sends tokens in the hash)
+        // Check for errors first (can be in hash or query params)
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const accessToken = hashParams.get("access_token");
-        const refreshToken = hashParams.get("refresh_token");
-        const error = hashParams.get("error");
-        const errorDescription = hashParams.get("error_description");
+        const queryParams = new URLSearchParams(window.location.search);
+        
+        const error = hashParams.get("error") || queryParams.get("error");
+        const errorDescription = hashParams.get("error_description") || queryParams.get("error_description");
 
         if (error) {
           console.error(`[AuthCallback] Error received: ${error} - ${errorDescription}`);
@@ -30,9 +32,15 @@ export default function AuthCallback() {
           return;
         }
 
+        // Method 1: Check for tokens in hash (implicit flow)
+        const accessToken = hashParams.get("access_token");
+        const refreshToken = hashParams.get("refresh_token");
+        
+        // Method 2: Check for code in query params (PKCE flow - common on mobile)
+        const code = queryParams.get("code");
+
         if (accessToken && refreshToken) {
-          console.log("[AuthCallback] Setting session from tokens");
-          // Set the session with the tokens from the URL
+          console.log("[AuthCallback] Setting session from hash tokens (implicit flow)");
           const { error: sessionError } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
@@ -46,15 +54,30 @@ export default function AuthCallback() {
           }
 
           setStatus("success");
-          console.log("[AuthCallback] Success - redirecting to dashboard");
-          // Redirect to dashboard after showing success message
-          // Using replace to ensure we stay on the current domain
+          console.log("[AuthCallback] Success via implicit flow - redirecting to dashboard");
+          setTimeout(() => {
+            navigate("/dashboard", { replace: true });
+          }, 2000);
+        } else if (code) {
+          // PKCE flow: Exchange code for session
+          console.log("[AuthCallback] Exchanging code for session (PKCE flow)");
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+
+          if (exchangeError) {
+            console.error("[AuthCallback] Code exchange error:", exchangeError.message);
+            setStatus("error");
+            setErrorMessage(exchangeError.message);
+            return;
+          }
+
+          setStatus("success");
+          console.log("[AuthCallback] Success via PKCE flow - redirecting to dashboard");
           setTimeout(() => {
             navigate("/dashboard", { replace: true });
           }, 2000);
         } else {
-          // Try to get existing session (user might already be verified)
-          console.log("[AuthCallback] No tokens in URL, checking existing session");
+          // No tokens or code - check if there's already an active session
+          console.log("[AuthCallback] No tokens/code in URL, checking existing session");
           const { data: { session } } = await supabase.auth.getSession();
           
           if (session) {
@@ -65,8 +88,10 @@ export default function AuthCallback() {
             }, 2000);
           } else {
             console.error("[AuthCallback] No session found - invalid verification link");
+            console.log("[AuthCallback] Hash params:", Object.fromEntries(hashParams));
+            console.log("[AuthCallback] Query params:", Object.fromEntries(queryParams));
             setStatus("error");
-            setErrorMessage("Invalid or expired verification link");
+            setErrorMessage("Invalid or expired verification link. Please try signing up again.");
           }
         }
       } catch (err) {
