@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { identifyUser, resetUser, trackSignUp, trackLogin } from "@/lib/posthog";
+import { toast } from "@/hooks/use-toast";
 
 interface AuthContextType {
   user: User | null;
@@ -19,6 +20,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Check if user has a profile, sign out if not (deleted user detection)
+  const checkProfileExists = async (userId: string): Promise<boolean> => {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("user_id", userId)
+      .maybeSingle();
+    
+    return !!profile;
+  };
+
+  const handleDeletedUser = async () => {
+    console.log("[Auth] User profile not found - signing out deleted user");
+    resetUser();
+    await supabase.auth.signOut();
+    setUser(null);
+    setSession(null);
+    toast({
+      title: "Account not found",
+      description: "Your account no longer exists.",
+      variant: "destructive",
+    });
+  };
+
   useEffect(() => {
     // Track whether we've already identified the user to prevent duplicate calls
     let hasIdentified = false;
@@ -33,8 +58,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Only identify user once per session to prevent duplicate PostHog calls
         if (session?.user && !hasIdentified) {
           hasIdentified = true;
-          // Use setTimeout to avoid calling during render
-          setTimeout(() => {
+          // Use setTimeout to avoid calling during render and check profile
+          setTimeout(async () => {
+            const profileExists = await checkProfileExists(session.user.id);
+            if (!profileExists) {
+              await handleDeletedUser();
+              return;
+            }
             identifyUser(session.user.id, session.user.email || "");
           }, 0);
         }
@@ -47,15 +77,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-      
-      // Only identify if not already done by auth state change
-      if (session?.user && !hasIdentified) {
-        hasIdentified = true;
-        identifyUser(session.user.id, session.user.email || "");
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        // Check if profile exists before accepting this session
+        const profileExists = await checkProfileExists(session.user.id);
+        if (!profileExists) {
+          await handleDeletedUser();
+          return;
+        }
+        
+        setSession(session);
+        setUser(session.user);
+        setLoading(false);
+        
+        // Only identify if not already done by auth state change
+        if (!hasIdentified) {
+          hasIdentified = true;
+          identifyUser(session.user.id, session.user.email || "");
+        }
+      } else {
+        setSession(null);
+        setUser(null);
+        setLoading(false);
       }
     });
 
