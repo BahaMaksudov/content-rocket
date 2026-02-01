@@ -86,12 +86,6 @@ export default function Billing() {
     }
   };
 
-  // Mock payment history - in production, this would come from Stripe
-  const mockPaymentHistory = isPaidPlan ? [
-    { id: "inv_001", date: new Date().toISOString(), amount: tierConfig.price, status: "paid" },
-    { id: "inv_002", date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), amount: tierConfig.price, status: "paid" },
-    { id: "inv_003", date: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(), amount: tierConfig.price, status: "paid" },
-  ] : [];
 
   return (
     <AppLayout>
@@ -234,7 +228,7 @@ export default function Billing() {
             </CardTitle>
             <CardDescription>
               {isPaidPlan 
-                ? "Your recent invoices and payments"
+                ? "View and download your invoices"
                 : "Subscribe to a plan to see your payment history"
               }
             </CardDescription>
@@ -247,50 +241,31 @@ export default function Billing() {
                 <p className="text-xs mt-1">Subscribe to Pro or Agency to get started</p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {mockPaymentHistory.map((invoice) => (
-                  <div
-                    key={invoice.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Calendar className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">
-                          {new Date(invoice.date).toLocaleDateString("en-US", {
-                            month: "long",
-                            day: "numeric",
-                            year: "numeric",
-                          })}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {tierConfig.name} Plan
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium">${invoice.amount.toFixed(2)}</p>
-                      <Badge variant="secondary" className="text-xs bg-success/10 text-success border-0">
-                        {invoice.status}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-                
-                {isPaidPlan && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleManageSubscription}
-                    disabled={portalLoading}
-                    className="w-full mt-2 text-muted-foreground hover:text-foreground"
-                  >
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    View All Invoices in Stripe
-                  </Button>
-                )}
+              <div className="text-center py-6">
+                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <Receipt className="h-6 w-6 text-primary" />
+                </div>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Access your complete invoice history, download receipts, and manage payment methods in the Stripe Customer Portal.
+                </p>
+                <Button
+                  onClick={handleManageSubscription}
+                  disabled={portalLoading}
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                >
+                  {portalLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Opening Portal...
+                    </>
+                  ) : (
+                    <>
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      View Invoices in Stripe
+                    </>
+                  )}
+                </Button>
               </div>
             )}
           </CardContent>
