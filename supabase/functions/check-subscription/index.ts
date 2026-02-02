@@ -149,8 +149,23 @@ serve(async (req) => {
       }
     }
 
-    // Get real-time data from Stripe
-    const currentPeriodEnd = new Date(activeSubscription.current_period_end * 1000).toISOString();
+    // Get real-time data from Stripe - handle timestamp safely
+    let currentPeriodEnd: string;
+    try {
+      const periodEndTimestamp = activeSubscription.current_period_end;
+      if (typeof periodEndTimestamp === 'number') {
+        currentPeriodEnd = new Date(periodEndTimestamp * 1000).toISOString();
+      } else if (typeof periodEndTimestamp === 'string') {
+        currentPeriodEnd = new Date(periodEndTimestamp).toISOString();
+      } else {
+        // Fallback to 30 days from now if we can't parse the timestamp
+        currentPeriodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+        logStep("Warning: Could not parse current_period_end, using fallback", { periodEndTimestamp });
+      }
+    } catch (err) {
+      logStep("Error parsing current_period_end, using fallback", { error: String(err) });
+      currentPeriodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    }
     const priceId = activeSubscription.items.data[0]?.price.id;
 
     logStep("Active subscription found", { 
