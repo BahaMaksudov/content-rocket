@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      batch_jobs: {
+        Row: {
+          completed_at: string | null
+          completed_videos: number
+          created_at: string
+          error_message: string | null
+          failed_videos: number
+          id: string
+          organization_id: string | null
+          results: Json | null
+          status: string
+          total_videos: number
+          updated_at: string
+          user_id: string
+          video_urls: Json
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_videos?: number
+          created_at?: string
+          error_message?: string | null
+          failed_videos?: number
+          id?: string
+          organization_id?: string | null
+          results?: Json | null
+          status?: string
+          total_videos?: number
+          updated_at?: string
+          user_id: string
+          video_urls?: Json
+        }
+        Update: {
+          completed_at?: string | null
+          completed_videos?: number
+          created_at?: string
+          error_message?: string | null
+          failed_videos?: number
+          id?: string
+          organization_id?: string | null
+          results?: Json | null
+          status?: string
+          total_videos?: number
+          updated_at?: string
+          user_id?: string
+          video_urls?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "batch_jobs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brand_voices: {
         Row: {
           created_at: string

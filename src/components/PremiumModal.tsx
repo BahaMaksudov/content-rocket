@@ -17,7 +17,7 @@ import { toast } from "sonner";
 interface PremiumModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  feature?: "youtube" | "brand-voice" | "generation-limit" | "voice-generation";
+  feature?: "youtube" | "brand-voice" | "generation-limit" | "voice-generation" | "bulk-processing" | "team-workspace";
   description?: string;
   tier?: "pro" | "agency";
 }
@@ -38,10 +38,12 @@ const agencyFeatures = [
   { icon: Sparkles, text: "Dedicated account manager" },
 ];
 
-export function PremiumModal({ open, onOpenChange, feature, description, tier = "pro" }: PremiumModalProps) {
+export function PremiumModal({ open, onOpenChange, feature, description, tier: propTier = "pro" }: PremiumModalProps) {
   const { openCheckout } = useSubscription();
   const [isLoading, setIsLoading] = useState(false);
 
+  // Set tier to agency for agency-only features
+  const tier = (feature === "bulk-processing" || feature === "team-workspace") ? "agency" : propTier;
   const isAgencyTier = tier === "agency";
   const features = isAgencyTier ? agencyFeatures : proFeatures;
   const tierConfig = SUBSCRIPTION_TIERS[tier];
@@ -74,9 +76,16 @@ export function PremiumModal({ open, onOpenChange, feature, description, tier = 
     ? "You have run out of credits. Please upgrade your plan to continue."
     : feature === "voice-generation"
     ? "Voice generation lets you convert scripts to professional AI audio"
+    : feature === "bulk-processing"
+    ? "Bulk processing lets you process multiple videos at once"
+    : feature === "team-workspace"
+    ? "Team workspaces let you collaborate with your team"
     : isAgencyTier
     ? "Agency features"
     : "this feature";
+
+  // Set tier to agency for agency-only features
+  const effectiveTier = (feature === "bulk-processing" || feature === "team-workspace") ? "agency" : tier;
 
   const isLimitReached = feature === "generation-limit" || feature === "youtube";
   

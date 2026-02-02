@@ -32,6 +32,7 @@ interface GenerationSettingsProps {
   hasTranscript: boolean;
   targetLanguage: string;
   setTargetLanguage: (language: string) => void;
+  hideGenerateButton?: boolean;
 }
 
 const tones = [
@@ -61,6 +62,7 @@ export function GenerationSettings({
   hasTranscript,
   targetLanguage,
   setTargetLanguage,
+  hideGenerateButton = false,
 }: GenerationSettingsProps) {
   const { isPro, isAgency } = useSubscription();
   const { hasCredits, creditsUsed, creditLimit, loading: creditsLoading } = useCredits();
@@ -268,70 +270,74 @@ export function GenerationSettings({
           </div>
         )}
 
-        {/* Generate Button */}
-        <div className="space-y-2">
-          <Button
-            onClick={onGenerate}
-            disabled={!hasTranscript || isGenerating || isCreditsExhausted}
-            className={`w-full ${
-              isCreditsExhausted 
-                ? "bg-muted text-muted-foreground cursor-not-allowed" 
-                : "gradient-primary text-primary-foreground"
-            }`}
-            size="lg"
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                Generating All Assets...
-              </>
-            ) : isCreditsExhausted ? (
-              <>
-                <AlertCircle className="h-4 w-4 mr-2" />
-                No Credits Remaining
-              </>
-            ) : (
-              <>
-                <Rocket className="h-4 w-4 mr-2" />
-                Generate All Assets
-              </>
-            )}
-          </Button>
-
-          {/* Credits remaining badge for Free and Pro users (Agency has unlimited) */}
-          {!isAgency && !creditsLoading && (
-            <div className="flex justify-center">
-              <Badge 
-                variant="outline" 
-                className={`text-xs ${
+        {/* Generate Button - hidden when used in bulk mode */}
+        {!hideGenerateButton && (
+          <>
+            <div className="space-y-2">
+              <Button
+                onClick={onGenerate}
+                disabled={!hasTranscript || isGenerating || isCreditsExhausted}
+                className={`w-full ${
                   isCreditsExhausted 
-                    ? "border-destructive/50 text-destructive" 
-                    : showCreditsWarning 
-                      ? "border-warning/50 text-warning-foreground"
-                      : "border-muted-foreground/30 text-muted-foreground"
+                    ? "bg-muted text-muted-foreground cursor-not-allowed" 
+                    : "gradient-primary text-primary-foreground"
                 }`}
+                size="lg"
               >
-                {creditsRemaining} / {creditLimit} credits remaining
-              </Badge>
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Generating All Assets...
+                  </>
+                ) : isCreditsExhausted ? (
+                  <>
+                    <AlertCircle className="h-4 w-4 mr-2" />
+                    No Credits Remaining
+                  </>
+                ) : (
+                  <>
+                    <Rocket className="h-4 w-4 mr-2" />
+                    Generate All Assets
+                  </>
+                )}
+              </Button>
+
+              {/* Credits remaining badge for Free and Pro users (Agency has unlimited) */}
+              {!isAgency && !creditsLoading && (
+                <div className="flex justify-center">
+                  <Badge 
+                    variant="outline" 
+                    className={`text-xs ${
+                      isCreditsExhausted 
+                        ? "border-destructive/50 text-destructive" 
+                        : showCreditsWarning 
+                          ? "border-warning/50 text-warning-foreground"
+                          : "border-muted-foreground/30 text-muted-foreground"
+                    }`}
+                  >
+                    {creditsRemaining} / {creditLimit} credits remaining
+                  </Badge>
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {!hasTranscript && !isCreditsExhausted && (
-          <p className="text-sm text-muted-foreground text-center">
-            Fetch or paste a transcript first
-          </p>
-        )}
+            {!hasTranscript && !isCreditsExhausted && (
+              <p className="text-sm text-muted-foreground text-center">
+                Fetch or paste a transcript first
+              </p>
+            )}
 
-        {isCreditsExhausted && (
-          <Button
-            variant="outline"
-            onClick={() => setShowPremiumModal(true)}
-            className="w-full border-primary/50 text-primary hover:bg-primary/10"
-          >
-            <Crown className="h-4 w-4 mr-2" />
-            Upgrade to Continue Generating
-          </Button>
+            {isCreditsExhausted && (
+              <Button
+                variant="outline"
+                onClick={() => setShowPremiumModal(true)}
+                className="w-full border-primary/50 text-primary hover:bg-primary/10"
+              >
+                <Crown className="h-4 w-4 mr-2" />
+                Upgrade to Continue Generating
+              </Button>
+            )}
+          </>
         )}
       </CardContent>
 
