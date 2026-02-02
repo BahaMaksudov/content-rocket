@@ -1,5 +1,4 @@
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { formatDistanceToNow } from "date-fns";
@@ -10,7 +9,8 @@ import {
   Loader2,
   Eye,
   Video,
-  Calendar
+  Calendar,
+  History
 } from "lucide-react";
 import { BatchJob } from "@/hooks/use-bulk-process";
 
@@ -53,7 +53,7 @@ export function RecentBatchesCarousel({
     }
   };
 
-  // Only show completed and failed batches
+  // Only show completed and failed batches (historical)
   const historicalBatches = batchJobs.filter(
     job => job.status === "completed" || job.status === "failed" || job.status === "cancelled"
   );
@@ -69,10 +69,10 @@ export function RecentBatchesCarousel({
   if (historicalBatches.length === 0) {
     return (
       <div className="text-center py-8 px-4">
-        <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-muted mb-3">
-          <Video className="h-6 w-6 text-muted-foreground" />
+        <div className="inline-flex items-center justify-center h-14 w-14 rounded-full bg-muted mb-3">
+          <History className="h-7 w-7 text-muted-foreground" />
         </div>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground">
           No batch history yet. Start processing to see your results here.
         </p>
       </div>
@@ -80,23 +80,26 @@ export function RecentBatchesCarousel({
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between px-1">
-        <h3 className="text-sm font-medium text-muted-foreground">Recent Batches</h3>
-        <Badge variant="outline" className="text-[10px]">
+    <div className="w-full space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <History className="h-5 w-5 text-muted-foreground" />
+          <h3 className="font-semibold">Recent Batches</h3>
+        </div>
+        <Badge variant="outline">
           {historicalBatches.length} batch{historicalBatches.length !== 1 ? "es" : ""}
         </Badge>
       </div>
       
       <ScrollArea className="w-full whitespace-nowrap">
-        <div className="flex gap-3 pb-3">
+        <div className="flex gap-4 pb-4">
           {historicalBatches.map((job) => (
             <Card
               key={job.id}
               onClick={() => onSelectBatch(job.id)}
-              className={`flex-shrink-0 w-[200px] cursor-pointer transition-all hover:shadow-md ${
+              className={`flex-shrink-0 w-[220px] cursor-pointer transition-all hover:shadow-lg ${
                 selectedBatchId === job.id
-                  ? "ring-2 ring-primary border-primary"
+                  ? "ring-2 ring-primary border-primary shadow-md"
                   : getStatusColor(job.status)
               }`}
             >
@@ -106,7 +109,7 @@ export function RecentBatchesCarousel({
                   {getStatusIcon(job.status)}
                   <Badge 
                     variant={job.status === "completed" ? "default" : job.status === "failed" ? "destructive" : "secondary"} 
-                    className="capitalize text-[10px]"
+                    className="capitalize text-xs"
                   >
                     {job.status}
                   </Badge>
@@ -115,13 +118,13 @@ export function RecentBatchesCarousel({
                 {/* Video count */}
                 <div className="flex items-center gap-2">
                   <Video className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium text-sm">
+                  <span className="font-semibold">
                     {job.total_videos} video{job.total_videos !== 1 ? "s" : ""}
                   </span>
                 </div>
 
                 {/* Stats */}
-                <div className="flex items-center gap-3 text-xs">
+                <div className="flex items-center gap-3 text-sm">
                   {job.completed_videos > 0 && (
                     <span className="text-primary font-medium">{job.completed_videos} ✓</span>
                   )}
@@ -131,15 +134,15 @@ export function RecentBatchesCarousel({
                 </div>
 
                 {/* Date */}
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Calendar className="h-3 w-3" />
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Calendar className="h-3.5 w-3.5" />
                   {formatDistanceToNow(new Date(job.created_at), { addSuffix: true })}
                 </div>
 
                 {/* View indicator */}
                 {selectedBatchId === job.id && (
-                  <div className="flex items-center gap-1.5 text-xs text-primary pt-2 border-t border-border">
-                    <Eye className="h-3 w-3" />
+                  <div className="flex items-center gap-1.5 text-sm text-primary pt-2 border-t border-border font-medium">
+                    <Eye className="h-4 w-4" />
                     Currently Viewing
                   </div>
                 )}
