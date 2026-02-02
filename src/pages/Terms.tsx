@@ -130,7 +130,7 @@ export default function Terms() {
               <li>
                 Email us at{" "}
                 <a href="mailto:support@rocketcontentpro.io" className="text-primary hover:underline">
-                  support@rocketcontent.app
+                  support@rocketcontentpro.io
                 </a>{" "}
                 with the subject line "Refund Request"
               </li>

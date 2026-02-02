@@ -62,7 +62,7 @@ export default function PaymentCanceled() {
                 Have a question before upgrading? We're here to help you make the right choice.
               </CardDescription>
               <Button variant="outline" asChild className="w-full gap-2">
-                <a href="mailto:support@contentrocket.app">
+                <a href="mailto:support@rocketcontentpro.io">
                   Talk to an Expert
                   <ArrowRight className="h-4 w-4" />
                 </a>
