@@ -224,6 +224,28 @@ export function AppLayout({ children }: AppLayoutProps) {
           <div className="flex-1 p-6 overflow-auto">
             {children}
           </div>
+          {/* Minimalist Dashboard Footer */}
+          <footer className="border-t border-border/50 px-4 py-3 bg-background/50">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
+              <div className="flex items-center gap-4">
+                <Link to="/privacy" className="hover:text-foreground transition-colors">
+                  Privacy Policy
+                </Link>
+                <Link to="/terms" className="hover:text-foreground transition-colors">
+                  Terms of Service
+                </Link>
+                <a 
+                  href="mailto:support@rocketcontentpro.io" 
+                  className="hover:text-foreground transition-colors"
+                >
+                  Contact Support
+                </a>
+              </div>
+              <span className="text-muted-foreground/70">
+                © {new Date().getFullYear()} Rocket Content
+              </span>
+            </div>
+          </footer>
         </main>
       </div>
       <SignOutConfirmationModal
