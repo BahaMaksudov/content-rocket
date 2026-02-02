@@ -1,4 +1,4 @@
-import { Home, History, Mic, Sparkles, Clock, Code } from "lucide-react";
+import { Home, History, Mic, Sparkles, Clock, Code, Users } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import {
@@ -129,6 +129,34 @@ export function AppSidebar() {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {/* Agency Features Navigation */}
+        {tier === "agency" && (
+          <SidebarGroup className="px-3">
+            <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              Team
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/team"
+                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sidebar-foreground transition-all duration-200 hover:bg-sidebar-accent hover:text-foreground"
+                      activeClassName="nav-active bg-sidebar-accent text-foreground font-medium"
+                    >
+                      <Users className="h-4 w-4 text-primary" />
+                      <span>Team Workspace</span>
+                      <Badge variant="secondary" className="ml-auto text-xs bg-primary/20 text-primary border-0">
+                        Agency
+                      </Badge>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

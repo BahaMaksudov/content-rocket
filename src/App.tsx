@@ -14,6 +14,7 @@ import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
 import Dashboard from "./pages/Dashboard";
 import History from "./pages/History";
+import Team from "./pages/Team";
 import BrandVoices from "./pages/BrandVoices";
 import Billing from "./pages/Billing";
 import Settings from "./pages/Settings";
@@ -65,6 +66,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <BrandVoices />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/team"
+              element={
+                <ProtectedRoute>
+                  <Team />
                 </ProtectedRoute>
               }
             />
