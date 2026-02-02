@@ -1,0 +1,341 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import { PremiumModal } from "@/components/PremiumModal";
+import { BatchJob } from "@/hooks/use-bulk-process";
+import { 
+  Link2, 
+  ListVideo, 
+  Play, 
+  Lock,
+  Sparkles,
+  AlertCircle,
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  MessageSquare,
+  Globe,
+  Cpu,
+  Settings2
+} from "lucide-react";
+
+const MAX_URLS_PER_BATCH = 10;
+
+interface QuickSettingsBarProps {
+  tone: string;
+  setTone: (tone: string) => void;
+  targetLanguage: string;
+  setTargetLanguage: (language: string) => void;
+}
+
+const tones = [
+  { value: "professional", label: "Professional" },
+  { value: "casual", label: "Casual" },
+  { value: "humorous", label: "Humorous" },
+  { value: "inspirational", label: "Inspirational" },
+];
+
+const languages = [
+  { value: "english", label: "English" },
+  { value: "spanish", label: "Spanish" },
+  { value: "french", label: "French" },
+  { value: "german", label: "German" },
+  { value: "portuguese", label: "Portuguese" },
+  { value: "japanese", label: "Japanese" },
+  { value: "korean", label: "Korean" },
+  { value: "chinese", label: "Chinese" },
+];
+
+function QuickSettingsBar({ tone, setTone, targetLanguage, setTargetLanguage }: QuickSettingsBarProps) {
+  return (
+    <div className="flex items-center gap-4 py-3 px-4 bg-muted/30 rounded-lg border border-border">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Settings2 className="h-4 w-4" />
+        <span className="font-medium">Quick Settings</span>
+      </div>
+      
+      <div className="h-4 w-px bg-border" />
+      
+      {/* Tone */}
+      <div className="flex items-center gap-2">
+        <MessageSquare className="h-4 w-4 text-muted-foreground" />
+        <Select value={tone} onValueChange={setTone}>
+          <SelectTrigger className="h-8 w-[130px] text-xs bg-background">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-popover border-border z-50">
+            {tones.map((t) => (
+              <SelectItem key={t.value} value={t.value} className="text-xs">
+                {t.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Language */}
+      <div className="flex items-center gap-2">
+        <Globe className="h-4 w-4 text-muted-foreground" />
+        <Select value={targetLanguage} onValueChange={setTargetLanguage}>
+          <SelectTrigger className="h-8 w-[120px] text-xs bg-background">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-popover border-border z-50">
+            {languages.map((l) => (
+              <SelectItem key={l.value} value={l.value} className="text-xs">
+                {l.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Model indicator */}
+      <div className="flex items-center gap-2 ml-auto">
+        <Cpu className="h-4 w-4 text-primary" />
+        <Badge variant="secondary" className="text-[10px] px-2">
+          GPT-4 Turbo
+        </Badge>
+      </div>
+    </div>
+  );
+}
+
+interface FullWidthInputProps {
+  onStartBulk: (urls?: string[], playlistUrl?: string) => void;
+  isPending: boolean;
+  activeJob: BatchJob | null;
+  onCancel: () => void;
+  isCancelling: boolean;
+  tone: string;
+  setTone: (tone: string) => void;
+  targetLanguage: string;
+  setTargetLanguage: (language: string) => void;
+}
+
+export function FullWidthInput({ 
+  onStartBulk, 
+  isPending, 
+  activeJob, 
+  onCancel, 
+  isCancelling,
+  tone,
+  setTone,
+  targetLanguage,
+  setTargetLanguage
+}: FullWidthInputProps) {
+  const { isAgency } = useSubscription();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [inputMode, setInputMode] = useState<"urls" | "playlist">("urls");
+  const [urlsInput, setUrlsInput] = useState("");
+  const [playlistUrl, setPlaylistUrl] = useState("");
+
+  const validUrls = urlsInput
+    .split("\n")
+    .filter((url) => {
+      const trimmed = url.trim();
+      return trimmed && (trimmed.includes("youtube") || trimmed.includes("youtu.be"));
+    });
+  const validUrlCount = validUrls.length;
+  const isOverLimit = validUrlCount > MAX_URLS_PER_BATCH;
+
+  const handleStartBulk = () => {
+    if (!isAgency) {
+      setShowUpgradeModal(true);
+      return;
+    }
+    if (isOverLimit) return;
+
+    const urls = inputMode === "urls" 
+      ? urlsInput.split("\n").filter((url) => url.trim())
+      : undefined;
+
+    onStartBulk(urls, inputMode === "playlist" ? playlistUrl : undefined);
+    setUrlsInput("");
+    setPlaylistUrl("");
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "completed":
+        return <CheckCircle2 className="h-3 w-3 text-primary" />;
+      case "failed":
+        return <XCircle className="h-3 w-3 text-destructive" />;
+      case "processing":
+        return <Loader2 className="h-3 w-3 animate-spin text-primary" />;
+      default:
+        return <Clock className="h-3 w-3 text-muted-foreground" />;
+    }
+  };
+
+  return (
+    <div className="space-y-3 relative">
+      {/* Agency Lock Overlay */}
+      {!isAgency && (
+        <div className="absolute inset-0 bg-background/90 backdrop-blur-sm z-10 flex items-center justify-center rounded-xl">
+          <div className="text-center p-6">
+            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+              <Lock className="h-6 w-6 text-primary" />
+            </div>
+            <h3 className="font-semibold mb-1">Agency Feature</h3>
+            <p className="text-sm text-muted-foreground mb-3">
+              Process up to 10 videos at once
+            </p>
+            <Button size="sm" onClick={() => setShowUpgradeModal(true)}>
+              <Sparkles className="h-4 w-4 mr-2" />
+              Upgrade to Agency
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Main Input Area */}
+      <div className="bg-card border border-border rounded-xl p-4">
+        {activeJob ? (
+          /* Active Job Progress */
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <div>
+                  <p className="font-medium text-sm">Processing Batch</p>
+                  <p className="text-xs text-muted-foreground">
+                    {activeJob.completed_videos + activeJob.failed_videos} of {activeJob.total_videos} videos completed
+                  </p>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" onClick={onCancel} disabled={isCancelling}>
+                Cancel
+              </Button>
+            </div>
+            
+            <Progress
+              value={((activeJob.completed_videos + activeJob.failed_videos) / activeJob.total_videos) * 100}
+              className="h-2"
+            />
+
+            {/* Compact video list */}
+            <div className="flex flex-wrap gap-2">
+              <TooltipProvider>
+                {activeJob.video_urls.map((video, idx) => (
+                  <Tooltip key={video.videoId}>
+                    <TooltipTrigger asChild>
+                      <div className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-xs ${
+                        video.status === "processing" ? "bg-primary/10 text-primary" :
+                        video.status === "completed" ? "bg-muted text-foreground" :
+                        video.status === "failed" ? "bg-destructive/10 text-destructive" :
+                        "bg-muted/50 text-muted-foreground"
+                      }`}>
+                        {getStatusIcon(video.status)}
+                        <span className="max-w-[100px] truncate">{video.title || `Video ${idx + 1}`}</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">{video.title || video.videoId}</p>
+                      {video.error && <p className="text-xs text-destructive">{video.error}</p>}
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+              </TooltipProvider>
+            </div>
+          </div>
+        ) : (
+          /* URL Input */
+          <div className="space-y-3">
+            <Tabs value={inputMode} onValueChange={(v) => setInputMode(v as "urls" | "playlist")}>
+              <div className="flex items-center justify-between gap-4">
+                <TabsList className="h-9">
+                  <TabsTrigger value="urls" className="text-xs gap-1.5">
+                    <Link2 className="h-3.5 w-3.5" />
+                    Multiple URLs
+                  </TabsTrigger>
+                  <TabsTrigger value="playlist" className="text-xs gap-1.5">
+                    <ListVideo className="h-3.5 w-3.5" />
+                    Playlist
+                  </TabsTrigger>
+                </TabsList>
+
+                <Button
+                  size="sm"
+                  disabled={
+                    isPending ||
+                    isOverLimit ||
+                    (inputMode === "urls" && validUrlCount === 0) ||
+                    (inputMode === "playlist" && !playlistUrl.trim())
+                  }
+                  onClick={handleStartBulk}
+                  className="gap-2"
+                >
+                  {isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Play className="h-4 w-4" />
+                  )}
+                  Start Processing
+                  {validUrlCount > 0 && inputMode === "urls" && (
+                    <Badge variant="secondary" className="ml-1 text-[10px]">
+                      {Math.min(validUrlCount, MAX_URLS_PER_BATCH)}
+                    </Badge>
+                  )}
+                </Button>
+              </div>
+
+              <TabsContent value="urls" className="mt-3">
+                <Textarea
+                  placeholder="Paste YouTube URLs (one per line)&#10;https://youtube.com/watch?v=...&#10;https://youtu.be/..."
+                  value={urlsInput}
+                  onChange={(e) => setUrlsInput(e.target.value)}
+                  rows={3}
+                  className={`font-mono text-xs resize-none ${isOverLimit ? "border-destructive" : ""}`}
+                />
+                <div className="flex items-center justify-between mt-2 text-xs">
+                  <span className={validUrlCount > 0 ? (isOverLimit ? "text-destructive" : "text-primary") : "text-muted-foreground"}>
+                    {validUrlCount > 0 ? `${validUrlCount} URLs detected` : "Paste YouTube URLs above"}
+                  </span>
+                  <span className={`flex items-center gap-1 ${isOverLimit ? "text-destructive" : "text-muted-foreground"}`}>
+                    {isOverLimit && <AlertCircle className="h-3 w-3" />}
+                    Max {MAX_URLS_PER_BATCH} per batch
+                  </span>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="playlist" className="mt-3">
+                <Input
+                  placeholder="https://youtube.com/playlist?list=..."
+                  value={playlistUrl}
+                  onChange={(e) => setPlaylistUrl(e.target.value)}
+                  className="text-sm"
+                />
+                <p className="text-xs text-muted-foreground mt-2">
+                  First {MAX_URLS_PER_BATCH} videos from the playlist will be processed
+                </p>
+              </TabsContent>
+            </Tabs>
+          </div>
+        )}
+      </div>
+
+      {/* Quick Settings Bar */}
+      <QuickSettingsBar
+        tone={tone}
+        setTone={setTone}
+        targetLanguage={targetLanguage}
+        setTargetLanguage={setTargetLanguage}
+      />
+
+      <PremiumModal
+        open={showUpgradeModal}
+        onOpenChange={setShowUpgradeModal}
+        feature="bulk-processing"
+      />
+    </div>
+  );
+}

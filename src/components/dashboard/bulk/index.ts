@@ -3,3 +3,7 @@ export { CompactSettings } from "./CompactSettings";
 export { BulkUploadInput } from "./BulkUploadInput";
 export { BatchContentViewer } from "./BatchContentViewer";
 export { BatchHistoryPanel } from "./BatchHistoryPanel";
+export { FullWidthInput } from "./FullWidthInput";
+export { ContentFocusedViewer } from "./ContentFocusedViewer";
+export { RecentBatchesCarousel } from "./RecentBatchesCarousel";
+export { FloatingActions } from "./FloatingActions";
