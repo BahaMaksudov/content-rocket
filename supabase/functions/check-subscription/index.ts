@@ -149,24 +149,37 @@ serve(async (req) => {
       }
     }
 
-    // Get real-time data from Stripe - handle timestamp safely
+    // Get real-time data from Stripe
+    // The current_period_end is on the subscription item, not the subscription object itself
+    const subscriptionItem = activeSubscription.items.data[0];
+    const priceId = subscriptionItem?.price.id;
+    
+    // Get current_period_end from subscription item (where Stripe actually stores it)
     let currentPeriodEnd: string;
-    try {
-      const periodEndTimestamp = activeSubscription.current_period_end;
-      if (typeof periodEndTimestamp === 'number') {
-        currentPeriodEnd = new Date(periodEndTimestamp * 1000).toISOString();
-      } else if (typeof periodEndTimestamp === 'string') {
-        currentPeriodEnd = new Date(periodEndTimestamp).toISOString();
+    const rawPeriodEnd = (subscriptionItem as any)?.current_period_end;
+    
+    logStep("Raw period end from Stripe subscription item", { 
+      rawPeriodEnd, 
+      type: typeof rawPeriodEnd,
+      subscriptionId: activeSubscription.id 
+    });
+    
+    if (typeof rawPeriodEnd === 'number' && rawPeriodEnd > 0) {
+      // Unix timestamp in seconds - convert to milliseconds
+      currentPeriodEnd = new Date(rawPeriodEnd * 1000).toISOString();
+    } else if (typeof rawPeriodEnd === 'string' && rawPeriodEnd) {
+      // Already a date string
+      const parsed = new Date(rawPeriodEnd);
+      if (!isNaN(parsed.getTime())) {
+        currentPeriodEnd = parsed.toISOString();
       } else {
-        // Fallback to 30 days from now if we can't parse the timestamp
+        logStep("Warning: Could not parse string current_period_end", { rawPeriodEnd });
         currentPeriodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-        logStep("Warning: Could not parse current_period_end, using fallback", { periodEndTimestamp });
       }
-    } catch (err) {
-      logStep("Error parsing current_period_end, using fallback", { error: String(err) });
+    } else {
+      logStep("Warning: current_period_end missing or invalid, using fallback", { rawPeriodEnd });
       currentPeriodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
     }
-    const priceId = activeSubscription.items.data[0]?.price.id;
 
     logStep("Active subscription found", { 
       subscriptionId: activeSubscription.id,
