@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useBulkProcess, BatchJob } from "@/hooks/use-bulk-process";
+import { useBulkProcess } from "@/hooks/use-bulk-process";
 
-import { CompactSettings } from "./CompactSettings";
-import { BulkUploadInput } from "./BulkUploadInput";
-import { BatchContentViewer } from "./BatchContentViewer";
-import { BatchHistoryPanel } from "./BatchHistoryPanel";
+import { FullWidthInput } from "./FullWidthInput";
+import { ContentFocusedViewer } from "./ContentFocusedViewer";
+import { RecentBatchesCarousel } from "./RecentBatchesCarousel";
+import { FloatingActions } from "./FloatingActions";
 
 interface BrandVoice {
   id: string;
@@ -16,7 +16,6 @@ interface BrandVoice {
 }
 
 interface BulkWorkspaceProps {
-  // Settings from parent (for single video mode compatibility)
   tone?: string;
   setTone?: (tone: string) => void;
   audience?: string;
@@ -42,13 +41,13 @@ export function BulkWorkspace({
   const { user } = useAuth();
   const { batchJobs, activeJob, startBulkProcess, cancelBatchJob, isLoading } = useBulkProcess();
   
-  // Internal state (used if external props not provided)
+  // Internal state
   const [internalTone, setInternalTone] = useState("professional");
   const [internalAudience, setInternalAudience] = useState("general");
   const [internalTargetLanguage, setInternalTargetLanguage] = useState("english");
   const [internalSelectedBrandVoice, setInternalSelectedBrandVoice] = useState<string | null>("default_friendly_peer");
   
-  // Use external props if provided, otherwise use internal state
+  // Use external props if provided
   const tone = externalTone ?? internalTone;
   const setTone = externalSetTone ?? setInternalTone;
   const audience = externalAudience ?? internalAudience;
@@ -61,7 +60,7 @@ export function BulkWorkspace({
   // Selected batch for viewing
   const [selectedBatchId, setSelectedBatchId] = useState<string | null>(null);
 
-  // Fetch brand voices if not provided
+  // Fetch brand voices
   const { data: fetchedBrandVoices } = useQuery({
     queryKey: ["brand-voices", user?.id],
     queryFn: async () => {
@@ -89,11 +88,18 @@ export function BulkWorkspace({
     }
   }, [activeJob, batchJobs, selectedBatchId]);
 
+  // Handle batch selection from history - auto-selects first video
+  const handleSelectBatch = (batchId: string) => {
+    setSelectedBatchId(batchId);
+  };
+
   // Get selected batch
   const selectedBatch = batchJobs?.find(j => j.id === selectedBatchId) || activeJob || null;
 
+  // Check if we have content for floating actions
+  const hasContent = selectedBatch?.status === "completed" && (selectedBatch?.completed_videos || 0) > 0;
+
   const handleStartBulk = (urls?: string[], playlistUrl?: string) => {
-    // Find the brand voice object
     const brandVoiceObj = selectedBrandVoice 
       ? brandVoices.find(v => v.id === selectedBrandVoice) 
       : null;
@@ -109,49 +115,45 @@ export function BulkWorkspace({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Left Column: Upload & Settings */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1 space-y-4">
-          {/* Bulk Upload Input */}
-          <BulkUploadInput
-            onStartBulk={handleStartBulk}
-            isPending={startBulkProcess.isPending}
-            activeJob={activeJob || null}
-            onCancel={() => activeJob && cancelBatchJob.mutate(activeJob.id)}
-            isCancelling={cancelBatchJob.isPending}
-          />
+    <div className="space-y-6 pb-20">
+      {/* Section 1: Full-Width Input & Quick Settings */}
+      <section>
+        <FullWidthInput
+          onStartBulk={handleStartBulk}
+          isPending={startBulkProcess.isPending}
+          activeJob={activeJob || null}
+          onCancel={() => activeJob && cancelBatchJob.mutate(activeJob.id)}
+          isCancelling={cancelBatchJob.isPending}
+          tone={tone}
+          setTone={setTone}
+          targetLanguage={targetLanguage}
+          setTargetLanguage={setTargetLanguage}
+        />
+      </section>
 
-          {/* Compact Settings */}
-          <CompactSettings
-            brandVoices={brandVoices}
-            selectedBrandVoice={selectedBrandVoice}
-            setSelectedBrandVoice={setSelectedBrandVoice}
-            tone={tone}
-            setTone={setTone}
-            audience={audience}
-            setAudience={setAudience}
-            targetLanguage={targetLanguage}
-            setTargetLanguage={setTargetLanguage}
-          />
+      {/* Section 2: Content Focused Viewer */}
+      <section>
+        <ContentFocusedViewer
+          batchJob={selectedBatch}
+          isProcessing={activeJob?.id === selectedBatchId}
+        />
+      </section>
 
-          {/* Batch History */}
-          <BatchHistoryPanel
-            batchJobs={batchJobs || []}
-            selectedBatchId={selectedBatchId}
-            onSelectBatch={setSelectedBatchId}
-            isLoading={isLoading}
-          />
-        </div>
+      {/* Section 3: Recent Batches Carousel */}
+      <section className="border-t border-border pt-6">
+        <RecentBatchesCarousel
+          batchJobs={batchJobs || []}
+          selectedBatchId={selectedBatchId}
+          onSelectBatch={handleSelectBatch}
+          isLoading={isLoading}
+        />
+      </section>
 
-        {/* Right Column: Content Viewer */}
-        <div className="lg:col-span-2">
-          <BatchContentViewer
-            batchJob={selectedBatch}
-            isProcessing={activeJob?.id === selectedBatchId}
-          />
-        </div>
-      </div>
+      {/* Floating Action Buttons */}
+      <FloatingActions
+        batchJob={selectedBatch}
+        hasContent={hasContent}
+      />
     </div>
   );
 }
