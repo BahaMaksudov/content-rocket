@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,7 +21,8 @@ import {
   Loader2,
   Lock,
   Sparkles,
-  AlertCircle
+  AlertCircle,
+  ExternalLink
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -35,6 +37,7 @@ interface BulkUploadProps {
 }
 
 export function BulkUpload({ tone, audience, brandVoice, targetLanguage }: BulkUploadProps) {
+  const navigate = useNavigate();
   const { isAgency, openCheckout } = useSubscription();
   const { batchJobs, activeJob, startBulkProcess, cancelBatchJob, isLoading } = useBulkProcess();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -366,6 +369,17 @@ export function BulkUpload({ tone, audience, brandVoice, targetLanguage }: BulkU
                       </span>
                     )}
                     {getStatusBadge(job.status)}
+                    {job.status === "completed" && job.completed_videos > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate("/history")}
+                        className="ml-2"
+                      >
+                        <ExternalLink className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
