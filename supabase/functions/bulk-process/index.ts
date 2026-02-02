@@ -168,19 +168,50 @@ serve(async (req: Request) => {
     }
     logStep("User authenticated", { userId: user.id });
 
-    // Check if user has Agency subscription
+    // Admin client for database operations
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { data: subscription } = await adminClient
-      .from("subscriptions")
-      .select("status")
-      .eq("user_id", user.id)
-      .single();
+    // OPTIMIZED: Single subscription check at the beginning with try/catch
+    let isAgencyUser = false;
+    try {
+      logStep("Starting subscription check");
+      
+      const { data: subscription, error: subError } = await adminClient
+        .from("subscriptions")
+        .select("status")
+        .eq("user_id", user.id)
+        .single();
 
-    if (!subscription || subscription.status !== "agency") {
+      if (subError) {
+        logStep("Subscription query failed", { error: subError.message });
+        return new Response(
+          JSON.stringify({ 
+            error: "subscription_check_failed", 
+            message: "Failed to verify subscription status. Please try again." 
+          }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      logStep("Subscription check result", { status: subscription?.status });
+      isAgencyUser = subscription?.status === "agency";
+      
+    } catch (subCheckError: any) {
+      logStep("Subscription check exception", { error: subCheckError.message });
+      return new Response(
+        JSON.stringify({ 
+          error: "subscription_check_failed", 
+          message: "Subscription verification failed. Please refresh and try again." 
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!isAgencyUser) {
+      logStep("User is not Agency tier", { userId: user.id });
       return new Response(
         JSON.stringify({ 
           error: "agency_required", 
@@ -189,7 +220,7 @@ serve(async (req: Request) => {
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-    logStep("Agency subscription verified");
+    logStep("Agency subscription verified - proceeding with batch");
 
     // Get user profile for email notification
     const { data: profile } = await adminClient
@@ -290,7 +321,11 @@ serve(async (req: Request) => {
           .eq("id", batchJob.id);
 
         try {
-          // Fetch transcript
+          // Build the YouTube URL from the video ID
+          const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+          logStep(`Fetching transcript for video ${videoId}`, { url: youtubeUrl });
+
+          // Fetch transcript - NOTE: fetch-transcript expects { url: "..." } not { videoId: "..." }
           const transcriptResponse = await fetch(
             `${Deno.env.get("SUPABASE_URL")}/functions/v1/fetch-transcript`,
             {
@@ -299,19 +334,27 @@ serve(async (req: Request) => {
                 "Content-Type": "application/json",
                 Authorization: authHeader,
               },
-              body: JSON.stringify({ videoId }),
+              body: JSON.stringify({ url: youtubeUrl }),
             }
           );
 
           const transcriptData = await transcriptResponse.json();
+          logStep(`Transcript response for ${videoId}`, { 
+            ok: transcriptResponse.ok, 
+            hasTranscript: !!transcriptData.transcript,
+            transcriptLength: transcriptData.transcript?.length || 0,
+            error: transcriptData.error || null
+          });
 
           if (!transcriptResponse.ok || transcriptData.error) {
-            throw new Error(transcriptData.error || transcriptData.message || "Failed to fetch transcript");
+            throw new Error(transcriptData.error || transcriptData.message || transcriptData.details || "Failed to fetch transcript");
           }
 
           if (!transcriptData.transcript || transcriptData.transcript.length < 100) {
-            throw new Error("No valid transcript available for this video");
+            throw new Error("No valid transcript available for this video. Captions may be disabled.");
           }
+
+          logStep(`Generating content for ${videoId}`, { transcriptLength: transcriptData.transcript.length });
 
           // Generate content
           const contentResponse = await fetch(
@@ -324,6 +367,7 @@ serve(async (req: Request) => {
               },
               body: JSON.stringify({
                 transcript: transcriptData.transcript,
+                videoTitle: transcriptData.title || null,
                 tone: tone || "professional",
                 audience: audience || "general",
                 brandVoice: brandVoice || null,
@@ -333,6 +377,10 @@ serve(async (req: Request) => {
           );
 
           const contentData = await contentResponse.json();
+          logStep(`Content generation response for ${videoId}`, { 
+            ok: contentResponse.ok, 
+            error: contentData.error || null 
+          });
 
           if (!contentResponse.ok || contentData.error) {
             throw new Error(contentData.error || contentData.message || "Failed to generate content");
