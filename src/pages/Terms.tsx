@@ -30,58 +30,64 @@ export default function Terms() {
           <p className="text-muted-foreground mb-8">Last updated: January 27, 2026</p>
 
           <section className="mb-10">
-            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">1. Agreement to Terms</h2>
+            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">
+              1. Agreement to Terms
+            </h2>
             <p className="text-muted-foreground leading-relaxed">
-              By accessing or using Rocket Content ("the Service"), you agree to be bound by these Terms of Service 
-              ("Terms"). If you disagree with any part of the terms, you may not access the Service. These Terms 
-              apply to all visitors, users, and others who access or use the Service.
+              By accessing or using Rocket Content ("the Service"), you agree to be bound by these Terms of Service
+              ("Terms"). If you disagree with any part of the terms, you may not access the Service. These Terms apply
+              to all visitors, users, and others who access or use the Service.
             </p>
           </section>
 
           <section className="mb-10">
-            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">2. Description of Service</h2>
+            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">
+              2. Description of Service
+            </h2>
             <p className="text-muted-foreground leading-relaxed">
-              Rocket Content is an AI-powered content repurposing platform that transforms YouTube videos into 
-              multi-platform content including social media posts, blog articles, and visual assets. The Service 
-              uses artificial intelligence to analyze, transcribe, and generate derivative content.
+              Rocket Content is an AI-powered content repurposing platform that transforms YouTube videos into
+              multi-platform content including social media posts, blog articles, and visual assets. The Service uses
+              artificial intelligence to analyze, transcribe, and generate derivative content.
             </p>
           </section>
 
           <section className="mb-10">
-            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">3. User Accounts</h2>
+            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">
+              3. User Accounts
+            </h2>
             <h3 className="text-xl font-medium text-foreground mt-6 mb-3">3.1 Registration</h3>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              You must register for an account to use certain features of the Service. You agree to provide 
-              accurate, current, and complete information during registration and to update such information 
-              as necessary.
+              You must register for an account to use certain features of the Service. You agree to provide accurate,
+              current, and complete information during registration and to update such information as necessary.
             </p>
-            
+
             <h3 className="text-xl font-medium text-foreground mt-6 mb-3">3.2 Account Security</h3>
             <p className="text-muted-foreground leading-relaxed">
-              You are responsible for safeguarding your account credentials and for all activities that occur 
-              under your account. You must notify us immediately of any unauthorized use of your account.
+              You are responsible for safeguarding your account credentials and for all activities that occur under your
+              account. You must notify us immediately of any unauthorized use of your account.
             </p>
           </section>
 
           <section className="mb-10">
-            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">4. Subscriptions & Payments</h2>
+            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">
+              4. Subscriptions & Payments
+            </h2>
             <h3 className="text-xl font-medium text-foreground mt-6 mb-3">4.1 Billing</h3>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              Paid features require a subscription. By subscribing, you authorize us to charge your payment 
-              method on a recurring basis. All payments are processed securely through Stripe.
+              Paid features require a subscription. By subscribing, you authorize us to charge your payment method on a
+              recurring basis. All payments are processed securely through Stripe.
             </p>
 
             <h3 className="text-xl font-medium text-foreground mt-6 mb-3">4.2 Pricing</h3>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              Subscription prices are listed on our website. We reserve the right to change pricing with 
-              30 days' notice. Price changes will take effect at the start of your next billing cycle.
+              Subscription prices are listed on our website. We reserve the right to change pricing with 30 days'
+              notice. Price changes will take effect at the start of your next billing cycle.
             </p>
 
             <h3 className="text-xl font-medium text-foreground mt-6 mb-3">4.3 Refunds</h3>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              Subscription fees are generally non-refundable except as required by law. You may cancel your 
-              subscription at any time, and you will continue to have access until the end of your current 
-              billing period.
+              Subscription fees are generally non-refundable except as required by law. You may cancel your subscription
+              at any time, and you will continue to have access until the end of your current billing period.
             </p>
 
             <h3 className="text-xl font-medium text-foreground mt-6 mb-3">4.4 Free Tier</h3>
@@ -91,15 +97,18 @@ export default function Terms() {
           </section>
 
           <section className="mb-10">
-            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">5. Refund and Cancellation Policy</h2>
+            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">
+              5. Refund and Cancellation Policy
+            </h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              We want you to be completely satisfied with Rocket Content. Please review our refund and cancellation policies below.
+              We want you to be completely satisfied with Rocket Content. Please review our refund and cancellation
+              policies below.
             </p>
 
             <h3 className="text-xl font-medium text-foreground mt-6 mb-3">5.1 7-Day Satisfaction Guarantee</h3>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              First-time subscribers are eligible for a full refund within 7 days of their initial subscription purchase, 
-              provided they meet the eligibility criteria outlined below.
+              First-time subscribers are eligible for a full refund within 7 days of their initial subscription
+              purchase, provided they meet the eligibility criteria outlined below.
             </p>
 
             <h4 className="text-lg font-semibold text-foreground mt-4 mb-2">Eligibility</h4>
@@ -111,14 +120,20 @@ export default function Terms() {
             </ul>
 
             <p className="text-muted-foreground leading-relaxed mb-4">
-              <strong className="text-foreground">Important:</strong> After the 7-day period has elapsed, or if you have used 3 or more 
-              AI Generation credits, payments are non-refundable. This policy exists due to the immediate and 
-              substantial costs associated with AI processing that occur when generations are created.
+              <strong className="text-foreground">Important:</strong> After the 7-day period has elapsed, or if you have
+              used 3 or more AI Generation credits, payments are non-refundable. This policy exists due to the immediate
+              and substantial costs associated with AI processing that occur when generations are created.
             </p>
 
             <h4 className="text-lg font-semibold text-foreground mt-4 mb-2">How to Request a Refund</h4>
             <ul className="list-disc list-inside text-muted-foreground space-y-2 mb-4">
-              <li>Email us at <a href="mailto:support@rocketcontent.app" className="text-primary hover:underline">support@rocketcontent.app</a> with the subject line "Refund Request"</li>
+              <li>
+                Email us at{" "}
+                <a href="mailto:support@rocketcontent.app" className="text-primary hover:underline">
+                  support@rocketcontent.app
+                </a>{" "}
+                with the subject line "Refund Request"
+              </li>
               <li>Include your account email address and the date of your subscription</li>
               <li>Briefly explain the reason for your refund request</li>
               <li>Refund requests are typically processed within 5-7 business days</li>
@@ -126,21 +141,26 @@ export default function Terms() {
 
             <h3 className="text-xl font-medium text-foreground mt-6 mb-3">5.2 Subscription Management</h3>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              You may cancel your subscription at any time through the "Billing" section in your dashboard settings. 
+              You may cancel your subscription at any time through the "Billing" section in your dashboard settings.
               Upon cancellation:
             </p>
             <ul className="list-disc list-inside text-muted-foreground space-y-2 mb-4">
               <li>Your subscription will not renew at the end of your current billing cycle</li>
-              <li>You will retain full Pro access and all associated features until the end of your current billing period</li>
+              <li>
+                You will retain full Pro access and all associated features until the end of your current billing period
+              </li>
               <li>No partial refunds are provided for unused time within a billing cycle</li>
-              <li>You may resubscribe at any time, though the 7-Day Satisfaction Guarantee only applies to first-time subscribers</li>
+              <li>
+                You may resubscribe at any time, though the 7-Day Satisfaction Guarantee only applies to first-time
+                subscribers
+              </li>
             </ul>
 
             <h3 className="text-xl font-medium text-foreground mt-6 mb-3">5.3 Technical Issues and Service Credits</h3>
             <p className="text-muted-foreground leading-relaxed">
-              If a technical error on our platform prevents an AI generation from completing successfully, we will, 
-              at our discretion, either refund the AI Generation credit to your account balance or issue a partial 
-              monetary refund. To report a technical issue, please contact us at{" "}
+              If a technical error on our platform prevents an AI generation from completing successfully, we will, at
+              our discretion, either refund the AI Generation credit to your account balance or issue a partial monetary
+              refund. To report a technical issue, please contact us at{" "}
               <a href="mailto:support@rocketcontent.app" className="text-primary hover:underline">
                 support@rocketcontent.app
               </a>{" "}
@@ -149,28 +169,32 @@ export default function Terms() {
           </section>
 
           <section className="mb-10">
-            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">6. Content & Intellectual Property</h2>
+            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">
+              6. Content & Intellectual Property
+            </h2>
             <h3 className="text-xl font-medium text-foreground mt-6 mb-3">6.1 Your Content</h3>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              You retain ownership of content you submit to the Service. By submitting content, you grant us 
-              a limited license to process and transform it for the purpose of providing the Service.
+              You retain ownership of content you submit to the Service. By submitting content, you grant us a limited
+              license to process and transform it for the purpose of providing the Service.
             </p>
 
             <h3 className="text-xl font-medium text-foreground mt-6 mb-3">6.2 Generated Content</h3>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              Content generated by our AI based on your submissions belongs to you. You are free to use, 
-              modify, and distribute this content as you see fit.
+              Content generated by our AI based on your submissions belongs to you for commercial and non-commercial
+              use. You are free to use, modify, and distribute this content as you see fit.
             </p>
 
             <h3 className="text-xl font-medium text-foreground mt-6 mb-3">6.3 Responsibility</h3>
             <p className="text-muted-foreground leading-relaxed">
-              You are solely responsible for ensuring you have the rights to submit content for processing. 
-              Do not submit content that infringes on third-party copyrights or intellectual property rights.
+              You are solely responsible for ensuring you have the rights to submit content for processing. Do not
+              submit content that infringes on third-party copyrights or intellectual property rights.
             </p>
           </section>
 
           <section className="mb-10">
-            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">7. AI-Generated Content Disclaimer</h2>
+            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">
+              7. AI-Generated Content Disclaimer
+            </h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
               Content generated by our AI is provided "as is." While we strive for accuracy and quality:
             </p>
@@ -183,10 +207,10 @@ export default function Terms() {
           </section>
 
           <section className="mb-10">
-            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">8. Prohibited Uses</h2>
-            <p className="text-muted-foreground leading-relaxed mb-4">
-              You agree not to use the Service to:
-            </p>
+            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">
+              8. Prohibited Uses
+            </h2>
+            <p className="text-muted-foreground leading-relaxed mb-4">You agree not to use the Service to:</p>
             <ul className="list-disc list-inside text-muted-foreground space-y-2">
               <li>Generate illegal, harmful, or offensive content</li>
               <li>Infringe on intellectual property rights</li>
@@ -201,45 +225,53 @@ export default function Terms() {
           <section className="mb-10">
             <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">9. Termination</h2>
             <p className="text-muted-foreground leading-relaxed">
-              We may terminate or suspend your account immediately, without prior notice, for any reason, 
-              including breach of these Terms. Upon termination, your right to use the Service will cease 
-              immediately. You may also delete your account at any time through your account settings.
+              We may terminate or suspend your account immediately, without prior notice, for any reason, including
+              breach of these Terms. Upon termination, your right to use the Service will cease immediately. You may
+              also delete your account at any time through your account settings.
             </p>
           </section>
 
           <section className="mb-10">
-            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">10. Limitation of Liability</h2>
+            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">
+              10. Limitation of Liability
+            </h2>
             <p className="text-muted-foreground leading-relaxed">
-              To the maximum extent permitted by law, Rocket Content shall not be liable for any indirect, 
-              incidental, special, consequential, or punitive damages, including loss of profits, data, or 
-              goodwill, arising from your use of the Service. Our total liability shall not exceed the amount 
-              you paid us in the twelve months preceding the claim.
+              To the maximum extent permitted by law, Rocket Content shall not be liable for any indirect, incidental,
+              special, consequential, or punitive damages, including loss of profits, data, or goodwill, arising from
+              your use of the Service. Our total liability shall not exceed the amount you paid us in the twelve months
+              preceding the claim.
             </p>
           </section>
 
           <section className="mb-10">
-            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">11. Disclaimer of Warranties</h2>
+            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">
+              11. Disclaimer of Warranties
+            </h2>
             <p className="text-muted-foreground leading-relaxed">
-              The Service is provided "as is" and "as available" without warranties of any kind, either express 
-              or implied, including but not limited to implied warranties of merchantability, fitness for a 
-              particular purpose, and non-infringement.
+              The Service is provided "as is" and "as available" without warranties of any kind, either express or
+              implied, including but not limited to implied warranties of merchantability, fitness for a particular
+              purpose, and non-infringement.
             </p>
           </section>
 
           <section className="mb-10">
-            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">12. Changes to Terms</h2>
+            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">
+              12. Changes to Terms
+            </h2>
             <p className="text-muted-foreground leading-relaxed">
-              We reserve the right to modify these Terms at any time. We will provide notice of significant 
-              changes by posting the new Terms on this page and updating the "Last updated" date. Your continued 
-              use of the Service after changes constitutes acceptance of the new Terms.
+              We reserve the right to modify these Terms at any time. We will provide notice of significant changes by
+              posting the new Terms on this page and updating the "Last updated" date. Your continued use of the Service
+              after changes constitutes acceptance of the new Terms.
             </p>
           </section>
 
           <section className="mb-10">
-            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">13. Governing Law</h2>
+            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">
+              13. Governing Law
+            </h2>
             <p className="text-muted-foreground leading-relaxed">
-              These Terms shall be governed by and construed in accordance with the laws of the jurisdiction 
-              in which Rocket Content operates, without regard to its conflict of law provisions.
+              These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which
+              Rocket Content operates, without regard to its conflict of law provisions.
             </p>
           </section>
 
@@ -253,7 +285,8 @@ export default function Terms() {
               or visit our{" "}
               <Link to="/contact" className="text-primary hover:underline">
                 Contact page
-              </Link>.
+              </Link>
+              .
             </p>
           </section>
         </article>
