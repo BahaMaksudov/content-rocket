@@ -56,9 +56,14 @@ serve(async (req) => {
       throw new Error("No Stripe subscription ID found");
     }
 
+    // Determine tier for user-friendly messaging
+    const tier = subscription.status as "pro" | "agency";
+    const tierLabel = tier === "agency" ? "Agency" : "Pro";
+
     logStep("Found subscription", { 
       subscriptionId: subscription.stripe_subscription_id,
-      status: subscription.status 
+      status: subscription.status,
+      tier: tierLabel
     });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
@@ -78,14 +83,16 @@ serve(async (req) => {
     const periodEnd = new Date(updatedSubscription.current_period_end * 1000).toISOString();
 
     // Note: We do NOT update the Supabase status here.
-    // The user keeps Pro access until the webhook receives customer.subscription.deleted
+    // The user keeps their tier access until the webhook receives customer.subscription.deleted
 
     return new Response(
       JSON.stringify({
         success: true,
         cancelAtPeriodEnd: true,
         periodEnd,
-        message: `Your subscription will be canceled at the end of your billing period. You'll have Pro access until ${new Date(periodEnd).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}.`,
+        tier,
+        tierLabel,
+        message: `Your ${tierLabel} subscription will be canceled at the end of your billing period. You'll have ${tierLabel} access until ${new Date(periodEnd).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}.`,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
@@ -98,4 +105,3 @@ serve(async (req) => {
     });
   }
 });
-

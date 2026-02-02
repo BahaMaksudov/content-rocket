@@ -14,7 +14,12 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
 };
 
 const REFUND_WINDOW_DAYS = 7;
-const MAX_GENERATIONS_FOR_REFUND = 3;
+
+// Tier-specific generation limits for refund eligibility
+const MAX_GENERATIONS_BY_TIER = {
+  pro: 3,
+  agency: 7,
+};
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -57,13 +62,20 @@ serve(async (req) => {
           eligible: false,
           reason: "No active paid subscription found",
           canCancel: false,
+          tier: "free",
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
       );
     }
 
+    // Determine tier from subscription status
+    const tier = subscription.status as "pro" | "agency";
+    const maxGenerationsForRefund = MAX_GENERATIONS_BY_TIER[tier] ?? MAX_GENERATIONS_BY_TIER.pro;
+
     logStep("Subscription found", {
       status: subscription.status,
+      tier,
+      maxGenerationsForRefund,
       createdAt: subscription.created_at,
       stripeSubscriptionId: subscription.stripe_subscription_id,
     });
@@ -77,7 +89,7 @@ serve(async (req) => {
     const withinRefundWindow = daysSinceCreation <= REFUND_WINDOW_DAYS;
     logStep("Check 1 - Refund window", { daysSinceCreation, withinRefundWindow });
 
-    // Check 2: Has the user used fewer than 3 AI generations?
+    // Check 2: Has the user used fewer than the tier-specific limit of AI generations?
     const { count: generationCount, error: genError } = await supabaseClient
       .from("generations")
       .select("*", { count: "exact", head: true })
@@ -88,8 +100,8 @@ serve(async (req) => {
     }
 
     const totalGenerations = generationCount ?? 0;
-    const underGenerationLimit = totalGenerations < MAX_GENERATIONS_FOR_REFUND;
-    logStep("Check 2 - Generation count", { totalGenerations, underGenerationLimit });
+    const underGenerationLimit = totalGenerations < maxGenerationsForRefund;
+    logStep("Check 2 - Generation count", { totalGenerations, underGenerationLimit, limit: maxGenerationsForRefund });
 
     // Check 3: Is this the user's first subscription? 
     // Check payment_history for previous payments (more than 1 means not first subscription)
@@ -114,12 +126,12 @@ serve(async (req) => {
     if (!withinRefundWindow) {
       reason = `Subscription is ${daysSinceCreation} days old (refund window is ${REFUND_WINDOW_DAYS} days)`;
     } else if (!underGenerationLimit) {
-      reason = `Used ${totalGenerations} AI generations (limit is ${MAX_GENERATIONS_FOR_REFUND - 1})`;
+      reason = `Used ${totalGenerations} AI generations (${tier === "agency" ? "Agency" : "Pro"} limit is ${maxGenerationsForRefund - 1})`;
     } else if (!isFirstSubscription) {
       reason = "Refunds are only available for first-time subscribers";
     }
 
-    logStep("Eligibility result", { eligible, reason });
+    logStep("Eligibility result", { eligible, reason, tier });
 
     return new Response(
       JSON.stringify({
@@ -129,8 +141,10 @@ serve(async (req) => {
         withinRefundWindow,
         daysSinceCreation,
         generationsUsed: totalGenerations,
+        generationLimit: maxGenerationsForRefund,
         isFirstSubscription,
         subscriptionEnd: subscription.current_period_end,
+        tier,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );

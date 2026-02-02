@@ -10,8 +10,10 @@ interface RefundEligibility {
   withinRefundWindow?: boolean;
   daysSinceCreation?: number;
   generationsUsed?: number;
+  generationLimit?: number;
   isFirstSubscription?: boolean;
   subscriptionEnd?: string;
+  tier?: "pro" | "agency" | "free";
 }
 
 interface CancelResult {
