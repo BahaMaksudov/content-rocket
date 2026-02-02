@@ -19,9 +19,13 @@ import {
   Clock, 
   Loader2,
   Lock,
-  Sparkles
+  Sparkles,
+  AlertCircle
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+const MAX_URLS_PER_BATCH = 10;
 
 interface BulkUploadProps {
   tone?: string;
@@ -39,14 +43,22 @@ export function BulkUpload({ tone, audience, brandVoice, targetLanguage }: BulkU
   const [playlistUrl, setPlaylistUrl] = useState("");
 
   // Count valid URLs
-  const validUrlCount = urlsInput
+  const validUrls = urlsInput
     .split("\n")
-    .filter((url) => url.trim() && url.includes("youtube") || url.includes("youtu.be"))
-    .length;
+    .filter((url) => {
+      const trimmed = url.trim();
+      return trimmed && (trimmed.includes("youtube") || trimmed.includes("youtu.be"));
+    });
+  const validUrlCount = validUrls.length;
+  const isOverLimit = validUrlCount > MAX_URLS_PER_BATCH;
 
   const handleStartBulk = () => {
     if (!isAgency) {
       setShowUpgradeModal(true);
+      return;
+    }
+
+    if (isOverLimit) {
       return;
     }
 
@@ -152,18 +164,28 @@ export function BulkUpload({ tone, audience, brandVoice, targetLanguage }: BulkU
                 value={urlsInput}
                 onChange={(e) => setUrlsInput(e.target.value)}
                 rows={6}
-                className="font-mono text-sm"
+                className={`font-mono text-sm ${isOverLimit ? "border-destructive focus-visible:ring-destructive" : ""}`}
               />
-              <p className="text-sm text-muted-foreground">
-                {validUrlCount > 0 ? (
-                  <span className="text-primary font-medium">{validUrlCount} valid URL(s) detected</span>
-                ) : (
-                  "Enter YouTube URLs, one per line"
-                )}
-                {validUrlCount > 10 && (
-                  <span className="text-amber-500 ml-2">(max 10 per batch)</span>
-                )}
-              </p>
+              <div className="flex items-center justify-between text-sm">
+                <div>
+                  {validUrlCount > 0 ? (
+                    <span className={isOverLimit ? "text-destructive font-medium" : "text-primary font-medium"}>
+                      {validUrlCount} valid URL(s) detected
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground">Enter YouTube URLs, one per line</span>
+                  )}
+                </div>
+                <div className={`flex items-center gap-1 ${isOverLimit ? "text-destructive" : "text-muted-foreground"}`}>
+                  {isOverLimit && <AlertCircle className="h-4 w-4" />}
+                  <span>Max {MAX_URLS_PER_BATCH} per batch</span>
+                </div>
+              </div>
+              {isOverLimit && (
+                <p className="text-sm text-destructive">
+                  Please remove {validUrlCount - MAX_URLS_PER_BATCH} URL(s) to continue. Only the first {MAX_URLS_PER_BATCH} will be processed.
+                </p>
+              )}
             </TabsContent>
 
             <TabsContent value="playlist" className="mt-4 space-y-3">
@@ -173,7 +195,7 @@ export function BulkUpload({ tone, audience, brandVoice, targetLanguage }: BulkU
                 onChange={(e) => setPlaylistUrl(e.target.value)}
               />
               <p className="text-sm text-muted-foreground">
-                Paste a YouTube playlist URL to process all videos
+                Paste a YouTube playlist URL to process up to {MAX_URLS_PER_BATCH} videos
               </p>
             </TabsContent>
           </Tabs>
@@ -183,6 +205,7 @@ export function BulkUpload({ tone, audience, brandVoice, targetLanguage }: BulkU
             disabled={
               startBulkProcess.isPending ||
               !!activeJob ||
+              isOverLimit ||
               (inputMode === "urls" && validUrlCount === 0) ||
               (inputMode === "playlist" && !playlistUrl.trim())
             }
@@ -201,7 +224,7 @@ export function BulkUpload({ tone, audience, brandVoice, targetLanguage }: BulkU
             ) : (
               <>
                 <Play className="h-4 w-4 mr-2" />
-                Start Bulk Processing
+                Start Bulk Processing ({validUrlCount > 0 ? Math.min(validUrlCount, MAX_URLS_PER_BATCH) : 0} videos)
               </>
             )}
           </Button>
@@ -259,19 +282,49 @@ export function BulkUpload({ tone, audience, brandVoice, targetLanguage }: BulkU
               </div>
             </div>
 
-            {/* Video list */}
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              {activeJob.video_urls.map((video, idx) => (
-                <div
-                  key={video.videoId}
-                  className="flex items-center gap-3 p-2 rounded-lg bg-muted/30"
-                >
-                  {getStatusIcon(video.status)}
-                  <span className="text-sm flex-1 truncate">
-                    {video.title || video.videoId}
-                  </span>
-                </div>
-              ))}
+            {/* Video list with individual status */}
+            <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
+              <TooltipProvider>
+                {activeJob.video_urls.map((video, idx) => (
+                  <div
+                    key={video.videoId}
+                    className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                      video.status === "processing" 
+                        ? "bg-primary/10 border border-primary/20" 
+                        : video.status === "completed"
+                        ? "bg-muted/50"
+                        : video.status === "failed"
+                        ? "bg-destructive/10 border border-destructive/20"
+                        : "bg-muted/30"
+                    }`}
+                  >
+                    <div className="flex items-center justify-center w-6 h-6">
+                      {getStatusIcon(video.status)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {video.title || `Video ${idx + 1}`}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {video.videoId}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {getStatusBadge(video.status)}
+                      {video.error && (
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <AlertCircle className="h-4 w-4 text-destructive" />
+                          </TooltipTrigger>
+                          <TooltipContent side="left" className="max-w-xs">
+                            <p className="text-sm">{video.error}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </TooltipProvider>
             </div>
           </CardContent>
         </Card>
