@@ -13,6 +13,27 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[SYNC-PAYMENT-HISTORY] ${step}${detailsStr}`);
 };
 
+// Product IDs for subscription tiers
+const PRODUCT_IDS = {
+  pro: "prod_TtwRuGNynEpRHz",
+  agency: "prod_TtxGA6pKTbpMoM",
+};
+
+function getPlanNameFromProductId(productId: string): string {
+  if (productId === PRODUCT_IDS.agency) return "Agency Plan";
+  if (productId === PRODUCT_IDS.pro) return "Pro Plan";
+  return "Subscription";
+}
+
+function getPlanNameFromAmount(amount: number): string {
+  // amount is in cents
+  if (amount === 24900) return "Agency Plan";
+  if (amount === 2900) return "Pro Plan";
+  if (amount > 10000) return "Agency Plan"; // Fallback for amounts > $100
+  if (amount > 1000) return "Pro Plan"; // Fallback for amounts > $10
+  return "Subscription";
+}
+
 // Normalize Stripe timestamps to ISO string for DB timestamp columns.
 const toTimestamp = (v: any) => {
   const n = typeof v === "number" ? v : Number(v);
@@ -49,7 +70,7 @@ serve(async (req) => {
 
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-12-15.clover" });
 
     // 1) Get (or create) Stripe customer id and persist it.
     const { data: subRecord } = await supabase
@@ -88,8 +109,12 @@ serve(async (req) => {
 
     if (!customerId) throw new Error("Unable to determine Stripe customer id");
 
-    // 2) Fetch last 10 invoices.
-    const invoices = await stripe.invoices.list({ customer: customerId, limit: 10 });
+    // 2) Fetch last 20 invoices to get more history including paid ones
+    const invoices = await stripe.invoices.list({ 
+      customer: customerId, 
+      limit: 20,
+      status: "paid", // Only fetch paid invoices
+    });
     logStep("Fetched invoices", { count: invoices.data.length, customerId });
 
     const invoiceIds = invoices.data
@@ -124,6 +149,30 @@ serve(async (req) => {
             ? inv.payment_intent
             : inv.payment_intent?.id ?? null;
 
+        // Try to get product ID from the invoice line items to determine plan name
+        let planName = "Subscription payment";
+        const lineItem = inv.lines?.data?.[0];
+        if (lineItem?.price?.product) {
+          const productId = typeof lineItem.price.product === "string" 
+            ? lineItem.price.product 
+            : lineItem.price.product?.id;
+          if (productId) {
+            planName = getPlanNameFromProductId(productId);
+          }
+        }
+        
+        // Fallback: derive plan name from amount if product lookup fails
+        if (planName === "Subscription" || planName === "Subscription payment") {
+          planName = getPlanNameFromAmount(amount);
+        }
+
+        logStep("Processing invoice", { 
+          invoiceId: inv.id, 
+          amount, 
+          planName,
+          lineDescription: lineItem?.description 
+        });
+
         return {
           user_id: user.id,
           stripe_invoice_id: inv.id,
@@ -133,7 +182,7 @@ serve(async (req) => {
           status: inv.status ?? "paid",
           payment_date: paymentDate,
           invoice_pdf_url: inv.invoice_pdf ?? inv.hosted_invoice_url ?? null,
-          description: inv.lines?.data?.[0]?.description ?? inv.description ?? "Invoice",
+          description: planName,
         };
       });
 
