@@ -7,6 +7,7 @@ import { YouTubeInput } from "@/components/dashboard/YouTubeInput";
 import { GenerationSettings } from "@/components/dashboard/GenerationSettings";
 import { ContentOutput } from "@/components/dashboard/ContentOutput";
 import { WelcomeBanner } from "@/components/dashboard/WelcomeBanner";
+import { BulkUpload } from "@/components/dashboard/BulkUpload";
 import { PremiumModal } from "@/components/PremiumModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -16,6 +17,8 @@ import { trackGenerationStarted, trackUpgradeClicked } from "@/lib/posthog";
 import { toast as sonnerToast } from "sonner";
 import { DEFAULT_BRAND_VOICES, isDefaultVoiceId, getDefaultVoiceById } from "@/lib/default-brand-voices";
 import { useSyncPaymentHistoryOnce } from "@/hooks/use-sync-payment-history";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Video, Layers, Lock } from "lucide-react";
 
 export interface GeneratedContent {
   twitterHooks: string[];
@@ -26,7 +29,7 @@ export interface GeneratedContent {
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { openCheckout, loading: subscriptionLoading } = useSubscription();
+  const { openCheckout, loading: subscriptionLoading, isAgency } = useSubscription();
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const [transcript, setTranscript] = useState("");
@@ -40,7 +43,9 @@ export default function Dashboard() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
+  const [showBulkUpgradeModal, setShowBulkUpgradeModal] = useState(false);
   const [upgradeProcessed, setUpgradeProcessed] = useState(false);
+  const [activeTab, setActiveTab] = useState<"single" | "bulk">("single");
 
   // One-time backfill so Billing shows historical invoices (e.g. Feb 1) even if the webhook
   // wasn't configured at the time of payment.
@@ -326,46 +331,106 @@ export default function Dashboard() {
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Left column - Input & Settings */}
-          <div className="lg:col-span-1 space-y-6">
-            <div ref={youtubeInputRef}>
-              <YouTubeInput
-                onTranscriptFetched={handleTranscriptFetched}
-                transcript={transcript}
-                transcriptMethod={transcriptMethod}
-                youtubeUrl={youtubeUrl}
-                setYoutubeUrl={setYoutubeUrl}
-                onCreditUsed={refreshCredits}
-              />
-            </div>
-            
-            <GenerationSettings
-              brandVoices={brandVoices || []}
-              selectedBrandVoice={selectedBrandVoice}
-              setSelectedBrandVoice={setSelectedBrandVoice}
-              tone={tone}
-              setTone={setTone}
-              audience={audience}
-              setAudience={setAudience}
-              onGenerate={handleGenerate}
-              isGenerating={isGenerating}
-              hasTranscript={!!transcript}
-              targetLanguage={targetLanguage}
-              setTargetLanguage={setTargetLanguage}
-            />
-          </div>
+        {/* Mode Toggle Tabs */}
+        <Tabs value={activeTab} onValueChange={(v) => {
+          if (v === "bulk" && !isAgency) {
+            setShowBulkUpgradeModal(true);
+            return;
+          }
+          setActiveTab(v as "single" | "bulk");
+        }}>
+          <TabsList className="grid grid-cols-2 w-full max-w-md">
+            <TabsTrigger value="single" className="flex items-center gap-2">
+              <Video className="h-4 w-4" />
+              Single Video
+            </TabsTrigger>
+            <TabsTrigger value="bulk" className="flex items-center gap-2 relative">
+              <Layers className="h-4 w-4" />
+              Bulk Upload
+              {!isAgency && <Lock className="h-3 w-3 ml-1 text-muted-foreground" />}
+            </TabsTrigger>
+          </TabsList>
 
-          {/* Right column - Output */}
-          <div className="lg:col-span-2" ref={contentOutputRef}>
-            <ContentOutput
-              content={generatedContent}
-              isGenerating={isGenerating}
-              onUpdateContent={handleUpdateContent}
-              targetLanguage={targetLanguage !== "english" ? targetLanguage : null}
-            />
-          </div>
-        </div>
+          <TabsContent value="single" className="mt-6">
+            <div className="grid lg:grid-cols-3 gap-6">
+              {/* Left column - Input & Settings */}
+              <div className="lg:col-span-1 space-y-6">
+                <div ref={youtubeInputRef}>
+                  <YouTubeInput
+                    onTranscriptFetched={handleTranscriptFetched}
+                    transcript={transcript}
+                    transcriptMethod={transcriptMethod}
+                    youtubeUrl={youtubeUrl}
+                    setYoutubeUrl={setYoutubeUrl}
+                    onCreditUsed={refreshCredits}
+                  />
+                </div>
+                
+                <GenerationSettings
+                  brandVoices={brandVoices || []}
+                  selectedBrandVoice={selectedBrandVoice}
+                  setSelectedBrandVoice={setSelectedBrandVoice}
+                  tone={tone}
+                  setTone={setTone}
+                  audience={audience}
+                  setAudience={setAudience}
+                  onGenerate={handleGenerate}
+                  isGenerating={isGenerating}
+                  hasTranscript={!!transcript}
+                  targetLanguage={targetLanguage}
+                  setTargetLanguage={setTargetLanguage}
+                />
+              </div>
+
+              {/* Right column - Output */}
+              <div className="lg:col-span-2" ref={contentOutputRef}>
+                <ContentOutput
+                  content={generatedContent}
+                  isGenerating={isGenerating}
+                  onUpdateContent={handleUpdateContent}
+                  targetLanguage={targetLanguage !== "english" ? targetLanguage : null}
+                />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="bulk" className="mt-6">
+            <div className="grid lg:grid-cols-3 gap-6">
+              {/* Left column - Bulk Upload */}
+              <div className="lg:col-span-1">
+                <BulkUpload
+                  tone={tone}
+                  audience={audience}
+                  brandVoice={selectedBrandVoice ? (
+                    isDefaultVoiceId(selectedBrandVoice) 
+                      ? getDefaultVoiceById(selectedBrandVoice)
+                      : brandVoices?.find(v => v.id === selectedBrandVoice)
+                  ) : undefined}
+                  targetLanguage={targetLanguage}
+                />
+              </div>
+
+              {/* Right column - Settings for bulk */}
+              <div className="lg:col-span-2">
+                <GenerationSettings
+                  brandVoices={brandVoices || []}
+                  selectedBrandVoice={selectedBrandVoice}
+                  setSelectedBrandVoice={setSelectedBrandVoice}
+                  tone={tone}
+                  setTone={setTone}
+                  audience={audience}
+                  setAudience={setAudience}
+                  onGenerate={() => {}}
+                  isGenerating={false}
+                  hasTranscript={false}
+                  targetLanguage={targetLanguage}
+                  setTargetLanguage={setTargetLanguage}
+                  hideGenerateButton
+                />
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
       
       {/* Credits exhausted modal */}
@@ -373,6 +438,13 @@ export default function Dashboard() {
         open={showCreditsModal} 
         onOpenChange={setShowCreditsModal}
         feature="generation-limit"
+      />
+
+      {/* Bulk processing upgrade modal */}
+      <PremiumModal 
+        open={showBulkUpgradeModal} 
+        onOpenChange={setShowBulkUpgradeModal}
+        feature="bulk-processing"
       />
     </AppLayout>
   );
