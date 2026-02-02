@@ -168,14 +168,14 @@ export default function Privacy() {
             <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">10. Contact Us</h2>
             <p className="text-muted-foreground leading-relaxed">
               If you have questions about this Privacy Policy or our data practices, please contact us at{" "}
-              {/* <a href="mailto:privacy@rocketcontentpro.io" className="text-primary hover:underline">
-                privacy@rocketcontent.app
+              <a href="mailto:privacy@rocketcontentpro.io" className="text-primary hover:underline">
+                privacy@rocketcontentpro.io
               </a>{" "}
-              or visit our{" "} */}
+              or visit our{" "}
               <Link to="/contact" className="text-primary hover:underline">
                 Contact page
               </Link>
-              .
+              .Sharon, MA USA
             </p>
           </section>
         </article>
