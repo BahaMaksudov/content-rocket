@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,6 +18,7 @@ export interface BatchJob {
     status: string;
     title: string | null;
     error: string | null;
+    generationId?: string | null;
   }>;
   results: any[];
   error_message: string | null;
@@ -30,6 +31,9 @@ export function useBulkProcess() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Track previously active job to detect completion
+  const prevActiveJobRef = useRef<string | null>(null);
 
   // Get recent batch jobs
   const { data: batchJobs, isLoading } = useQuery({
@@ -53,6 +57,42 @@ export function useBulkProcess() {
       return hasActiveJob ? 3000 : false;
     },
   });
+  
+  // Detect when a batch job completes and refresh generations
+  const activeJob = batchJobs?.find(
+    (job) => job.status === "pending" || job.status === "processing"
+  );
+  
+  useEffect(() => {
+    const currentActiveId = activeJob?.id || null;
+    const prevActiveId = prevActiveJobRef.current;
+    
+    // If we had an active job and now we don't, the job completed
+    if (prevActiveId && !currentActiveId) {
+      // Find the job that just completed
+      const completedJob = batchJobs?.find(job => job.id === prevActiveId);
+      
+      if (completedJob) {
+        // Invalidate generations query so History page shows new content
+        queryClient.invalidateQueries({ queryKey: ["generations"] });
+        
+        // Show completion toast with summary
+        if (completedJob.status === "completed") {
+          toast({
+            title: "🎉 Batch processing complete!",
+            description: `${completedJob.completed_videos} video(s) processed successfully. View them in History.`,
+          });
+        } else if (completedJob.status === "failed" && completedJob.completed_videos > 0) {
+          toast({
+            title: "Batch processing finished",
+            description: `${completedJob.completed_videos} succeeded, ${completedJob.failed_videos} failed. Check History for results.`,
+          });
+        }
+      }
+    }
+    
+    prevActiveJobRef.current = currentActiveId;
+  }, [activeJob?.id, batchJobs, queryClient, toast]);
 
   // Get a specific batch job
   const getBatchJob = (batchId: string) => {
@@ -123,11 +163,6 @@ export function useBulkProcess() {
       });
     },
   });
-
-  // Get active job (if any)
-  const activeJob = batchJobs?.find(
-    (job) => job.status === "pending" || job.status === "processing"
-  );
 
   return {
     batchJobs,
