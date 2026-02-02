@@ -88,7 +88,7 @@ export function BulkWorkspace({
     }
   }, [activeJob, batchJobs, selectedBatchId]);
 
-  // Handle batch selection from history - auto-selects first video
+  // Handle batch selection - populates the content viewer immediately
   const handleSelectBatch = (batchId: string) => {
     setSelectedBatchId(batchId);
   };
@@ -115,9 +115,9 @@ export function BulkWorkspace({
   };
 
   return (
-    <div className="space-y-6 pb-20">
-      {/* Section 1: Full-Width Input & Quick Settings */}
-      <section>
+    <div className="flex flex-col w-full space-y-6 pb-24">
+      {/* Phase 1: The Header - Full Width Input & Collapsible Config */}
+      <section className="w-full">
         <FullWidthInput
           onStartBulk={handleStartBulk}
           isPending={startBulkProcess.isPending}
@@ -131,16 +131,16 @@ export function BulkWorkspace({
         />
       </section>
 
-      {/* Section 2: Content Focused Viewer */}
-      <section>
+      {/* Phase 2: The Primary Content Viewer - Hero Card (100% width) */}
+      <section className="w-full">
         <ContentFocusedViewer
           batchJob={selectedBatch}
           isProcessing={activeJob?.id === selectedBatchId}
         />
       </section>
 
-      {/* Section 3: Recent Batches Carousel */}
-      <section className="border-t border-border pt-6">
+      {/* Phase 3: Horizontal Batch History - Bottom Section */}
+      <section className="w-full border-t border-border pt-6">
         <RecentBatchesCarousel
           batchJobs={batchJobs || []}
           selectedBatchId={selectedBatchId}
@@ -149,7 +149,7 @@ export function BulkWorkspace({
         />
       </section>
 
-      {/* Floating Action Buttons */}
+      {/* Floating Action Buttons - Bottom Right */}
       <FloatingActions
         batchJob={selectedBatch}
         hasContent={hasContent}
