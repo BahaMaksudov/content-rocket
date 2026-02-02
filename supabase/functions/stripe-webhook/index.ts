@@ -15,6 +15,21 @@ const PRODUCT_IDS = {
   agency: "prod_TtxGA6pKTbpMoM", // Agency product ID ($249/mo)
 };
 
+function getPlanNameFromProductId(productId: string): string {
+  if (productId === PRODUCT_IDS.agency) return "Agency Plan";
+  if (productId === PRODUCT_IDS.pro) return "Pro Plan";
+  return "Subscription";
+}
+
+function getPlanNameFromAmount(amount: number): string {
+  // amount is in cents
+  if (amount === 24900) return "Agency Plan";
+  if (amount === 2900) return "Pro Plan";
+  if (amount > 10000) return "Agency Plan";
+  if (amount > 1000) return "Pro Plan";
+  return "Subscription";
+}
+
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[STRIPE-WEBHOOK] ${step}${detailsStr}`);
@@ -344,6 +359,22 @@ serve(async (req) => {
             const paymentDate = toTimestamp(paidAt ?? invoice.created);
             const amount = invoice.amount_paid || invoice.amount_due || invoice.total || 0;
             
+            // Derive plan name from product ID or amount
+            let planName = "Subscription payment";
+            const lineItem = invoice.lines?.data?.[0];
+            if (lineItem?.price?.product) {
+              const productId = typeof lineItem.price.product === "string" 
+                ? lineItem.price.product 
+                : (lineItem.price.product as any)?.id;
+              if (productId) {
+                planName = getPlanNameFromProductId(productId);
+              }
+            }
+            // Fallback to amount-based detection
+            if (planName === "Subscription payment" || planName === "Subscription") {
+              planName = getPlanNameFromAmount(amount);
+            }
+            
             const { error: insertError } = await supabase
               .from("payment_history")
               .insert({
@@ -357,7 +388,7 @@ serve(async (req) => {
                 status: invoice.status || 'paid',
                 payment_date: paymentDate,
                 invoice_pdf_url: invoice.invoice_pdf || invoice.hosted_invoice_url || null,
-                description: invoice.lines?.data?.[0]?.description || 'Subscription payment',
+                description: planName,
               });
 
             if (insertError) {
