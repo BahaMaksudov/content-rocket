@@ -129,7 +129,7 @@ export default function Terms() {
             <ul className="list-disc list-inside text-muted-foreground space-y-2 mb-4">
               <li>
                 Email us at{" "}
-                <a href="mailto:support@rocketcontent.app" className="text-primary hover:underline">
+                <a href="mailto:support@rocketcontentpro.io" className="text-primary hover:underline">
                   support@rocketcontent.app
                 </a>{" "}
                 with the subject line "Refund Request"
@@ -161,8 +161,8 @@ export default function Terms() {
               If a technical error on our platform prevents an AI generation from completing successfully, we will, at
               our discretion, either refund the AI Generation credit to your account balance or issue a partial monetary
               refund. To report a technical issue, please contact us at{" "}
-              <a href="mailto:support@rocketcontent.app" className="text-primary hover:underline">
-                support@rocketcontent.app
+              <a href="mailto:support@rocketcontentpro.io" className="text-primary hover:underline">
+                support@rocketcontentpro.io
               </a>{" "}
               with details of the error, including any error messages received and the approximate time of the incident.
             </p>
@@ -279,14 +279,14 @@ export default function Terms() {
             <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">14. Contact Us</h2>
             <p className="text-muted-foreground leading-relaxed">
               If you have questions about these Terms, please contact us at{" "}
-              <a href="mailto:legal@rocketcontent.app" className="text-primary hover:underline">
+              <a href="mailto:legal@rocketcontentpro.io" className="text-primary hover:underline">
                 legal@rocketcontentpro.io
               </a>{" "}
               or visit our{" "}
               <Link to="/contact" className="text-primary hover:underline">
                 Contact page
               </Link>
-              . Sharon, MA USA
+              .
             </p>
           </section>
         </article>
