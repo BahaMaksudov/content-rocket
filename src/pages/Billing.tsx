@@ -418,16 +418,37 @@ export default function Billing() {
                 ))}
                 
                 {isPaidPlan && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleManageSubscription}
-                    disabled={portalLoading}
-                    className="w-full mt-2 text-muted-foreground hover:text-foreground"
-                  >
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    View All Invoices in Stripe
-                  </Button>
+                  <div className="flex flex-col sm:flex-row gap-2 mt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSyncPaymentHistory}
+                      disabled={syncLoading}
+                      className="gap-2"
+                    >
+                      {syncLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Syncing…
+                        </>
+                      ) : (
+                        <>
+                          <Receipt className="h-4 w-4" />
+                          Sync invoices now
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleManageSubscription}
+                      disabled={portalLoading}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      View All Invoices in Stripe
+                    </Button>
+                  </div>
                 )}
               </div>
             )}
