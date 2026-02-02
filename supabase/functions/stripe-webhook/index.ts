@@ -160,6 +160,22 @@ serve(async (req) => {
                 userId, 
                 nextBillingDate: currentPeriodEnd 
               });
+
+              // Reset generations count on successful upgrade/payment
+              // This ensures the refund window generation count starts fresh
+              const { error: profileError } = await supabase
+                .from("profiles")
+                .update({
+                  generations_this_month: 0,
+                  updated_at: updatedAt,
+                })
+                .eq("user_id", userId);
+
+              if (profileError) {
+                logStep("Error resetting generations count", { error: profileError.message });
+              } else {
+                logStep("Generations count reset for new subscription", { userId });
+              }
             }
           } catch (dbError) {
             const errorMessage = dbError instanceof Error ? dbError.message : String(dbError);

@@ -14,7 +14,12 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
 };
 
 const REFUND_WINDOW_DAYS = 7;
-const MAX_GENERATIONS_FOR_REFUND = 3;
+
+// Tier-specific generation limits for refund eligibility
+const MAX_GENERATIONS_BY_TIER = {
+  pro: 3,
+  agency: 7,
+};
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -55,6 +60,12 @@ serve(async (req) => {
       throw new Error("No active paid subscription found");
     }
 
+    // Determine tier from subscription status
+    const tier = subscription.status as "pro" | "agency";
+    const maxGenerationsForRefund = MAX_GENERATIONS_BY_TIER[tier] ?? MAX_GENERATIONS_BY_TIER.pro;
+
+    logStep("Subscription found", { tier, maxGenerationsForRefund });
+
     // Re-verify eligibility (security check)
     const subscriptionCreatedAt = new Date(subscription.created_at);
     const now = new Date();
@@ -71,8 +82,8 @@ serve(async (req) => {
       .select("*", { count: "exact", head: true })
       .eq("user_id", user.id);
 
-    if ((generationCount ?? 0) >= MAX_GENERATIONS_FOR_REFUND) {
-      throw new Error("Too many AI generations used for refund eligibility");
+    if ((generationCount ?? 0) >= maxGenerationsForRefund) {
+      throw new Error(`Too many AI generations used for ${tier === "agency" ? "Agency" : "Pro"} refund eligibility (limit: ${maxGenerationsForRefund - 1})`);
     }
 
     const { count: paymentCount } = await supabaseClient
@@ -84,7 +95,7 @@ serve(async (req) => {
       throw new Error("Refunds only available for first-time subscribers");
     }
 
-    logStep("Eligibility verified");
+    logStep("Eligibility verified", { tier, daysSinceCreation, generationCount });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
@@ -157,7 +168,7 @@ serve(async (req) => {
       .from("payment_history")
       .update({
         status: "refunded",
-        description: "Full refund - 7-day satisfaction guarantee",
+        description: `Full refund - 7-day satisfaction guarantee (${tier === "agency" ? "Agency" : "Pro"})`,
       })
       .eq("stripe_invoice_id", latestInvoice.id);
 
@@ -166,7 +177,8 @@ serve(async (req) => {
         success: true,
         refundId: refund.id,
         refundAmount: refund.amount,
-        message: "Your subscription has been canceled and refunded successfully.",
+        tier,
+        message: `Your ${tier === "agency" ? "Agency" : "Pro"} subscription has been canceled and refunded successfully.`,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );

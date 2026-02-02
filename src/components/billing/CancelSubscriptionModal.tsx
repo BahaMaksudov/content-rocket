@@ -39,7 +39,11 @@ export function CancelSubscriptionModal({
     success: boolean;
     immediate: boolean;
     periodEnd?: string;
+    tierLabel?: string;
   } | null>(null);
+
+  // Determine tier label for display
+  const tierLabel = eligibility?.tier === "agency" ? "Agency" : "Pro";
 
   // Check eligibility when modal opens
   useEffect(() => {
@@ -52,7 +56,7 @@ export function CancelSubscriptionModal({
   const handleRefund = async () => {
     const result = await processRefund();
     if (result.success) {
-      setCancellationResult({ success: true, immediate: true });
+      setCancellationResult({ success: true, immediate: true, tierLabel });
       await checkSubscription();
       onCanceled?.();
     }
@@ -64,7 +68,8 @@ export function CancelSubscriptionModal({
       setCancellationResult({ 
         success: true, 
         immediate: false, 
-        periodEnd: result.periodEnd 
+        periodEnd: result.periodEnd,
+        tierLabel,
       });
       await checkSubscription();
       onCanceled?.();
@@ -82,6 +87,7 @@ export function CancelSubscriptionModal({
 
   // Show success state after cancellation
   if (cancellationResult?.success) {
+    const displayTier = cancellationResult.tierLabel || tierLabel;
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-md">
@@ -100,7 +106,7 @@ export function CancelSubscriptionModal({
                   <div>
                     <p className="font-medium text-success">Access Removed Immediately</p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Your subscription has been canceled and you've received a full refund.
+                      Your {displayTier} subscription has been canceled and you've received a full refund.
                       Your account has been downgraded to the free tier.
                     </p>
                   </div>
@@ -111,9 +117,9 @@ export function CancelSubscriptionModal({
                 <div className="flex items-start gap-3">
                   <Calendar className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-medium text-primary">Pro Access Until Period End</p>
+                    <p className="font-medium text-primary">{displayTier} Access Until Period End</p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      You'll continue to have Pro access until{" "}
+                      You'll continue to have {displayTier} access until{" "}
                       <span className="font-semibold">
                         {formattedEndDate(cancellationResult.periodEnd)}
                       </span>
@@ -141,7 +147,7 @@ export function CancelSubscriptionModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-warning" />
-            Cancel Subscription
+            Cancel {tierLabel} Subscription
           </DialogTitle>
           <DialogDescription>
             We're sorry to see you go. Please review your cancellation options below.
@@ -161,7 +167,7 @@ export function CancelSubscriptionModal({
                 <div>
                   <p className="font-medium text-success">Eligible for Full Refund</p>
                   <p className="text-sm text-muted-foreground mt-1">
-                    You qualify for our 7-Day Satisfaction Guarantee. Your subscription will be canceled 
+                    You qualify for our 7-Day Satisfaction Guarantee. Your {tierLabel} subscription will be canceled 
                     <span className="font-semibold"> immediately</span> and you'll receive a full refund.
                   </p>
                 </div>
@@ -175,7 +181,9 @@ export function CancelSubscriptionModal({
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">AI generations used:</span>
-                <Badge variant="secondary">{eligibility.generationsUsed} / 3</Badge>
+                <Badge variant="secondary">
+                  {eligibility.generationsUsed} / {eligibility.generationLimit || (eligibility.tier === "agency" ? 7 : 3)}
+                </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">First-time subscriber:</span>
@@ -218,7 +226,7 @@ export function CancelSubscriptionModal({
                 <div>
                   <p className="font-medium">Standard Cancellation</p>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Your subscription will remain active until the end of your billing period.
+                    Your {tierLabel} subscription will remain active until the end of your billing period.
                     No refund is available.
                   </p>
                 </div>
@@ -231,19 +239,19 @@ export function CancelSubscriptionModal({
                 <div className="text-sm">
                   <p className="font-medium text-warning">Non-refundable</p>
                   <p className="text-muted-foreground mt-1">
-                    {eligibility.reason || "Refund not available as per our policy (over 7 days or 3+ credits used)."}
+                    {eligibility.reason || `Refund not available as per our policy (over 7 days or ${eligibility.generationLimit || (eligibility.tier === "agency" ? 7 : 3)}+ credits used).`}
                   </p>
                 </div>
               </div>
             </div>
 
-            {subscriptionEnd && (
+            {(subscriptionEnd || eligibility.subscriptionEnd) && (
               <div className="rounded-lg bg-primary/10 border border-primary/30 p-4">
                 <div className="flex items-center gap-3">
                   <Calendar className="h-5 w-5 text-primary shrink-0" />
                   <p className="text-sm">
-                    <span className="font-medium text-primary">You'll have Pro access until </span>
-                    <span className="font-semibold">{formattedEndDate(subscriptionEnd)}</span>
+                    <span className="font-medium text-primary">You'll have {tierLabel} access until </span>
+                    <span className="font-semibold">{formattedEndDate(subscriptionEnd || eligibility.subscriptionEnd)}</span>
                   </p>
                 </div>
               </div>
@@ -264,7 +272,7 @@ export function CancelSubscriptionModal({
                     Canceling...
                   </>
                 ) : (
-                  "Cancel Subscription"
+                  `Cancel ${tierLabel} Subscription`
                 )}
               </Button>
             </DialogFooter>
