@@ -17,7 +17,7 @@ const REFUND_WINDOW_DAYS = 7;
 
 // Tier-specific generation limits for refund eligibility
 const MAX_GENERATIONS_BY_TIER = {
-  pro: 3,
+  pro: 5,
   agency: 7,
 };
 
