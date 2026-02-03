@@ -5,12 +5,13 @@ import { BarChart3, Infinity, ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export function CreditsRemaining() {
-  const { tier } = useSubscription();
-  const { creditsUsed, creditLimit, hasCredits, loading } = useCredits();
+  const { tier, loading: subscriptionLoading } = useSubscription();
+  const { creditsUsed, creditLimit, hasCredits, loading: creditsLoading } = useCredits();
   
   const isUnlimited = tier === "agency";
 
-  if (loading) {
+  // Wait for BOTH subscription and credits to load before rendering tier-dependent UI
+  if (subscriptionLoading || creditsLoading) {
     return (
       <div className="px-4 py-3 bg-sidebar-accent/30 rounded-lg animate-pulse">
         <div className="h-4 bg-muted rounded w-24 mb-2" />
