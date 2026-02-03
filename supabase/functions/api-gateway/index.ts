@@ -8,6 +8,56 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Rate limiting store (in-memory, resets on function restart)
+const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
+
+// Input validation utilities
+function validateString(input: unknown, fieldName: string, maxLength: number, required = false): string | null {
+  if (input === undefined || input === null || input === "") {
+    if (required) {
+      throw new Error(`${fieldName} is required`);
+    }
+    return null;
+  }
+  
+  if (typeof input !== "string") {
+    throw new Error(`${fieldName} must be a string`);
+  }
+  
+  // Sanitize: trim whitespace, remove null bytes, limit length
+  const sanitized = input.trim().replace(/\0/g, "").slice(0, maxLength);
+  
+  if (sanitized.length === 0 && required) {
+    throw new Error(`${fieldName} cannot be empty`);
+  }
+  
+  return sanitized;
+}
+
+function checkRateLimit(apiKeyHash: string, maxRequests = 10, windowMs = 60000): boolean {
+  const now = Date.now();
+  const limit = rateLimitStore.get(apiKeyHash);
+  
+  // Clean up old entries periodically
+  if (rateLimitStore.size > 1000) {
+    for (const [key, val] of rateLimitStore) {
+      if (val.resetAt < now) rateLimitStore.delete(key);
+    }
+  }
+  
+  if (!limit || limit.resetAt < now) {
+    rateLimitStore.set(apiKeyHash, { count: 1, resetAt: now + windowMs });
+    return true;
+  }
+  
+  if (limit.count >= maxRequests) {
+    return false;
+  }
+  
+  limit.count++;
+  return true;
+}
+
 // Helper to create JSON response
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -135,18 +185,47 @@ serve(async (req) => {
       return json({ error: "API access requires a Pro or Agency subscription" }, 403);
     }
 
-    // Parse request body
-    const body = await req.json();
-    const { action, transcript, tone, audience, topic, voice } = body;
+    // Check rate limit (10 requests per minute per API key)
+    if (!checkRateLimit(keyHash, 10, 60000)) {
+      console.log("Rate limit exceeded for API key");
+      return json({ error: "Rate limit exceeded. Maximum 10 requests per minute." }, 429);
+    }
 
+    // Parse and validate request body
+    let body;
+    try {
+      body = await req.json();
+    } catch {
+      return json({ error: "Invalid JSON in request body" }, 400);
+    }
+
+    const { action } = body;
     if (action !== "generate") {
       return json({ error: "Invalid action. Supported actions: generate" }, 400);
     }
 
-    // Use transcript if provided, or generate a simple prompt from topic
-    let contentToProcess = transcript;
-    if (!contentToProcess && topic) {
-      contentToProcess = `Generate content about: ${topic}. Voice/Style: ${voice || "Professional"}`;
+    // Validate and sanitize all inputs
+    let validatedTranscript: string | null;
+    let validatedTopic: string | null;
+    let validatedTone: string;
+    let validatedAudience: string;
+    let validatedVoice: string;
+
+    try {
+      validatedTranscript = validateString(body.transcript, "transcript", 15000);
+      validatedTopic = validateString(body.topic, "topic", 500);
+      validatedTone = validateString(body.tone, "tone", 100) || "professional";
+      validatedAudience = validateString(body.audience, "audience", 200) || "general";
+      validatedVoice = validateString(body.voice, "voice", 200) || "Professional";
+    } catch (validationError) {
+      const message = validationError instanceof Error ? validationError.message : "Invalid input";
+      return json({ error: message }, 400);
+    }
+
+    // Build content to process
+    let contentToProcess = validatedTranscript;
+    if (!contentToProcess && validatedTopic) {
+      contentToProcess = `Generate content about: ${validatedTopic}. Voice/Style: ${validatedVoice}`;
     }
 
     if (!contentToProcess) {
@@ -162,11 +241,11 @@ serve(async (req) => {
 
     console.log("Generating content via API for user:", keyData.user_id);
 
-    // Build the prompt
+    // Build the prompt with validated inputs
     const systemPrompt = `You are an elite content strategist and viral copywriter. Transform the provided content into high-engagement multi-platform content.
 
-TONE: ${tone || voice || "professional"}
-TARGET AUDIENCE: ${audience || "general"}
+TONE: ${validatedTone}
+TARGET AUDIENCE: ${validatedAudience}
 
 Generate the following:
 
