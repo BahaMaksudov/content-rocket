@@ -5,12 +5,50 @@ import { Loader2, CheckCircle, Rocket, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { toast as sonnerToast } from "sonner";
 export default function AuthCallback() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [errorMessage, setErrorMessage] = useState("");
+
+  // Process invite token after successful auth
+  const processInviteAfterAuth = async (token: string | null) => {
+    if (!token) return;
+    
+    try {
+      console.log("[AuthCallback] Processing team invite token");
+      const response = await supabase.functions.invoke("accept-team-invite", {
+        body: { token },
+      });
+
+      if (response.error) {
+        console.error("[AuthCallback] Invite acceptance error:", response.error);
+        sonnerToast.error("Failed to join team", {
+          description: response.error.message || "Please try again or contact support",
+        });
+        return;
+      }
+
+      const data = response.data;
+      if (data?.success) {
+        sonnerToast.success(`Welcome to ${data.organizationName || "the team"}!`, {
+          description: "You've successfully joined the team.",
+        });
+      } else if (data?.error === "email_mismatch") {
+        sonnerToast.error("Email Mismatch", {
+          description: data.message,
+        });
+      } else if (data?.error === "invalid_invite") {
+        sonnerToast.error("Invalid Invite", {
+          description: "This invite link is invalid or has expired.",
+        });
+      }
+    } catch (error) {
+      console.error("[AuthCallback] Invite processing error:", error);
+    }
+  };
 
   useEffect(() => {
     const handleAuthCallback = async () => {
@@ -62,9 +100,10 @@ export default function AuthCallback() {
             return;
           }
 
-          // Handle invite type specifically
+          // Handle invite type - process team invite if present
           if (authType === "invite" || inviteToken) {
             console.log("[AuthCallback] Invite flow detected - processing team invite");
+            await processInviteAfterAuth(inviteToken);
           }
 
           setStatus("success");
