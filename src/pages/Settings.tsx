@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,7 +18,20 @@ export default function Settings() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
   const [fullName, setFullName] = useState("");
+  
+  // Support ?tab=integrations URL parameter
+  const defaultTab = searchParams.get("tab") === "integrations" ? "integrations" : "profile";
+  const [activeTab, setActiveTab] = useState(defaultTab);
+
+  // Update tab when URL param changes
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam === "integrations" || tabParam === "profile") {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["profile", user?.id],
@@ -73,7 +87,7 @@ export default function Settings() {
           </p>
         </div>
 
-        <Tabs defaultValue="profile" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="mb-6">
             <TabsTrigger value="profile" className="gap-2">
               <User className="h-4 w-4" />
