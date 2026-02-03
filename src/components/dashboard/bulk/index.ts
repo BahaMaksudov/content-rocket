@@ -7,3 +7,4 @@ export { FullWidthInput } from "./FullWidthInput";
 export { ContentFocusedViewer } from "./ContentFocusedViewer";
 export { RecentBatchesCarousel } from "./RecentBatchesCarousel";
 export { FloatingActions } from "./FloatingActions";
+export { SocialActionBar } from "./SocialActionBar";
