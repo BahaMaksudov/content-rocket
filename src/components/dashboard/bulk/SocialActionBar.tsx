@@ -1,9 +1,16 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Twitter,
   Linkedin,
@@ -11,6 +18,7 @@ import {
   Send,
   Loader2,
   ExternalLink,
+  Settings,
 } from "lucide-react";
 
 interface SocialActionBarProps {
@@ -70,11 +78,31 @@ function truncateForTwitter(text: string, url?: string): string {
 export function SocialActionBar({ content, platform, youtubeUrl }: SocialActionBarProps) {
   const { toast } = useToast();
   const { tier } = useSubscription();
-  const { session } = useAuth();
+  const { session, user } = useAuth();
+  const navigate = useNavigate();
   const [isSyncing, setIsSyncing] = useState(false);
   
   const isPro = tier === "pro" || tier === "agency";
   const isAgency = tier === "agency";
+  
+  // Query for Buffer integration status
+  const { data: bufferIntegration, isLoading: isLoadingIntegration } = useQuery({
+    queryKey: ["user-integrations", "buffer", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("user_integrations")
+        .select("*")
+        .eq("user_id", user!.id)
+        .eq("service", "buffer")
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user && isAgency,
+  });
+  
+  const hasBufferKey = !!bufferIntegration?.api_key;
   
   // Don't render for free users
   if (!isPro) {
@@ -163,6 +191,10 @@ export function SocialActionBar({ content, platform, youtubeUrl }: SocialActionB
     }
   };
   
+  const handleGoToSettings = () => {
+    navigate("/settings?tab=integrations");
+  };
+  
   return (
     <div className="sticky bottom-0 left-0 right-0 z-20 bg-background/95 backdrop-blur-sm border-t border-border">
       <div className="px-4 py-3 flex items-center justify-between gap-3">
@@ -205,19 +237,63 @@ export function SocialActionBar({ content, platform, youtubeUrl }: SocialActionB
           
           {/* Sync to Buffer Queue (Agency Only) */}
           {isAgency && (
-            <Button
-              size="sm"
-              onClick={handleBufferSync}
-              disabled={isSyncing}
-              className="bg-primary text-primary-foreground gap-2"
-            >
-              {isSyncing ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+            <>
+              {hasBufferKey ? (
+                <Button
+                  size="sm"
+                  onClick={handleBufferSync}
+                  disabled={isSyncing || isLoadingIntegration}
+                  className="bg-primary text-primary-foreground gap-2"
+                >
+                  {isSyncing ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                  <span className="hidden sm:inline">Sync to Buffer</span>
+                </Button>
               ) : (
-                <Send className="h-4 w-4" />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-2 border-dashed"
+                      disabled={isLoadingIntegration}
+                    >
+                      <Send className="h-4 w-4 text-muted-foreground" />
+                      <span className="hidden sm:inline text-muted-foreground">Sync to Buffer</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent 
+                    side="top" 
+                    align="end" 
+                    className="w-72 p-4"
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
+                          <Share2 className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <p className="font-medium text-sm">Connect Buffer</p>
+                      </div>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        Connect your Buffer account to enable one-click syncing to your publishing queue.
+                      </p>
+                      <Button
+                        size="sm"
+                        variant="link"
+                        onClick={handleGoToSettings}
+                        className="h-auto p-0 text-primary gap-1"
+                      >
+                        <Settings className="h-3.5 w-3.5" />
+                        Go to Integrations Settings →
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               )}
-              <span className="hidden sm:inline">Sync to Buffer</span>
-            </Button>
+            </>
           )}
         </div>
       </div>
