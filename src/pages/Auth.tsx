@@ -53,6 +53,54 @@ export default function Auth() {
   // Get redirect and upgrade params for post-auth navigation
   const redirectPath = searchParams.get("redirect") || "/dashboard";
   const upgradeTier = searchParams.get("upgrade");
+  const inviteToken = searchParams.get("invite");
+
+  // Process invite token after successful auth
+  const processInviteToken = async (token: string) => {
+    try {
+      console.log("[Auth] Processing team invite token");
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.error("[Auth] No session for invite processing");
+        return false;
+      }
+
+      const response = await supabase.functions.invoke("accept-team-invite", {
+        body: { token },
+      });
+
+      if (response.error) {
+        console.error("[Auth] Invite acceptance error:", response.error);
+        toast.error("Failed to join team", {
+          description: response.error.message || "Please try again or contact support",
+        });
+        return false;
+      }
+
+      const data = response.data;
+      if (data?.success) {
+        toast.success(`Welcome to ${data.organizationName || "the team"}!`, {
+          description: "You've successfully joined the team.",
+        });
+        return true;
+      } else if (data?.error === "email_mismatch") {
+        toast.error("Email Mismatch", {
+          description: data.message,
+        });
+        return false;
+      } else if (data?.error === "invalid_invite") {
+        toast.error("Invalid Invite", {
+          description: "This invite link is invalid or has expired.",
+        });
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("[Auth] Invite processing error:", error);
+      return false;
+    }
+  };
 
   // Client-side validation
   const isEmailValid = useMemo(() => {
@@ -236,7 +284,13 @@ export default function Auth() {
             });
           }
         } else {
-          toast.success("Welcome back!");
+          // Process invite token if present
+          if (inviteToken) {
+            console.log("[Auth] Login successful, processing invite token");
+            await processInviteToken(inviteToken);
+          } else {
+            toast.success("Welcome back!");
+          }
           const targetPath = upgradeTier ? `${redirectPath}?upgrade=${upgradeTier}` : redirectPath;
           navigate(targetPath);
         }
