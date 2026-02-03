@@ -46,16 +46,15 @@ const PLATFORM_STYLES = {
   },
 };
 
-// Truncate text to nearest sentence under 280 chars for Twitter
-function truncateForTwitter(text: string, url?: string): string {
-  const urlLength = url ? url.length + 1 : 0; // +1 for space
-  const maxLength = 280 - urlLength;
+// Truncate text to 250 chars and add ellipsis for Twitter
+function truncateForTwitter(text: string): string {
+  const maxLength = 250;
   
   if (text.length <= maxLength) {
-    return url ? `${text} ${url}` : text;
+    return text;
   }
   
-  // Find sentence boundaries
+  // Find sentence boundaries within limit
   const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
   let result = "";
   
@@ -70,9 +69,11 @@ function truncateForTwitter(text: string, url?: string): string {
   // If no complete sentence fits, truncate with ellipsis
   if (!result.trim()) {
     result = text.substring(0, maxLength - 3) + "...";
+  } else if (result.trim().length < text.length) {
+    result = result.trim() + "...";
   }
   
-  return url ? `${result.trim()} ${url}` : result.trim();
+  return result.trim();
 }
 
 export function SocialActionBar({ content, platform, youtubeUrl }: SocialActionBarProps) {
@@ -109,32 +110,61 @@ export function SocialActionBar({ content, platform, youtubeUrl }: SocialActionB
     return null;
   }
   
-  const handlePostToTwitter = () => {
-    const tweetText = truncateForTwitter(content, youtubeUrl || undefined);
-    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+  const handlePostToTwitter = async () => {
+    const truncatedText = truncateForTwitter(content);
+    
+    // Copy full content to clipboard
+    await navigator.clipboard.writeText(content);
+    
+    // Build URL with text and url as separate params
+    const params = new URLSearchParams();
+    params.set("text", truncatedText);
+    if (youtubeUrl) {
+      params.set("url", youtubeUrl);
+    }
+    
+    const url = `https://twitter.com/intent/tweet?${params.toString()}`;
+    
+    toast({
+      title: "Opening X (Twitter)...",
+      description: "Full content copied to clipboard for reference.",
+    });
+    
     window.open(url, "_blank", "width=550,height=420");
   };
   
-  const handleShareLinkedIn = () => {
-    // LinkedIn share with full content - URL is shared separately
+  const handleShareLinkedIn = async () => {
+    // Copy full content to clipboard first
+    await navigator.clipboard.writeText(content);
+    
+    // LinkedIn share - URL only (LinkedIn scrapes the URL for preview)
     const shareUrl = youtubeUrl || window.location.href;
     const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
-    window.open(url, "_blank", "width=550,height=520");
     
-    // Copy content to clipboard for easy paste
-    navigator.clipboard.writeText(content);
     toast({
-      title: "Content copied!",
-      description: "Paste your summary in the LinkedIn post.",
+      title: "Opening LinkedIn...",
+      description: "AI summary copied to clipboard - paste it in the post box.",
     });
+    
+    window.open(url, "_blank", "width=550,height=520");
   };
   
-  const handleBufferShare = () => {
+  const handleBufferShare = async () => {
     const text = platform === "twitter" 
-      ? truncateForTwitter(content, undefined)
+      ? truncateForTwitter(content)
       : content;
     const shareUrl = youtubeUrl || "";
+    
+    // Copy full content to clipboard
+    await navigator.clipboard.writeText(content);
+    
     const url = `https://buffer.com/add?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`;
+    
+    toast({
+      title: "Opening Buffer...",
+      description: "Content copied to clipboard.",
+    });
+    
     window.open(url, "_blank");
   };
   
@@ -156,7 +186,7 @@ export function SocialActionBar({ content, platform, youtubeUrl }: SocialActionB
         },
         body: {
           content: platform === "twitter" 
-            ? truncateForTwitter(content, youtubeUrl || undefined)
+            ? truncateForTwitter(content)
             : content,
           platform,
           youtubeUrl,
