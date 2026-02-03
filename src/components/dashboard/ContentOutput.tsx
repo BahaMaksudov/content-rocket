@@ -11,12 +11,14 @@ import { ImageGenerator } from "./ImageGenerator";
 import { SocialPreview, SocialPreviewToggle } from "./SocialPreview";
 import { VoiceGenerator } from "./VoiceGenerator";
 import { trackCopyContent } from "@/lib/posthog";
+import { SocialActionBar } from "./bulk/SocialActionBar";
 
 interface ContentOutputProps {
   content: GeneratedContent | null;
   isGenerating: boolean;
   onUpdateContent: (content: GeneratedContent) => void;
   targetLanguage?: string | null;
+  youtubeUrl?: string | null;
 }
 
 function CopyButton({ text, contentType, platform }: { text: string; contentType?: string; platform?: string }) {
@@ -103,7 +105,7 @@ function EditableContent({
   );
 }
 
-export function ContentOutput({ content, isGenerating, onUpdateContent, targetLanguage }: ContentOutputProps) {
+export function ContentOutput({ content, isGenerating, onUpdateContent, targetLanguage, youtubeUrl }: ContentOutputProps) {
   const { toast } = useToast();
   const [showPreview, setShowPreview] = useState(false);
   const [activeTab, setActiveTab] = useState("twitter");
@@ -250,6 +252,11 @@ ${content.blogPost}
                 </div>
               </div>
             ))}
+            <SocialActionBar 
+              content={content.twitterHooks.join("\n\n")} 
+              platform="twitter" 
+              youtubeUrl={youtubeUrl} 
+            />
           </TabsContent>
 
           {/* LinkedIn Post */}
@@ -271,6 +278,11 @@ ${content.blogPost}
                 onSave={(value) => onUpdateContent({ ...content, linkedinPost: value })}
               />
             </div>
+            <SocialActionBar 
+              content={content.linkedinPost} 
+              platform="linkedin" 
+              youtubeUrl={youtubeUrl} 
+            />
           </TabsContent>
 
           {/* Short-form Scripts */}
@@ -312,6 +324,11 @@ ${content.blogPost}
                 </div>
               </div>
             ))}
+            <SocialActionBar 
+              content={content.shortFormScripts.map(s => `${s.title}\n\n${s.script}`).join("\n\n---\n\n")} 
+              platform="shorts" 
+              youtubeUrl={youtubeUrl} 
+            />
           </TabsContent>
 
           {/* Blog Post */}
@@ -333,6 +350,11 @@ ${content.blogPost}
                 onSave={(value) => onUpdateContent({ ...content, blogPost: value })}
               />
             </div>
+            <SocialActionBar 
+              content={content.blogPost} 
+              platform="blog" 
+              youtubeUrl={youtubeUrl} 
+            />
           </TabsContent>
         </Tabs>
       </CardContent>

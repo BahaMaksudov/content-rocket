@@ -389,6 +389,7 @@ export default function Dashboard() {
                   isGenerating={isGenerating}
                   onUpdateContent={handleUpdateContent}
                   targetLanguage={targetLanguage !== "english" ? targetLanguage : null}
+                  youtubeUrl={youtubeUrl || null}
                 />
               </div>
             </div>

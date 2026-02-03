@@ -14,6 +14,7 @@ import { formatDistanceToNow } from "date-fns";
 import { History as HistoryIcon, ExternalLink, Trash2, Copy, Check, Twitter, Linkedin, Film, FileText } from "lucide-react";
 import { ImageGenerator } from "@/components/dashboard/ImageGenerator";
 import { trackCopyContent } from "@/lib/posthog";
+import { SocialActionBar } from "@/components/dashboard/bulk/SocialActionBar";
 
 interface Generation {
   id: string;
@@ -195,6 +196,11 @@ export default function History() {
                       <CopyButton text={hook} contentType="twitter_hook" platform="twitter" />
                     </div>
                   ))}
+                  <SocialActionBar 
+                    content={(selectedGeneration.twitter_hooks as string[] | null)?.join("\n\n") || ""} 
+                    platform="twitter" 
+                    youtubeUrl={selectedGeneration.youtube_url} 
+                  />
                 </TabsContent>
 
                 <TabsContent value="linkedin">
@@ -211,6 +217,11 @@ export default function History() {
                     </div>
                     <p className="whitespace-pre-wrap">{selectedGeneration.linkedin_post}</p>
                   </div>
+                  <SocialActionBar 
+                    content={selectedGeneration.linkedin_post || ""} 
+                    platform="linkedin" 
+                    youtubeUrl={selectedGeneration.youtube_url} 
+                  />
                 </TabsContent>
 
                 <TabsContent value="shorts" className="space-y-4">
@@ -233,6 +244,11 @@ export default function History() {
                       <p className="whitespace-pre-wrap">{script.script}</p>
                     </div>
                   ))}
+                  <SocialActionBar 
+                    content={(selectedGeneration.short_form_scripts as Array<{ title: string; script: string; duration: string }> | null)?.map(s => `${s.title}\n\n${s.script}`).join("\n\n---\n\n") || ""} 
+                    platform="shorts" 
+                    youtubeUrl={selectedGeneration.youtube_url} 
+                  />
                 </TabsContent>
 
                 <TabsContent value="blog">
@@ -249,6 +265,11 @@ export default function History() {
                     </div>
                     <p className="whitespace-pre-wrap">{selectedGeneration.blog_post}</p>
                   </div>
+                  <SocialActionBar 
+                    content={selectedGeneration.blog_post || ""} 
+                    platform="blog" 
+                    youtubeUrl={selectedGeneration.youtube_url} 
+                  />
                 </TabsContent>
               </Tabs>
             )}
