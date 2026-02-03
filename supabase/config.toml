@@ -53,3 +53,6 @@ verify_jwt = false
 
 [functions.bulk-process]
 verify_jwt = false
+
+[functions.buffer-sync]
+verify_jwt = false
