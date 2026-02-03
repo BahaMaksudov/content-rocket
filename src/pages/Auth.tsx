@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate, Navigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,10 +9,83 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { Loader2, Rocket, ArrowLeft, RefreshCw, AlertCircle, UserPlus, Info, LogIn, KeyRound } from "lucide-react";
+import { Loader2, Rocket, ArrowLeft, RefreshCw, AlertCircle, UserPlus, Info, LogIn, KeyRound, Users } from "lucide-react";
 import { z } from "zod";
 import { VerificationPending } from "@/components/auth/VerificationPending";
 import { getEmailRedirectTo } from "@/lib/auth-redirect";
+
+// Component to handle invite processing when user is already logged in
+function AuthInviteProcessor({ 
+  inviteToken, 
+  redirectPath, 
+  upgradeTier 
+}: { 
+  inviteToken: string; 
+  redirectPath: string; 
+  upgradeTier: string | null;
+}) {
+  const navigate = useNavigate();
+  const [isProcessing, setIsProcessing] = useState(true);
+
+  useEffect(() => {
+    const processInvite = async () => {
+      try {
+        console.log("[Auth] Already logged in - processing invite token");
+        const response = await supabase.functions.invoke("accept-team-invite", {
+          body: { token: inviteToken },
+        });
+
+        if (response.error) {
+          console.error("[Auth] Invite acceptance error:", response.error);
+          toast.error("Failed to join team", {
+            description: response.error.message || "Please try again or contact support",
+          });
+        } else {
+          const data = response.data;
+          if (data?.success) {
+            toast.success(`Welcome to ${data.organizationName || "the team"}!`, {
+              description: "You've successfully joined the team.",
+            });
+          } else if (data?.error === "email_mismatch") {
+            toast.error("Email Mismatch", {
+              description: data.message,
+            });
+          } else if (data?.error === "invalid_invite") {
+            toast.error("Invalid Invite", {
+              description: "This invite link is invalid or has expired.",
+            });
+          }
+        }
+      } catch (error) {
+        console.error("[Auth] Invite processing error:", error);
+        toast.error("Failed to process invite");
+      } finally {
+        setIsProcessing(false);
+        const targetPath = upgradeTier ? `${redirectPath}?upgrade=${upgradeTier}` : redirectPath;
+        navigate(targetPath, { replace: true });
+      }
+    };
+
+    processInvite();
+  }, [inviteToken, redirectPath, upgradeTier, navigate]);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+            <Users className="h-6 w-6 text-primary" />
+          </div>
+          <CardTitle>Joining Team</CardTitle>
+          <CardDescription>Processing your invitation...</CardDescription>
+        </CardHeader>
+        <CardContent className="flex justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
 const emailSchema = z.string().email("Please enter a valid email address");
 const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
@@ -143,7 +216,17 @@ export default function Auth() {
     );
   }
 
+  // Handle already logged-in users - process invite if present before redirecting
   if (user) {
+    // If there's an invite token, we need to process it before redirecting
+    if (inviteToken) {
+      // Use useEffect pattern by showing a processing state
+      return <AuthInviteProcessor 
+        inviteToken={inviteToken} 
+        redirectPath={redirectPath} 
+        upgradeTier={upgradeTier}
+      />;
+    }
     const targetPath = upgradeTier ? `${redirectPath}?upgrade=${upgradeTier}` : redirectPath;
     return <Navigate to={targetPath} replace />;
   }
