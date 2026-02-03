@@ -223,18 +223,18 @@ export function FullWidthInput({
                 <Button
                   disabled={isPending || isOverLimit || validUrlCount === 0}
                   onClick={handleStartBulk}
-                  className="w-full gap-2"
-                  size="lg"
+                  className="gap-2"
+                  size="sm"
                 >
                   {isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-3 w-3 animate-spin" />
                   ) : (
-                    <Play className="h-4 w-4" />
+                    <Play className="h-3 w-3" />
                   )}
-                  Generate Content
+                  Generate
                   {validUrlCount > 0 && (
-                    <Badge variant="secondary" className="ml-1">
-                      {Math.min(validUrlCount, MAX_URLS_PER_BATCH)} videos
+                    <Badge variant="secondary" className="ml-1 text-[10px]">
+                      {Math.min(validUrlCount, MAX_URLS_PER_BATCH)}
                     </Badge>
                   )}
                 </Button>
@@ -254,15 +254,15 @@ export function FullWidthInput({
                 <Button
                   disabled={isPending || !playlistUrl.trim()}
                   onClick={handleStartBulk}
-                  className="w-full gap-2"
-                  size="lg"
+                  className="gap-2"
+                  size="sm"
                 >
                   {isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-3 w-3 animate-spin" />
                   ) : (
-                    <Play className="h-4 w-4" />
+                    <Play className="h-3 w-3" />
                   )}
-                  Generate Content from Playlist
+                  Generate from Playlist
                 </Button>
               </TabsContent>
             </Tabs>
@@ -270,39 +270,39 @@ export function FullWidthInput({
         )}
       </div>
 
-      {/* Collapsible Configuration */}
+      {/* Collapsible Configuration - Compact */}
       <Collapsible open={configOpen} onOpenChange={setConfigOpen}>
         <CollapsibleTrigger asChild>
           <Button 
             variant="ghost" 
-            className="w-full justify-between h-11 px-4 bg-muted/50 hover:bg-muted border border-border rounded-lg"
+            className="w-1/2 justify-between h-9 px-3 bg-muted/50 hover:bg-muted border border-border rounded-lg text-sm"
           >
             <div className="flex items-center gap-2">
-              <Settings2 className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">Configuration</span>
-              <Badge variant="secondary" className="text-[10px]">
+              <Settings2 className="h-3 w-3 text-muted-foreground" />
+              <span className="font-medium text-xs">Config</span>
+              <Badge variant="secondary" className="text-[9px] px-1.5 py-0">
                 {tone} • {targetLanguage}
               </Badge>
             </div>
-            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${configOpen ? "rotate-180" : ""}`} />
+            <ChevronDown className={`h-3 w-3 text-muted-foreground transition-transform ${configOpen ? "rotate-180" : ""}`} />
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent className="mt-2">
-          <div className="p-4 bg-muted/30 rounded-lg border border-border space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+          <div className="p-3 bg-muted/30 rounded-lg border border-border w-1/2">
+            <div className="grid grid-cols-2 gap-3">
               {/* Tone */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4 text-muted-foreground" />
+              <div className="space-y-1">
+                <label className="text-xs font-medium flex items-center gap-1">
+                  <MessageSquare className="h-3 w-3 text-muted-foreground" />
                   Tone
                 </label>
                 <Select value={tone} onValueChange={setTone}>
-                  <SelectTrigger className="bg-background">
+                  <SelectTrigger className="bg-background h-8 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-popover border-border z-50">
                     {tones.map((t) => (
-                      <SelectItem key={t.value} value={t.value}>
+                      <SelectItem key={t.value} value={t.value} className="text-xs">
                         {t.label}
                       </SelectItem>
                     ))}
@@ -311,18 +311,18 @@ export function FullWidthInput({
               </div>
 
               {/* Language */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium flex items-center gap-2">
-                  <Globe className="h-4 w-4 text-muted-foreground" />
-                  Output Language
+              <div className="space-y-1">
+                <label className="text-xs font-medium flex items-center gap-1">
+                  <Globe className="h-3 w-3 text-muted-foreground" />
+                  Language
                 </label>
                 <Select value={targetLanguage} onValueChange={setTargetLanguage}>
-                  <SelectTrigger className="bg-background">
+                  <SelectTrigger className="bg-background h-8 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-popover border-border z-50">
                     {languages.map((l) => (
-                      <SelectItem key={l.value} value={l.value}>
+                      <SelectItem key={l.value} value={l.value} className="text-xs">
                         {l.label}
                       </SelectItem>
                     ))}

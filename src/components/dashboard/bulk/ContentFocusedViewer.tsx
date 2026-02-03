@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import { BatchJob } from "@/hooks/use-bulk-process";
 import { trackCopyContent } from "@/lib/posthog";
+import { VoiceGenerator } from "../VoiceGenerator";
+import { ImageGenerator } from "../ImageGenerator";
 
 interface ContentFocusedViewerProps {
   batchJob: BatchJob | null;
@@ -278,7 +280,14 @@ export function ContentFocusedViewer({ batchJob, isProcessing }: ContentFocusedV
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <Badge variant="secondary" className="text-xs">SEO-Optimized Blog Post</Badge>
-                    <CopyButton text={currentGeneration.blog_post} contentType="blog_post" platform="blog" label="Copy Post" />
+                    <div className="flex items-center gap-2">
+                      <ImageGenerator 
+                        textContent={currentGeneration.blog_post} 
+                        platform="blog" 
+                        targetLanguage={currentGeneration.target_language}
+                      />
+                      <CopyButton text={currentGeneration.blog_post} contentType="blog_post" platform="blog" label="Copy Post" />
+                    </div>
                   </div>
                   <div className="prose prose-sm dark:prose-invert max-w-none max-h-[450px] overflow-y-auto p-5 rounded-lg bg-muted/30 border border-border">
                     <p className="whitespace-pre-wrap leading-relaxed">{currentGeneration.blog_post}</p>
@@ -297,18 +306,28 @@ export function ContentFocusedViewer({ batchJob, isProcessing }: ContentFocusedV
                   return <p className="text-muted-foreground text-center py-16">No Twitter hooks generated</p>;
                 }
                 return (
-                  <div className="space-y-3 max-h-[450px] overflow-y-auto">
-                    {hooks.map((hook, idx) => (
-                      <div key={idx} className="p-5 rounded-lg bg-muted/30 border border-border group hover:border-primary/30 transition-colors">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <Badge variant="secondary" className="mb-3 text-xs">Hook {idx + 1}</Badge>
-                            <p className="text-sm leading-relaxed">{hook}</p>
+                  <div className="space-y-3">
+                    {/* AI Visual Generator for Twitter */}
+                    <div className="flex justify-end">
+                      <ImageGenerator 
+                        textContent={hooks[0]} 
+                        platform="twitter" 
+                        targetLanguage={currentGeneration.target_language}
+                      />
+                    </div>
+                    <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                      {hooks.map((hook, idx) => (
+                        <div key={idx} className="p-5 rounded-lg bg-muted/30 border border-border group hover:border-primary/30 transition-colors">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <Badge variant="secondary" className="mb-3 text-xs">Hook {idx + 1}</Badge>
+                              <p className="text-sm leading-relaxed">{hook}</p>
+                            </div>
+                            <CopyButton text={hook} contentType="twitter_hook" platform="twitter" />
                           </div>
-                          <CopyButton text={hook} contentType="twitter_hook" platform="twitter" />
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 );
               })()}
@@ -320,7 +339,14 @@ export function ContentFocusedViewer({ batchJob, isProcessing }: ContentFocusedV
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <Badge variant="secondary" className="text-xs">LinkedIn Summary</Badge>
-                    <CopyButton text={currentGeneration.linkedin_post} contentType="linkedin_post" platform="linkedin" label="Copy Post" />
+                    <div className="flex items-center gap-2">
+                      <ImageGenerator 
+                        textContent={currentGeneration.linkedin_post} 
+                        platform="linkedin" 
+                        targetLanguage={currentGeneration.target_language}
+                      />
+                      <CopyButton text={currentGeneration.linkedin_post} contentType="linkedin_post" platform="linkedin" label="Copy Post" />
+                    </div>
                   </div>
                   <div className="p-5 rounded-lg bg-muted/30 border border-border max-h-[450px] overflow-y-auto">
                     <p className="text-sm whitespace-pre-wrap leading-relaxed">{currentGeneration.linkedin_post}</p>
@@ -354,7 +380,12 @@ export function ContentFocusedViewer({ batchJob, isProcessing }: ContentFocusedV
                           />
                         </div>
                         <h4 className="font-semibold mb-2">{script.title}</h4>
-                        <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">{script.script}</p>
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed mb-4">{script.script}</p>
+                        
+                        {/* Voice Generator for each script */}
+                        <div className="pt-3 border-t border-border">
+                          <VoiceGenerator scriptText={script.script} />
+                        </div>
                       </div>
                     ))}
                   </div>
