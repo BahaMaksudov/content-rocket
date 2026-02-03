@@ -167,8 +167,10 @@ serve(async (req: Request) => {
     }
     logStep("Invite created", { inviteId: invite.id });
 
-    // Send invite email
-    const inviteUrl = `${Deno.env.get("SUPABASE_URL")?.replace(".supabase.co", ".lovable.app")}/auth?invite=${invite.token}`;
+    // Send invite email - Use VITE_SITE_URL for production domain
+    const siteUrl = Deno.env.get("VITE_SITE_URL") || "https://rocketcontentpro.io";
+    const inviteUrl = `${siteUrl}/auth?invite=${invite.token}`;
+    logStep("Invite URL generated", { siteUrl, inviteUrl });
     const inviterName = inviterProfile?.full_name || inviterProfile?.email || "A teammate";
     const orgName = org?.name || "a team";
 
