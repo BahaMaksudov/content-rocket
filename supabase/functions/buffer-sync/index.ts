@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { decodeBase64, encodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,6 +11,49 @@ interface BufferSyncRequest {
   content: string;
   platform: "blog" | "twitter" | "linkedin" | "shorts";
   youtubeUrl?: string;
+}
+
+// Get the encryption key from environment (32 bytes for AES-256)
+async function getEncryptionKey(): Promise<CryptoKey> {
+  const keyString = Deno.env.get("INTEGRATION_ENCRYPTION_KEY");
+  if (!keyString || keyString.length < 32) {
+    throw new Error("Encryption key not configured");
+  }
+  
+  const keyMaterial = new TextEncoder().encode(keyString.slice(0, 32));
+  
+  return crypto.subtle.importKey(
+    "raw",
+    keyMaterial,
+    { name: "AES-GCM" },
+    false,
+    ["decrypt"]
+  );
+}
+
+// Decrypt a value that was encrypted with AES-256-GCM
+async function decryptValue(encryptedValue: string): Promise<string> {
+  // Check if the value is encrypted (has the enc: prefix)
+  if (!encryptedValue.startsWith("enc:")) {
+    // Legacy plaintext value - return as-is for backward compatibility
+    console.log("[Buffer Sync] Warning: Using legacy unencrypted API key");
+    return encryptedValue;
+  }
+  
+  const key = await getEncryptionKey();
+  const combined = decodeBase64(encryptedValue.slice(4)); // Remove "enc:" prefix
+  
+  // Extract IV (first 12 bytes) and ciphertext
+  const iv = combined.slice(0, 12);
+  const ciphertext = combined.slice(12);
+  
+  const decrypted = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv },
+    key,
+    ciphertext
+  );
+  
+  return new TextDecoder().decode(decrypted);
 }
 
 Deno.serve(async (req) => {
@@ -93,6 +137,18 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Decrypt the API key at runtime
+    let decryptedApiKey: string;
+    try {
+      decryptedApiKey = await decryptValue(integration.api_key);
+    } catch (decryptError) {
+      console.error("[Buffer Sync] Failed to decrypt API key:", decryptError);
+      return new Response(
+        JSON.stringify({ error: "Failed to decrypt API key. Please re-save your Buffer token." }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Parse request body
     const body: BufferSyncRequest = await req.json();
     const { content, platform, youtubeUrl } = body;
@@ -109,7 +165,7 @@ Deno.serve(async (req) => {
     // Get user's Buffer profiles
     const profilesResponse = await fetch("https://api.bufferapp.com/1/profiles.json", {
       headers: {
-        Authorization: `Bearer ${integration.api_key}`,
+        Authorization: `Bearer ${decryptedApiKey}`,
       },
     });
 
@@ -162,7 +218,7 @@ Deno.serve(async (req) => {
     const updateResponse = await fetch("https://api.bufferapp.com/1/updates/create.json", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${integration.api_key}`,
+        Authorization: `Bearer ${decryptedApiKey}`,
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: formData.toString(),

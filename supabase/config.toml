@@ -56,3 +56,6 @@ verify_jwt = false
 
 [functions.buffer-sync]
 verify_jwt = false
+
+[functions.encrypt-integration-key]
+verify_jwt = false

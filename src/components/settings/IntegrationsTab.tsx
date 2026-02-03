@@ -14,8 +14,6 @@ import {
   Share2,
   Loader2,
   Check,
-  Eye,
-  EyeOff,
   ExternalLink,
   Lock,
   Trash2,
@@ -36,7 +34,6 @@ export function IntegrationsTab() {
   const { isAgency } = useSubscription();
   const queryClient = useQueryClient();
   const [bufferKey, setBufferKey] = useState("");
-  const [showKey, setShowKey] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
   const { data: integrations, isLoading } = useQuery({
@@ -54,34 +51,24 @@ export function IntegrationsTab() {
   });
 
   const bufferIntegration = integrations?.find(i => i.service === "buffer");
+  // Check if there's a key (encrypted keys start with "enc:")
+  const hasBufferKey = !!bufferIntegration?.api_key;
 
   const saveMutation = useMutation({
     mutationFn: async (apiKey: string) => {
-      if (bufferIntegration) {
-        // Update existing
-        const { error } = await supabase
-          .from("user_integrations")
-          .update({ api_key: apiKey, is_active: true, updated_at: new Date().toISOString() })
-          .eq("id", bufferIntegration.id);
-        
-        if (error) throw error;
-      } else {
-        // Insert new
-        const { error } = await supabase
-          .from("user_integrations")
-          .insert({
-            user_id: user!.id,
-            service: "buffer",
-            api_key: apiKey,
-            is_active: true,
-          });
-        
-        if (error) throw error;
-      }
+      // Call the encryption endpoint to save the key securely
+      const { data, error } = await supabase.functions.invoke("encrypt-integration-key", {
+        body: { service: "buffer", apiKey },
+      });
+      
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user-integrations"] });
-      toast({ title: "Buffer API key saved!" });
+      toast({ title: "Buffer API key saved securely!" });
       setIsEditing(false);
       setBufferKey("");
     },
@@ -118,10 +105,8 @@ export function IntegrationsTab() {
     saveMutation.mutate(bufferKey.trim());
   };
 
-  const maskApiKey = (key: string) => {
-    if (key.length <= 8) return "••••••••";
-    return key.substring(0, 4) + "••••••••" + key.substring(key.length - 4);
-  };
+  // Never show actual encrypted key - always show masked placeholder
+  const displayMaskedKey = () => "••••••••••••••••";
 
   // Non-agency users see locked state
   if (!isAgency) {
@@ -182,7 +167,7 @@ export function IntegrationsTab() {
                   <div>
                     <h4 className="font-semibold flex items-center gap-2">
                       Buffer
-                      {bufferIntegration?.api_key && (
+                      {hasBufferKey && (
                         <Badge variant="secondary" className="bg-green-500/10 text-green-500">
                           <Check className="h-3 w-3 mr-1" />
                           Connected
@@ -205,18 +190,11 @@ export function IntegrationsTab() {
               </div>
 
               <div className="mt-4 space-y-3">
-                {bufferIntegration?.api_key && !isEditing ? (
+                {hasBufferKey && !isEditing ? (
                   <div className="flex items-center gap-2">
                     <div className="flex-1 p-2 rounded bg-muted font-mono text-sm">
-                      {showKey ? bufferIntegration.api_key : maskApiKey(bufferIntegration.api_key)}
+                      {displayMaskedKey()}
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setShowKey(!showKey)}
-                    >
-                      {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
