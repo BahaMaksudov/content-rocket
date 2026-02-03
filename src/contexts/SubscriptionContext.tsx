@@ -27,8 +27,12 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const isPro = tier === "pro" || tier === "agency";
   const isAgency = tier === "agency";
 
-  const checkSubscription = useCallback(async () => {
-    if (!session?.access_token) {
+  const checkSubscription = useCallback(async (retryOnAuthError = true) => {
+    // Get a fresh session to ensure we have the latest token
+    const { data: sessionData } = await supabase.auth.getSession();
+    const currentSession = sessionData?.session;
+    
+    if (!currentSession?.access_token) {
       setTier("free");
       setStatus("free");
       setSubscriptionEnd(null);
@@ -39,24 +43,39 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     try {
       const { data, error } = await supabase.functions.invoke("check-subscription", {
         headers: {
-          Authorization: `Bearer ${session.access_token}`,
+          Authorization: `Bearer ${currentSession.access_token}`,
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        // If auth error, try refreshing session once
+        if (retryOnAuthError && (error.message?.includes("401") || error.message?.includes("403") || error.message?.includes("expired"))) {
+          console.log("[Subscription] Auth error, refreshing session and retrying...");
+          const { error: refreshError } = await supabase.auth.refreshSession();
+          if (!refreshError) {
+            return checkSubscription(false); // Retry with fresh token, but don't retry again
+          }
+        }
+        throw error;
+      }
 
       const currentTier = getTierFromStatus(data.status || "free");
+      console.log("[Subscription] Status received:", { status: data.status, tier: currentTier });
       setTier(currentTier);
       setStatus(data.status || "free");
       setSubscriptionEnd(data.subscription_end);
     } catch (error) {
       console.error("Error checking subscription:", error);
-      setTier("free");
-      setStatus("free");
+      // Don't reset to free on error if we already have a tier set
+      // This prevents flickering back to free on transient errors
+      if (tier === "free" || !tier) {
+        setTier("free");
+        setStatus("free");
+      }
     } finally {
       setLoading(false);
     }
-  }, [session?.access_token]);
+  }, [tier]);
 
   const openCheckout = useCallback(async (checkoutTier: "pro" | "agency" = "pro") => {
     if (!session?.access_token) {
