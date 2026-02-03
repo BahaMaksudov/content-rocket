@@ -191,43 +191,18 @@ export function FullWidthInput({
           /* URL Input */
           <div className="space-y-4">
             <Tabs value={inputMode} onValueChange={(v) => setInputMode(v as "urls" | "playlist")}>
-              <div className="flex items-center justify-between gap-4">
-                <TabsList className="h-10">
-                  <TabsTrigger value="urls" className="gap-2 px-4">
-                    <Link2 className="h-4 w-4" />
-                    Multiple URLs
-                  </TabsTrigger>
-                  <TabsTrigger value="playlist" className="gap-2 px-4">
-                    <ListVideo className="h-4 w-4" />
-                    Playlist
-                  </TabsTrigger>
-                </TabsList>
+              <TabsList className="h-10">
+                <TabsTrigger value="urls" className="gap-2 px-4">
+                  <Link2 className="h-4 w-4" />
+                  Multiple URLs
+                </TabsTrigger>
+                <TabsTrigger value="playlist" className="gap-2 px-4">
+                  <ListVideo className="h-4 w-4" />
+                  Playlist
+                </TabsTrigger>
+              </TabsList>
 
-                <Button
-                  disabled={
-                    isPending ||
-                    isOverLimit ||
-                    (inputMode === "urls" && validUrlCount === 0) ||
-                    (inputMode === "playlist" && !playlistUrl.trim())
-                  }
-                  onClick={handleStartBulk}
-                  className="gap-2 px-6"
-                >
-                  {isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Play className="h-4 w-4" />
-                  )}
-                  Generate Content
-                  {validUrlCount > 0 && inputMode === "urls" && (
-                    <Badge variant="secondary" className="ml-1">
-                      {Math.min(validUrlCount, MAX_URLS_PER_BATCH)}
-                    </Badge>
-                  )}
-                </Button>
-              </div>
-
-              <TabsContent value="urls" className="mt-4">
+              <TabsContent value="urls" className="mt-4 space-y-3">
                 <Textarea
                   placeholder="Paste YouTube URLs (one per line)&#10;https://youtube.com/watch?v=...&#10;https://youtu.be/..."
                   value={urlsInput}
@@ -235,7 +210,7 @@ export function FullWidthInput({
                   rows={4}
                   className={`font-mono text-sm resize-none ${isOverLimit ? "border-destructive focus-visible:ring-destructive" : ""}`}
                 />
-                <div className="flex items-center justify-between mt-2 text-sm">
+                <div className="flex items-center justify-between text-sm">
                   <span className={validUrlCount > 0 ? (isOverLimit ? "text-destructive font-medium" : "text-primary font-medium") : "text-muted-foreground"}>
                     {validUrlCount > 0 ? `${validUrlCount} URLs detected` : "Paste YouTube URLs above"}
                   </span>
@@ -244,18 +219,51 @@ export function FullWidthInput({
                     Max {MAX_URLS_PER_BATCH} per batch
                   </span>
                 </div>
+                {/* Generate button below URL input */}
+                <Button
+                  disabled={isPending || isOverLimit || validUrlCount === 0}
+                  onClick={handleStartBulk}
+                  className="w-full gap-2"
+                  size="lg"
+                >
+                  {isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Play className="h-4 w-4" />
+                  )}
+                  Generate Content
+                  {validUrlCount > 0 && (
+                    <Badge variant="secondary" className="ml-1">
+                      {Math.min(validUrlCount, MAX_URLS_PER_BATCH)} videos
+                    </Badge>
+                  )}
+                </Button>
               </TabsContent>
 
-              <TabsContent value="playlist" className="mt-4">
+              <TabsContent value="playlist" className="mt-4 space-y-3">
                 <Input
                   placeholder="https://youtube.com/playlist?list=..."
                   value={playlistUrl}
                   onChange={(e) => setPlaylistUrl(e.target.value)}
                   className="text-sm h-11"
                 />
-                <p className="text-sm text-muted-foreground mt-2">
+                <p className="text-sm text-muted-foreground">
                   First {MAX_URLS_PER_BATCH} videos from the playlist will be processed
                 </p>
+                {/* Generate button below playlist input */}
+                <Button
+                  disabled={isPending || !playlistUrl.trim()}
+                  onClick={handleStartBulk}
+                  className="w-full gap-2"
+                  size="lg"
+                >
+                  {isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Play className="h-4 w-4" />
+                  )}
+                  Generate Content from Playlist
+                </Button>
               </TabsContent>
             </Tabs>
           </div>

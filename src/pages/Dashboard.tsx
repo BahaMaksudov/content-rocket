@@ -395,40 +395,17 @@ export default function Dashboard() {
           </TabsContent>
 
           <TabsContent value="bulk" className="mt-6">
-            <div className="grid lg:grid-cols-3 gap-6">
-              {/* Left column - Bulk Upload */}
-              <div className="lg:col-span-1">
-                <BulkUpload
-                  tone={tone}
-                  audience={audience}
-                  brandVoice={selectedBrandVoice ? (
-                    isDefaultVoiceId(selectedBrandVoice) 
-                      ? getDefaultVoiceById(selectedBrandVoice)
-                      : brandVoices?.find(v => v.id === selectedBrandVoice)
-                  ) : undefined}
-                  targetLanguage={targetLanguage}
-                />
-              </div>
-
-              {/* Right column - Settings for bulk */}
-              <div className="lg:col-span-2">
-                <GenerationSettings
-                  brandVoices={brandVoices || []}
-                  selectedBrandVoice={selectedBrandVoice}
-                  setSelectedBrandVoice={setSelectedBrandVoice}
-                  tone={tone}
-                  setTone={setTone}
-                  audience={audience}
-                  setAudience={setAudience}
-                  onGenerate={() => {}}
-                  isGenerating={false}
-                  hasTranscript={false}
-                  targetLanguage={targetLanguage}
-                  setTargetLanguage={setTargetLanguage}
-                  hideGenerateButton
-                />
-              </div>
-            </div>
+            {/* Full-width workspace - no grid split */}
+            <BulkUpload
+              tone={tone}
+              audience={audience}
+              brandVoice={selectedBrandVoice ? (
+                isDefaultVoiceId(selectedBrandVoice) 
+                  ? getDefaultVoiceById(selectedBrandVoice)
+                  : brandVoices?.find(v => v.id === selectedBrandVoice)
+              ) : undefined}
+              targetLanguage={targetLanguage}
+            />
           </TabsContent>
         </Tabs>
       </div>
