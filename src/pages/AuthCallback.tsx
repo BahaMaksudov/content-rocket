@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, CheckCircle, Rocket, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-
+import { useToast } from "@/hooks/use-toast";
 export default function AuthCallback() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { toast } = useToast();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -32,12 +34,19 @@ export default function AuthCallback() {
           return;
         }
 
+        // Check for invite token in URL (team invitation flow)
+        const inviteToken = searchParams.get("invite");
+        
         // Method 1: Check for tokens in hash (implicit flow)
         const accessToken = hashParams.get("access_token");
         const refreshToken = hashParams.get("refresh_token");
         
         // Method 2: Check for code in query params (PKCE flow - common on mobile)
         const code = queryParams.get("code");
+
+        // Check for auth type (e.g., 'invite' for team invites)
+        const authType = hashParams.get("type") || queryParams.get("type");
+        console.log(`[AuthCallback] Auth type: ${authType}, Invite token: ${inviteToken ? "present" : "none"}`);
 
         if (accessToken && refreshToken) {
           console.log("[AuthCallback] Setting session from hash tokens (implicit flow)");
@@ -51,6 +60,11 @@ export default function AuthCallback() {
             setStatus("error");
             setErrorMessage(sessionError.message);
             return;
+          }
+
+          // Handle invite type specifically
+          if (authType === "invite" || inviteToken) {
+            console.log("[AuthCallback] Invite flow detected - processing team invite");
           }
 
           setStatus("success");
@@ -75,6 +89,11 @@ export default function AuthCallback() {
           setTimeout(() => {
             navigate("/dashboard", { replace: true });
           }, 2000);
+        } else if (inviteToken) {
+          // Handle invite token without session - redirect to auth page with token
+          console.log("[AuthCallback] Invite token found but no session - redirecting to auth page");
+          navigate(`/auth?invite=${inviteToken}`, { replace: true });
+          return;
         } else {
           // No tokens or code - check if there's already an active session
           console.log("[AuthCallback] No tokens/code in URL, checking existing session");
@@ -102,7 +121,7 @@ export default function AuthCallback() {
     };
 
     handleAuthCallback();
-  }, [navigate]);
+  }, [navigate, searchParams, toast]);
 
   return (
     <div className="min-h-screen bg-background">
