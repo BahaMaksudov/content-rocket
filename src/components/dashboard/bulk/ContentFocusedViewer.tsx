@@ -7,24 +7,22 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  Copy, 
-  Check, 
-  Twitter, 
-  Linkedin, 
-  Film, 
+import {
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  Check,
+  Twitter,
+  Linkedin,
+  Film,
   FileText,
   FileX,
   Loader2,
   Video,
-  ExternalLink
+  ExternalLink,
 } from "lucide-react";
 import { BatchJob } from "@/hooks/use-bulk-process";
 import { trackCopyContent } from "@/lib/posthog";
-import { VoiceGenerator } from "../VoiceGenerator";
-import { ImageGenerator } from "../ImageGenerator";
 
 interface ContentFocusedViewerProps {
   batchJob: BatchJob | null;
@@ -43,7 +41,7 @@ interface Generation {
 }
 
 function parseTwitterHooks(hooks: unknown): string[] | null {
-  if (Array.isArray(hooks) && hooks.every(h => typeof h === "string")) {
+  if (Array.isArray(hooks) && hooks.every((h) => typeof h === "string")) {
     return hooks;
   }
   return null;
@@ -51,15 +49,24 @@ function parseTwitterHooks(hooks: unknown): string[] | null {
 
 function parseShortFormScripts(scripts: unknown): Array<{ title: string; script: string; duration: string }> | null {
   if (Array.isArray(scripts)) {
-    return scripts.filter(s => 
-      typeof s === "object" && s !== null && 
-      "title" in s && "script" in s && "duration" in s
+    return scripts.filter(
+      (s) => typeof s === "object" && s !== null && "title" in s && "script" in s && "duration" in s,
     ) as Array<{ title: string; script: string; duration: string }>;
   }
   return null;
 }
 
-function CopyButton({ text, contentType, platform, label }: { text: string; contentType?: string; platform?: string; label?: string }) {
+function CopyButton({
+  text,
+  contentType,
+  platform,
+  label,
+}: {
+  text: string;
+  contentType?: string;
+  platform?: string;
+  label?: string;
+}) {
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
 
@@ -83,18 +90,14 @@ export function ContentFocusedViewer({ batchJob, isProcessing }: ContentFocusedV
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [activeTab, setActiveTab] = useState("blog");
 
-  const generationIds = batchJob?.video_urls
-    ?.filter(v => v.status === "completed" && v.generationId)
-    ?.map(v => v.generationId) || [];
+  const generationIds =
+    batchJob?.video_urls?.filter((v) => v.status === "completed" && v.generationId)?.map((v) => v.generationId) || [];
 
   const { data: generations, isLoading } = useQuery({
     queryKey: ["batch-generations", generationIds],
     queryFn: async () => {
       if (generationIds.length === 0) return [];
-      const { data, error } = await supabase
-        .from("generations")
-        .select("*")
-        .in("id", generationIds);
+      const { data, error } = await supabase.from("generations").select("*").in("id", generationIds);
       if (error) throw error;
       return data as Generation[];
     },
@@ -120,7 +123,8 @@ export function ContentFocusedViewer({ batchJob, isProcessing }: ContentFocusedV
           <div>
             <h3 className="text-2xl font-semibold mb-2">Ready to Process</h3>
             <p className="text-muted-foreground max-w-lg mx-auto">
-              Paste YouTube URLs above to generate blog posts, Twitter threads, and LinkedIn content for multiple videos at once.
+              Paste YouTube URLs above to generate blog posts, Twitter threads, and LinkedIn content for multiple videos
+              at once.
             </p>
           </div>
         </div>
@@ -145,9 +149,7 @@ export function ContentFocusedViewer({ batchJob, isProcessing }: ContentFocusedV
           </div>
           <div>
             <h3 className="text-2xl font-semibold mb-2">Generating Content...</h3>
-            <p className="text-muted-foreground">
-              Creating blog posts, threads, and summaries for your videos
-            </p>
+            <p className="text-muted-foreground">Creating blog posts, threads, and summaries for your videos</p>
           </div>
           <div className="flex justify-center gap-8 text-sm">
             <div className="text-center">
@@ -183,10 +185,9 @@ export function ContentFocusedViewer({ batchJob, isProcessing }: ContentFocusedV
           <div>
             <h3 className="text-2xl font-semibold mb-2">No Content Generated</h3>
             <p className="text-muted-foreground max-w-lg mx-auto">
-              {batchJob.failed_videos > 0 
+              {batchJob.failed_videos > 0
                 ? `All ${batchJob.failed_videos} video(s) failed to process. Check video URLs have captions enabled.`
-                : "No videos were processed in this batch."
-              }
+                : "No videos were processed in this batch."}
             </p>
           </div>
         </div>
@@ -213,14 +214,14 @@ export function ContentFocusedViewer({ batchJob, isProcessing }: ContentFocusedV
       <div className="flex items-center justify-between px-6 py-4 bg-primary/5 border-b-2 border-primary/20">
         <Button
           variant="outline"
-          onClick={() => setCurrentVideoIndex(prev => Math.max(0, prev - 1))}
+          onClick={() => setCurrentVideoIndex((prev) => Math.max(0, prev - 1))}
           disabled={currentVideoIndex === 0}
           className="gap-2 font-medium"
         >
           <ChevronLeft className="h-4 w-4" />
           Prev
         </Button>
-        
+
         <div className="flex items-center gap-4 text-center">
           <Badge className="text-sm px-4 py-1.5 bg-primary text-primary-foreground">
             Video {currentVideoIndex + 1} of {totalVideos}
@@ -239,10 +240,10 @@ export function ContentFocusedViewer({ batchJob, isProcessing }: ContentFocusedV
             </Button>
           )}
         </div>
-        
+
         <Button
           variant="outline"
-          onClick={() => setCurrentVideoIndex(prev => Math.min(totalVideos - 1, prev + 1))}
+          onClick={() => setCurrentVideoIndex((prev) => Math.min(totalVideos - 1, prev + 1))}
           disabled={currentVideoIndex === totalVideos - 1}
           className="gap-2 font-medium"
         >
@@ -261,8 +262,7 @@ export function ContentFocusedViewer({ batchJob, isProcessing }: ContentFocusedV
                 Blog Post
               </TabsTrigger>
               <TabsTrigger value="twitter" className="flex items-center gap-2 text-sm font-medium h-full">
-                <Twitter className="h-5 w-5" />
-                Twitter Thread
+                <Twitter className="h-5 w-5" />X (Twitter) Thread
               </TabsTrigger>
               <TabsTrigger value="linkedin" className="flex items-center gap-2 text-sm font-medium h-full">
                 <Linkedin className="h-5 w-5" />
@@ -279,15 +279,15 @@ export function ContentFocusedViewer({ batchJob, isProcessing }: ContentFocusedV
               {currentGeneration.blog_post ? (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <Badge variant="secondary" className="text-xs">SEO-Optimized Blog Post</Badge>
-                    <div className="flex items-center gap-2">
-                      <ImageGenerator 
-                        textContent={currentGeneration.blog_post} 
-                        platform="blog" 
-                        targetLanguage={currentGeneration.target_language}
-                      />
-                      <CopyButton text={currentGeneration.blog_post} contentType="blog_post" platform="blog" label="Copy Post" />
-                    </div>
+                    <Badge variant="secondary" className="text-xs">
+                      SEO-Optimized Blog Post
+                    </Badge>
+                    <CopyButton
+                      text={currentGeneration.blog_post}
+                      contentType="blog_post"
+                      platform="blog"
+                      label="Copy Post"
+                    />
                   </div>
                   <div className="prose prose-sm dark:prose-invert max-w-none max-h-[450px] overflow-y-auto p-5 rounded-lg bg-muted/30 border border-border">
                     <p className="whitespace-pre-wrap leading-relaxed">{currentGeneration.blog_post}</p>
@@ -306,28 +306,23 @@ export function ContentFocusedViewer({ batchJob, isProcessing }: ContentFocusedV
                   return <p className="text-muted-foreground text-center py-16">No Twitter hooks generated</p>;
                 }
                 return (
-                  <div className="space-y-3">
-                    {/* AI Visual Generator for Twitter */}
-                    <div className="flex justify-end">
-                      <ImageGenerator 
-                        textContent={hooks[0]} 
-                        platform="twitter" 
-                        targetLanguage={currentGeneration.target_language}
-                      />
-                    </div>
-                    <div className="space-y-3 max-h-[400px] overflow-y-auto">
-                      {hooks.map((hook, idx) => (
-                        <div key={idx} className="p-5 rounded-lg bg-muted/30 border border-border group hover:border-primary/30 transition-colors">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1">
-                              <Badge variant="secondary" className="mb-3 text-xs">Hook {idx + 1}</Badge>
-                              <p className="text-sm leading-relaxed">{hook}</p>
-                            </div>
-                            <CopyButton text={hook} contentType="twitter_hook" platform="twitter" />
+                  <div className="space-y-3 max-h-[450px] overflow-y-auto">
+                    {hooks.map((hook, idx) => (
+                      <div
+                        key={idx}
+                        className="p-5 rounded-lg bg-muted/30 border border-border group hover:border-primary/30 transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <Badge variant="secondary" className="mb-3 text-xs">
+                              Hook {idx + 1}
+                            </Badge>
+                            <p className="text-sm leading-relaxed">{hook}</p>
                           </div>
+                          <CopyButton text={hook} contentType="twitter_hook" platform="twitter" />
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))}
                   </div>
                 );
               })()}
@@ -338,15 +333,15 @@ export function ContentFocusedViewer({ batchJob, isProcessing }: ContentFocusedV
               {currentGeneration.linkedin_post ? (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <Badge variant="secondary" className="text-xs">LinkedIn Summary</Badge>
-                    <div className="flex items-center gap-2">
-                      <ImageGenerator 
-                        textContent={currentGeneration.linkedin_post} 
-                        platform="linkedin" 
-                        targetLanguage={currentGeneration.target_language}
-                      />
-                      <CopyButton text={currentGeneration.linkedin_post} contentType="linkedin_post" platform="linkedin" label="Copy Post" />
-                    </div>
+                    <Badge variant="secondary" className="text-xs">
+                      LinkedIn Summary
+                    </Badge>
+                    <CopyButton
+                      text={currentGeneration.linkedin_post}
+                      contentType="linkedin_post"
+                      platform="linkedin"
+                      label="Copy Post"
+                    />
                   </div>
                   <div className="p-5 rounded-lg bg-muted/30 border border-border max-h-[450px] overflow-y-auto">
                     <p className="text-sm whitespace-pre-wrap leading-relaxed">{currentGeneration.linkedin_post}</p>
@@ -370,22 +365,23 @@ export function ContentFocusedViewer({ batchJob, isProcessing }: ContentFocusedV
                       <div key={idx} className="p-5 rounded-lg bg-muted/30 border border-border">
                         <div className="flex items-start justify-between gap-4 mb-3">
                           <div className="flex items-center gap-2">
-                            <Badge variant="secondary" className="text-xs">Script {idx + 1}</Badge>
-                            <Badge variant="outline" className="text-xs">{script.duration}</Badge>
+                            <Badge variant="secondary" className="text-xs">
+                              Script {idx + 1}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              {script.duration}
+                            </Badge>
                           </div>
-                          <CopyButton 
-                            text={`${script.title}\n\n${script.script}`} 
-                            contentType="short_form_script" 
-                            platform="shorts" 
+                          <CopyButton
+                            text={`${script.title}\n\n${script.script}`}
+                            contentType="short_form_script"
+                            platform="shorts"
                           />
                         </div>
                         <h4 className="font-semibold mb-2">{script.title}</h4>
-                        <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed mb-4">{script.script}</p>
-                        
-                        {/* Voice Generator for each script */}
-                        <div className="pt-3 border-t border-border">
-                          <VoiceGenerator scriptText={script.script} />
-                        </div>
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                          {script.script}
+                        </p>
                       </div>
                     ))}
                   </div>
