@@ -25,6 +25,7 @@ import { BatchJob } from "@/hooks/use-bulk-process";
 import { trackCopyContent } from "@/lib/posthog";
 import { ImageGenerator } from "@/components/dashboard/ImageGenerator";
 import { VoiceGenerator } from "@/components/dashboard/VoiceGenerator";
+import { SocialActionBar } from "@/components/dashboard/bulk/SocialActionBar";
 
 interface ContentFocusedViewerProps {
   batchJob: BatchJob | null;
@@ -279,7 +280,7 @@ export function ContentFocusedViewer({ batchJob, isProcessing }: ContentFocusedV
             {/* Blog Post */}
             <TabsContent value="blog" className="mt-0">
               {currentGeneration.blog_post ? (
-                <div className="space-y-4">
+                <div className="space-y-4 relative pb-16">
                   <div className="flex items-center justify-between">
                     <Badge variant="secondary" className="text-xs">
                       SEO-Optimized Blog Post
@@ -301,6 +302,11 @@ export function ContentFocusedViewer({ batchJob, isProcessing }: ContentFocusedV
                   <div className="prose prose-sm dark:prose-invert max-w-none max-h-[450px] overflow-y-auto p-5 rounded-lg bg-muted/30 border border-border">
                     <p className="whitespace-pre-wrap leading-relaxed">{currentGeneration.blog_post}</p>
                   </div>
+                  <SocialActionBar 
+                    content={currentGeneration.blog_post} 
+                    platform="blog" 
+                    youtubeUrl={currentGeneration.youtube_url}
+                  />
                 </div>
               ) : (
                 <p className="text-muted-foreground text-center py-16">No blog post generated</p>
@@ -314,8 +320,9 @@ export function ContentFocusedViewer({ batchJob, isProcessing }: ContentFocusedV
                 if (!hooks || hooks.length === 0) {
                   return <p className="text-muted-foreground text-center py-16">No Twitter hooks generated</p>;
                 }
+                const fullThread = hooks.join("\n\n---\n\n");
                 return (
-                  <div className="space-y-4">
+                  <div className="space-y-4 relative pb-16">
                     <div className="flex items-center justify-between">
                       <Badge variant="secondary" className="text-xs">
                         X (Twitter) Thread
@@ -344,6 +351,11 @@ export function ContentFocusedViewer({ batchJob, isProcessing }: ContentFocusedV
                         </div>
                       ))}
                     </div>
+                    <SocialActionBar 
+                      content={hooks[0]} 
+                      platform="twitter" 
+                      youtubeUrl={currentGeneration.youtube_url}
+                    />
                   </div>
                 );
               })()}
@@ -352,7 +364,7 @@ export function ContentFocusedViewer({ batchJob, isProcessing }: ContentFocusedV
             {/* LinkedIn Post */}
             <TabsContent value="linkedin" className="mt-0">
               {currentGeneration.linkedin_post ? (
-                <div className="space-y-4">
+                <div className="space-y-4 relative pb-16">
                   <div className="flex items-center justify-between">
                     <Badge variant="secondary" className="text-xs">
                       LinkedIn Summary
@@ -374,6 +386,11 @@ export function ContentFocusedViewer({ batchJob, isProcessing }: ContentFocusedV
                   <div className="p-5 rounded-lg bg-muted/30 border border-border max-h-[450px] overflow-y-auto">
                     <p className="text-sm whitespace-pre-wrap leading-relaxed">{currentGeneration.linkedin_post}</p>
                   </div>
+                  <SocialActionBar 
+                    content={currentGeneration.linkedin_post} 
+                    platform="linkedin" 
+                    youtubeUrl={currentGeneration.youtube_url}
+                  />
                 </div>
               ) : (
                 <p className="text-muted-foreground text-center py-16">No LinkedIn post generated</p>
@@ -388,7 +405,7 @@ export function ContentFocusedViewer({ batchJob, isProcessing }: ContentFocusedV
                   return <p className="text-muted-foreground text-center py-16">No video scripts generated</p>;
                 }
                 return (
-                  <div className="space-y-4 max-h-[500px] overflow-y-auto">
+                  <div className="space-y-4 max-h-[500px] overflow-y-auto relative pb-16">
                     {scripts.map((script, idx) => (
                       <div key={idx} className="p-5 rounded-lg bg-muted/30 border border-border space-y-4">
                         <div className="flex items-start justify-between gap-4">
@@ -425,6 +442,11 @@ export function ContentFocusedViewer({ batchJob, isProcessing }: ContentFocusedV
                         </div>
                       </div>
                     ))}
+                    <SocialActionBar 
+                      content={scripts[0]?.script || ""} 
+                      platform="shorts" 
+                      youtubeUrl={currentGeneration.youtube_url}
+                    />
                   </div>
                 );
               })()}
