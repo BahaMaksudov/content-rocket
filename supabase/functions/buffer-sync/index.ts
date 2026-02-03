@@ -13,11 +13,20 @@ interface BufferSyncRequest {
   youtubeUrl?: string;
 }
 
+// Custom error class for missing system encryption key
+class EncryptionKeyMissingError extends Error {
+  constructor() {
+    super("System Encryption Key Missing. Please contact support.");
+    this.name = "EncryptionKeyMissingError";
+  }
+}
+
 // Get the encryption key from environment (32 bytes for AES-256)
 async function getEncryptionKey(): Promise<CryptoKey> {
   const keyString = Deno.env.get("INTEGRATION_ENCRYPTION_KEY");
   if (!keyString || keyString.length < 32) {
-    throw new Error("Encryption key not configured");
+    console.error("[Buffer Sync] CRITICAL: INTEGRATION_ENCRYPTION_KEY is missing or invalid");
+    throw new EncryptionKeyMissingError();
   }
   
   const keyMaterial = new TextEncoder().encode(keyString.slice(0, 32));
@@ -143,6 +152,15 @@ Deno.serve(async (req) => {
       decryptedApiKey = await decryptValue(integration.api_key);
     } catch (decryptError) {
       console.error("[Buffer Sync] Failed to decrypt API key:", decryptError);
+      
+      // Check if it's the specific encryption key missing error
+      if (decryptError instanceof EncryptionKeyMissingError) {
+        return new Response(
+          JSON.stringify({ error: decryptError.message }),
+          { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
       return new Response(
         JSON.stringify({ error: "Failed to decrypt API key. Please re-save your Buffer token." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
