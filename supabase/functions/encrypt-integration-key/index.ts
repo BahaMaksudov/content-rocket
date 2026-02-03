@@ -7,11 +7,20 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Custom error class for missing system encryption key
+class EncryptionKeyMissingError extends Error {
+  constructor() {
+    super("System Encryption Key Missing. Please contact support.");
+    this.name = "EncryptionKeyMissingError";
+  }
+}
+
 // Get the encryption key from environment (32 bytes for AES-256)
 async function getEncryptionKey(): Promise<CryptoKey> {
   const keyString = Deno.env.get("INTEGRATION_ENCRYPTION_KEY");
   if (!keyString || keyString.length < 32) {
-    throw new Error("Encryption key not configured or too short");
+    console.error("[Encrypt Integration] CRITICAL: INTEGRATION_ENCRYPTION_KEY is missing or invalid");
+    throw new EncryptionKeyMissingError();
   }
   
   // Use first 32 bytes of the key string
@@ -161,6 +170,15 @@ Deno.serve(async (req) => {
 
   } catch (error: unknown) {
     console.error("[Encrypt Integration] Error:", error);
+    
+    // Check if it's the specific encryption key missing error
+    if (error instanceof EncryptionKeyMissingError) {
+      return new Response(
+        JSON.stringify({ error: error.message }),
+        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
     const errorMessage = error instanceof Error ? error.message : "Internal server error";
     return new Response(
       JSON.stringify({ error: errorMessage }),
