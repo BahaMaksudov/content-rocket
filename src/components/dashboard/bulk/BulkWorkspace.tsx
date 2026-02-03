@@ -116,7 +116,7 @@ export function BulkWorkspace({
 
   return (
     <div className="flex flex-col w-full space-y-6 pb-24">
-      {/* Phase 1: The Header - Full Width Input & Collapsible Config */}
+      {/* Phase 1: The Header - Full Width Input & Generation Settings */}
       <section className="w-full">
         <FullWidthInput
           onStartBulk={handleStartBulk}
@@ -126,8 +126,13 @@ export function BulkWorkspace({
           isCancelling={cancelBatchJob.isPending}
           tone={tone}
           setTone={setTone}
+          audience={audience}
+          setAudience={setAudience}
           targetLanguage={targetLanguage}
           setTargetLanguage={setTargetLanguage}
+          brandVoices={brandVoices}
+          selectedBrandVoice={selectedBrandVoice}
+          setSelectedBrandVoice={setSelectedBrandVoice}
         />
       </section>
 

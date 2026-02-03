@@ -5,12 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { PremiumModal } from "@/components/PremiumModal";
 import { BatchJob } from "@/hooks/use-bulk-process";
+import { HorizontalGenerationSettings } from "./HorizontalGenerationSettings";
 import { 
   Link2, 
   ListVideo, 
@@ -21,32 +20,16 @@ import {
   Loader2,
   CheckCircle2,
   XCircle,
-  Clock,
-  MessageSquare,
-  Globe,
-  Settings2,
-  ChevronDown
+  Clock
 } from "lucide-react";
 
 const MAX_URLS_PER_BATCH = 10;
 
-const tones = [
-  { value: "professional", label: "Professional" },
-  { value: "casual", label: "Casual" },
-  { value: "humorous", label: "Humorous" },
-  { value: "inspirational", label: "Inspirational" },
-];
-
-const languages = [
-  { value: "english", label: "English" },
-  { value: "spanish", label: "Spanish" },
-  { value: "french", label: "French" },
-  { value: "german", label: "German" },
-  { value: "portuguese", label: "Portuguese" },
-  { value: "japanese", label: "Japanese" },
-  { value: "korean", label: "Korean" },
-  { value: "chinese", label: "Chinese" },
-];
+interface BrandVoice {
+  id: string;
+  name: string;
+  description: string | null;
+}
 
 interface FullWidthInputProps {
   onStartBulk: (urls?: string[], playlistUrl?: string) => void;
@@ -56,8 +39,13 @@ interface FullWidthInputProps {
   isCancelling: boolean;
   tone: string;
   setTone: (tone: string) => void;
+  audience: string;
+  setAudience: (audience: string) => void;
   targetLanguage: string;
   setTargetLanguage: (language: string) => void;
+  brandVoices: BrandVoice[];
+  selectedBrandVoice: string | null;
+  setSelectedBrandVoice: (id: string | null) => void;
 }
 
 export function FullWidthInput({ 
@@ -68,15 +56,19 @@ export function FullWidthInput({
   isCancelling,
   tone,
   setTone,
+  audience,
+  setAudience,
   targetLanguage,
-  setTargetLanguage
+  setTargetLanguage,
+  brandVoices,
+  selectedBrandVoice,
+  setSelectedBrandVoice
 }: FullWidthInputProps) {
   const { isAgency } = useSubscription();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [inputMode, setInputMode] = useState<"urls" | "playlist">("urls");
   const [urlsInput, setUrlsInput] = useState("");
   const [playlistUrl, setPlaylistUrl] = useState("");
-  const [configOpen, setConfigOpen] = useState(false);
 
   const validUrls = urlsInput
     .split("\n")
@@ -117,7 +109,7 @@ export function FullWidthInput({
   };
 
   return (
-    <div className="w-full space-y-3 relative">
+    <div className="w-full space-y-4 relative">
       {/* Agency Lock Overlay */}
       {!isAgency && (
         <div className="absolute inset-0 bg-background/90 backdrop-blur-sm z-10 flex items-center justify-center rounded-xl">
@@ -270,69 +262,18 @@ export function FullWidthInput({
         )}
       </div>
 
-      {/* Collapsible Configuration - Compact */}
-      <Collapsible open={configOpen} onOpenChange={setConfigOpen}>
-        <CollapsibleTrigger asChild>
-          <Button 
-            variant="ghost" 
-            className="w-1/2 justify-between h-9 px-3 bg-muted/50 hover:bg-muted border border-border rounded-lg text-sm"
-          >
-            <div className="flex items-center gap-2">
-              <Settings2 className="h-3 w-3 text-muted-foreground" />
-              <span className="font-medium text-xs">Config</span>
-              <Badge variant="secondary" className="text-[9px] px-1.5 py-0">
-                {tone} • {targetLanguage}
-              </Badge>
-            </div>
-            <ChevronDown className={`h-3 w-3 text-muted-foreground transition-transform ${configOpen ? "rotate-180" : ""}`} />
-          </Button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="mt-2">
-          <div className="p-3 bg-muted/30 rounded-lg border border-border w-1/2">
-            <div className="grid grid-cols-2 gap-3">
-              {/* Tone */}
-              <div className="space-y-1">
-                <label className="text-xs font-medium flex items-center gap-1">
-                  <MessageSquare className="h-3 w-3 text-muted-foreground" />
-                  Tone
-                </label>
-                <Select value={tone} onValueChange={setTone}>
-                  <SelectTrigger className="bg-background h-8 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-popover border-border z-50">
-                    {tones.map((t) => (
-                      <SelectItem key={t.value} value={t.value} className="text-xs">
-                        {t.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Language */}
-              <div className="space-y-1">
-                <label className="text-xs font-medium flex items-center gap-1">
-                  <Globe className="h-3 w-3 text-muted-foreground" />
-                  Language
-                </label>
-                <Select value={targetLanguage} onValueChange={setTargetLanguage}>
-                  <SelectTrigger className="bg-background h-8 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-popover border-border z-50">
-                    {languages.map((l) => (
-                      <SelectItem key={l.value} value={l.value} className="text-xs">
-                        {l.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
+      {/* Horizontal Generation Settings - Always Visible */}
+      <HorizontalGenerationSettings
+        brandVoices={brandVoices}
+        selectedBrandVoice={selectedBrandVoice}
+        setSelectedBrandVoice={setSelectedBrandVoice}
+        tone={tone}
+        setTone={setTone}
+        audience={audience}
+        setAudience={setAudience}
+        targetLanguage={targetLanguage}
+        setTargetLanguage={setTargetLanguage}
+      />
 
       <PremiumModal
         open={showUpgradeModal}
