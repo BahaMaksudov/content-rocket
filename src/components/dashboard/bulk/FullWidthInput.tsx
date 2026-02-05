@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { PremiumModal } from "@/components/PremiumModal";
@@ -20,7 +22,8 @@ import {
   Loader2,
   CheckCircle2,
   XCircle,
-  Clock
+  Clock,
+  Info
 } from "lucide-react";
 
 const MAX_URLS_PER_BATCH = 10;
@@ -69,6 +72,7 @@ export function FullWidthInput({
   const [inputMode, setInputMode] = useState<"urls" | "playlist">("urls");
   const [urlsInput, setUrlsInput] = useState("");
   const [playlistUrl, setPlaylistUrl] = useState("");
+  const [fairUseConfirmed, setFairUseConfirmed] = useState(false);
 
   const validUrls = urlsInput
     .split("\n")
@@ -84,7 +88,7 @@ export function FullWidthInput({
       setShowUpgradeModal(true);
       return;
     }
-    if (isOverLimit) return;
+    if (isOverLimit || !fairUseConfirmed) return;
 
     const urls = inputMode === "urls" 
       ? urlsInput.split("\n").filter((url) => url.trim())
@@ -195,6 +199,14 @@ export function FullWidthInput({
               </TabsList>
 
               <TabsContent value="urls" className="mt-4 space-y-3">
+                {/* Respect Creators Note */}
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/30 border border-border text-muted-foreground">
+                  <span className="text-base leading-none">⚠️</span>
+                  <p className="text-sm leading-relaxed">
+                    <strong>Note:</strong> Please ensure you have permission to use this content or are creating original commentary. We support a healthy ecosystem of creators.
+                  </p>
+                </div>
+                
                 <Textarea
                   placeholder="Paste YouTube URLs (one per line)&#10;https://youtube.com/watch?v=...&#10;https://youtu.be/..."
                   value={urlsInput}
@@ -211,9 +223,42 @@ export function FullWidthInput({
                     Max {MAX_URLS_PER_BATCH} per batch
                   </span>
                 </div>
+                
+                {/* Responsible Creation Checkbox */}
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border">
+                  <Checkbox
+                    id="bulk-fair-use-confirmation"
+                    checked={fairUseConfirmed}
+                    onCheckedChange={(checked) => setFairUseConfirmed(checked === true)}
+                    className="mt-0.5"
+                  />
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-center gap-1.5">
+                      <Label 
+                        htmlFor="bulk-fair-use-confirmation" 
+                        className="text-sm font-medium cursor-pointer leading-tight"
+                      >
+                        I confirm I have the right to use this content or am transforming it for Fair Use.
+                      </Label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-4 w-4 text-muted-foreground flex-shrink-0 cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-xs">
+                            <p className="text-sm">
+                              Fair Use generally allows summarizing others' work if you add your own unique value or commentary.
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </div>
+                </div>
+                
                 {/* Generate button below URL input */}
                 <Button
-                  disabled={isPending || isOverLimit || validUrlCount === 0}
+                  disabled={isPending || isOverLimit || validUrlCount === 0 || !fairUseConfirmed}
                   onClick={handleStartBulk}
                   className="gap-2"
                   size="sm"
@@ -233,6 +278,14 @@ export function FullWidthInput({
               </TabsContent>
 
               <TabsContent value="playlist" className="mt-4 space-y-3">
+                {/* Respect Creators Note */}
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/30 border border-border text-muted-foreground">
+                  <span className="text-base leading-none">⚠️</span>
+                  <p className="text-sm leading-relaxed">
+                    <strong>Note:</strong> Please ensure you have permission to use this content or are creating original commentary. We support a healthy ecosystem of creators.
+                  </p>
+                </div>
+                
                 <Input
                   placeholder="https://youtube.com/playlist?list=..."
                   value={playlistUrl}
@@ -242,9 +295,42 @@ export function FullWidthInput({
                 <p className="text-sm text-muted-foreground">
                   First {MAX_URLS_PER_BATCH} videos from the playlist will be processed
                 </p>
+                
+                {/* Responsible Creation Checkbox */}
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border">
+                  <Checkbox
+                    id="playlist-fair-use-confirmation"
+                    checked={fairUseConfirmed}
+                    onCheckedChange={(checked) => setFairUseConfirmed(checked === true)}
+                    className="mt-0.5"
+                  />
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-center gap-1.5">
+                      <Label 
+                        htmlFor="playlist-fair-use-confirmation" 
+                        className="text-sm font-medium cursor-pointer leading-tight"
+                      >
+                        I confirm I have the right to use this content or am transforming it for Fair Use.
+                      </Label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-4 w-4 text-muted-foreground flex-shrink-0 cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-xs">
+                            <p className="text-sm">
+                              Fair Use generally allows summarizing others' work if you add your own unique value or commentary.
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </div>
+                </div>
+                
                 {/* Generate button below playlist input */}
                 <Button
-                  disabled={isPending || !playlistUrl.trim()}
+                  disabled={isPending || !playlistUrl.trim() || !fairUseConfirmed}
                   onClick={handleStartBulk}
                   className="gap-2"
                   size="sm"

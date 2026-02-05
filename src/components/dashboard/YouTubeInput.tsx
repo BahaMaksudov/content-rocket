@@ -284,6 +284,13 @@ export function YouTubeInput({
         <CardDescription>Enter a YouTube URL to extract the transcript</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Respect Creators Note */}
+        <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/30 border border-border text-muted-foreground">
+          <span className="text-base leading-none">⚠️</span>
+          <p className="text-sm leading-relaxed">
+            <strong>Note:</strong> Please ensure you have permission to use this content or are creating original commentary. We support a healthy ecosystem of creators.
+          </p>
+        </div>
         <div className="space-y-3">
           <Label htmlFor="youtube-url">Video URL</Label>
           {/* Full-width URL input */}

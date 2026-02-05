@@ -46,6 +46,22 @@ const PLATFORM_STYLES = {
   },
 };
 
+// Extract YouTube channel name from content or return generic attribution
+function extractChannelAttribution(content: string, youtubeUrl?: string | null): string {
+  // Try to extract channel name from common patterns in the content
+  // For now, we'll use a generic attribution that includes the URL
+  if (youtubeUrl) {
+    return `\n\n---\nSource: Inspired by YouTube creator via Rocket Content`;
+  }
+  return `\n\n---\nSource: Content generated via Rocket Content`;
+}
+
+// Append credit line to content for sharing
+function appendCreditLine(content: string, youtubeUrl?: string | null): string {
+  const creditLine = extractChannelAttribution(content, youtubeUrl);
+  return content + creditLine;
+}
+
 // Truncate text to 250 chars and add ellipsis for Twitter
 function truncateForTwitter(text: string): string {
   const maxLength = 250;
@@ -111,10 +127,12 @@ export function SocialActionBar({ content, platform, youtubeUrl }: SocialActionB
   }
   
   const handlePostToTwitter = async () => {
+    // Append credit line to the full content for clipboard
+    const contentWithCredit = appendCreditLine(content, youtubeUrl);
     const truncatedText = truncateForTwitter(content);
     
-    // Copy full content to clipboard
-    await navigator.clipboard.writeText(content);
+    // Copy full content WITH credit to clipboard
+    await navigator.clipboard.writeText(contentWithCredit);
     
     // Build URL with text and url as separate params
     const params = new URLSearchParams();
@@ -126,43 +144,46 @@ export function SocialActionBar({ content, platform, youtubeUrl }: SocialActionB
     const url = `https://twitter.com/intent/tweet?${params.toString()}`;
     
     toast({
-      title: "Opening X (Twitter)...",
-      description: "Full content copied to clipboard for reference.",
+      title: "Text copied & opening X (Twitter)...",
+      description: "Content with source credit copied to clipboard.",
     });
     
     window.open(url, "_blank", "width=550,height=420");
   };
   
   const handleShareLinkedIn = async () => {
-    // Copy full content to clipboard first
-    await navigator.clipboard.writeText(content);
+    // Copy full content WITH credit to clipboard first
+    const contentWithCredit = appendCreditLine(content, youtubeUrl);
+    await navigator.clipboard.writeText(contentWithCredit);
     
     // LinkedIn share - URL only (LinkedIn scrapes the URL for preview)
     const shareUrl = youtubeUrl || window.location.href;
     const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
     
     toast({
-      title: "Opening LinkedIn...",
-      description: "AI summary copied to clipboard - paste it in the post box.",
+      title: "Text copied & opening LinkedIn...",
+      description: "AI summary with source credit copied - paste it in the post box.",
     });
     
     window.open(url, "_blank", "width=550,height=520");
   };
   
   const handleBufferShare = async () => {
+    // Append credit line for Buffer
+    const contentWithCredit = appendCreditLine(content, youtubeUrl);
     const text = platform === "twitter" 
       ? truncateForTwitter(content)
-      : content;
+      : contentWithCredit;
     const shareUrl = youtubeUrl || "";
     
-    // Copy full content to clipboard
-    await navigator.clipboard.writeText(content);
+    // Copy full content WITH credit to clipboard
+    await navigator.clipboard.writeText(contentWithCredit);
     
     const url = `https://buffer.com/add?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`;
     
     toast({
-      title: "Opening Buffer...",
-      description: "Content copied to clipboard.",
+      title: "Text copied & opening Buffer...",
+      description: "Content with source credit copied to clipboard.",
     });
     
     window.open(url, "_blank");
@@ -180,6 +201,8 @@ export function SocialActionBar({ content, platform, youtubeUrl }: SocialActionB
     
     setIsSyncing(true);
     try {
+      // Append credit line for Buffer sync
+      const contentWithCredit = appendCreditLine(content, youtubeUrl);
       const { data, error } = await supabase.functions.invoke("buffer-sync", {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
@@ -187,7 +210,7 @@ export function SocialActionBar({ content, platform, youtubeUrl }: SocialActionB
         body: {
           content: platform === "twitter" 
             ? truncateForTwitter(content)
-            : content,
+            : contentWithCredit,
           platform,
           youtubeUrl,
         },

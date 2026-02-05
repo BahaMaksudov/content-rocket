@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSeparator } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Sparkles, Mic, Crown, Rocket, AlertCircle, Plus } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Loader2, Sparkles, Mic, Crown, Rocket, AlertCircle, Plus, Info } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useCredits } from "@/hooks/use-credits";
@@ -68,6 +70,7 @@ export function GenerationSettings({
   const { hasCredits, creditsUsed, creditLimit, loading: creditsLoading } = useCredits();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showCreateVoiceModal, setShowCreateVoiceModal] = useState(false);
+  const [fairUseConfirmed, setFairUseConfirmed] = useState(false);
 
   // Auto-select default voice on first render if nothing selected
   useState(() => {
@@ -273,14 +276,48 @@ export function GenerationSettings({
         {/* Generate Button - hidden when used in bulk mode */}
         {!hideGenerateButton && (
           <>
+            {/* Responsible Creation Checkbox */}
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border">
+              <Checkbox
+                id="fair-use-confirmation"
+                checked={fairUseConfirmed}
+                onCheckedChange={(checked) => setFairUseConfirmed(checked === true)}
+                className="mt-0.5"
+              />
+              <div className="flex-1 space-y-1">
+                <div className="flex items-center gap-1.5">
+                  <Label 
+                    htmlFor="fair-use-confirmation" 
+                    className="text-sm font-medium cursor-pointer leading-tight"
+                  >
+                    I confirm I have the right to use this content or am transforming it for Fair Use (commentary, education, or news reporting).
+                  </Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-4 w-4 text-muted-foreground flex-shrink-0 cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-xs">
+                        <p className="text-sm">
+                          Fair Use generally allows summarizing others' work if you add your own unique value or commentary.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Button
                 onClick={onGenerate}
-                disabled={!hasTranscript || isGenerating || isCreditsExhausted}
+                disabled={!hasTranscript || isGenerating || isCreditsExhausted || !fairUseConfirmed}
                 className={`w-full ${
                   isCreditsExhausted 
                     ? "bg-muted text-muted-foreground cursor-not-allowed" 
-                    : "gradient-primary text-primary-foreground"
+                    : !fairUseConfirmed
+                      ? "bg-muted text-muted-foreground cursor-not-allowed"
+                      : "gradient-primary text-primary-foreground"
                 }`}
                 size="lg"
               >
