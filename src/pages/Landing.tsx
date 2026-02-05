@@ -713,7 +713,7 @@ function PricingSection({ onUpgradeClick }: { onUpgradeClick: (tier: "pro" | "ag
       features: [
         "Unlimited AI generations",
         "Bulk video processing",
-        "Team workspace (5 members)",
+        "Team workspace",
         "Unlimited brand voices",
         "White-label previews",
         "Custom integrations",
