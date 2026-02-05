@@ -16,7 +16,7 @@ export const SUBSCRIPTION_TIERS = {
     name: "Pro",
     price: 29,
     priceId: "price_1Sw8YLBqKXDc35qoCAep9wJo",
-    productId: "prod_TtwRuGNynEpRHz",  // Updated to new Pro product
+    productId: "prod_TtwRuGNynEpRHz", // Updated to new Pro product
     features: [
       "50 AI content generations per month",
       "All 4 platform outputs",
@@ -31,15 +31,14 @@ export const SUBSCRIPTION_TIERS = {
   agency: {
     name: "Agency",
     price: 249,
-    priceId: "price_1Sw9LXBqKXDc35qouka1dA67",  // Updated Agency price
-    productId: "prod_TtxGA6pKTbpMoM",  // Updated Agency product
+    priceId: "price_1Sw9LXBqKXDc35qouka1dA67", // Updated Agency price
+    productId: "prod_TtxGA6pKTbpMoM", // Updated Agency product
     features: [
       "Unlimited AI content generations",
       "Bulk video processing (playlists)",
       "Team workspace (5 members)",
       "Unlimited brand voices",
       "White-label previews",
-      "Dedicated account manager",
       "Custom integrations",
       "SSO & advanced security",
     ],
