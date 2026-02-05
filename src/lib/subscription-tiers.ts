@@ -36,7 +36,7 @@ export const SUBSCRIPTION_TIERS = {
     features: [
       "Unlimited AI content generations",
       "Bulk video processing (playlists)",
-      "Team workspace (5 members)",
+      "Team workspace",
       "Unlimited brand voices",
       "White-label previews",
       "Custom integrations",
