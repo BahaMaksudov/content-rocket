@@ -716,7 +716,6 @@ function PricingSection({ onUpgradeClick }: { onUpgradeClick: (tier: "pro" | "ag
         "Team workspace (5 members)",
         "Unlimited brand voices",
         "White-label previews",
-        "Dedicated account manager",
         "Custom integrations",
         "SSO & advanced security",
       ],
