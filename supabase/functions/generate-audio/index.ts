@@ -49,34 +49,13 @@ const LANGUAGE_CODE_MAP: Record<string, string> = {
  * Other non-Latin languages use slightly lower stability for native inflections.
  */
 function getVoiceSettingsForLanguage(targetLanguage: string | null) {
-  const lang = (targetLanguage || "english").toLowerCase();
-
-  // Uzbek-specific tuning: low stability for Central Asian vowel patterns.
-  // V3 model auto-detects Uzbek — no language_code needed.
-  if (lang === "uzbek") {
-    return {
-      stability: 0.35,
-      similarity_boost: 0.80,
-      style: 0.6,
-      use_speaker_boost: true,
-    };
-  }
-
-  // Other non-Latin languages benefit from lower stability
-  if (["hindi", "mandarin", "russian"].includes(lang)) {
-    return {
-      stability: 0.4,
-      similarity_boost: 0.75,
-      style: 0.6,
-      use_speaker_boost: true,
-    };
-  }
-
-  // English, Spanish, and any other language get standard professional delivery
+  // Match exact ElevenLabs Dashboard "Natural" preset for all languages.
+  // style: 0.0 prevents American-style emotional exaggeration,
+  // letting the V3 model produce native intonation from the text itself.
   return {
-    stability: 0.5,
+    stability: 0.40,
     similarity_boost: 0.75,
-    style: 0.5,
+    style: 0.0,
     use_speaker_boost: true,
   };
 }
@@ -113,6 +92,17 @@ function cleanForTargetLanguage(text: string, targetLanguage: string | null): st
   cleaned = cleaned.replace(/\s+/g, ' ').trim();
 
   return cleaned;
+}
+
+/**
+ * Normalize whitespace and preserve punctuation for V3 natural breathing pauses.
+ * Removes double-spaces, trims, and ensures commas/periods remain intact.
+ */
+function normalizeForV3(text: string): string {
+  return text
+    .replace(/[ \t]{2,}/g, ' ')   // Collapse multiple spaces/tabs to single space
+    .replace(/\n{3,}/g, '\n\n')   // Collapse excessive newlines
+    .trim();
 }
 
 /**
@@ -370,16 +360,32 @@ serve(async (req) => {
     // Strip stray English words that cause accent fallback for non-English languages
     const languageCleaned = cleanForTargetLanguage(cleanedCore, targetLanguage);
 
+    // Normalize whitespace for V3: remove double-spaces, preserve punctuation
+    const normalized = normalizeForV3(languageCleaned);
+
     // Prime with a leading pause for natural delivery
-    const cleanText = `... ${languageCleaned}`;
+    const cleanText = `... ${normalized}`;
     console.log(`Final text length: ${cleanText.length} characters (language: ${lang})`);
 
-    // --- Language-aware voice settings ---
+    // --- Language-aware voice settings (matches Dashboard "Natural" preset) ---
     const voiceSettings = getVoiceSettingsForLanguage(lang);
     // Only get language_code for languages ElevenLabs actually supports.
     // Uzbek is NOT in the map, so languageCode will be null → auto-detect from text.
     const languageCode = getLanguageCode(targetLanguage);
-    console.log(`Voice settings: stability=${voiceSettings.stability}, similarity_boost=${voiceSettings.similarity_boost}, language_code=${languageCode || "auto-detect"}`);
+
+    // -----------------------------------------------------------
+    // DEBUG: Log the exact payload being sent to ElevenLabs
+    // -----------------------------------------------------------
+    const debugPayload = {
+      model_id: "eleven_v3",
+      voice_id: voiceId,
+      language_code: languageCode || "(omitted — auto-detect)",
+      voice_settings: voiceSettings,
+      text_length: cleanText.length,
+      text_preview: cleanText.substring(0, 120) + (cleanText.length > 120 ? "..." : ""),
+      target_language: lang,
+    };
+    console.log(`[ElevenLabs Payload] ${JSON.stringify(debugPayload, null, 2)}`);
 
     // -----------------------------------------------------------
     // Model cascade (3-tier fallback):
