@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Mic, Plus, Edit2, Trash2, Star, Loader2 } from "lucide-react";
+import { Mic, Plus, Edit2, Trash2, Star, Loader2, FlaskConical, Crown, AlertCircle } from "lucide-react";
+import { PremiumModal } from "@/components/PremiumModal";
+import { StyleLabModal } from "@/components/dashboard/StyleLabModal";
 
 interface BrandVoice {
   id: string;
@@ -30,12 +33,22 @@ interface BrandVoice {
 const toneOptions = ["Professional", "Casual", "Humorous", "Inspirational", "Educational", "Conversational"];
 const audienceOptions = ["General", "B2B Professionals", "Tech Enthusiasts", "Young Adults", "Entrepreneurs", "Creatives"];
 
+// Tier limits for custom voices
+const VOICE_LIMITS = {
+  free: 0,
+  pro: 1,
+  agency: 10,
+} as const;
+
 export default function BrandVoices() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isPro, isAgency, tier } = useSubscription();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingVoice, setEditingVoice] = useState<BrandVoice | null>(null);
+  const [showStyleLab, setShowStyleLab] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
   
   // Form state
   const [name, setName] = useState("");
@@ -58,6 +71,11 @@ export default function BrandVoices() {
     },
     enabled: !!user,
   });
+
+  const voiceCount = brandVoices?.length ?? 0;
+  const voiceLimit = VOICE_LIMITS[tier as keyof typeof VOICE_LIMITS] ?? 0;
+  const canCreateVoice = isPro || isAgency;
+  const isAtLimit = !isAgency && voiceCount >= voiceLimit;
 
   const createMutation = useMutation({
     mutationFn: async (voiceData: Omit<BrandVoice, 'id' | 'created_at' | 'is_default'>) => {
@@ -129,9 +147,7 @@ export default function BrandVoices() {
 
   const setDefaultMutation = useMutation({
     mutationFn: async (id: string) => {
-      // First, unset all defaults
       await supabase.from("brand_voices").update({ is_default: false }).eq("user_id", user!.id);
-      // Then set the new default
       const { error } = await supabase.from("brand_voices").update({ is_default: true }).eq("id", id);
       if (error) throw error;
     },
@@ -186,12 +202,44 @@ export default function BrandVoices() {
     }
   };
 
+  const handleNewVoice = () => {
+    if (!canCreateVoice) {
+      setShowPremiumModal(true);
+      return;
+    }
+    if (isAtLimit) {
+      toast({
+        variant: "destructive",
+        title: "Voice limit reached",
+        description: `Your ${tier} plan allows ${voiceLimit} custom voice${voiceLimit !== 1 ? "s" : ""}. Delete an existing voice or upgrade to Agency.`,
+      });
+      return;
+    }
+    setIsDialogOpen(true);
+  };
+
+  const handleOpenStyleLab = () => {
+    if (!canCreateVoice) {
+      setShowPremiumModal(true);
+      return;
+    }
+    if (isAtLimit) {
+      toast({
+        variant: "destructive",
+        title: "Voice limit reached",
+        description: `Your ${tier} plan allows ${voiceLimit} custom voice${voiceLimit !== 1 ? "s" : ""}. Delete an existing voice or upgrade to Agency.`,
+      });
+      return;
+    }
+    setShowStyleLab(true);
+  };
+
   const isPending = createMutation.isPending || updateMutation.isPending;
 
   return (
     <AppLayout>
       <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
               <Mic className="h-8 w-8 text-primary" />
@@ -202,116 +250,176 @@ export default function BrandVoices() {
             </p>
           </div>
 
-          <Dialog open={isDialogOpen} onOpenChange={(open) => {
-            setIsDialogOpen(open);
-            if (!open) {
-              setEditingVoice(null);
-              resetForm();
-            }
-          }}>
-            <DialogTrigger asChild>
-              <Button className="gradient-primary text-primary-foreground">
-                <Plus className="h-4 w-4 mr-2" />
-                New Voice
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg">
-              <DialogHeader>
-                <DialogTitle>
-                  {editingVoice ? "Edit Brand Voice" : "Create Brand Voice"}
-                </DialogTitle>
-              </DialogHeader>
+          <div className="flex gap-2">
+            {/* Style Lab button */}
+            <Button
+              variant="outline"
+              onClick={handleOpenStyleLab}
+              className="border-primary/50 text-primary hover:bg-primary/10"
+            >
+              <FlaskConical className="h-4 w-4 mr-2" />
+              Style Lab
+              {!canCreateVoice && <Crown className="h-3 w-3 ml-1" />}
+            </Button>
 
-              <div className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name *</Label>
-                  <Input
-                    id="name"
-                    placeholder="e.g., Professional Tech Writer"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Brief description of this voice..."
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={2}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="writingStyle">Writing Style</Label>
-                  <Textarea
-                    id="writingStyle"
-                    placeholder="e.g., Concise, data-driven, uses analogies..."
-                    value={writingStyle}
-                    onChange={(e) => setWritingStyle(e.target.value)}
-                    rows={2}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Tone</Label>
-                    <Select value={tone} onValueChange={setTone}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select tone" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {toneOptions.map((t) => (
-                          <SelectItem key={t} value={t.toLowerCase()}>{t}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Target Audience</Label>
-                    <Select value={targetAudience} onValueChange={setTargetAudience}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select audience" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {audienceOptions.map((a) => (
-                          <SelectItem key={a} value={a.toLowerCase()}>{a}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="keyPhrases">Key Phrases (comma-separated)</Label>
-                  <Input
-                    id="keyPhrases"
-                    placeholder="e.g., Let's dive in, Here's the thing, Game-changer"
-                    value={keyPhrases}
-                    onChange={(e) => setKeyPhrases(e.target.value)}
-                  />
-                </div>
-
+            {/* Manual create */}
+            <Dialog open={isDialogOpen} onOpenChange={(open) => {
+              setIsDialogOpen(open);
+              if (!open) {
+                setEditingVoice(null);
+                resetForm();
+              }
+            }}>
+              <DialogTrigger asChild>
                 <Button
-                  onClick={handleSubmit}
-                  disabled={isPending}
-                  className="w-full gradient-primary text-primary-foreground"
+                  className="gradient-primary text-primary-foreground"
+                  onClick={(e) => {
+                    if (!editingVoice) {
+                      e.preventDefault();
+                      handleNewVoice();
+                    }
+                  }}
                 >
-                  {isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : editingVoice ? (
-                    "Update Voice"
-                  ) : (
-                    "Create Voice"
-                  )}
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Voice
+                  {!canCreateVoice && <Crown className="h-3 w-3 ml-1" />}
                 </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingVoice ? "Edit Brand Voice" : "Create Brand Voice"}
+                  </DialogTitle>
+                </DialogHeader>
+
+                <div className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Name *</Label>
+                    <Input
+                      id="name"
+                      placeholder="e.g., Professional Tech Writer"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      placeholder="Brief description of this voice..."
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      rows={2}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="writingStyle">Writing Style</Label>
+                    <Textarea
+                      id="writingStyle"
+                      placeholder="e.g., Concise, data-driven, uses analogies..."
+                      value={writingStyle}
+                      onChange={(e) => setWritingStyle(e.target.value)}
+                      rows={2}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Tone</Label>
+                      <Select value={tone} onValueChange={setTone}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select tone" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {toneOptions.map((t) => (
+                            <SelectItem key={t} value={t.toLowerCase()}>{t}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Target Audience</Label>
+                      <Select value={targetAudience} onValueChange={setTargetAudience}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select audience" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {audienceOptions.map((a) => (
+                            <SelectItem key={a} value={a.toLowerCase()}>{a}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="keyPhrases">Key Phrases (comma-separated)</Label>
+                    <Input
+                      id="keyPhrases"
+                      placeholder="e.g., Let's dive in, Here's the thing, Game-changer"
+                      value={keyPhrases}
+                      onChange={(e) => setKeyPhrases(e.target.value)}
+                    />
+                  </div>
+
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={isPending}
+                    className="w-full gradient-primary text-primary-foreground"
+                  >
+                    {isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : editingVoice ? (
+                      "Update Voice"
+                    ) : (
+                      "Create Voice"
+                    )}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
+
+        {/* Tier Limit Info */}
+        {canCreateVoice && (
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-xs">
+              {voiceCount} / {isAgency ? "10" : "1"} custom voice{isAgency ? "s" : ""}
+            </Badge>
+            {isAtLimit && !isAgency && (
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                Upgrade to Agency for up to 10 voices
+              </span>
+            )}
+          </div>
+        )}
+
+        {!canCreateVoice && (
+          <Card className="border-primary/30 bg-primary/5">
+            <CardContent className="p-4 flex items-center gap-3">
+              <Crown className="h-5 w-5 text-primary flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium">Custom voices are a Pro feature</p>
+                <p className="text-xs text-muted-foreground">
+                  Upgrade to Pro (1 voice) or Agency (up to 10 voices) to create AI-trained writing styles.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="ml-auto border-primary/50 text-primary"
+                onClick={() => setShowPremiumModal(true)}
+              >
+                Upgrade
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {isLoading ? (
           <div className="grid gap-4 md:grid-cols-2">
@@ -331,14 +439,27 @@ export default function BrandVoices() {
               <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
                 <Mic className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h3 className="font-semibold mb-2">No brand voices yet</h3>
-              <p className="text-muted-foreground mb-4">
-                Create a brand voice to maintain consistent style across all your content
+              <h3 className="font-semibold mb-2">No custom voices yet</h3>
+              <p className="text-muted-foreground mb-4 max-w-md mx-auto">
+                Train an AI voice from your own writing with <strong>Style Lab</strong>, or create one manually.
               </p>
-              <Button onClick={() => setIsDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Your First Voice
-              </Button>
+              {canCreateVoice ? (
+                <div className="flex gap-3 justify-center">
+                  <Button onClick={handleOpenStyleLab} variant="outline" className="border-primary/50 text-primary">
+                    <FlaskConical className="h-4 w-4 mr-2" />
+                    Open Style Lab
+                  </Button>
+                  <Button onClick={handleNewVoice}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Manually
+                  </Button>
+                </div>
+              ) : (
+                <Button onClick={() => setShowPremiumModal(true)} variant="outline" className="border-primary/50 text-primary">
+                  <Crown className="h-4 w-4 mr-2" />
+                  Upgrade to Create Voices
+                </Button>
+              )}
             </CardContent>
           </Card>
         ) : (
@@ -367,7 +488,7 @@ export default function BrandVoices() {
                   </div>
 
                   {voice.writing_style && (
-                    <p className="text-sm text-muted-foreground line-clamp-2">
+                    <p className="text-sm text-muted-foreground line-clamp-3">
                       {voice.writing_style}
                     </p>
                   )}
@@ -422,6 +543,19 @@ export default function BrandVoices() {
           </div>
         )}
       </div>
+
+      {/* Style Lab Modal */}
+      <StyleLabModal
+        open={showStyleLab}
+        onOpenChange={setShowStyleLab}
+      />
+
+      {/* Premium Upgrade Modal */}
+      <PremiumModal
+        open={showPremiumModal}
+        onOpenChange={setShowPremiumModal}
+        feature="brand-voice"
+      />
     </AppLayout>
   );
 }
