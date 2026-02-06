@@ -226,11 +226,11 @@ export default function Developer() {
 
   return (
     <AppLayout>
-      <div className="max-w-4xl mx-auto space-y-8">
+      <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8 px-4 sm:px-0">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Developer API</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Developer API</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">
             Manage your API keys and integrate Rocket Content into your workflows
           </p>
         </div>
@@ -238,19 +238,19 @@ export default function Developer() {
         {/* API Keys Management */}
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                   <Key className="h-5 w-5 text-primary" />
                   API Keys
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-xs sm:text-sm">
                   Your secret API keys are listed below. Keep them secure!
                 </CardDescription>
               </div>
               <Dialog open={showKeyModal} onOpenChange={setShowKeyModal}>
                 <DialogTrigger asChild>
-                  <Button className="gap-2">
+                  <Button className="gap-2 w-full sm:w-auto">
                     <Plus className="h-4 w-4" />
                     Generate New Key
                   </Button>
@@ -310,7 +310,7 @@ export default function Developer() {
                       >
                         {copied ? (
                           <>
-                            <Check className="h-4 w-4 text-green-500" />
+                            <Check className="h-4 w-4 text-primary" />
                             Copied!
                           </>
                         ) : (
@@ -345,11 +345,11 @@ export default function Developer() {
                 {apiKeys.map((key) => (
                   <div 
                     key={key.id}
-                    className="flex items-center justify-between p-4 border rounded-lg bg-card"
+                    className="flex items-center justify-between p-3 sm:p-4 border rounded-lg bg-card gap-2"
                   >
-                    <div className="space-y-1">
-                      <p className="font-medium">{key.name}</p>
-                      <p className="text-sm text-muted-foreground">
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <p className="font-medium truncate">{key.name}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         Created {format(new Date(key.created_at), "MMM d, yyyy")}
                       </p>
                     </div>
@@ -395,11 +395,11 @@ export default function Developer() {
         {/* Getting Started Documentation */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Rocket className="h-5 w-5 text-primary" />
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Rocket className="h-5 w-5 text-primary shrink-0" />
               Developer API: Getting Started
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs sm:text-sm">
               Learn how to integrate Rocket Content into your applications
             </CardDescription>
           </CardHeader>
@@ -407,13 +407,13 @@ export default function Developer() {
             {/* Step 1 */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="px-2 py-0.5">1</Badge>
-                <h3 className="font-semibold flex items-center gap-2">
-                  <Key className="h-4 w-4" />
+                <Badge variant="secondary" className="px-2 py-0.5 text-xs">1</Badge>
+                <h3 className="font-semibold flex items-center gap-2 text-sm sm:text-base">
+                  <Key className="h-4 w-4 shrink-0" />
                   Generate Your API Key
                 </h3>
               </div>
-              <p className="text-sm text-muted-foreground pl-8">
+              <p className="text-xs sm:text-sm text-muted-foreground pl-6 sm:pl-8">
                 Go to the section above and click "Generate New Key". Copy your key immediately as it will never be shown again for security reasons.
               </p>
             </div>
@@ -421,40 +421,40 @@ export default function Developer() {
             {/* Step 2 */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="px-2 py-0.5">2</Badge>
-                <h3 className="font-semibold flex items-center gap-2">
-                  <Lock className="h-4 w-4" />
+                <Badge variant="secondary" className="px-2 py-0.5 text-xs">2</Badge>
+                <h3 className="font-semibold flex items-center gap-2 text-sm sm:text-base">
+                  <Lock className="h-4 w-4 shrink-0" />
                   Authentication
                 </h3>
               </div>
-              <p className="text-sm text-muted-foreground pl-8">
+              <p className="text-xs sm:text-sm text-muted-foreground pl-6 sm:pl-8">
                 All requests must include your key in the header:
               </p>
-              <div className="ml-8 p-3 bg-muted rounded-lg font-mono text-sm">
-                Authorization: Bearer YOUR_API_KEY
+              <div className="ml-6 sm:ml-8 p-3 bg-muted rounded-lg font-mono text-xs sm:text-sm overflow-x-auto">
+                <code>Authorization: Bearer YOUR_API_KEY</code>
               </div>
             </div>
 
             {/* Step 3 */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="px-2 py-0.5">3</Badge>
-                <h3 className="font-semibold flex items-center gap-2">
-                  <Code className="h-4 w-4" />
+                <Badge variant="secondary" className="px-2 py-0.5 text-xs">3</Badge>
+                <h3 className="font-semibold flex items-center gap-2 text-sm sm:text-base">
+                  <Code className="h-4 w-4 shrink-0" />
                   Example Request
                 </h3>
               </div>
-              <div className="ml-8 space-y-2">
-                <p className="text-sm text-muted-foreground">
+              <div className="ml-6 sm:ml-8 space-y-2">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   <strong>Endpoint:</strong>
                 </p>
-                <div className="p-3 bg-muted rounded-lg font-mono text-sm break-all">
-                  POST {supabaseUrl}/functions/v1/api-gateway
+                <div className="p-3 bg-muted rounded-lg font-mono text-xs sm:text-sm overflow-x-auto">
+                  <code className="whitespace-nowrap">POST {supabaseUrl}/functions/v1/api-gateway</code>
                 </div>
-                <p className="text-sm text-muted-foreground mt-3">
+                <p className="text-xs sm:text-sm text-muted-foreground mt-3">
                   <strong>Body:</strong>
                 </p>
-                <pre className="p-3 bg-muted rounded-lg font-mono text-sm overflow-x-auto">
+                <pre className="p-3 bg-muted rounded-lg font-mono text-xs sm:text-sm overflow-x-auto max-w-full">
 {`{
   "action": "generate",
   "transcript": "Your video transcript here...",
@@ -467,13 +467,13 @@ export default function Developer() {
             {/* Step 4 */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="px-2 py-0.5">4</Badge>
-                <h3 className="font-semibold flex items-center gap-2">
-                  <Zap className="h-4 w-4" />
+                <Badge variant="secondary" className="px-2 py-0.5 text-xs">4</Badge>
+                <h3 className="font-semibold flex items-center gap-2 text-sm sm:text-base">
+                  <Zap className="h-4 w-4 shrink-0" />
                   Rate Limits
                 </h3>
               </div>
-              <div className="pl-8 text-sm text-muted-foreground space-y-1">
+              <div className="pl-6 sm:pl-8 text-xs sm:text-sm text-muted-foreground space-y-1">
                 <p>• Pro users: <strong>1,000 requests per month</strong></p>
                 <p>• Rate limit: <strong>10 requests per minute</strong></p>
               </div>
