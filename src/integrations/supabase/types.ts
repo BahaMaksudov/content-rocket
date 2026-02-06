@@ -345,6 +345,7 @@ export type Database = {
           id: string
           last_fetch_date: string | null
           last_generation_date: string | null
+          lifetime_credits_used: number
           transcript_fetches_this_month: number
           updated_at: string
           user_id: string
@@ -361,6 +362,7 @@ export type Database = {
           id?: string
           last_fetch_date?: string | null
           last_generation_date?: string | null
+          lifetime_credits_used?: number
           transcript_fetches_this_month?: number
           updated_at?: string
           user_id: string
@@ -377,6 +379,7 @@ export type Database = {
           id?: string
           last_fetch_date?: string | null
           last_generation_date?: string | null
+          lifetime_credits_used?: number
           transcript_fetches_this_month?: number
           updated_at?: string
           user_id?: string
