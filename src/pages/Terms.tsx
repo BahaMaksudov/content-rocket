@@ -96,6 +96,19 @@ export default function Terms() {
             </p>
           </section>
 
+          <h3 className="text-xl font-medium text-foreground mt-6 mb-3">4.5 Chargeback Policy</h3>
+            <p className="text-muted-foreground leading-relaxed">
+              Users agree to contact Rocket Content support at support@rocketcontentpro.io before initiating a chargeback 
+              through their bank. Unauthorized chargebacks may result in immediate account termination.
+            </p>
+          </section>
+
+        <h3 className="text-xl font-medium text-foreground mt-6 mb-3">4.6 Taxes</h3>
+            <p className="text-muted-foreground leading-relaxed">
+              All fees are exclusive of taxes, which will be charged based on your jurisdiction where applicable.
+            </p>
+          </section>
+
           <section className="mb-10">
             <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">
               5. Refund and Cancellation Policy
@@ -186,8 +199,9 @@ export default function Terms() {
 
             <h3 className="text-xl font-medium text-foreground mt-6 mb-3">6.3 Responsibility</h3>
             <p className="text-muted-foreground leading-relaxed">
-              You are solely responsible for ensuring you have the rights to submit content for processing. Do not
-              submit content that infringes on third-party copyrights or intellectual property rights.
+              You represent and warrant that you own or have the necessary licenses and permissions for any YouTube URL 
+              or content you submit. The Service is intended for Transformative Use (e.g., commentary, criticism, or 
+              education). Use of the Service to engage in verbatim plagiarism or copyright theft is strictly prohibited.
             </p>
           </section>
 
@@ -219,6 +233,8 @@ export default function Terms() {
               <li>Attempt to reverse-engineer or exploit the Service</li>
               <li>Use automated systems to access the Service without permission</li>
               <li>Violate any applicable laws or regulations</li>
+              <li>Using the Service to circumvent YouTube's technical protections or Terms of Service</li>
+              <li>Submitting content that violates the YouTube Community Guidelines</li>
             </ul>
           </section>
 
