@@ -91,19 +91,17 @@ export default function Terms() {
             </p>
 
             <h3 className="text-xl font-medium text-foreground mt-6 mb-3">4.4 Free Tier</h3>
-            <p className="text-muted-foreground leading-relaxed">
+            <p className="text-muted-foreground leading-relaxed mb-4">
               We offer a free tier with limited features. Free tier limitations are subject to change at our discretion.
             </p>
-          </section>
 
-          <h3 className="text-xl font-medium text-foreground mt-6 mb-3">4.5 Chargeback Policy</h3>
-            <p className="text-muted-foreground leading-relaxed">
+            <h3 className="text-xl font-medium text-foreground mt-6 mb-3">4.5 Chargeback Policy</h3>
+            <p className="text-muted-foreground leading-relaxed mb-4">
               Users agree to contact Rocket Content support at support@rocketcontentpro.io before initiating a chargeback 
               through their bank. Unauthorized chargebacks may result in immediate account termination.
             </p>
-          </section>
 
-        <h3 className="text-xl font-medium text-foreground mt-6 mb-3">4.6 Taxes</h3>
+            <h3 className="text-xl font-medium text-foreground mt-6 mb-3">4.6 Taxes</h3>
             <p className="text-muted-foreground leading-relaxed">
               All fees are exclusive of taxes, which will be charged based on your jurisdiction where applicable.
             </p>
