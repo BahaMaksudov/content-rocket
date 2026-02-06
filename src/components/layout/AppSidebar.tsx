@@ -1,5 +1,6 @@
-import { Home, History, Mic, Sparkles, Clock, Code, Users } from "lucide-react";
+import { Home, History, Mic, Sparkles, Clock, Code, Users, Rocket, Crown, ArrowUpRight } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
+import { Link } from "react-router-dom";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import {
   Sidebar,
@@ -14,6 +15,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { UpgradeButton } from "@/components/dashboard/UpgradeButton";
 import { CreditsRemaining } from "@/components/dashboard/CreditsRemaining";
 import { SUBSCRIPTION_TIERS } from "@/lib/subscription-tiers";
@@ -163,15 +165,39 @@ export function AppSidebar() {
         )}
       </SidebarContent>
 
-      {/* Footer with Credits and Upgrade */}
+      {/* Footer with Credits and Upgrades */}
       <SidebarFooter className="p-4 border-t border-sidebar-border space-y-3">
         {/* Credits Remaining */}
         <CreditsRemaining />
-        
-        {/* Upgrade Button */}
-        <div className="flex justify-center">
-          <UpgradeButton />
-        </div>
+
+        {/* Upgrade to Agency - shown to all non-agency users */}
+        {tier !== "agency" && (
+          <Link to="/billing" className="block">
+            <Button
+              variant="outline"
+              className="w-full relative overflow-hidden border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 hover:from-amber-500/20 hover:via-orange-500/20 hover:to-amber-500/20 text-amber-400 hover:text-amber-300 transition-all duration-300"
+            >
+              <Rocket className="h-4 w-4 mr-2 text-amber-400" />
+              Upgrade to Agency
+              <ArrowUpRight className="h-3.5 w-3.5 ml-auto text-amber-400/70" />
+            </Button>
+          </Link>
+        )}
+
+        {/* Upgrade to Pro - shown to Free and Starter users */}
+        {(tier === "free" || tier === "starter") && (
+          <Link to="/billing" className="block">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full text-primary/80 hover:text-primary hover:bg-primary/10 transition-all"
+            >
+              <Crown className="h-4 w-4 mr-2 text-primary" />
+              Upgrade to Pro
+              <ArrowUpRight className="h-3 w-3 ml-auto text-primary/50" />
+            </Button>
+          </Link>
+        )}
 
         {/* Current Plan Indicator */}
         <div className="flex items-center justify-center gap-2 p-2 rounded-lg bg-sidebar-accent/50">

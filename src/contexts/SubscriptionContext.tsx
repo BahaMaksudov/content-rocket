@@ -1,7 +1,8 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, useRef, ReactNode, useCallback } from "react";
 import { useAuth } from "./AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { SubscriptionTier, SUBSCRIPTION_TIERS, getTierFromStatus } from "@/lib/subscription-tiers";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface SubscriptionContextType {
   isStarter: boolean;
@@ -24,7 +25,9 @@ const SubscriptionContext = createContext<SubscriptionContextType | undefined>(u
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const { user, session } = useAuth();
+  const queryClient = useQueryClient();
   const [tier, setTier] = useState<SubscriptionTier>("free");
+  const prevTierRef = useRef<SubscriptionTier>("free");
   const [status, setStatus] = useState("free");
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -187,6 +190,17 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       setTimeout(checkSubscription, 2000);
     }
   }, [checkSubscription]);
+
+  // Invalidate credits cache when tier changes (upgrade/downgrade)
+  useEffect(() => {
+    if (tier !== prevTierRef.current) {
+      console.log("[Subscription] Tier changed from", prevTierRef.current, "to", tier, "— refreshing credits");
+      prevTierRef.current = tier;
+      // Invalidate all credit-related queries so they refetch with new limits
+      queryClient.invalidateQueries({ queryKey: ["credits"] });
+      queryClient.invalidateQueries({ queryKey: ["generationCredits"] });
+    }
+  }, [tier, queryClient]);
 
   return (
     <SubscriptionContext.Provider

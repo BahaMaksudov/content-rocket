@@ -5,9 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCreditLimitForTier } from "@/lib/subscription-tiers";
 
-// Credit limits per tier
+// Credit limits per tier (kept in sync with SUBSCRIPTION_TIERS)
 export const FREE_TIER_LIMIT = 3;
-export const STARTER_TIER_LIMIT = 20;
+export const STARTER_TIER_LIMIT = 15;
 export const PRO_TIER_LIMIT = 60;
 export const AGENCY_TIER_LIMIT = 250;
 
