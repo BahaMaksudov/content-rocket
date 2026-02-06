@@ -44,16 +44,16 @@ const LANGUAGE_CODE_MAP: Record<string, string> = {
 
 /**
  * Returns language-specific voice settings for ElevenLabs multilingual model.
- * Uzbek gets extra-low stability + higher similarity boost for authentic vowel sounds.
+ * Uzbek uses stability 0.4 + similarity_boost 0.8 for authentic vowel sounds.
  * Other non-Latin languages use slightly lower stability for native inflections.
  */
 function getVoiceSettingsForLanguage(targetLanguage: string | null) {
   const lang = (targetLanguage || "english").toLowerCase();
 
-  // Uzbek-specific tuning: lower stability for Central Asian vowel patterns
+  // Uzbek-specific tuning: balanced stability for Central Asian vowel patterns
   if (lang === "uzbek") {
     return {
-      stability: 0.35,
+      stability: 0.4,
       similarity_boost: 0.80,
       style: 0.6,
       use_speaker_boost: true,
@@ -114,28 +114,18 @@ function cleanForTargetLanguage(text: string, targetLanguage: string | null): st
  */
 function sanitizeForTTS(rawText: string): string {
   let text = rawText
-    // Remove timestamps like [0:00], [00:00], [0:00-0:03], etc.
     .replace(/\[\d{1,2}:\d{2}(?:-\d{1,2}:\d{2})?\]/g, '')
-    // Remove timestamps without brackets
     .replace(/\b\d{1,2}:\d{2}\b/g, '')
-    // Remove speaker labels
     .replace(/\b(?:Speaker\s*[A-Z0-9]+|Host|Guest\s*\d*|Narrator|Speaker\s*\d+):\s*/gi, '')
-    // Remove section markers
     .replace(/\[(HOOK|INTRO|SETUP|MAIN|CTA|OUTRO|CONCLUSION)\]/gi, '')
-    // Remove hashtags
     .replace(/#\w+/g, '')
-    // Remove JSON-like artifacts
     .replace(/[{}"]/g, '')
-    // Remove common JSON keys
     .replace(/\b(text|snippet|content|transcript|duration|offset|start|end):\s*/gi, '')
-    // Clean up extra whitespace
     .replace(/\s+/g, ' ')
     .trim();
 
-  // Remove visual/non-audio tags that ElevenLabs cannot perform
   text = text
     .replace(/\[(smiling|winks?|gestures?|nods?|looks?|points?|leans?|walks?|waves?|shrugs?|raises?|tilts?|crosses?|stands?|sits?|turns?|faces?|stares?|glances?|blinks?|frowns?|grins?|beams?|sneers?|pouts?|rolls eyes?|eye roll|thumbs up|thumbs down|air quotes?|finger guns?|claps?|applauds?|dances?|jumps?|spins?|bows?|curtsies?|salutes?|flexes?|gestures wildly|chuckles?|laughs|sighs|gasps|giggles|whispering|excitedly)(\s+\w+)*\]/gi, '')
-    // Normalize multi-word tags to single-word versions
     .replace(/\[chuckles?\]/gi, '[giggle]')
     .replace(/\[laughs\]/gi, '[laugh]')
     .replace(/\[sighs\]/gi, '[sigh]')
@@ -350,7 +340,7 @@ serve(async (req) => {
 
     // --- Text sanitization ---
     const sanitizedText = sanitizeForTTS(processedText);
-    const speakableCore = stripAllTags(sanitizedText).replace(/^\.\.\.\s*/, '').trim();
+    const speakableCore = stripAllTags(sanitizedText).replace(/^\.\.\.s*/, '').trim();
 
     if (!speakableCore) {
       return new Response(
@@ -379,24 +369,25 @@ serve(async (req) => {
     console.log(`Voice settings: stability=${(voiceSettings as any).stability}, similarity_boost=${(voiceSettings as any).similarity_boost}, language_code=${languageCode || "auto"}`);
 
     // -----------------------------------------------------------
-    // Model cascade:
-    //   1. eleven_multilingual_v2  (best for all languages, removes English accent)
-    //   2. eleven_turbo_v2_5       (fast fallback, still decent multilingual)
+    // Model cascade (3-tier fallback):
+    //   1. eleven_multilingual_v3  (highest quality, latest architecture)
+    //   2. eleven_multilingual_v2  (proven stable, excellent multilingual)
+    //   3. eleven_turbo_v2_5       (fast fallback, still decent multilingual)
     // -----------------------------------------------------------
 
-    // Attempt 1: eleven_multilingual_v2 (ALWAYS primary – never monolingual)
-    console.log(`Attempt 1: eleven_multilingual_v2 (language: ${lang}, code: ${languageCode || "auto"})`);
+    // Attempt 1: eleven_multilingual_v3 (primary – best quality)
+    console.log(`Attempt 1: eleven_multilingual_v3 (language: ${lang}, code: ${languageCode || "auto"})`);
     const attempt1 = await tryGenerateAudio(
       ELEVENLABS_API_KEY,
       voiceId,
       cleanText,
-      "eleven_multilingual_v2",
+      "eleven_multilingual_v3",
       voiceSettings,
       languageCode,
     );
 
     if (attempt1.audio) {
-      console.log(`Audio generated with eleven_multilingual_v2: ${attempt1.audio.byteLength} bytes`);
+      console.log(`Audio generated with eleven_multilingual_v3: ${attempt1.audio.byteLength} bytes`);
       return new Response(attempt1.audio, {
         headers: { ...corsHeaders, "Content-Type": "audio/mpeg" },
       });
@@ -413,26 +404,19 @@ serve(async (req) => {
       );
     }
 
-    // Attempt 2: eleven_turbo_v2_5 (fallback – still multilingual, NOT monolingual)
-    console.log(`Attempt 2: eleven_turbo_v2_5 (fallback, language_code: ${languageCode || "auto"})`);
-    const turboSettings = {
-      stability: 0.5,
-      similarity_boost: 0.75,
-      style: 0.5,
-      use_speaker_boost: true,
-    };
-
+    // Attempt 2: eleven_multilingual_v2 (stable fallback)
+    console.log(`Attempt 2: eleven_multilingual_v2 (fallback, language_code: ${languageCode || "auto"})`);
     const attempt2 = await tryGenerateAudio(
       ELEVENLABS_API_KEY,
       voiceId,
       cleanText,
-      "eleven_turbo_v2_5",
-      turboSettings,
+      "eleven_multilingual_v2",
+      voiceSettings,
       languageCode,
     );
 
     if (attempt2.audio) {
-      console.log(`Audio generated with eleven_turbo_v2_5 (fallback): ${attempt2.audio.byteLength} bytes`);
+      console.log(`Audio generated with eleven_multilingual_v2 (fallback): ${attempt2.audio.byteLength} bytes`);
       return new Response(attempt2.audio, {
         headers: { ...corsHeaders, "Content-Type": "audio/mpeg" },
       });
@@ -448,13 +432,49 @@ serve(async (req) => {
       );
     }
 
-    // Both attempts failed
-    console.error("Both model attempts failed");
+    // Attempt 3: eleven_turbo_v2_5 (last resort – fast, still multilingual)
+    console.log(`Attempt 3: eleven_turbo_v2_5 (last resort, language_code: ${languageCode || "auto"})`);
+    const turboSettings = {
+      stability: 0.5,
+      similarity_boost: 0.75,
+      style: 0.5,
+      use_speaker_boost: true,
+    };
+
+    const attempt3 = await tryGenerateAudio(
+      ELEVENLABS_API_KEY,
+      voiceId,
+      cleanText,
+      "eleven_turbo_v2_5",
+      turboSettings,
+      languageCode,
+    );
+
+    if (attempt3.audio) {
+      console.log(`Audio generated with eleven_turbo_v2_5 (last resort): ${attempt3.audio.byteLength} bytes`);
+      return new Response(attempt3.audio, {
+        headers: { ...corsHeaders, "Content-Type": "audio/mpeg" },
+      });
+    }
+
+    if (attempt3.status === 401) {
+      return new Response(
+        JSON.stringify({
+          error: "ElevenLabs Authentication Failed: Please check your API key or upgrade to a paid plan.",
+          details: attempt3.error,
+        }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // All attempts failed
+    console.error("All three model attempts failed");
     return new Response(
       JSON.stringify({
-        error: "Failed to generate audio with both models",
-        multilingual_error: attempt1.error,
-        turbo_error: attempt2.error,
+        error: "Failed to generate audio with all models",
+        v3_error: attempt1.error,
+        v2_error: attempt2.error,
+        turbo_error: attempt3.error,
       }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
