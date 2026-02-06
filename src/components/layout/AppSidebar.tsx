@@ -1,6 +1,6 @@
+import { useState } from "react";
 import { Home, History, Mic, Sparkles, Clock, Code, Users, Rocket, Crown, ArrowUpRight } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { Link } from "react-router-dom";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import {
   Sidebar,
@@ -13,12 +13,14 @@ import {
   SidebarMenuItem,
   SidebarHeader,
   SidebarFooter,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { UpgradeButton } from "@/components/dashboard/UpgradeButton";
 import { CreditsRemaining } from "@/components/dashboard/CreditsRemaining";
+import { PremiumModal } from "@/components/PremiumModal";
 import { SUBSCRIPTION_TIERS } from "@/lib/subscription-tiers";
+import { trackUpgradeClicked } from "@/lib/posthog";
 
 const mainNavItems = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
@@ -31,7 +33,18 @@ const proNavItems = [
 
 export function AppSidebar() {
   const { tier } = useSubscription();
+  const { setOpenMobile, isMobile } = useSidebar();
   const tierConfig = SUBSCRIPTION_TIERS[tier];
+  const [showModal, setShowModal] = useState(false);
+  const [modalTier, setModalTier] = useState<"starter" | "pro" | "agency">("pro");
+
+  const openUpgrade = (t: "starter" | "pro" | "agency") => {
+    trackUpgradeClicked(t, `sidebar_${tier}_user`);
+    // Close mobile drawer before showing modal
+    if (isMobile) setOpenMobile(false);
+    setModalTier(t);
+    setShowModal(true);
+  };
 
   return (
     <Sidebar className="border-r border-sidebar-border gradient-sidebar">
@@ -172,31 +185,29 @@ export function AppSidebar() {
 
         {/* Upgrade to Agency - shown to all non-agency users */}
         {tier !== "agency" && (
-          <Link to="/billing" className="block">
-            <Button
-              variant="outline"
-              className="w-full relative overflow-hidden border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 hover:from-amber-500/20 hover:via-orange-500/20 hover:to-amber-500/20 text-amber-400 hover:text-amber-300 transition-all duration-300"
-            >
-              <Rocket className="h-4 w-4 mr-2 text-amber-400" />
-              Upgrade to Agency
-              <ArrowUpRight className="h-3.5 w-3.5 ml-auto text-amber-400/70" />
-            </Button>
-          </Link>
+          <Button
+            variant="outline"
+            onClick={() => openUpgrade("agency")}
+            className="w-full relative overflow-hidden border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 hover:from-amber-500/20 hover:via-orange-500/20 hover:to-amber-500/20 text-amber-400 hover:text-amber-300 transition-all duration-300"
+          >
+            <Rocket className="h-4 w-4 mr-2 text-amber-400" />
+            Upgrade to Agency
+            <ArrowUpRight className="h-3.5 w-3.5 ml-auto text-amber-400/70" />
+          </Button>
         )}
 
         {/* Upgrade to Pro - shown to Free and Starter users */}
         {(tier === "free" || tier === "starter") && (
-          <Link to="/billing" className="block">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full text-primary/80 hover:text-primary hover:bg-primary/10 transition-all"
-            >
-              <Crown className="h-4 w-4 mr-2 text-primary" />
-              Upgrade to Pro
-              <ArrowUpRight className="h-3 w-3 ml-auto text-primary/50" />
-            </Button>
-          </Link>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => openUpgrade("pro")}
+            className="w-full text-primary/80 hover:text-primary hover:bg-primary/10 transition-all"
+          >
+            <Crown className="h-4 w-4 mr-2 text-primary" />
+            Upgrade to Pro
+            <ArrowUpRight className="h-3 w-3 ml-auto text-primary/50" />
+          </Button>
         )}
 
         {/* Current Plan Indicator */}
@@ -209,6 +220,9 @@ export function AppSidebar() {
           </Badge>
         </div>
       </SidebarFooter>
+
+      {/* Upgrade Modal */}
+      <PremiumModal open={showModal} onOpenChange={setShowModal} tier={modalTier} />
     </Sidebar>
   );
 }

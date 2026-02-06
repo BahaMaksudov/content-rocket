@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
+import { PremiumModal } from "@/components/PremiumModal";
+import { Link } from "react-router-dom";
+import { trackUpgradeClicked } from "@/lib/posthog";
 import { supabase } from "@/integrations/supabase/client";
 import { SUBSCRIPTION_TIERS } from "@/lib/subscription-tiers";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,6 +48,14 @@ export default function Billing() {
   const [historyLoading, setHistoryLoading] = useState(true);
   const [syncLoading, setSyncLoading] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [upgradeTier, setUpgradeTier] = useState<"starter" | "pro" | "agency">("pro");
+
+  const handleUpgradeClick = (t: "starter" | "pro" | "agency") => {
+    trackUpgradeClicked(t, "billing_page");
+    setUpgradeTier(t);
+    setUpgradeModalOpen(true);
+  };
 
   const fetchPaymentHistory = useCallback(async () => {
     if (!user) {
@@ -296,29 +306,26 @@ export default function Billing() {
                       </Button>
                     </>
                   ) : (
-                    <Button asChild className="gradient-primary text-primary-foreground">
-                      <Link to="/#pricing" className="flex items-center gap-2">
-                        <Crown className="h-4 w-4" />
-                        View Pro Features
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
+                    <Button
+                      onClick={() => handleUpgradeClick("pro")}
+                      className="gradient-primary text-primary-foreground"
+                    >
+                      <Crown className="h-4 w-4 mr-2" />
+                      View Pro Features
+                      <ArrowRight className="h-4 w-4 ml-2" />
                     </Button>
                   )}
                   
                   {tier === "starter" && (
-                    <Button variant="outline" asChild>
-                      <Link to="/#pricing" className="flex items-center gap-2">
-                        <Crown className="h-4 w-4" />
-                        Upgrade to Pro
-                      </Link>
+                    <Button variant="outline" onClick={() => handleUpgradeClick("pro")}>
+                      <Crown className="h-4 w-4 mr-2" />
+                      Upgrade to Pro
                     </Button>
                   )}
                   {tier === "pro" && (
-                    <Button variant="outline" asChild>
-                      <Link to="/#pricing" className="flex items-center gap-2">
-                        <Rocket className="h-4 w-4" />
-                        Upgrade to Agency
-                      </Link>
+                    <Button variant="outline" onClick={() => handleUpgradeClick("agency")}>
+                      <Rocket className="h-4 w-4 mr-2" />
+                      Upgrade to Agency
                     </Button>
                   )}
                 </div>
@@ -506,6 +513,13 @@ export default function Billing() {
           // Refresh page data after cancellation
           fetchPaymentHistory();
         }}
+      />
+
+      {/* Upgrade Modal */}
+      <PremiumModal
+        open={upgradeModalOpen}
+        onOpenChange={setUpgradeModalOpen}
+        tier={upgradeTier}
       />
     </AppLayout>
   );
