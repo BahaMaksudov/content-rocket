@@ -26,9 +26,10 @@ import { PremiumModal } from "@/components/PremiumModal";
 
 interface VoiceGeneratorProps {
   scriptText: string;
+  targetLanguage?: string | null;
 }
 
-export function VoiceGenerator({ scriptText }: VoiceGeneratorProps) {
+export function VoiceGenerator({ scriptText, targetLanguage }: VoiceGeneratorProps) {
   const { toast } = useToast();
   const { session } = useAuth();
   const { tier, isPro, isAgency, loading: subscriptionLoading } = useSubscription();
@@ -157,6 +158,7 @@ export function VoiceGenerator({ scriptText }: VoiceGeneratorProps) {
             text: cleanText,
             voiceId: voice.voiceId,
             performancePrompt: voice.performancePrompt,
+            targetLanguage: targetLanguage || "english",
           }),
         });
 
@@ -292,7 +294,7 @@ export function VoiceGenerator({ scriptText }: VoiceGeneratorProps) {
                   <SelectSeparator className="my-2" />
                   <SelectGroup>
                     <SelectLabel className="flex items-center gap-1 py-2">
-                      <Rocket className="h-3 w-3 text-amber-500" />
+                      <Rocket className="h-3 w-3 text-primary" />
                       Premium Cloned Voices
                     </SelectLabel>
                     {voices.cloned.map((voice) => (

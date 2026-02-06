@@ -27,8 +27,155 @@ const AGENCY_ONLY_VOICE_IDS = [
   "iP95p4xoKVk53GoZ742B",
 ];
 
+// Languages that benefit from lower stability for native inflections
+const LOW_STABILITY_LANGUAGES = ["uzbek", "hindi", "mandarin", "russian"];
+const STANDARD_STABILITY_LANGUAGES = ["english", "spanish"];
+
+/**
+ * Returns language-specific voice settings for ElevenLabs multilingual model.
+ * Lower stability allows more native inflections for non-Latin languages.
+ */
+function getVoiceSettingsForLanguage(targetLanguage: string | null) {
+  const lang = (targetLanguage || "english").toLowerCase();
+
+  if (LOW_STABILITY_LANGUAGES.includes(lang)) {
+    return {
+      stability: 0.4,
+      similarity_boost: 0.75,
+      style: 0.6,
+      use_speaker_boost: true,
+    };
+  }
+
+  // English, Spanish, and any other language get standard professional delivery
+  return {
+    stability: 0.5,
+    similarity_boost: 0.75,
+    style: 0.5,
+    use_speaker_boost: true,
+  };
+}
+
+/**
+ * Sanitize input text for TTS: remove timestamps, speaker labels, tags, JSON artifacts.
+ */
+function sanitizeForTTS(rawText: string): string {
+  let text = rawText
+    // Remove timestamps like [0:00], [00:00], [0:00-0:03], etc.
+    .replace(/\[\d{1,2}:\d{2}(?:-\d{1,2}:\d{2})?\]/g, '')
+    // Remove timestamps without brackets
+    .replace(/\b\d{1,2}:\d{2}\b/g, '')
+    // Remove speaker labels
+    .replace(/\b(?:Speaker\s*[A-Z0-9]+|Host|Guest\s*\d*|Narrator|Speaker\s*\d+):\s*/gi, '')
+    // Remove section markers
+    .replace(/\[(HOOK|INTRO|SETUP|MAIN|CTA|OUTRO|CONCLUSION)\]/gi, '')
+    // Remove hashtags
+    .replace(/#\w+/g, '')
+    // Remove JSON-like artifacts
+    .replace(/[{}"]/g, '')
+    // Remove common JSON keys
+    .replace(/\b(text|snippet|content|transcript|duration|offset|start|end):\s*/gi, '')
+    // Clean up extra whitespace
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // Remove visual/non-audio tags that ElevenLabs cannot perform
+  text = text
+    .replace(/\[(smiling|winks?|gestures?|nods?|looks?|points?|leans?|walks?|waves?|shrugs?|raises?|tilts?|crosses?|stands?|sits?|turns?|faces?|stares?|glances?|blinks?|frowns?|grins?|beams?|sneers?|pouts?|rolls eyes?|eye roll|thumbs up|thumbs down|air quotes?|finger guns?|claps?|applauds?|dances?|jumps?|spins?|bows?|curtsies?|salutes?|flexes?|gestures wildly|chuckles?|laughs|sighs|gasps|giggles|whispering|excitedly)(\s+\w+)*\]/gi, '')
+    // Normalize multi-word tags to single-word versions
+    .replace(/\[chuckles?\]/gi, '[giggle]')
+    .replace(/\[laughs\]/gi, '[laugh]')
+    .replace(/\[sighs\]/gi, '[sigh]')
+    .replace(/\[gasps\]/gi, '[gasp]')
+    .replace(/\[giggles\]/gi, '[giggle]')
+    .replace(/\[whispering\]/gi, '[whisper]')
+    .replace(/\[excitedly?\]/gi, '[excited]')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return text;
+}
+
+/**
+ * Strip ALL bracketed tags from text so the model doesn't read them aloud.
+ */
+function stripAllTags(text: string): string {
+  return text.replace(/\[.*?\]/g, '').replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * Flatten incoming text from various formats into a plain string.
+ */
+function flattenText(text: unknown): string {
+  if (Array.isArray(text)) {
+    return text
+      .map((item: unknown) => {
+        if (typeof item === 'string') return item;
+        if (item && typeof item === 'object') {
+          const obj = item as Record<string, unknown>;
+          return obj.text || obj.snippet || obj.content || obj.transcript || '';
+        }
+        return '';
+      })
+      .filter(Boolean)
+      .join(' ');
+  }
+  if (typeof text === 'string') return text;
+  if (text && typeof text === 'object') {
+    const obj = text as Record<string, unknown>;
+    return String(obj.text || obj.snippet || obj.content || obj.transcript || '');
+  }
+  return '';
+}
+
+/**
+ * Attempt a TTS call to ElevenLabs with a given model and settings.
+ * Returns the audio ArrayBuffer on success, or null on failure.
+ */
+async function tryGenerateAudio(
+  apiKey: string,
+  voiceId: string,
+  text: string,
+  modelId: string,
+  voiceSettings: Record<string, unknown> | null,
+): Promise<{ audio: ArrayBuffer | null; status: number; error: string }> {
+  const requestBody: Record<string, unknown> = {
+    text,
+    model_id: modelId,
+  };
+  if (voiceSettings) {
+    requestBody.voice_settings = voiceSettings;
+  }
+
+  try {
+    const response = await fetch(
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
+      {
+        method: "POST",
+        headers: {
+          "xi-api-key": apiKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      }
+    );
+
+    if (response.ok) {
+      const audio = await response.arrayBuffer();
+      return { audio, status: 200, error: "" };
+    }
+
+    const errorText = await response.text();
+    console.error(`ElevenLabs ${modelId} error: ${response.status} - ${errorText}`);
+    return { audio: null, status: response.status, error: errorText };
+  } catch (fetchError) {
+    const msg = fetchError instanceof Error ? fetchError.message : "Unknown fetch error";
+    console.error(`Fetch error with ${modelId}:`, msg);
+    return { audio: null, status: 500, error: msg };
+  }
+}
+
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -38,7 +185,7 @@ serve(async (req) => {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    
+
     if (!ELEVENLABS_API_KEY) {
       console.error("ELEVENLABS_API_KEY is not configured");
       return new Response(
@@ -55,7 +202,7 @@ serve(async (req) => {
       );
     }
 
-    // Get the authorization header
+    // --- Authentication ---
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
@@ -64,15 +211,12 @@ serve(async (req) => {
       );
     }
 
-    // Create Supabase client with user's token for JWT validation
     const supabaseAuth = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       global: { headers: { Authorization: authHeader } }
     });
-    
-    // Verify the JWT (Edge Functions don't have persisted sessions, so pass the JWT explicitly)
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token);
-    
+
     if (authError || !user) {
       console.error("Auth error:", authError);
       return new Response(
@@ -83,11 +227,9 @@ serve(async (req) => {
 
     const userId = user.id;
     console.log(`User ${userId} requesting audio generation`);
-    
-    // Create admin client for database queries
-    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // CRITICAL: Verify user's subscription tier from database (do not trust frontend)
+    // --- Subscription check ---
+    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     const { data: subscription, error: subError } = await supabaseAdmin
       .from("subscriptions")
       .select("status")
@@ -103,68 +245,28 @@ serve(async (req) => {
     }
 
     const status = subscription?.status || "free";
-    console.log(`User subscription status: ${status}`);
-
-    // Determine tier from status
     let tier: "free" | "pro" | "agency" = "free";
-    if (status === "agency" || status === "active_agency") {
-      tier = "agency";
-    } else if (status === "pro" || status === "active" || status === "active_pro") {
-      tier = "pro";
-    }
+    if (status === "agency" || status === "active_agency") tier = "agency";
+    else if (status === "pro" || status === "active" || status === "active_pro") tier = "pro";
 
-    // Block free users
     if (tier === "free") {
-      console.log(`Blocking free user ${userId} from voice generation`);
       return new Response(
-        JSON.stringify({ 
-          error: "Voice generation is a Pro feature",
-          code: "SUBSCRIPTION_REQUIRED"
-        }),
+        JSON.stringify({ error: "Voice generation is a Pro feature", code: "SUBSCRIPTION_REQUIRED" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const { text, voiceId, performancePrompt } = await req.json();
-    
-    // Flatten text if it's an array (handle various transcript formats)
-    let processedText: string;
-    if (Array.isArray(text)) {
-      console.log(`Received array input with ${text.length} items, flattening...`);
-      processedText = text
-        .map((item: unknown) => {
-          if (typeof item === 'string') return item;
-          if (item && typeof item === 'object') {
-            // Handle common transcript object formats
-            const obj = item as Record<string, unknown>;
-            return obj.text || obj.snippet || obj.content || obj.transcript || '';
-          }
-          return '';
-        })
-        .filter(Boolean)
-        .join(' ');
-    } else if (typeof text === 'string') {
-      processedText = text;
-    } else if (text && typeof text === 'object') {
-      // Handle single object with text property
-      const obj = text as Record<string, unknown>;
-      processedText = String(obj.text || obj.snippet || obj.content || obj.transcript || '');
-    } else {
-      processedText = '';
-    }
+    // --- Parse & validate request body ---
+    const { text, voiceId, performancePrompt, targetLanguage } = await req.json();
 
-    // Validate that we have actual text content
+    const processedText = flattenText(text);
     if (!processedText || processedText.trim().length === 0) {
-      console.error("No valid text content found in input");
       return new Response(
-        JSON.stringify({ 
-          error: "No text content to convert. Please generate a script first.",
-          code: "INVALID_TRANSCRIPT_DATA"
-        }),
+        JSON.stringify({ error: "No text content to convert. Please generate a script first.", code: "INVALID_TRANSCRIPT_DATA" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-    
+
     if (!voiceId) {
       return new Response(
         JSON.stringify({ error: "Missing required field: voiceId" }),
@@ -172,9 +274,6 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Processed text length: ${processedText.length} characters`);
-
-    // Validate voice ID
     if (!VALID_VOICE_IDS.includes(voiceId)) {
       return new Response(
         JSON.stringify({ error: "Invalid voice selection" }),
@@ -182,103 +281,76 @@ serve(async (req) => {
       );
     }
 
-    // Check if user is trying to use agency-only voice without agency tier
     if (AGENCY_ONLY_VOICE_IDS.includes(voiceId) && tier !== "agency") {
-      console.log(`Blocking pro user ${userId} from agency-only voice`);
       return new Response(
-        JSON.stringify({ 
-          error: "This voice is only available to Agency users",
-          code: "AGENCY_REQUIRED"
-        }),
+        JSON.stringify({ error: "This voice is only available to Agency users", code: "AGENCY_REQUIRED" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log(`Generating audio for voice: ${voiceId}, tier: ${tier}`);
+    console.log(`Generating audio - voice: ${voiceId}, tier: ${tier}, language: ${targetLanguage || "english"}`);
 
-    // Sanitize text: remove timestamps, speaker labels, and JSON artifacts for cleaner TTS output
-    let sanitizedText = processedText
-      // Remove timestamps like [0:00], [00:00], [0:00-0:03], etc.
-      .replace(/\[\d{1,2}:\d{2}(?:-\d{1,2}:\d{2})?\]/g, '')
-      // Remove timestamps without brackets like 0:00, 00:00
-      .replace(/\b\d{1,2}:\d{2}\b/g, '')
-      // Remove speaker labels like "Speaker A:", "Host:", "Guest 1:", "Speaker 1:"
-      .replace(/\b(?:Speaker\s*[A-Z0-9]+|Host|Guest\s*\d*|Narrator|Speaker\s*\d+):\s*/gi, '')
-      // Remove section markers like "[HOOK]", "[INTRO]", "[CTA]"
-      .replace(/\[(HOOK|INTRO|SETUP|MAIN|CTA|OUTRO|CONCLUSION)\]/gi, '')
-      // Remove hashtags
-      .replace(/#\w+/g, '')
-      // Remove JSON-like artifacts that might leak through (keep square brackets so we can strip tags safely later)
-      .replace(/[{}"]/g, '')
-      // Remove common JSON keys that might appear
-      .replace(/\b(text|snippet|content|transcript|duration|offset|start|end):\s*/gi, '')
-      // Clean up extra whitespace
-      .replace(/\s+/g, ' ')
-      .trim();
-    
-    console.log(`Text after sanitization: ${sanitizedText.length} characters`);
+    // --- Text sanitization ---
+    const sanitizedText = sanitizeForTTS(processedText);
+    const speakableCore = stripAllTags(sanitizedText).replace(/^\.\.\.\s*/, '').trim();
 
-    // Safety net: Remove any visual/non-audio tags that ElevenLabs cannot perform
-    // These would be read aloud instead of performed
-    sanitizedText = sanitizedText
-      .replace(/\[(smiling|winks?|gestures?|nods?|looks?|points?|leans?|walks?|waves?|shrugs?|raises?|tilts?|crosses?|stands?|sits?|turns?|faces?|stares?|glances?|blinks?|frowns?|grins?|beams?|sneers?|pouts?|rolls eyes?|eye roll|thumbs up|thumbs down|air quotes?|finger guns?|claps?|applauds?|dances?|jumps?|spins?|bows?|curtsies?|salutes?|flexes?|gestures wildly|chuckles?|laughs|sighs|gasps|giggles|whispering|excitedly)(\s+\w+)*\]/gi, '')
-      // Normalize multi-word tags to single-word versions for v3 compatibility
-      .replace(/\[chuckles?\]/gi, '[giggle]')
-      .replace(/\[laughs\]/gi, '[laugh]')
-      .replace(/\[sighs\]/gi, '[sigh]')
-      .replace(/\[gasps\]/gi, '[gasp]')
-      .replace(/\[giggles\]/gi, '[giggle]')
-      .replace(/\[whispering\]/gi, '[whisper]')
-      .replace(/\[excitedly?\]/gi, '[excited]')
-      // Clean up any resulting double spaces
-      .replace(/\s+/g, ' ')
-      .trim();
-    
-    console.log(`Text after visual tag removal: ${sanitizedText.length} characters`);
-
-    // Final validation after sanitization - use fallback if empty
-    if (sanitizedText.length < 10) {
-      console.warn("Text too short after sanitization, using fallback");
-      sanitizedText = "Hello, welcome to the show.";
-    }
-
-    // Prime the model with a small pause at the beginning for better delivery
-    sanitizedText = "... " + sanitizedText;
-
-    // Prepend the performance prompt to guide the AI's delivery
-    const enhancedText = performancePrompt 
-      ? `[${performancePrompt}] ${sanitizedText}`
-      : sanitizedText;
-
-    // DEFINITIVE FIX: Keep tags in the UI script, but remove ALL bracketed tags from the audio payload
-    // This prevents the model from reading tag words aloud.
-    const originalText = enhancedText;
-    const tagStripped = originalText.replace(/\[.*?\]/g, '').replace(/\s+/g, ' ').trim();
-    const speakableCore = tagStripped.replace(/^\.\.\.\s*/, '').trim();
-
-    // Safety check: if nothing remains after stripping tags, do not call ElevenLabs
     if (!speakableCore) {
       return new Response(
-        JSON.stringify({
-          error: "No speakable text found.",
-          code: "NO_SPEAKABLE_TEXT",
-        }),
+        JSON.stringify({ error: "No speakable text found.", code: "NO_SPEAKABLE_TEXT" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Prime Trick: always prefix with a clean leading pause
-    const cleanText = `... ${speakableCore}`;
+    // Clean any stray non-printable / control characters that break multilingual output
+    const cleanedCore = speakableCore
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+      .replace(/\uFEFF/g, '')
+      .trim();
 
-    // Voice settings for custom voices (stability 0.32, style 0.85 for maximum emotional range)
-    const customVoiceSettings = {
-      stability: 0.32,
-      similarity_boost: 0.75,
-      style: 0.85,
-      use_speaker_boost: true,
-    };
+    // Prime with a leading pause for natural delivery
+    const cleanText = `... ${cleanedCore}`;
+    console.log(`Final text length: ${cleanText.length} characters`);
 
-    // Fallback settings for turbo model
+    // --- Language-aware voice settings ---
+    const lang = (targetLanguage || "english").toLowerCase();
+    const voiceSettings = getVoiceSettingsForLanguage(lang);
+
+    // -----------------------------------------------------------
+    // Model cascade:
+    //   1. eleven_multilingual_v2  (best for all languages, removes English accent)
+    //   2. eleven_turbo_v2_5       (fast fallback, still decent multilingual)
+    // -----------------------------------------------------------
+
+    // Attempt 1: eleven_multilingual_v2
+    console.log(`Attempt 1: eleven_multilingual_v2 (language: ${lang})`);
+    const attempt1 = await tryGenerateAudio(
+      ELEVENLABS_API_KEY,
+      voiceId,
+      cleanText,
+      "eleven_multilingual_v2",
+      voiceSettings,
+    );
+
+    if (attempt1.audio) {
+      console.log(`Audio generated with eleven_multilingual_v2: ${attempt1.audio.byteLength} bytes`);
+      return new Response(attempt1.audio, {
+        headers: { ...corsHeaders, "Content-Type": "audio/mpeg" },
+      });
+    }
+
+    // If auth error, bail immediately
+    if (attempt1.status === 401) {
+      return new Response(
+        JSON.stringify({
+          error: "ElevenLabs Authentication Failed: Please check your API key or upgrade to a paid plan.",
+          details: attempt1.error,
+        }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Attempt 2: eleven_turbo_v2_5 (fallback)
+    console.log(`Attempt 2: eleven_turbo_v2_5 (fallback)`);
     const turboSettings = {
       stability: 0.5,
       similarity_boost: 0.75,
@@ -286,148 +358,48 @@ serve(async (req) => {
       use_speaker_boost: true,
     };
 
-    // Check if this is a "default" voice - for default voices, we omit voice_settings entirely
-    // to avoid 400 errors from ElevenLabs v3 when settings don't match voice capabilities
-    const DEFAULT_VOICE_IDS = [
-      "EXAVITQu4vr4xnSDxMaL", // Sarah - Friendly Guide (commonly used as default)
-    ];
-    const isDefaultVoice = DEFAULT_VOICE_IDS.includes(voiceId);
+    const attempt2 = await tryGenerateAudio(
+      ELEVENLABS_API_KEY,
+      voiceId,
+      cleanText,
+      "eleven_turbo_v2_5",
+      turboSettings,
+    );
 
-    // Try v3 Alpha first, fallback to turbo if it fails
-    let audioBuffer: ArrayBuffer | null = null;
-    let lastError: string = "";
+    if (attempt2.audio) {
+      console.log(`Audio generated with eleven_turbo_v2_5 (fallback): ${attempt2.audio.byteLength} bytes`);
+      return new Response(attempt2.audio, {
+        headers: { ...corsHeaders, "Content-Type": "audio/mpeg" },
+      });
+    }
 
-    // Attempt 1: eleven_v3_alpha
-    console.log(`Attempting audio generation with eleven_v3_alpha (isDefaultVoice: ${isDefaultVoice})...`);
-    try {
-      // Build the request body - omit voice_settings for default voices
-      const v3RequestBody: Record<string, unknown> = {
-        text: cleanText,
-        model_id: "eleven_v3_alpha",
-      };
-      
-      // Only add voice_settings for custom voices
-      if (!isDefaultVoice) {
-        v3RequestBody.voice_settings = customVoiceSettings;
-      }
-
-      const response = await fetch(
-        `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
-        {
-          method: "POST",
-          headers: {
-            "xi-api-key": ELEVENLABS_API_KEY,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(v3RequestBody),
-        }
+    if (attempt2.status === 401) {
+      return new Response(
+        JSON.stringify({
+          error: "ElevenLabs Authentication Failed: Please check your API key or upgrade to a paid plan.",
+          details: attempt2.error,
+        }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
-
-      if (response.ok) {
-        audioBuffer = await response.arrayBuffer();
-        console.log(`Audio generated successfully with v3_alpha: ${audioBuffer.byteLength} bytes`);
-      } else {
-        const errorText = await response.text();
-        lastError = errorText;
-        console.error(`ElevenLabs v3_alpha error: ${response.status}`);
-        console.error(`Full ElevenLabs v3_alpha response: ${errorText}`);
-        
-        // Try to parse the JSON error for better logging
-        try {
-          const errorJson = JSON.parse(errorText);
-          console.error(`ElevenLabs v3_alpha error message: ${errorJson.detail?.message || errorJson.message || errorJson.detail || 'Unknown'}`);
-        } catch {
-          console.error(`ElevenLabs v3_alpha raw error: ${errorText}`);
-        }
-        
-        // Check for auth errors
-        if (response.status === 401) {
-          return new Response(
-            JSON.stringify({ 
-              error: "ElevenLabs Authentication Failed: Please check your API key or upgrade to a paid plan.",
-              details: errorText
-            }),
-            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-      }
-    } catch (fetchError) {
-      console.error("Fetch error with v3_alpha:", fetchError);
-      lastError = fetchError instanceof Error ? fetchError.message : "Unknown fetch error";
     }
 
-    // Attempt 2: Fallback to eleven_turbo_v2_5 if v3_alpha failed
-    if (!audioBuffer) {
-      console.log(`Falling back to eleven_turbo_v2_5...`);
-      try {
-        const response = await fetch(
-          `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
-          {
-            method: "POST",
-            headers: {
-              "xi-api-key": ELEVENLABS_API_KEY,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              text: cleanText,
-              model_id: "eleven_turbo_v2_5",
-              voice_settings: turboSettings,
-            }),
-          }
-        );
-
-        if (response.ok) {
-          audioBuffer = await response.arrayBuffer();
-          console.log(`Audio generated successfully with turbo_v2_5 (fallback): ${audioBuffer.byteLength} bytes`);
-        } else {
-          const errorText = await response.text();
-          console.error(`ElevenLabs turbo fallback error: ${response.status} - ${errorText}`);
-          
-          if (response.status === 401) {
-            return new Response(
-              JSON.stringify({ 
-                error: "ElevenLabs Authentication Failed: Please check your API key or upgrade to a paid plan.",
-                details: errorText
-              }),
-              { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-            );
-          }
-          
-          return new Response(
-            JSON.stringify({ 
-              error: "Failed to generate audio with both models", 
-              v3_error: lastError,
-              turbo_error: errorText 
-            }),
-            { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-      } catch (fetchError) {
-        console.error("Fetch error with turbo fallback:", fetchError);
-        return new Response(
-          JSON.stringify({ 
-            error: "Failed to generate audio", 
-            v3_error: lastError,
-            turbo_error: fetchError instanceof Error ? fetchError.message : "Unknown error"
-          }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-    }
-
-    return new Response(audioBuffer, {
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "audio/mpeg",
-      },
-    });
+    // Both attempts failed
+    console.error("Both model attempts failed");
+    return new Response(
+      JSON.stringify({
+        error: "Failed to generate audio with both models",
+        multilingual_error: attempt1.error,
+        turbo_error: attempt2.error,
+      }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
 
   } catch (error) {
     console.error("Error in generate-audio function:", error);
     return new Response(
-      JSON.stringify({ 
-        error: "Internal server error", 
-        message: error instanceof Error ? error.message : "Unknown error" 
+      JSON.stringify({
+        error: "Internal server error",
+        message: error instanceof Error ? error.message : "Unknown error",
       }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
