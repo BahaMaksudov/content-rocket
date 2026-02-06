@@ -15,7 +15,7 @@ export default function PaymentSuccess() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
-  const { checkSubscription, isPro, isAgency } = useSubscription();
+  const { checkSubscription, isStarter, isPro, isAgency } = useSubscription();
   
   const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>("verifying");
   const [displayName, setDisplayName] = useState<string>("");
@@ -24,7 +24,7 @@ export default function PaymentSuccess() {
   const sessionId = searchParams.get("session_id");
 
   // Check if user has an active paid subscription
-  const hasPaidSubscription = isPro || isAgency;
+  const hasPaidSubscription = isStarter || isPro || isAgency;
 
   // Redirect to dashboard
   const redirectToDashboard = useCallback(() => {
@@ -113,7 +113,7 @@ export default function PaymentSuccess() {
           console.log("[PaymentSuccess] Subscription update received:", payload);
           const newStatus = payload.new?.status;
           
-          if (newStatus === "pro" || newStatus === "agency") {
+          if (newStatus === "starter" || newStatus === "pro" || newStatus === "agency") {
             console.log("[PaymentSuccess] Subscription upgraded to:", newStatus);
             setVerificationStatus("success");
             // Refresh subscription context
@@ -155,7 +155,7 @@ export default function PaymentSuccess() {
 
         console.log("[PaymentSuccess] Current subscription status:", data?.status);
 
-        if (data?.status === "pro" || data?.status === "agency") {
+        if (data?.status === "starter" || data?.status === "pro" || data?.status === "agency") {
           setVerificationStatus("success");
           return;
         }
