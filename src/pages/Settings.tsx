@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Settings as SettingsIcon, User, Mail, Loader2, Share2 } from "lucide-react";
 import { IntegrationsTab } from "@/components/settings/IntegrationsTab";
-
+import { DangerZone } from "@/components/settings/DangerZone";
 export default function Settings() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -190,6 +190,8 @@ export default function Settings() {
                 </div>
               </CardContent>
             </Card>
+
+            <DangerZone />
           </TabsContent>
 
           <TabsContent value="integrations">
