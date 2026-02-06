@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect, forwardRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -673,7 +673,7 @@ function DemoSection() {
 }
 
 // Pricing Section
-function PricingSection({ onUpgradeClick }: { onUpgradeClick: (tier: "starter" | "pro" | "agency") => void }) {
+function PricingSection({ onUpgradeClick, highlightedPlan }: { onUpgradeClick: (tier: "starter" | "pro" | "agency") => void; highlightedPlan?: string | null }) {
   const plans = [
     {
       name: "Free",
@@ -770,14 +770,16 @@ function PricingSection({ onUpgradeClick }: { onUpgradeClick: (tier: "starter" |
         </motion.div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-          {plans.map((plan, index) => (
+          {plans.map((plan, index) => {
+            const isHighlighted = highlightedPlan && plan.name.toLowerCase() === highlightedPlan;
+            return (
             <motion.div
               key={plan.name}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="relative"
+              className={`relative ${isHighlighted ? "animate-pulse-slow ring-2 ring-primary ring-offset-2 ring-offset-background rounded-xl" : ""}`}
             >
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
@@ -842,7 +844,8 @@ function PricingSection({ onUpgradeClick }: { onUpgradeClick: (tier: "starter" |
                 </CardContent>
               </Card>
             </motion.div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Payment trust section */}
@@ -1136,6 +1139,8 @@ export default function Landing() {
   const [contactSalesOpen, setContactSalesOpen] = useState(false);
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const highlightedPlan = searchParams.get("plan");
 
   // Redirect authenticated users to dashboard immediately
   useEffect(() => {
@@ -1144,14 +1149,33 @@ export default function Landing() {
     }
   }, [user, loading, navigate]);
 
+  // Auto-scroll to pricing section when ?plan= is present
+  useEffect(() => {
+    if (highlightedPlan) {
+      // Small delay to allow page to render
+      const timer = setTimeout(() => {
+        const pricingSection = document.getElementById("pricing");
+        if (pricingSection) {
+          pricingSection.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 300);
+      // Clean up the plan param after scrolling
+      const cleanupTimer = setTimeout(() => {
+        searchParams.delete("plan");
+        setSearchParams(searchParams, { replace: true });
+      }, 5000);
+      return () => {
+        clearTimeout(timer);
+        clearTimeout(cleanupTimer);
+      };
+    }
+  }, [highlightedPlan, searchParams, setSearchParams]);
+
   // Handle upgrade button clicks from pricing section
   const handleUpgradeClick = (tier: "starter" | "pro" | "agency") => {
     if (user) {
-      // User is logged in - redirect to dashboard with upgrade intent
-      // Dashboard will handle the checkout flow
       navigate(`/dashboard?upgrade=${tier}`);
     } else {
-      // User is logged out - redirect to auth with return state
       navigate(`/auth?redirect=/dashboard&upgrade=${tier}`);
     }
   };
@@ -1180,7 +1204,7 @@ export default function Landing() {
       <ProblemSection />
       <SolutionSection />
       <DemoSection />
-      <PricingSection onUpgradeClick={handleUpgradeClick} />
+      <PricingSection onUpgradeClick={handleUpgradeClick} highlightedPlan={highlightedPlan} />
       <FAQSection />
       <CTASection />
       <Footer />
