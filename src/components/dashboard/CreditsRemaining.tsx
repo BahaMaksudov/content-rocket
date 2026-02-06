@@ -20,7 +20,7 @@ export function CreditsRemaining() {
 
   const creditsRemaining = Math.max(0, creditLimit - creditsUsed);
   const progressValue = Math.min(100, (creditsUsed / creditLimit) * 100);
-  const lowThreshold = tier === "agency" ? 50 : tier === "pro" ? 10 : tier === "starter" ? 5 : 1;
+  const lowThreshold = tier === "agency" ? 50 : tier === "pro" ? 10 : tier === "starter" ? 3 : 1;
   const isLow = creditsRemaining <= lowThreshold && creditsRemaining > 0;
   const isExhausted = !hasCredits;
 
