@@ -27,18 +27,41 @@ const AGENCY_ONLY_VOICE_IDS = [
   "iP95p4xoKVk53GoZ742B",
 ];
 
-// Languages that benefit from lower stability for native inflections
-const LOW_STABILITY_LANGUAGES = ["uzbek", "hindi", "mandarin", "russian"];
-const STANDARD_STABILITY_LANGUAGES = ["english", "spanish"];
+// Language → ElevenLabs language_code mapping (BCP-47 / ISO 639-1)
+const LANGUAGE_CODE_MAP: Record<string, string> = {
+  uzbek: "uz",
+  hindi: "hi",
+  mandarin: "zh",
+  russian: "ru",
+  spanish: "es",
+  english: "en",
+  french: "fr",
+  german: "de",
+  portuguese: "pt",
+  japanese: "ja",
+  korean: "ko",
+};
 
 /**
  * Returns language-specific voice settings for ElevenLabs multilingual model.
- * Lower stability allows more native inflections for non-Latin languages.
+ * Uzbek gets extra-low stability + higher similarity boost for authentic vowel sounds.
+ * Other non-Latin languages use slightly lower stability for native inflections.
  */
 function getVoiceSettingsForLanguage(targetLanguage: string | null) {
   const lang = (targetLanguage || "english").toLowerCase();
 
-  if (LOW_STABILITY_LANGUAGES.includes(lang)) {
+  // Uzbek-specific tuning: lower stability for Central Asian vowel patterns
+  if (lang === "uzbek") {
+    return {
+      stability: 0.35,
+      similarity_boost: 0.80,
+      style: 0.6,
+      use_speaker_boost: true,
+    };
+  }
+
+  // Other non-Latin languages benefit from lower stability
+  if (["hindi", "mandarin", "russian"].includes(lang)) {
     return {
       stability: 0.4,
       similarity_boost: 0.75,
@@ -54,6 +77,36 @@ function getVoiceSettingsForLanguage(targetLanguage: string | null) {
     style: 0.5,
     use_speaker_boost: true,
   };
+}
+
+/**
+ * Returns the ElevenLabs language_code for the given target language, or null.
+ */
+function getLanguageCode(targetLanguage: string | null): string | null {
+  const lang = (targetLanguage || "").toLowerCase();
+  return LANGUAGE_CODE_MAP[lang] || null;
+}
+
+/**
+ * For non-English languages, strip stray ASCII-only words that would cause
+ * the model to fall back to an English accent. Keeps Uzbek Latin (which uses
+ * ASCII) by only removing isolated common English filler words.
+ */
+function cleanForTargetLanguage(text: string, targetLanguage: string | null): string {
+  const lang = (targetLanguage || "english").toLowerCase();
+  if (lang === "english") return text;
+
+  // Remove common English filler / placeholder words that leak into translated scripts
+  const englishFillers = /\b(um|uh|like|you know|I mean|basically|actually|literally|right|okay|so yeah|check it out|let's go|hey guys|what's up|subscribe|smash that)\b/gi;
+  let cleaned = text.replace(englishFillers, '');
+
+  // Remove URLs (always English)
+  cleaned = cleaned.replace(/https?:\/\/\S+/g, '');
+
+  // Clean up resulting whitespace
+  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+
+  return cleaned;
 }
 
 /**
@@ -138,6 +191,7 @@ async function tryGenerateAudio(
   text: string,
   modelId: string,
   voiceSettings: Record<string, unknown> | null,
+  languageCode: string | null,
 ): Promise<{ audio: ArrayBuffer | null; status: number; error: string }> {
   const requestBody: Record<string, unknown> = {
     text,
@@ -145,6 +199,10 @@ async function tryGenerateAudio(
   };
   if (voiceSettings) {
     requestBody.voice_settings = voiceSettings;
+  }
+  // Provide explicit language hint so the multilingual model doesn't default to English
+  if (languageCode) {
+    requestBody.language_code = languageCode;
   }
 
   try {
@@ -307,13 +365,18 @@ serve(async (req) => {
       .replace(/\uFEFF/g, '')
       .trim();
 
-    // Prime with a leading pause for natural delivery
-    const cleanText = `... ${cleanedCore}`;
-    console.log(`Final text length: ${cleanText.length} characters`);
-
-    // --- Language-aware voice settings ---
+    // Strip stray English words that cause accent fallback for non-English languages
     const lang = (targetLanguage || "english").toLowerCase();
+    const languageCleaned = cleanForTargetLanguage(cleanedCore, targetLanguage);
+
+    // Prime with a leading pause for natural delivery
+    const cleanText = `... ${languageCleaned}`;
+    console.log(`Final text length: ${cleanText.length} characters (language: ${lang})`);
+
+    // --- Language-aware voice settings & language code hint ---
     const voiceSettings = getVoiceSettingsForLanguage(lang);
+    const languageCode = getLanguageCode(targetLanguage);
+    console.log(`Voice settings: stability=${(voiceSettings as any).stability}, similarity_boost=${(voiceSettings as any).similarity_boost}, language_code=${languageCode || "auto"}`);
 
     // -----------------------------------------------------------
     // Model cascade:
@@ -321,14 +384,15 @@ serve(async (req) => {
     //   2. eleven_turbo_v2_5       (fast fallback, still decent multilingual)
     // -----------------------------------------------------------
 
-    // Attempt 1: eleven_multilingual_v2
-    console.log(`Attempt 1: eleven_multilingual_v2 (language: ${lang})`);
+    // Attempt 1: eleven_multilingual_v2 (ALWAYS primary – never monolingual)
+    console.log(`Attempt 1: eleven_multilingual_v2 (language: ${lang}, code: ${languageCode || "auto"})`);
     const attempt1 = await tryGenerateAudio(
       ELEVENLABS_API_KEY,
       voiceId,
       cleanText,
       "eleven_multilingual_v2",
       voiceSettings,
+      languageCode,
     );
 
     if (attempt1.audio) {
@@ -349,8 +413,8 @@ serve(async (req) => {
       );
     }
 
-    // Attempt 2: eleven_turbo_v2_5 (fallback)
-    console.log(`Attempt 2: eleven_turbo_v2_5 (fallback)`);
+    // Attempt 2: eleven_turbo_v2_5 (fallback – still multilingual, NOT monolingual)
+    console.log(`Attempt 2: eleven_turbo_v2_5 (fallback, language_code: ${languageCode || "auto"})`);
     const turboSettings = {
       stability: 0.5,
       similarity_boost: 0.75,
@@ -364,6 +428,7 @@ serve(async (req) => {
       cleanText,
       "eleven_turbo_v2_5",
       turboSettings,
+      languageCode,
     );
 
     if (attempt2.audio) {
