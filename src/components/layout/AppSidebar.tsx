@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Home, History, Mic, Sparkles, Clock, Code, Users, Rocket, Crown, ArrowUpRight } from "lucide-react";
+import { Home, History, Mic, Sparkles, Clock, Code, Users, Rocket, Crown, ArrowUpRight, Zap } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
+import { useNavigate } from "react-router-dom";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import {
   Sidebar,
@@ -33,6 +34,7 @@ const proNavItems = [
 
 export function AppSidebar() {
   const { tier } = useSubscription();
+  const navigate = useNavigate();
   const { setOpenMobile, isMobile } = useSidebar();
   const tierConfig = SUBSCRIPTION_TIERS[tier];
   const [showModal, setShowModal] = useState(false);
@@ -179,7 +181,7 @@ export function AppSidebar() {
       </SidebarContent>
 
       {/* Footer with Credits and Upgrades */}
-      <SidebarFooter className="p-4 border-t border-sidebar-border space-y-3">
+      <SidebarFooter className="p-4 border-t border-sidebar-border space-y-2">
         {/* Credits Remaining */}
         <CreditsRemaining />
 
@@ -188,11 +190,11 @@ export function AppSidebar() {
           <Button
             variant="outline"
             onClick={() => openUpgrade("agency")}
-            className="w-full relative overflow-hidden border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 hover:from-amber-500/20 hover:via-orange-500/20 hover:to-amber-500/20 text-amber-400 hover:text-amber-300 transition-all duration-300"
+            className="w-full relative overflow-hidden border-accent/30 bg-gradient-to-r from-accent/10 via-accent/5 to-accent/10 hover:from-accent/20 hover:via-accent/10 hover:to-accent/20 text-accent-foreground hover:text-accent-foreground transition-all duration-300"
           >
-            <Rocket className="h-4 w-4 mr-2 text-amber-400" />
+            <Rocket className="h-4 w-4 mr-2" />
             Upgrade to Agency
-            <ArrowUpRight className="h-3.5 w-3.5 ml-auto text-amber-400/70" />
+            <ArrowUpRight className="h-3.5 w-3.5 ml-auto opacity-70" />
           </Button>
         )}
 
@@ -210,11 +212,29 @@ export function AppSidebar() {
           </Button>
         )}
 
+        {/* Upgrade to Starter - shown to Free users only */}
+        {tier === "free" && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              trackUpgradeClicked("starter", "sidebar_free_user");
+              if (isMobile) setOpenMobile(false);
+              navigate("/?plan=starter");
+            }}
+            className="w-full text-secondary-foreground/80 hover:text-secondary-foreground hover:bg-secondary/20 transition-all"
+          >
+            <Zap className="h-4 w-4 mr-2 text-secondary-foreground" />
+            Upgrade to Starter
+            <ArrowUpRight className="h-3 w-3 ml-auto text-secondary-foreground/50" />
+          </Button>
+        )}
+
         {/* Current Plan Indicator */}
         <div className="flex items-center justify-center gap-2 p-2 rounded-lg bg-sidebar-accent/50">
           <Badge 
             variant="outline" 
-            className={`text-xs ${tier === "agency" ? "bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-amber-500/30 text-amber-400" : "border-primary/30 text-primary"}`}
+            className={`text-xs ${tier === "agency" ? "bg-gradient-to-r from-accent/20 to-accent/10 border-accent/30 text-accent-foreground" : "border-primary/30 text-primary"}`}
           >
             {tierConfig.name} Plan
           </Badge>
