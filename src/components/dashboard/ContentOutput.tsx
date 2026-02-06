@@ -320,7 +320,7 @@ ${content.blogPost}
                 
                 {/* Voice Generator for this script */}
                 <div className="pt-3 border-t border-border">
-                  <VoiceGenerator scriptText={script.script} />
+                  <VoiceGenerator scriptText={script.script} targetLanguage={targetLanguage} />
                 </div>
               </div>
             ))}
