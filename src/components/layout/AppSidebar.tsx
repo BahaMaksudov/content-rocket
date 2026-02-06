@@ -105,7 +105,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
         {/* Pro Features Navigation */}
-        {(tier === "pro" || tier === "agency") && (
+        {(tier === "starter" || tier === "pro" || tier === "agency") && (
           <SidebarGroup className="px-3">
             <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
               Pro Features

@@ -23,7 +23,8 @@ import {
   Check,
   ArrowRight,
   Download,
-  XCircle
+  XCircle,
+  Zap
 } from "lucide-react";
 
 interface PaymentHistoryItem {
@@ -115,7 +116,7 @@ export default function Billing() {
   };
 
   const tierConfig = SUBSCRIPTION_TIERS[tier];
-  const isPaidPlan = tier === "pro" || tier === "agency";
+  const isPaidPlan = tier !== "free";
 
   const handleManageSubscription = async () => {
     if (!session) {
@@ -155,6 +156,8 @@ export default function Billing() {
         return <Rocket className="h-6 w-6" />;
       case "pro":
         return <Crown className="h-6 w-6" />;
+      case "starter":
+        return <Zap className="h-6 w-6" />;
       default:
         return <Sparkles className="h-6 w-6" />;
     }
@@ -166,6 +169,8 @@ export default function Billing() {
         return "from-amber-500 to-orange-500";
       case "pro":
         return "from-primary to-electric";
+      case "starter":
+        return "from-info to-info/80";
       default:
         return "from-muted-foreground to-muted-foreground";
     }
@@ -300,6 +305,14 @@ export default function Billing() {
                     </Button>
                   )}
                   
+                  {tier === "starter" && (
+                    <Button variant="outline" asChild>
+                      <Link to="/#pricing" className="flex items-center gap-2">
+                        <Crown className="h-4 w-4" />
+                        Upgrade to Pro
+                      </Link>
+                    </Button>
+                  )}
                   {tier === "pro" && (
                     <Button variant="outline" asChild>
                       <Link to="/#pricing" className="flex items-center gap-2">

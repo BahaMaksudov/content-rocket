@@ -12,15 +12,17 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[CHECK-SUBSCRIPTION] ${step}${detailsStr}`);
 };
 
-// Product IDs for subscription tiers
+// Product IDs for subscription tiers - NEW 4-tier structure
 const PRODUCT_IDS = {
-  pro: "prod_TtwRuGNynEpRHz",
-  agency: "prod_TtxGA6pKTbpMoM",
+  starter: "prod_TvmgZ0hR2LljbD",
+  pro: "prod_TvmhiAvWEs9spu",
+  agency: "prod_TvmiVnuynHd9pf",
 };
 
-function getTierFromProductId(productId: string): "pro" | "agency" | "free" {
+function getTierFromProductId(productId: string): "starter" | "pro" | "agency" | "free" {
   if (productId === PRODUCT_IDS.agency) return "agency";
   if (productId === PRODUCT_IDS.pro) return "pro";
+  if (productId === PRODUCT_IDS.starter) return "starter";
   return "free";
 }
 
@@ -53,7 +55,7 @@ serve(async (req) => {
     
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Check if user has a profile (prevents subscription creation for deleted users)
+    // Check if user has a profile
     const { data: profile } = await supabase
       .from("profiles")
       .select("id")
@@ -75,13 +77,11 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-12-15.clover" });
 
-    // Look up Stripe customer by email
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     
     if (customers.data.length === 0) {
       logStep("No Stripe customer found, returning free status");
       
-      // Ensure we have a subscription record
       await supabase
         .from("subscriptions")
         .upsert({ user_id: user.id, status: "free" }, { onConflict: "user_id" });
@@ -99,7 +99,6 @@ serve(async (req) => {
     const customerId = customers.data[0].id;
     logStep("Found Stripe customer", { customerId });
 
-    // Fetch ACTIVE subscriptions from Stripe - prioritize active over canceled
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
       status: "active",
@@ -111,7 +110,6 @@ serve(async (req) => {
     if (subscriptions.data.length === 0) {
       logStep("No active subscription found");
       
-      // Update database to reflect free status
       await supabase
         .from("subscriptions")
         .upsert({ 
@@ -130,54 +128,37 @@ serve(async (req) => {
       });
     }
 
-    // Get the most recent active subscription (prioritize agency over pro if multiple)
+    // Priority: agency > pro > starter
     let activeSubscription = subscriptions.data[0];
     let tier = "free" as string;
+    const tierPriority = { agency: 3, pro: 2, starter: 1, free: 0 };
 
-    // Check all active subscriptions and prioritize agency
     for (const sub of subscriptions.data) {
       const productId = sub.items.data[0]?.price.product as string;
       const subTier = getTierFromProductId(productId);
       
-      if (subTier === "agency") {
+      if ((tierPriority[subTier] || 0) > (tierPriority[tier as keyof typeof tierPriority] || 0)) {
         activeSubscription = sub;
-        tier = "agency";
-        break;
-      } else if (subTier === "pro" && tier !== "agency") {
-        activeSubscription = sub;
-        tier = "pro";
+        tier = subTier;
       }
     }
 
-    // Get real-time data from Stripe
-    // The current_period_end is on the subscription item, not the subscription object itself
     const subscriptionItem = activeSubscription.items.data[0];
     const priceId = subscriptionItem?.price.id;
     
-    // Get current_period_end from subscription item (where Stripe actually stores it)
     let currentPeriodEnd: string;
     const rawPeriodEnd = (subscriptionItem as any)?.current_period_end;
     
-    logStep("Raw period end from Stripe subscription item", { 
-      rawPeriodEnd, 
-      type: typeof rawPeriodEnd,
-      subscriptionId: activeSubscription.id 
-    });
-    
     if (typeof rawPeriodEnd === 'number' && rawPeriodEnd > 0) {
-      // Unix timestamp in seconds - convert to milliseconds
       currentPeriodEnd = new Date(rawPeriodEnd * 1000).toISOString();
     } else if (typeof rawPeriodEnd === 'string' && rawPeriodEnd) {
-      // Already a date string
       const parsed = new Date(rawPeriodEnd);
       if (!isNaN(parsed.getTime())) {
         currentPeriodEnd = parsed.toISOString();
       } else {
-        logStep("Warning: Could not parse string current_period_end", { rawPeriodEnd });
         currentPeriodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
       }
     } else {
-      logStep("Warning: current_period_end missing or invalid, using fallback", { rawPeriodEnd });
       currentPeriodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
     }
 
@@ -188,7 +169,6 @@ serve(async (req) => {
       priceId,
     });
 
-    // Update database with real-time Stripe data
     const { error: updateError } = await supabase
       .from("subscriptions")
       .upsert({

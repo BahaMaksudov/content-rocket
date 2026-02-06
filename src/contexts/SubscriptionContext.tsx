@@ -4,14 +4,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { SubscriptionTier, SUBSCRIPTION_TIERS, getTierFromStatus } from "@/lib/subscription-tiers";
 
 interface SubscriptionContextType {
+  isStarter: boolean;
   isPro: boolean;
   isAgency: boolean;
+  /** True if user has any paid plan (starter, pro, or agency) */
+  isPaid: boolean;
+  /** True if user has pro or agency (style mimicking access) */
+  hasStyleMimicking: boolean;
   tier: SubscriptionTier;
   status: string;
   subscriptionEnd: string | null;
   loading: boolean;
   checkSubscription: () => Promise<void>;
-  openCheckout: (tier?: "pro" | "agency") => Promise<void>;
+  openCheckout: (tier?: "starter" | "pro" | "agency") => Promise<void>;
   openCustomerPortal: () => Promise<void>;
 }
 
@@ -24,11 +29,13 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const isPro = tier === "pro" || tier === "agency";
+  const isStarter = tier === "starter";
+  const isPro = tier === "pro";
   const isAgency = tier === "agency";
+  const isPaid = tier !== "free";
+  const hasStyleMimicking = tier === "pro" || tier === "agency";
 
   const checkSubscription = useCallback(async (retryOnAuthError = true) => {
-    // Get a fresh session to ensure we have the latest token
     const { data: sessionData } = await supabase.auth.getSession();
     const currentSession = sessionData?.session;
 
@@ -75,7 +82,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       const err = error as Error & { status?: number };
 
-      // If auth error, try refreshing session once
       if (
         retryOnAuthError &&
         (err.status === 401 ||
@@ -86,13 +92,11 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         console.log("[Subscription] Auth error, refreshing session and retrying...");
         const { error: refreshError } = await supabase.auth.refreshSession();
         if (!refreshError) {
-          return checkSubscription(false); // Retry with fresh token, but don't retry again
+          return checkSubscription(false);
         }
       }
 
       console.error("Error checking subscription:", error);
-      // Don't reset to free on error if we already have a tier set
-      // This prevents flickering back to free on transient errors
       if (tier === "free" || !tier) {
         setTier("free");
         setStatus("free");
@@ -102,7 +106,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     }
   }, [tier]);
 
-  const openCheckout = useCallback(async (checkoutTier: "pro" | "agency" = "pro") => {
+  const openCheckout = useCallback(async (checkoutTier: "starter" | "pro" | "agency" = "pro") => {
     if (!session?.access_token) {
       console.error("No session found - user must be logged in to checkout");
       throw new Error("Please log in to upgrade your subscription");
@@ -125,7 +129,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
       if (data?.url) {
         console.log("Redirecting to Stripe checkout URL:", data.url);
-        // Use direct navigation for mobile compatibility (window.open is often blocked)
         window.location.href = data.url;
       } else {
         throw new Error("No checkout URL received from server");
@@ -172,7 +175,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   // Re-check subscription every minute for active users
   useEffect(() => {
     if (!user) return;
-
     const interval = setInterval(checkSubscription, 60000);
     return () => clearInterval(interval);
   }, [user, checkSubscription]);
@@ -181,9 +183,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get("checkout") === "success") {
-      // Remove the query param
       window.history.replaceState({}, "", window.location.pathname);
-      // Wait a moment for Stripe webhook to process
       setTimeout(checkSubscription, 2000);
     }
   }, [checkSubscription]);
@@ -191,8 +191,11 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   return (
     <SubscriptionContext.Provider
       value={{
+        isStarter,
         isPro,
         isAgency,
+        isPaid,
+        hasStyleMimicking,
         tier,
         status,
         subscriptionEnd,

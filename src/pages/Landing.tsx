@@ -673,7 +673,7 @@ function DemoSection() {
 }
 
 // Pricing Section
-function PricingSection({ onUpgradeClick }: { onUpgradeClick: (tier: "pro" | "agency") => void }) {
+function PricingSection({ onUpgradeClick }: { onUpgradeClick: (tier: "starter" | "pro" | "agency") => void }) {
   const plans = [
     {
       name: "Free",
@@ -681,47 +681,62 @@ function PricingSection({ onUpgradeClick }: { onUpgradeClick: (tier: "pro" | "ag
       period: "forever",
       description: "Perfect for trying out Rocket Content",
       highlight: null,
-      features: ["5 generations per month", "X threads & LinkedIn posts", "1 brand voice", "Community support"],
+      features: ["3 generations per month", "X threads & LinkedIn posts", "Standard AI", "Community support"],
       cta: "Start Free",
       ctaAction: "auth" as const,
       tier: null,
       popular: false,
     },
     {
-      name: "Pro",
-      price: "$29",
+      name: "Starter",
+      price: "$9.99",
       period: "/month",
-      description: "For creators serious about growth",
+      description: "For creators getting started",
       highlight: null,
       features: [
-        "50 generations per month",
-        "All 4 platform outputs",
-        "AI-powered visuals",
-        "Global translation (multiple languages supported)",
-        "Social previews",
+        "20 generations per month",
+        "All social formats + blog posts",
+        "1 brand voice",
+        "Email support",
+      ],
+      cta: "Get Starter",
+      ctaAction: "upgrade" as const,
+      tier: "starter" as const,
+      popular: false,
+    },
+    {
+      name: "Pro",
+      price: "$19.99",
+      period: "/month",
+      description: "Best value — under $20/mo",
+      highlight: null,
+      features: [
+        "60 generations per month",
+        "Style Mimicking (AI voice training)",
+        "Priority processing",
+        "No watermarks",
         "3 brand voices",
-        "Priority support",
         "API access",
       ],
-      cta: "Upgrade to Pro",
+      cta: "Go Pro",
       ctaAction: "upgrade" as const,
       tier: "pro" as const,
       popular: true,
     },
     {
       name: "Agency",
-      price: "$249",
+      price: "$99.99",
       period: "/month",
-      description: "For High-Volume Teams & Content Agencies",
-      highlight: "Enterprise",
+      description: "For teams & content agencies",
+      highlight: "Team",
       features: [
-        "Unlimited AI generations",
-        "Bulk video processing",
-        "Team workspace",
-        "Unlimited brand voices",
-        "White-label previews",
+        "250 generations per month",
+        "10 brand voices",
+        "Team workspace (5 members)",
+        "Bulk export",
+        "Style Mimicking",
+        "Priority support",
         "Custom integrations",
-        "SSO & advanced security",
       ],
       cta: "Upgrade to Agency",
       ctaAction: "upgrade" as const,
@@ -754,7 +769,7 @@ function PricingSection({ onUpgradeClick }: { onUpgradeClick: (tier: "pro" | "ag
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
           {plans.map((plan, index) => (
             <motion.div
               key={plan.name}
@@ -1130,7 +1145,7 @@ export default function Landing() {
   }, [user, loading, navigate]);
 
   // Handle upgrade button clicks from pricing section
-  const handleUpgradeClick = (tier: "pro" | "agency") => {
+  const handleUpgradeClick = (tier: "starter" | "pro" | "agency") => {
     if (user) {
       // User is logged in - redirect to dashboard with upgrade intent
       // Dashboard will handle the checkout flow

@@ -7,11 +7,14 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform",
 };
 
-// Price IDs for subscription tiers - must match subscription-tiers.ts
-const PRICE_IDS = {
-  pro: "price_1Sw8YLBqKXDc35qoCAep9wJo",
-  agency: "price_1Sw9LXBqKXDc35qouka1dA67",  // Updated Agency price
-};
+// Price IDs for subscription tiers - NEW 4-tier structure
+const VALID_PRICE_IDS = new Set([
+  "price_1Sxv74BqKXDc35qoFpWfYr9i", // Starter $9.99
+  "price_1Sxv8DBqKXDc35qoYhRoWiap", // Pro $19.99
+  "price_1Sxv8iBqKXDc35qoP3Wj6har", // Agency $99.99
+]);
+
+const DEFAULT_PRICE_ID = "price_1Sxv8DBqKXDc35qoYhRoWiap"; // Pro
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -44,11 +47,10 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Parse request body to get priceId
-    let priceId = PRICE_IDS.pro; // Default to pro
+    let priceId = DEFAULT_PRICE_ID;
     try {
       const body = await req.json();
-      if (body.priceId && (body.priceId === PRICE_IDS.pro || body.priceId === PRICE_IDS.agency)) {
+      if (body.priceId && VALID_PRICE_IDS.has(body.priceId)) {
         priceId = body.priceId;
       }
     } catch {
@@ -58,7 +60,6 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     
-    // Check if customer exists
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     let customerId: string | undefined;
     if (customers.data.length > 0) {

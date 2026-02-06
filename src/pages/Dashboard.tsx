@@ -64,7 +64,7 @@ export default function Dashboard() {
 
   // Handle upgrade query parameter from landing page
   useEffect(() => {
-    const upgradeTier = searchParams.get("upgrade") as "pro" | "agency" | null;
+    const upgradeTier = searchParams.get("upgrade") as "starter" | "pro" | "agency" | null;
     
     if (upgradeTier && !subscriptionLoading && !upgradeProcessed) {
       setUpgradeProcessed(true);

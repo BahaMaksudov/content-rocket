@@ -1,16 +1,14 @@
 import { Progress } from "@/components/ui/progress";
-import { useCredits, FREE_TIER_LIMIT, PRO_TIER_LIMIT } from "@/hooks/use-credits";
+import { useCredits } from "@/hooks/use-credits";
 import { useSubscription } from "@/contexts/SubscriptionContext";
-import { BarChart3, Infinity, ArrowUpRight } from "lucide-react";
+import { BarChart3, ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export function CreditsRemaining() {
   const { tier, loading: subscriptionLoading } = useSubscription();
   const { creditsUsed, creditLimit, hasCredits, loading: creditsLoading } = useCredits();
-  
-  const isUnlimited = tier === "agency";
 
-  // Wait for BOTH subscription and credits to load before rendering tier-dependent UI
+  // Wait for BOTH subscription and credits to load before rendering
   if (subscriptionLoading || creditsLoading) {
     return (
       <div className="px-4 py-3 bg-sidebar-accent/30 rounded-lg animate-pulse">
@@ -20,28 +18,20 @@ export function CreditsRemaining() {
     );
   }
 
-  if (isUnlimited) {
-    return (
-      <div className="px-4 py-3 bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-lg border border-amber-500/20">
-        <div className="flex items-center justify-between text-sm mb-1">
-          <span className="flex items-center gap-1.5 font-medium text-foreground">
-            <Infinity className="h-4 w-4 text-amber-500" />
-            Unlimited Credits
-          </span>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Agency plan active
-        </p>
-      </div>
-    );
-  }
-
-  // For Free and Pro users - show usage against their limit
-  const displayLimit = tier === "pro" ? PRO_TIER_LIMIT : FREE_TIER_LIMIT;
-  const creditsRemaining = Math.max(0, displayLimit - creditsUsed);
-  const progressValue = Math.min(100, (creditsUsed / displayLimit) * 100);
-  const isLow = creditsRemaining <= (tier === "pro" ? 10 : 2) && creditsRemaining > 0;
+  const creditsRemaining = Math.max(0, creditLimit - creditsUsed);
+  const progressValue = Math.min(100, (creditsUsed / creditLimit) * 100);
+  const lowThreshold = tier === "agency" ? 50 : tier === "pro" ? 10 : tier === "starter" ? 5 : 1;
+  const isLow = creditsRemaining <= lowThreshold && creditsRemaining > 0;
   const isExhausted = !hasCredits;
+
+  const getNextTier = () => {
+    if (tier === "free") return { name: "Starter", path: "/billing" };
+    if (tier === "starter") return { name: "Pro", path: "/billing" };
+    if (tier === "pro") return { name: "Agency", path: "/billing" };
+    return null;
+  };
+
+  const nextTier = getNextTier();
 
   return (
     <div className={`px-4 py-3 rounded-lg border ${
@@ -61,7 +51,7 @@ export function CreditsRemaining() {
         <span className={`text-xs ${
           isExhausted ? "text-destructive" : isLow ? "text-warning" : "text-muted-foreground"
         }`}>
-          {creditsUsed} / {displayLimit} used
+          {creditsUsed} / {creditLimit} used
         </span>
       </div>
       <Progress 
@@ -75,24 +65,16 @@ export function CreditsRemaining() {
         }`}
       />
       <p className={`text-xs mt-2 ${isExhausted ? "text-destructive font-medium" : "text-muted-foreground"}`}>
-        {isExhausted ? (
-          tier === "pro" ? (
-            <Link 
-              to="/billing" 
-              className="flex items-center gap-1 hover:underline"
-            >
-              0 credits left — Upgrade to Agency
-              <ArrowUpRight className="h-3 w-3" />
-            </Link>
-          ) : (
-            <Link 
-              to="/billing" 
-              className="flex items-center gap-1 hover:underline"
-            >
-              0 credits left — Upgrade to Pro
-              <ArrowUpRight className="h-3 w-3" />
-            </Link>
-          )
+        {isExhausted && nextTier ? (
+          <Link 
+            to={nextTier.path} 
+            className="flex items-center gap-1 hover:underline"
+          >
+            0 credits left — Upgrade to {nextTier.name}
+            <ArrowUpRight className="h-3 w-3" />
+          </Link>
+        ) : isExhausted ? (
+          "0 credits remaining"
         ) : (
           `${creditsRemaining} credits remaining`
         )}
