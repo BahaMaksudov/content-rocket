@@ -154,17 +154,41 @@ serve(async (req) => {
             } else {
               logStep(`Subscription updated to ${tier}`, { userId, nextBillingDate: currentPeriodEnd });
 
-              // Reset generations count on successful upgrade
+              // Accumulate lifetime usage, then reset monthly credits for new plan
+              const { data: currentProfile } = await supabase
+                .from("profiles")
+                .select("credits_used, generations_this_month, transcript_fetches_this_month, lifetime_credits_used")
+                .eq("user_id", userId)
+                .maybeSingle();
+
+              const currentUsed = currentProfile
+                ? Math.max(
+                    currentProfile.credits_used ?? 0,
+                    (currentProfile.generations_this_month ?? 0) + (currentProfile.transcript_fetches_this_month ?? 0)
+                  )
+                : 0;
+              const lifetimeSoFar = currentProfile?.lifetime_credits_used ?? 0;
+
+              // Determine new credit limit based on upgraded tier
+              const newCreditLimit = tier === "agency" ? 250 : tier === "pro" ? 60 : tier === "starter" ? 15 : 3;
+
               const { error: profileError } = await supabase
                 .from("profiles")
                 .update({
+                  credits_used: 0,
+                  credits_available: newCreditLimit,
                   generations_this_month: 0,
+                  transcript_fetches_this_month: 0,
+                  lifetime_credits_used: lifetimeSoFar + currentUsed,
+                  credits_last_reset: updatedAt,
                   updated_at: updatedAt,
                 })
                 .eq("user_id", userId);
 
               if (profileError) {
-                logStep("Error resetting generations count", { error: profileError.message });
+                logStep("Error resetting credits on upgrade", { error: profileError.message });
+              } else {
+                logStep("Credits reset for upgrade", { userId, newCreditLimit, lifetimeAccumulated: lifetimeSoFar + currentUsed });
               }
             }
           } catch (dbError) {
@@ -182,16 +206,19 @@ serve(async (req) => {
 
       const { data: subRecord } = await supabase
         .from("subscriptions")
-        .select("user_id")
+        .select("user_id, status")
         .eq("stripe_subscription_id", subscription.id)
         .maybeSingle();
 
       if (subRecord) {
-        let status = "free";
+        let newStatus = "free";
         if (subscription.status === "active") {
           const productId = subscription.items.data[0]?.price.product as string;
-          status = getTierFromProductId(productId);
+          newStatus = getTierFromProductId(productId);
         }
+
+        const previousStatus = subRecord.status || "free";
+        const tierChanged = previousStatus !== newStatus;
         
         try {
           const currentPeriodEnd = toTimestamp(subscription.current_period_end);
@@ -200,7 +227,7 @@ serve(async (req) => {
           const { error } = await supabase
             .from("subscriptions")
             .update({
-              status,
+              status: newStatus,
               price_id: subscription.items.data[0]?.price.id,
               current_period_end: currentPeriodEnd,
               updated_at: updatedAt,
@@ -210,7 +237,44 @@ serve(async (req) => {
           if (error) {
             logStep("Database update error", { error: error.message });
           } else {
-            logStep("Subscription status updated", { userId: subRecord.user_id, status });
+            logStep("Subscription status updated", { userId: subRecord.user_id, status: newStatus });
+
+            // Reset credits when tier changes (upgrade or plan switch)
+            if (tierChanged && newStatus !== "free") {
+              const { data: currentProfile } = await supabase
+                .from("profiles")
+                .select("credits_used, generations_this_month, transcript_fetches_this_month, lifetime_credits_used")
+                .eq("user_id", subRecord.user_id)
+                .maybeSingle();
+
+              const currentUsed = currentProfile
+                ? Math.max(
+                    currentProfile.credits_used ?? 0,
+                    (currentProfile.generations_this_month ?? 0) + (currentProfile.transcript_fetches_this_month ?? 0)
+                  )
+                : 0;
+              const lifetimeSoFar = currentProfile?.lifetime_credits_used ?? 0;
+              const newCreditLimit = newStatus === "agency" ? 250 : newStatus === "pro" ? 60 : newStatus === "starter" ? 15 : 3;
+
+              const { error: resetError } = await supabase
+                .from("profiles")
+                .update({
+                  credits_used: 0,
+                  credits_available: newCreditLimit,
+                  generations_this_month: 0,
+                  transcript_fetches_this_month: 0,
+                  lifetime_credits_used: lifetimeSoFar + currentUsed,
+                  credits_last_reset: updatedAt,
+                  updated_at: updatedAt,
+                })
+                .eq("user_id", subRecord.user_id);
+
+              if (resetError) {
+                logStep("Error resetting credits on subscription update", { error: resetError.message });
+              } else {
+                logStep("Credits reset on plan change", { userId: subRecord.user_id, from: previousStatus, to: newStatus, newCreditLimit });
+              }
+            }
           }
         } catch (dbError) {
           const errorMessage = dbError instanceof Error ? dbError.message : String(dbError);

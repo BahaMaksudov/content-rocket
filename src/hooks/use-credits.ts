@@ -58,7 +58,7 @@ export function useCredits(): Credits {
   };
 
   const { data, isLoading, refetch } = useQuery<CreditsQueryData>({
-    queryKey: ["credits", user?.id, tier],
+    queryKey: ["credits", user?.id],
     queryFn: async () => {
       if (!user?.id) return { creditsAvailable: creditLimit, creditsUsed: 0, creditsLastReset: null };
 
@@ -139,9 +139,9 @@ export function useCredits(): Credits {
   const canUseCredits = hasCredits;
 
   const refreshCredits = useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: ["credits", user?.id, tier] });
+    await queryClient.invalidateQueries({ queryKey: ["credits", user?.id] });
     await refetch();
-  }, [queryClient, user?.id, tier, refetch]);
+  }, [queryClient, user?.id, refetch]);
 
   const getLatestCredits = useCallback(async () => {
     if (!user?.id) return null;
@@ -167,7 +167,7 @@ export function useCredits(): Credits {
       creditsLastReset: profile.credits_last_reset ?? null,
     };
 
-    queryClient.setQueryData(["credits", user.id, tier], snapshot);
+    queryClient.setQueryData(["credits", user.id], snapshot);
 
     await supabase
       .from("profiles")
@@ -181,7 +181,7 @@ export function useCredits(): Credits {
       ...snapshot,
       hasCredits: effectiveAvailable > 0,
     };
-  }, [user?.id, queryClient, creditLimit, tier]);
+  }, [user?.id, queryClient, creditLimit]);
 
   const useCredit = useCallback(async (): Promise<boolean> => {
     if (!user?.id) return false;
@@ -223,7 +223,7 @@ export function useCredits(): Credits {
       return false;
     }
 
-    queryClient.setQueryData(["credits", user.id, tier], {
+    queryClient.setQueryData(["credits", user.id], {
       creditsAvailable: newAvailable,
       creditsUsed: newUsed,
       creditsLastReset: freshProfile.credits_last_reset ?? null,
@@ -231,7 +231,7 @@ export function useCredits(): Credits {
     void refreshCredits();
 
     return true;
-  }, [user?.id, refreshCredits, queryClient, creditLimit, tier]);
+  }, [user?.id, refreshCredits, queryClient, creditLimit]);
 
   return {
     creditsAvailable,
