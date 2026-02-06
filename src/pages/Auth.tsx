@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { Loader2, Rocket, ArrowLeft, RefreshCw, AlertCircle, UserPlus, Info, LogIn, KeyRound, Users } from "lucide-react";
+import { Loader2, Rocket, ArrowLeft, RefreshCw, AlertCircle, UserPlus, Info, LogIn, KeyRound, Users, Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 import { VerificationPending } from "@/components/auth/VerificationPending";
 import { getEmailRedirectTo } from "@/lib/auth-redirect";
@@ -113,6 +113,7 @@ type AuthError = {
 export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isResendingVerification, setIsResendingVerification] = useState(false);
   const [showVerificationPending, setShowVerificationPending] = useState(false);
@@ -349,13 +350,17 @@ export default function Auth() {
               },
             });
           } else if (errorMessage.includes("Invalid login credentials")) {
-            // Check if we should suggest signup
+            // Invalid credentials - could be wrong password or no account
             setAuthError({
-              type: "info",
-              title: "Account Not Found",
-              message: "We couldn't find an account with this email. Would you like to create one?",
+              type: "warning",
+              title: "Invalid Credentials",
+              message: "Invalid password for this email. Would you like to reset it?",
               action: {
-                label: "Sign Up Instead",
+                label: "Reset Password",
+                onClick: () => navigate("/forgot-password"),
+              },
+              secondaryAction: {
+                label: "Create Account",
                 onClick: switchToSignup,
               },
             });
@@ -535,15 +540,30 @@ export default function Auth() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="login-password">Password</Label>
-                  <Input
-                    id="login-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => handlePasswordChange(e.target.value)}
-                    disabled={isLoading}
-                    onKeyDown={(e) => e.key === "Enter" && isFormValid && handleAuth("login")}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="login-password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => handlePasswordChange(e.target.value)}
+                      disabled={isLoading}
+                      onKeyDown={(e) => e.key === "Enter" && isFormValid && handleAuth("login")}
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
                 <div className="flex justify-end">
                   <Link 
@@ -587,15 +607,30 @@ export default function Auth() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Password</Label>
-                  <Input
-                    id="signup-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => handlePasswordChange(e.target.value)}
-                    disabled={isLoading}
-                    onKeyDown={(e) => e.key === "Enter" && isFormValid && handleAuth("signup")}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="signup-password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => handlePasswordChange(e.target.value)}
+                      disabled={isLoading}
+                      onKeyDown={(e) => e.key === "Enter" && isFormValid && handleAuth("signup")}
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
                   {password && !isPasswordValid && (
                     <p className="text-xs text-destructive">Password must be at least 6 characters</p>
                   )}
