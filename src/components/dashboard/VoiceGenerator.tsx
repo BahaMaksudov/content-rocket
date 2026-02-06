@@ -11,7 +11,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Volume2, Loader2, Lock, Crown, Rocket } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Volume2, Loader2, Lock, Crown, Rocket, Clock, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,6 +29,7 @@ import {
 } from "@/lib/voice-archetypes";
 import { AudioPlayer } from "./AudioPlayer";
 import { PremiumModal } from "@/components/PremiumModal";
+import { useAudioCredits } from "@/hooks/use-audio-credits";
 
 interface VoiceGeneratorProps {
   scriptText: string;
@@ -33,6 +40,7 @@ export function VoiceGenerator({ scriptText, targetLanguage }: VoiceGeneratorPro
   const { toast } = useToast();
   const { session } = useAuth();
   const { tier, isPro, isAgency, loading: subscriptionLoading } = useSubscription();
+  const { minutesRemaining, totalMinutes, hasMinutes, refreshAudioCredits, loading: audioLoading } = useAudioCredits();
   
   const [selectedVoiceId, setSelectedVoiceId] = useState(getDefaultVoice().id);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -41,18 +49,22 @@ export function VoiceGenerator({ scriptText, targetLanguage }: VoiceGeneratorPro
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const isFreeUser = tier === "free";
+  const isPaidUser = !isFreeUser;
   const voices = getVoicesForTier(tier);
 
-  // Validate and clean the script text - ensure it's a string
+  // Language restriction: only English is supported
+  const currentLang = (targetLanguage || "english").toLowerCase();
+  const isEnglish = currentLang === "english";
+  const isLanguageBlocked = isPaidUser && !isEnglish;
+  const isLimitReached = isPaidUser && !hasMinutes;
+
+  // Determine if button should be disabled
+  const isButtonDisabled = isGenerating || subscriptionLoading || audioLoading || isLanguageBlocked || isLimitReached;
+
+  // Validate and clean the script text
   const getCleanScriptText = (): string => {
     if (!scriptText) return '';
-    
-    // If it's already a string, return it trimmed
-    if (typeof scriptText === 'string') {
-      return scriptText.trim();
-    }
-    
-    // If it's an array, flatten it
+    if (typeof scriptText === 'string') return scriptText.trim();
     if (Array.isArray(scriptText)) {
       return (scriptText as unknown[])
         .map((item) => {
@@ -67,19 +79,29 @@ export function VoiceGenerator({ scriptText, targetLanguage }: VoiceGeneratorPro
         .join(' ')
         .trim();
     }
-    
-    // If it's an object with text property
     if (typeof scriptText === 'object') {
       const obj = scriptText as Record<string, unknown>;
       return String(obj.text || obj.snippet || obj.content || '').trim();
     }
-    
     return '';
   };
 
   const handleGenerateAudio = async () => {
-    // Gate free users
     if (isFreeUser) {
+      setShowUpgradeModal(true);
+      return;
+    }
+
+    if (isLanguageBlocked) {
+      toast({
+        title: "Language not supported",
+        description: "Voice generation is currently only available for English.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isLimitReached) {
       setShowUpgradeModal(true);
       return;
     }
@@ -105,7 +127,6 @@ export function VoiceGenerator({ scriptText, targetLanguage }: VoiceGeneratorPro
       return;
     }
 
-    // Check if user has access to this voice tier
     if (voice.tier === "agency" && !isAgency) {
       toast({
         title: "Agency voice",
@@ -119,7 +140,6 @@ export function VoiceGenerator({ scriptText, targetLanguage }: VoiceGeneratorPro
     setProgress(0);
     setAudioUrl(null);
 
-    // Simulate progress for UX (actual API doesn't stream progress)
     const progressInterval = setInterval(() => {
       setProgress(prev => {
         if (prev >= 90) {
@@ -131,8 +151,6 @@ export function VoiceGenerator({ scriptText, targetLanguage }: VoiceGeneratorPro
     }, 500);
 
     try {
-      // Always re-read the session right before calling a backend function
-      // so we don't accidentally use a stale access token.
       const { data: sessionData } = await supabase.auth.getSession();
       let accessToken = sessionData.session?.access_token || session?.access_token;
 
@@ -154,20 +172,17 @@ export function VoiceGenerator({ scriptText, targetLanguage }: VoiceGeneratorPro
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            // Always send the cleaned script text as a string
             text: cleanText,
             voiceId: voice.voiceId,
             performancePrompt: voice.performancePrompt,
-            targetLanguage: targetLanguage || "english",
+            targetLanguage: "english",
           }),
         });
 
       let response = await makeRequest(accessToken);
       let errorData: any = null;
 
-      // If we get an auth error, refresh session and retry once.
-      // 401 is always treated as an auth/session problem.
-      // 403 is only retried when it looks like a token/JWT issue (NOT tier gating).
+      // Handle auth errors with retry
       if (!response.ok && (response.status === 401 || response.status === 403)) {
         errorData = await response.json().catch(() => ({}));
 
@@ -186,7 +201,6 @@ export function VoiceGenerator({ scriptText, targetLanguage }: VoiceGeneratorPro
           if (!refreshError && refreshedToken) {
             accessToken = refreshedToken;
             response = await makeRequest(accessToken);
-            // If retry also fails, read the latest error body for messaging.
             if (!response.ok) {
               errorData = await response.json().catch(() => ({}));
             }
@@ -199,10 +213,18 @@ export function VoiceGenerator({ scriptText, targetLanguage }: VoiceGeneratorPro
           errorData = await response.json().catch(() => ({}));
         }
 
-        // Subscription/tier errors should not trigger token refresh.
         if (response.status === 403 && errorData?.code === "SUBSCRIPTION_REQUIRED") {
           setShowUpgradeModal(true);
           throw new Error("Upgrade required to use voice generation");
+        }
+
+        if (response.status === 429 && errorData?.code === "AUDIO_LIMIT_EXCEEDED") {
+          setShowUpgradeModal(true);
+          throw new Error("Monthly audio limit reached");
+        }
+
+        if (response.status === 400 && errorData?.code === "LANGUAGE_NOT_SUPPORTED") {
+          throw new Error("Voice generation is currently only available for English");
         }
 
         throw new Error(errorData?.error || "Failed to generate audio");
@@ -213,6 +235,9 @@ export function VoiceGenerator({ scriptText, targetLanguage }: VoiceGeneratorPro
       
       setProgress(100);
       setAudioUrl(url);
+
+      // Refresh audio credits to reflect new usage
+      await refreshAudioCredits();
       
       toast({
         title: "Audio generated!",
@@ -222,8 +247,7 @@ export function VoiceGenerator({ scriptText, targetLanguage }: VoiceGeneratorPro
     } catch (error) {
       console.error("Audio generation error:", error);
       
-      // Don't show toast if we're showing upgrade modal
-      if (error instanceof Error && !error.message.includes("Upgrade")) {
+      if (error instanceof Error && !error.message.includes("Upgrade") && !error.message.includes("limit reached")) {
         toast({
           title: "Audio generation failed",
           description: error.message || "Please try again later.",
@@ -257,11 +281,61 @@ export function VoiceGenerator({ scriptText, targetLanguage }: VoiceGeneratorPro
     );
   }
 
+  // Determine button label and tooltip
+  const getButtonContent = () => {
+    if (isGenerating) {
+      return (
+        <>
+          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          Generating...
+        </>
+      );
+    }
+    if (isFreeUser) {
+      return (
+        <>
+          <Lock className="h-4 w-4 mr-2" />
+          Convert to Audio
+        </>
+      );
+    }
+    if (isLimitReached) {
+      return (
+        <>
+          <AlertTriangle className="h-4 w-4 mr-2" />
+          Limit Reached
+        </>
+      );
+    }
+    if (isLanguageBlocked) {
+      return (
+        <>
+          <Lock className="h-4 w-4 mr-2" />
+          Convert to Audio
+        </>
+      );
+    }
+    return (
+      <>
+        <Volume2 className="h-4 w-4 mr-2" />
+        Convert to Audio
+      </>
+    );
+  };
+
+  const getTooltipMessage = (): string | null => {
+    if (isLanguageBlocked) return "Voice generation is currently only available for English";
+    if (isLimitReached) return "Monthly audio limit reached. Upgrade your plan for more minutes.";
+    return null;
+  };
+
+  const tooltipMessage = getTooltipMessage();
+
   // Show generation controls
   return (
     <>
       <div className="space-y-3">
-        {/* Voice Selection & Generate Button */}
+        {/* Voice Selection, Generate Button & Minutes Remaining */}
         <div className="flex flex-wrap items-center gap-4">
           <Select 
             value={selectedVoiceId} 
@@ -322,32 +396,45 @@ export function VoiceGenerator({ scriptText, targetLanguage }: VoiceGeneratorPro
             </SelectContent>
           </Select>
 
-          <Button
-            onClick={handleGenerateAudio}
-            disabled={isGenerating || getCleanScriptText().length < 10 || subscriptionLoading}
-            variant={isFreeUser ? "outline" : "secondary"}
-            className={isFreeUser ? "opacity-75" : ""}
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Generating...
-              </>
-            ) : isFreeUser ? (
-              <>
-                <Lock className="h-4 w-4 mr-2" />
-                Convert to Audio
-              </>
-            ) : (
-              <>
-                <Volume2 className="h-4 w-4 mr-2" />
-                Convert to Audio
-              </>
-            )}
-          </Button>
+          {/* Generate button with tooltip when disabled */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex">
+                  <Button
+                    onClick={handleGenerateAudio}
+                    disabled={isButtonDisabled || getCleanScriptText().length < 10}
+                    variant={isFreeUser || isLimitReached ? "outline" : "secondary"}
+                    className={isFreeUser || isLanguageBlocked || isLimitReached ? "opacity-75" : ""}
+                  >
+                    {getButtonContent()}
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              {tooltipMessage && (
+                <TooltipContent>
+                  <p>{tooltipMessage}</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
+
+          {/* Minutes Remaining indicator */}
+          {isPaidUser && !audioLoading && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Clock className="h-3 w-3" />
+              <span>
+                {isLimitReached ? (
+                  <span className="text-destructive font-medium">0 / {totalMinutes} min remaining</span>
+                ) : (
+                  <span>{minutesRemaining} / {totalMinutes} min remaining</span>
+                )}
+              </span>
+            </div>
+          )}
         </div>
 
-      {/* Free user hint */}
+        {/* Free user hint */}
         {isFreeUser && (
           <p className="text-xs text-muted-foreground flex items-center gap-1">
             <Lock className="h-3 w-3" />
@@ -355,11 +442,27 @@ export function VoiceGenerator({ scriptText, targetLanguage }: VoiceGeneratorPro
           </p>
         )}
 
-        {/* v3 badge for paid users */}
-        {!isFreeUser && !isGenerating && (
+        {/* Language restriction message */}
+        {isLanguageBlocked && (
+          <p className="text-xs text-destructive flex items-center gap-1">
+            <AlertTriangle className="h-3 w-3" />
+            Voice generation is currently only available for English
+          </p>
+        )}
+
+        {/* Limit reached message */}
+        {isLimitReached && !isFreeUser && (
+          <p className="text-xs text-destructive flex items-center gap-1">
+            <AlertTriangle className="h-3 w-3" />
+            Monthly audio limit reached. Upgrade your plan for more minutes.
+          </p>
+        )}
+
+        {/* Model badge for paid users */}
+        {isPaidUser && !isGenerating && !isLanguageBlocked && !isLimitReached && (
           <p className="text-[10px] text-muted-foreground/60 flex items-center gap-1">
             <Volume2 className="h-2.5 w-2.5" />
-            Powered by ElevenLabs V3 (Auto-detect)
+            Powered by ElevenLabs Multilingual v2
           </p>
         )}
 
@@ -379,7 +482,11 @@ export function VoiceGenerator({ scriptText, targetLanguage }: VoiceGeneratorPro
         open={showUpgradeModal}
         onOpenChange={setShowUpgradeModal}
         feature="voice-generation"
-        description="Convert your scripts into professional AI-powered audio with 5 unique character voices. Upgrade to Pro to unlock this feature!"
+        description={
+          isLimitReached
+            ? "You've used all your audio minutes this month. Upgrade your plan to get more audio generation time!"
+            : "Convert your scripts into professional AI-powered audio with 5 unique character voices. Upgrade to Pro to unlock this feature!"
+        }
       />
     </>
   );

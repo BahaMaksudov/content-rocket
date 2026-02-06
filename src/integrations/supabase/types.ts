@@ -334,6 +334,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          audio_chars_last_reset: string | null
+          audio_chars_used: number
           avatar_url: string | null
           created_at: string
           credits_available: number
@@ -351,6 +353,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          audio_chars_last_reset?: string | null
+          audio_chars_used?: number
           avatar_url?: string | null
           created_at?: string
           credits_available?: number
@@ -368,6 +372,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          audio_chars_last_reset?: string | null
+          audio_chars_used?: number
           avatar_url?: string | null
           created_at?: string
           credits_available?: number
