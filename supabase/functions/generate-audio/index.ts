@@ -27,50 +27,24 @@ const AGENCY_ONLY_VOICE_IDS = [
   "iP95p4xoKVk53GoZ742B",
 ];
 
-// Languages where ElevenLabs supports explicit language_code hints.
-// Uzbek is intentionally OMITTED — the V3 model auto-detects Uzbek
-// from the script text and applies correct phonetics automatically.
-const LANGUAGE_CODE_MAP: Record<string, string> = {
-  hindi: "hi",
-  mandarin: "zh",
-  russian: "ru",
-  spanish: "es",
-  english: "en",
-  french: "fr",
-  german: "de",
-  portuguese: "pt",
-  japanese: "ja",
-  korean: "ko",
+// Monthly audio character limits per tier (1,000 chars ≈ 1 minute)
+const AUDIO_CHAR_LIMITS: Record<string, number> = {
+  free: 1_000,       // 1 min
+  starter: 10_000,   // 10 mins
+  pro: 30_000,       // 30 mins
+  agency: 300_000,   // 5 hours
 };
 
 /**
- * Returns language-specific voice settings for ElevenLabs multilingual model.
- * Uzbek uses stability 0.35 + similarity_boost 0.80 for authentic vowel sounds.
- * Other non-Latin languages use slightly lower stability for native inflections.
+ * Returns standard voice settings for ElevenLabs multilingual v2.
  */
-function getVoiceSettingsForLanguage(targetLanguage: string | null) {
-  // Match exact ElevenLabs Dashboard "Natural" preset for all languages.
-  // style: 0.0 prevents American-style emotional exaggeration,
-  // letting the V3 model produce native intonation from the text itself.
+function getVoiceSettings() {
   return {
-    stability: 0.40,
+    stability: 0.5,
     similarity_boost: 0.75,
     style: 0.0,
     use_speaker_boost: true,
   };
-}
-
-/**
- * Returns the ElevenLabs language_code for the given target language, or null.
- * Returns null for Uzbek (V3 auto-detects) and unsupported languages.
- * Ensures no empty string or undefined is ever returned — only a valid code or null.
- */
-function getLanguageCode(targetLanguage: string | null): string | null {
-  if (!targetLanguage) return null;
-  const lang = targetLanguage.toLowerCase().trim();
-  if (!lang || lang === "uzbek") return null;
-  const code = LANGUAGE_CODE_MAP[lang];
-  return code || null;
 }
 
 /**
@@ -81,27 +55,20 @@ function cleanForTargetLanguage(text: string, targetLanguage: string | null): st
   const lang = (targetLanguage || "english").toLowerCase();
   if (lang === "english") return text;
 
-  // Remove common English filler / placeholder words that leak into translated scripts
   const englishFillers = /\b(um|uh|like|you know|I mean|basically|actually|literally|right|okay|so yeah|check it out|let's go|hey guys|what's up|subscribe|smash that)\b/gi;
   let cleaned = text.replace(englishFillers, '');
-
-  // Remove URLs (always English)
   cleaned = cleaned.replace(/https?:\/\/\S+/g, '');
-
-  // Clean up resulting whitespace
   cleaned = cleaned.replace(/\s+/g, ' ').trim();
-
   return cleaned;
 }
 
 /**
- * Normalize whitespace and preserve punctuation for V3 natural breathing pauses.
- * Removes double-spaces, trims, and ensures commas/periods remain intact.
+ * Normalize whitespace and preserve punctuation for natural breathing pauses.
  */
-function normalizeForV3(text: string): string {
+function normalizeText(text: string): string {
   return text
-    .replace(/[ \t]{2,}/g, ' ')   // Collapse multiple spaces/tabs to single space
-    .replace(/\n{3,}/g, '\n\n')   // Collapse excessive newlines
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
 
@@ -168,8 +135,15 @@ function flattenText(text: unknown): string {
 }
 
 /**
+ * Check if the month needs resetting and return current usage.
+ */
+function monthKey(dateIso: string) {
+  const d = new Date(dateIso);
+  return `${d.getFullYear()}-${d.getMonth()}`;
+}
+
+/**
  * Attempt a TTS call to ElevenLabs with a given model and settings.
- * Returns the audio ArrayBuffer on success, or null on failure.
  */
 async function tryGenerateAudio(
   apiKey: string,
@@ -177,7 +151,6 @@ async function tryGenerateAudio(
   text: string,
   modelId: string,
   voiceSettings: Record<string, unknown> | null,
-  languageCode: string | null,
 ): Promise<{ audio: ArrayBuffer | null; status: number; error: string }> {
   const requestBody: Record<string, unknown> = {
     text,
@@ -185,11 +158,6 @@ async function tryGenerateAudio(
   };
   if (voiceSettings) {
     requestBody.voice_settings = voiceSettings;
-  }
-  // Only include language_code if it's a valid non-empty string.
-  // Never send empty string or undefined — only a real code like "en", "es", etc.
-  if (languageCode && languageCode.length > 0) {
-    requestBody.language_code = languageCode;
   }
 
   try {
@@ -290,19 +258,32 @@ serve(async (req) => {
     }
 
     const status = subscription?.status || "free";
-    let tier: "free" | "pro" | "agency" = "free";
+    let tier: "free" | "starter" | "pro" | "agency" = "free";
     if (status === "agency" || status === "active_agency") tier = "agency";
     else if (status === "pro" || status === "active" || status === "active_pro") tier = "pro";
+    else if (status === "starter" || status === "active_starter") tier = "starter";
 
     if (tier === "free") {
       return new Response(
-        JSON.stringify({ error: "Voice generation is a Pro feature", code: "SUBSCRIPTION_REQUIRED" }),
+        JSON.stringify({ error: "Voice generation requires a paid plan. Upgrade to get started!", code: "SUBSCRIPTION_REQUIRED" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     // --- Parse & validate request body ---
     const { text, voiceId, performancePrompt, targetLanguage } = await req.json();
+
+    // --- Language restriction: English only ---
+    const lang = (targetLanguage || "english").toLowerCase();
+    if (lang !== "english") {
+      return new Response(
+        JSON.stringify({
+          error: "Voice generation is currently only available for English",
+          code: "LANGUAGE_NOT_SUPPORTED",
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     const processedText = flattenText(text);
     if (!processedText || processedText.trim().length === 0) {
@@ -336,7 +317,6 @@ serve(async (req) => {
       );
     }
 
-    const lang = (targetLanguage || "english").toLowerCase();
     console.log(`Generating audio - voice: ${voiceId}, tier: ${tier}, language: ${lang}, textLength: ${processedText.length}`);
 
     // --- Text sanitization ---
@@ -357,165 +337,141 @@ serve(async (req) => {
       .replace(/\uFEFF/g, '')
       .trim();
 
-    // Strip stray English words that cause accent fallback for non-English languages
     const languageCleaned = cleanForTargetLanguage(cleanedCore, targetLanguage);
-
-    // Normalize whitespace for V3: remove double-spaces, preserve punctuation
-    const normalized = normalizeForV3(languageCleaned);
-
-    // Prime with a leading pause for natural delivery
+    const normalized = normalizeText(languageCleaned);
     const cleanText = `... ${normalized}`;
-    console.log(`Final text length: ${cleanText.length} characters (language: ${lang})`);
+    const charCount = cleanText.length;
+    console.log(`Final text length: ${charCount} characters`);
 
-    // --- Language-aware voice settings (matches Dashboard "Natural" preset) ---
-    const voiceSettings = getVoiceSettingsForLanguage(lang);
-    // Only get language_code for languages ElevenLabs actually supports.
-    // Uzbek is NOT in the map, so languageCode will be null → auto-detect from text.
-    const languageCode = getLanguageCode(targetLanguage);
+    // --- Audio character limit check ---
+    const charLimit = AUDIO_CHAR_LIMITS[tier] || AUDIO_CHAR_LIMITS.free;
+
+    // Fetch current audio usage from profile
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .select("audio_chars_used, audio_chars_last_reset")
+      .eq("user_id", userId)
+      .single();
+
+    if (profileError) {
+      console.error("Error fetching profile for audio usage:", profileError);
+      return new Response(
+        JSON.stringify({ error: "Failed to check audio usage", code: "PROFILE_FETCH_FAILED" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    let currentUsed = profile?.audio_chars_used ?? 0;
+    const lastReset = profile?.audio_chars_last_reset;
+    const nowIso = new Date().toISOString();
+
+    // Monthly reset check
+    if (!lastReset || monthKey(lastReset) !== monthKey(nowIso)) {
+      console.log(`Monthly audio reset for user ${userId}`);
+      currentUsed = 0;
+      await supabaseAdmin
+        .from("profiles")
+        .update({ audio_chars_used: 0, audio_chars_last_reset: nowIso })
+        .eq("user_id", userId);
+    }
+
+    // Check if this request would exceed the limit
+    if (currentUsed + charCount > charLimit) {
+      const remainingChars = Math.max(0, charLimit - currentUsed);
+      const remainingMins = (remainingChars / 1000).toFixed(1);
+      console.log(`Audio limit exceeded for user ${userId}: used=${currentUsed}, request=${charCount}, limit=${charLimit}`);
+      return new Response(
+        JSON.stringify({
+          error: "Monthly audio limit reached. Upgrade your plan for more minutes.",
+          code: "AUDIO_LIMIT_EXCEEDED",
+          details: {
+            used: currentUsed,
+            limit: charLimit,
+            remaining_chars: remainingChars,
+            remaining_minutes: remainingMins,
+            requested_chars: charCount,
+          },
+        }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // --- Voice settings (consistent English output) ---
+    const voiceSettings = getVoiceSettings();
 
     // -----------------------------------------------------------
     // DEBUG: Log the exact payload being sent to ElevenLabs
     // -----------------------------------------------------------
     const debugPayload = {
-      model_id: "eleven_v3",
+      model_id: "eleven_multilingual_v2",
       voice_id: voiceId,
-      language_code: languageCode || "(omitted — auto-detect)",
       voice_settings: voiceSettings,
-      text_length: cleanText.length,
-      text_preview: cleanText.substring(0, 120) + (cleanText.length > 120 ? "..." : ""),
-      target_language: lang,
+      text_length: charCount,
+      text_preview: cleanText.substring(0, 120) + (charCount > 120 ? "..." : ""),
+      audio_chars_used: currentUsed,
+      audio_char_limit: charLimit,
     };
     console.log(`[ElevenLabs Payload] ${JSON.stringify(debugPayload, null, 2)}`);
 
     // -----------------------------------------------------------
-    // Model cascade (3-tier fallback):
-    //   1. eleven_v3              (latest, best quality, auto-detects Uzbek)
-    //   2. eleven_multilingual_v2 (proven stable fallback)
-    //   3. eleven_turbo_v2_5      (fast last-resort fallback)
+    // Single model: eleven_multilingual_v2 (proven, reliable)
     // -----------------------------------------------------------
-
-    // Attempt 1: eleven_v3 (primary – highest quality, native accent auto-detection)
-    console.log(`Attempt 1: eleven_v3 (language: ${lang}, language_code: ${languageCode || "auto-detect"})`);
-    const attempt1 = await tryGenerateAudio(
-      ELEVENLABS_API_KEY,
-      voiceId,
-      cleanText,
-      "eleven_v3",
-      voiceSettings,
-      languageCode,
-    );
-
-    if (attempt1.audio) {
-      console.log(`Audio generated with eleven_v3: ${attempt1.audio.byteLength} bytes`);
-      return new Response(attempt1.audio, {
-        headers: { ...corsHeaders, "Content-Type": "audio/mpeg" },
-      });
-    }
-
-    // If auth error, bail immediately with specific message
-    if (attempt1.status === 401) {
-      return new Response(
-        JSON.stringify({
-          error: "ElevenLabs API key is invalid or lacks permission for this model. Please check your API key.",
-          code: "ELEVENLABS_AUTH_FAILED",
-          details: attempt1.error,
-        }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    console.warn(`eleven_v3 failed (status: ${attempt1.status}), trying eleven_multilingual_v2 fallback...`);
-
-    // Attempt 2: eleven_multilingual_v2 (stable fallback)
-    console.log(`Attempt 2: eleven_multilingual_v2 (fallback, language_code: ${languageCode || "auto-detect"})`);
-    const attempt2 = await tryGenerateAudio(
+    console.log(`Generating with eleven_multilingual_v2`);
+    const result = await tryGenerateAudio(
       ELEVENLABS_API_KEY,
       voiceId,
       cleanText,
       "eleven_multilingual_v2",
       voiceSettings,
-      languageCode,
     );
 
-    if (attempt2.audio) {
-      console.log(`Audio generated with eleven_multilingual_v2 (fallback): ${attempt2.audio.byteLength} bytes`);
-      return new Response(attempt2.audio, {
+    if (result.audio) {
+      console.log(`Audio generated: ${result.audio.byteLength} bytes`);
+
+      // Increment audio character usage
+      const newUsed = currentUsed + charCount;
+      const { error: updateError } = await supabaseAdmin
+        .from("profiles")
+        .update({ audio_chars_used: newUsed })
+        .eq("user_id", userId);
+
+      if (updateError) {
+        console.error("Failed to update audio usage (non-fatal):", updateError);
+      } else {
+        console.log(`Audio usage updated: ${currentUsed} → ${newUsed} / ${charLimit}`);
+      }
+
+      return new Response(result.audio, {
         headers: { ...corsHeaders, "Content-Type": "audio/mpeg" },
       });
     }
 
-    if (attempt2.status === 401) {
+    // Auth error — bail with specific message
+    if (result.status === 401) {
       return new Response(
         JSON.stringify({
           error: "ElevenLabs API key is invalid or lacks permission. Please check your API key.",
           code: "ELEVENLABS_AUTH_FAILED",
-          details: attempt2.error,
+          details: result.error,
         }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.warn(`eleven_multilingual_v2 failed (status: ${attempt2.status}), trying turbo fallback...`);
-
-    // Attempt 3: eleven_turbo_v2_5 (fast last-resort)
-    console.log(`Attempt 3: eleven_turbo_v2_5 (last-resort fallback)`);
-    const turboSettings = {
-      stability: 0.5,
-      similarity_boost: 0.75,
-      style: 0.5,
-      use_speaker_boost: true,
-    };
-
-    const attempt3 = await tryGenerateAudio(
-      ELEVENLABS_API_KEY,
-      voiceId,
-      cleanText,
-      "eleven_turbo_v2_5",
-      turboSettings,
-      languageCode,
-    );
-
-    if (attempt3.audio) {
-      console.log(`Audio generated with eleven_turbo_v2_5 (last-resort): ${attempt3.audio.byteLength} bytes`);
-      return new Response(attempt3.audio, {
-        headers: { ...corsHeaders, "Content-Type": "audio/mpeg" },
-      });
-    }
-
-    if (attempt3.status === 401) {
-      return new Response(
-        JSON.stringify({
-          error: "ElevenLabs API key is invalid or lacks permission. Please check your API key.",
-          code: "ELEVENLABS_AUTH_FAILED",
-          details: attempt3.error,
-        }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // All attempts failed — return detailed error
-    console.error("All model attempts failed", {
-      v3_status: attempt1.status,
-      v3_error: attempt1.error,
-      v2_status: attempt2.status,
-      v2_error: attempt2.error,
-      turbo_status: attempt3.status,
-      turbo_error: attempt3.error,
-      language: lang,
-      language_code: languageCode,
-      textLength: cleanText.length,
+    // Generation failed
+    console.error("Audio generation failed", {
+      status: result.status,
+      error: result.error,
+      textLength: charCount,
     });
 
     return new Response(
       JSON.stringify({
-        error: "Failed to generate audio with all available models",
-        code: "ALL_MODELS_FAILED",
+        error: "Failed to generate audio. Please try again.",
+        code: "GENERATION_FAILED",
         details: {
-          eleven_v3: { status: attempt1.status, error: attempt1.error },
-          multilingual_v2: { status: attempt2.status, error: attempt2.error },
-          turbo_v2_5: { status: attempt3.status, error: attempt3.error },
-          language: lang,
-          language_code_sent: languageCode || "none (auto-detect)",
+          status: result.status,
+          error: result.error,
         },
       }),
       { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -525,7 +481,6 @@ serve(async (req) => {
     console.error("Error in generate-audio function:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
 
-    // Check for specific error types
     if (message.includes("JSON")) {
       return new Response(
         JSON.stringify({
