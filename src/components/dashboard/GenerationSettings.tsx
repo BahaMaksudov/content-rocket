@@ -6,13 +6,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSe
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Loader2, Sparkles, Mic, Crown, Rocket, AlertCircle, Plus, Info } from "lucide-react";
+import { Loader2, Sparkles, Mic, Crown, Rocket, AlertCircle, Plus, Info, FlaskConical } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useCredits } from "@/hooks/use-credits";
 import { PremiumModal } from "@/components/PremiumModal";
 import { GlobalReachSettings } from "./GlobalReachSettings";
 import { CreateBrandVoiceModal } from "./CreateBrandVoiceModal";
+import { StyleLabModal } from "./StyleLabModal";
 import { DEFAULT_BRAND_VOICES, isDefaultVoiceId } from "@/lib/default-brand-voices";
 
 interface BrandVoice {
@@ -70,6 +71,7 @@ export function GenerationSettings({
   const { hasCredits, creditsUsed, creditLimit, loading: creditsLoading } = useCredits();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showCreateVoiceModal, setShowCreateVoiceModal] = useState(false);
+  const [showStyleLab, setShowStyleLab] = useState(false);
   const [fairUseConfirmed, setFairUseConfirmed] = useState(false);
 
   // Auto-select default voice on first render if nothing selected
@@ -84,12 +86,20 @@ export function GenerationSettings({
 
   const handleBrandVoiceChange = (value: string) => {
     if (value === "create_new") {
-      // Open the create modal
       if (!isPro) {
         setShowPremiumModal(true);
         return;
       }
       setShowCreateVoiceModal(true);
+      return;
+    }
+
+    if (value === "style_lab") {
+      if (!isPro) {
+        setShowPremiumModal(true);
+        return;
+      }
+      setShowStyleLab(true);
       return;
     }
     
@@ -195,12 +205,19 @@ export function GenerationSettings({
                 </>
               )}
               
-              {/* Create New Option */}
+              {/* Create / Train Options */}
               <SelectSeparator />
+              <SelectItem value="style_lab" className="text-primary">
+                <div className="flex items-center gap-2">
+                  <FlaskConical className="h-4 w-4" />
+                  Train from My Writing
+                  {!isPro && <Crown className="h-3 w-3" />}
+                </div>
+              </SelectItem>
               <SelectItem value="create_new" className="text-primary">
                 <div className="flex items-center gap-2">
                   <Plus className="h-4 w-4" />
-                  Create New Voice
+                  Create Manually
                   {!isPro && <Crown className="h-3 w-3" />}
                 </div>
               </SelectItem>
@@ -387,6 +404,12 @@ export function GenerationSettings({
       <CreateBrandVoiceModal
         open={showCreateVoiceModal}
         onOpenChange={setShowCreateVoiceModal}
+        onVoiceCreated={handleVoiceCreated}
+      />
+
+      <StyleLabModal
+        open={showStyleLab}
+        onOpenChange={setShowStyleLab}
         onVoiceCreated={handleVoiceCreated}
       />
     </Card>

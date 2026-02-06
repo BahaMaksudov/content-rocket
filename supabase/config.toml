@@ -62,3 +62,6 @@ verify_jwt = false
 
 [functions.delete-user-account]
 verify_jwt = false
+
+[functions.analyze-voice]
+verify_jwt = false
