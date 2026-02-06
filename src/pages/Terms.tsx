@@ -291,8 +291,19 @@ export default function Terms() {
             </p>
           </section>
 
+      <section className="mb-10">
+            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">
+              14. Governing Law
+            </h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Rocket Content utilizes third-party AI providers (such as OpenAI and Google). By using the Service, 
+              you also agree to be bound by the relevant usage policies of these third-party providers. We are not 
+              responsible for the availability or accuracy of these third-party AI models.
+            </p>
+          </section>
+
           <section className="mb-10">
-            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">14. Contact Us</h2>
+            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">15. Contact Us</h2>
             <p className="text-muted-foreground leading-relaxed">
               If you have questions about these Terms, please contact us at{" "}
               <a href="mailto:legal@rocketcontentpro.io" className="text-primary hover:underline">
