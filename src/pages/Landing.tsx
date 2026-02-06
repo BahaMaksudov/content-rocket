@@ -42,6 +42,10 @@ import {
   LogOut,
   LayoutDashboard,
   ChevronDown,
+  Lock,
+  ShieldCheck,
+  MapPin,
+  CreditCard,
 } from "lucide-react";
 
 // Animation variants
@@ -825,6 +829,29 @@ function PricingSection({ onUpgradeClick }: { onUpgradeClick: (tier: "pro" | "ag
             </motion.div>
           ))}
         </div>
+
+        {/* Payment trust section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="mt-10 text-center"
+        >
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <Lock className="h-4 w-4 text-success" />
+              <span>Secure payments processed via Stripe</span>
+            </div>
+            <span className="hidden sm:inline text-muted-foreground/50">•</span>
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-success" />
+              <span>Cancel anytime</span>
+            </div>
+            <span className="hidden sm:inline text-muted-foreground/50">•</span>
+            <span>All prices include applicable taxes</span>
+          </div>
+        </motion.div>
       </div>
     </section>
   );
@@ -989,29 +1016,99 @@ CTASection.displayName = "CTASection";
 // Footer
 const Footer = forwardRef<HTMLElement>((_, ref) => {
   return (
-    <footer ref={ref} className="py-12 border-t border-border">
+    <footer ref={ref} className="py-12 border-t border-border bg-card/30">
       <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-rocket flex items-center justify-center">
-              <Rocket className="h-4 w-4 text-primary-foreground" />
+        {/* Main footer grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
+          {/* Brand & Company Info */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-rocket flex items-center justify-center">
+                <Rocket className="h-4 w-4 text-primary-foreground" />
+              </div>
+              <span className="font-bold">Rocket Content</span>
             </div>
-            <span className="font-bold">Rocket Content</span>
+            <div className="text-sm text-muted-foreground space-y-1">
+              <p className="font-medium text-foreground">Rocket Content LLC</p>
+              <div className="flex items-start gap-2">
+                <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
+                <span>Sharon, MA USA</span>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-6 text-sm text-muted-foreground">
-            <Link to="/privacy" className="hover:text-foreground transition-colors">
-              Privacy
-            </Link>
-            <Link to="/terms" className="hover:text-foreground transition-colors">
-              Terms
-            </Link>
-            <Link to="/contact" className="hover:text-foreground transition-colors">
-              Contact
-            </Link>
+
+          {/* Legal Links */}
+          <div className="space-y-4">
+            <h4 className="font-semibold text-sm">Legal</h4>
+            <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+              <Link to="/privacy" className="hover:text-foreground transition-colors">
+                Privacy Policy
+              </Link>
+              <Link to="/terms" className="hover:text-foreground transition-colors">
+                Terms of Service
+              </Link>
+              <Link to="/terms#refunds" className="hover:text-foreground transition-colors">
+                Refund Policy
+              </Link>
+              <Link to="/contact" className="hover:text-foreground transition-colors">
+                Contact Us
+              </Link>
+            </div>
           </div>
-          <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Rocket Content. All rights reserved.
-          </p>
+
+          {/* Product Links */}
+          <div className="space-y-4">
+            <h4 className="font-semibold text-sm">Product</h4>
+            <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+              <a href="#features" className="hover:text-foreground transition-colors">
+                Features
+              </a>
+              <a href="#pricing" className="hover:text-foreground transition-colors">
+                Pricing
+              </a>
+              <a href="#demo" className="hover:text-foreground transition-colors">
+                Demo
+              </a>
+              <a href="#faq" className="hover:text-foreground transition-colors">
+                FAQ
+              </a>
+            </div>
+          </div>
+
+          {/* Support */}
+          <div className="space-y-4">
+            <h4 className="font-semibold text-sm">Support</h4>
+            <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+              <a href="mailto:support@rocketcontentpro.io" className="hover:text-foreground transition-colors">
+                support@rocketcontentpro.io
+              </a>
+              <Link to="/contact" className="hover:text-foreground transition-colors">
+                Contact Sales
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Trust badges and copyright */}
+        <div className="pt-8 border-t border-border">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+            {/* Trust badges */}
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted/50 text-xs text-muted-foreground">
+                <CreditCard className="h-4 w-4" />
+                <span>Powered by Stripe</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted/50 text-xs text-muted-foreground">
+                <Lock className="h-4 w-4" />
+                <span>256-bit SSL Secured</span>
+              </div>
+            </div>
+
+            {/* Copyright */}
+            <p className="text-sm text-muted-foreground text-center">
+              © {new Date().getFullYear()} Rocket Content LLC. All rights reserved.
+            </p>
+          </div>
         </div>
       </div>
     </footer>

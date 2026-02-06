@@ -227,12 +227,15 @@ export function AppLayout({ children }: AppLayoutProps) {
           {/* Minimalist Dashboard Footer */}
           <footer className="border-t border-border/50 px-4 py-3 bg-background/50">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
-              <div className="flex items-center gap-4">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 sm:gap-4">
                 <Link to="/privacy" className="hover:text-foreground transition-colors">
                   Privacy Policy
                 </Link>
                 <Link to="/terms" className="hover:text-foreground transition-colors">
                   Terms of Service
+                </Link>
+                <Link to="/terms#refunds" className="hover:text-foreground transition-colors">
+                  Refund Policy
                 </Link>
                 <a 
                   href="mailto:support@rocketcontentpro.io" 
@@ -242,7 +245,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 </a>
               </div>
               <span className="text-muted-foreground/70">
-                © {new Date().getFullYear()} Rocket Content
+                © {new Date().getFullYear()} Rocket Content LLC
               </span>
             </div>
           </footer>
