@@ -90,11 +90,11 @@ export function getDefaultVoice(): VoiceArchetype {
   return VOICE_ARCHETYPES[4]; // Friendly Guide as default
 }
 
-export function getVoicesForTier(tier: "free" | "pro" | "agency"): {
+export function getVoicesForTier(tier: "free" | "starter" | "pro" | "agency"): {
   standard: VoiceArchetype[];
   cloned: VoiceArchetype[];
 } {
-  if (tier === "free") {
+  if (tier === "free" || tier === "starter") {
     return { standard: [], cloned: [] };
   }
   

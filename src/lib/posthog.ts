@@ -112,7 +112,7 @@ export const trackGenerationStarted = (settings?: Record<string, unknown>): void
   trackEvent("Generation Started", settings);
 };
 
-export const trackUpgradeClicked = (tier: "pro" | "agency", source?: string): void => {
+export const trackUpgradeClicked = (tier: "starter" | "pro" | "agency", source?: string): void => {
   trackEvent("Upgrade Clicked", { tier, source });
 };
 

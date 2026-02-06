@@ -13,7 +13,7 @@ interface RefundEligibility {
   generationLimit?: number;
   isFirstSubscription?: boolean;
   subscriptionEnd?: string;
-  tier?: "pro" | "agency" | "free";
+  tier?: "starter" | "pro" | "agency" | "free";
 }
 
 interface CancelResult {

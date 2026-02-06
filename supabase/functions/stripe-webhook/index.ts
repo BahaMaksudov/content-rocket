@@ -4,29 +4,31 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  // Not required for Stripe->server calls, but keeps browser tooling / local testing happy.
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Product IDs for subscription tiers - UPDATED to match new Stripe products
+// Product IDs for subscription tiers - NEW 4-tier structure
 const PRODUCT_IDS = {
-  pro: "prod_TtwRuGNynEpRHz",    // Pro product ID ($29/mo)
-  agency: "prod_TtxGA6pKTbpMoM", // Agency product ID ($249/mo)
+  starter: "prod_TvmgZ0hR2LljbD",
+  pro: "prod_TvmhiAvWEs9spu",
+  agency: "prod_TvmiVnuynHd9pf",
 };
 
 function getPlanNameFromProductId(productId: string): string {
   if (productId === PRODUCT_IDS.agency) return "Agency Plan";
   if (productId === PRODUCT_IDS.pro) return "Pro Plan";
+  if (productId === PRODUCT_IDS.starter) return "Starter Plan";
   return "Subscription";
 }
 
 function getPlanNameFromAmount(amount: number): string {
-  // amount is in cents
-  if (amount === 24900) return "Agency Plan";
-  if (amount === 2900) return "Pro Plan";
-  if (amount > 10000) return "Agency Plan";
-  if (amount > 1000) return "Pro Plan";
+  if (amount === 9999) return "Agency Plan";
+  if (amount === 1999) return "Pro Plan";
+  if (amount === 999) return "Starter Plan";
+  if (amount > 5000) return "Agency Plan";
+  if (amount > 1500) return "Pro Plan";
+  if (amount > 500) return "Starter Plan";
   return "Subscription";
 }
 
@@ -35,24 +37,16 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[STRIPE-WEBHOOK] ${step}${detailsStr}`);
 };
 
-// Stripe timestamps are usually Unix seconds, but some objects/versions can surface strings.
-// Always normalize to an ISO string for DB timestamp columns.
 const toTimestamp = (v: any) => {
   try {
     if (!v) return new Date().toISOString();
-
-    // If it's already a date-ish string (e.g., ISO), parse directly.
     if (typeof v === "string" && v.includes("-")) {
       const d = new Date(v);
       if (Number.isNaN(d.getTime())) throw new Error("Unparseable date string");
       return d.toISOString();
     }
-
-    // Default: treat as Unix seconds.
     const n = typeof v === "number" ? v : Number(v);
     if (!Number.isFinite(n)) throw new Error("Non-numeric timestamp");
-
-    // Heuristic: if it's already in ms, don't multiply again.
     const ms = n > 1e12 ? n : n * 1000;
     return new Date(ms).toISOString();
   } catch (err) {
@@ -62,9 +56,10 @@ const toTimestamp = (v: any) => {
   }
 };
 
-function getTierFromProductId(productId: string): "pro" | "agency" | "free" {
+function getTierFromProductId(productId: string): "starter" | "pro" | "agency" | "free" {
   if (productId === PRODUCT_IDS.agency) return "agency";
   if (productId === PRODUCT_IDS.pro) return "pro";
+  if (productId === PRODUCT_IDS.starter) return "starter";
   return "free";
 }
 
@@ -86,7 +81,7 @@ serve(async (req) => {
     return new Response("Webhook secret not configured", { status: 500 });
   }
 
-   const stripe = new Stripe(stripeKey, { apiVersion: "2025-12-15.clover" });
+  const stripe = new Stripe(stripeKey, { apiVersion: "2025-12-15.clover" });
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
@@ -105,14 +100,10 @@ serve(async (req) => {
     let event: Stripe.Event;
 
     try {
-      // Use constructEventAsync for Deno's SubtleCrypto provider
       event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      logStep("Webhook signature verification failed", {
-        message,
-        signatureSnippet: signature?.slice(0, 40),
-      });
+      logStep("Webhook signature verification failed", { message });
       return new Response("Invalid signature", { status: 400 });
     }
 
@@ -132,7 +123,6 @@ serve(async (req) => {
         const userId = session.metadata?.user_id;
 
         if (userId) {
-          // Get product ID to determine tier
           const priceId = subscription.items.data[0]?.price.id;
           const productId = subscription.items.data[0]?.price.product as string;
           const tier = getTierFromProductId(productId);
@@ -140,18 +130,9 @@ serve(async (req) => {
           logStep("Determined subscription tier", { productId, tier });
 
           try {
-            // CRITICAL: Use subscription.current_period_end for next billing date
-            // This is a Unix timestamp (seconds) from Stripe - convert to ISO string
             const rawPeriodEnd = subscription.current_period_end;
             const currentPeriodEnd = toTimestamp(rawPeriodEnd);
             const updatedAt = toTimestamp(undefined);
-
-            logStep("Timestamp conversion for checkout", {
-              rawCurrentPeriodEnd: rawPeriodEnd,
-              currentPeriodEnd,
-              updatedAt,
-              subscriptionId: subscription.id,
-            });
 
             const { error } = await supabase
               .from("subscriptions")
@@ -171,13 +152,9 @@ serve(async (req) => {
             if (error) {
               logStep("Database update error", { error: error.message });
             } else {
-              logStep(`Subscription updated to ${tier}`, { 
-                userId, 
-                nextBillingDate: currentPeriodEnd 
-              });
+              logStep(`Subscription updated to ${tier}`, { userId, nextBillingDate: currentPeriodEnd });
 
-              // Reset generations count on successful upgrade/payment
-              // This ensures the refund window generation count starts fresh
+              // Reset generations count on successful upgrade
               const { error: profileError } = await supabase
                 .from("profiles")
                 .update({
@@ -188,17 +165,11 @@ serve(async (req) => {
 
               if (profileError) {
                 logStep("Error resetting generations count", { error: profileError.message });
-              } else {
-                logStep("Generations count reset for new subscription", { userId });
               }
             }
           } catch (dbError) {
             const errorMessage = dbError instanceof Error ? dbError.message : String(dbError);
-            logStep("Database operation failed", {
-              error: errorMessage,
-              rawCurrentPeriodEnd: subscription.current_period_end,
-              userId,
-            });
+            logStep("Database operation failed", { error: errorMessage, userId });
             throw dbError;
           }
         }
@@ -223,14 +194,8 @@ serve(async (req) => {
         }
         
         try {
-           const currentPeriodEnd = toTimestamp(subscription.current_period_end);
-           const updatedAt = toTimestamp(undefined);
-           
-           logStep("Timestamp conversion for update", { 
-             rawCurrentPeriodEnd: subscription.current_period_end,
-             currentPeriodEnd,
-             updatedAt,
-           });
+          const currentPeriodEnd = toTimestamp(subscription.current_period_end);
+          const updatedAt = toTimestamp(undefined);
 
           const { error } = await supabase
             .from("subscriptions")
@@ -249,14 +214,7 @@ serve(async (req) => {
           }
         } catch (dbError) {
           const errorMessage = dbError instanceof Error ? dbError.message : String(dbError);
-          logStep("Database update operation failed", { 
-            error: errorMessage,
-            timestampInputs: {
-              currentPeriodEnd: subscription.current_period_end,
-              eventCreated: event.created,
-            },
-            userId: subRecord.user_id 
-          });
+          logStep("Database update operation failed", { error: errorMessage });
           throw dbError;
         }
       }
@@ -284,130 +242,106 @@ serve(async (req) => {
         }
       } catch (dbError) {
         const errorMessage = dbError instanceof Error ? dbError.message : String(dbError);
-        logStep("Database cancel operation failed", {
-          error: errorMessage,
-          timestampInputs: { eventCreated: event.created },
-          subscriptionId: subscription.id,
-        });
+        logStep("Database cancel operation failed", { error: errorMessage });
         throw dbError;
       }
     }
 
-    // Handle successful payments - insert into payment_history
+    // Handle successful payments
     if (event.type === "invoice.paid" || event.type === "invoice.payment_succeeded") {
       const invoice = event.data.object as Stripe.Invoice;
-      logStep("Invoice payment success", { type: event.type, invoiceId: invoice.id, customerId: invoice.customer });
+      logStep("Invoice payment success", { type: event.type, invoiceId: invoice.id });
 
       try {
-        // Resolve the user_id for this invoice. Prefer customer id, but fall back to subscription id
-        // since some Stripe setups can produce invoices that don't match our stored customer mapping.
         const customerId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id;
         const subscriptionId = typeof invoice.subscription === 'string'
           ? invoice.subscription
           : (invoice.subscription as any)?.id;
 
         if (!customerId && !subscriptionId) {
-          logStep("Invoice missing customer/subscription id; skipping", { invoiceId: invoice.id });
           return new Response(JSON.stringify({ received: true }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
             status: 200,
           });
         }
 
-        logStep("Invoice identifiers", { invoiceId: invoice.id, customerId, subscriptionId });
+        // Idempotency check
+        const { data: existing } = await supabase
+          .from("payment_history")
+          .select("id")
+          .eq("stripe_invoice_id", invoice.id)
+          .maybeSingle();
 
-        if (customerId || subscriptionId) {
-          // Idempotency: webhooks can be retried.
-          const { data: existing } = await supabase
-            .from("payment_history")
-            .select("id")
-            .eq("stripe_invoice_id", invoice.id)
+        if (existing?.id) {
+          return new Response(JSON.stringify({ received: true }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          });
+        }
+
+        let resolvedUserId: string | null = null;
+        if (customerId) {
+          const { data: subByCustomer } = await supabase
+            .from("subscriptions")
+            .select("user_id")
+            .eq("stripe_customer_id", customerId)
             .maybeSingle();
+          resolvedUserId = subByCustomer?.user_id ?? null;
+        }
 
-          if (existing?.id) {
-            logStep("Payment history already exists for invoice; skipping", { invoiceId: invoice.id });
-            return new Response(JSON.stringify({ received: true }), {
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-              status: 200,
+        if (!resolvedUserId && subscriptionId) {
+          const { data: subBySubscription } = await supabase
+            .from("subscriptions")
+            .select("user_id")
+            .eq("stripe_subscription_id", subscriptionId)
+            .maybeSingle();
+          resolvedUserId = subBySubscription?.user_id ?? null;
+        }
+
+        if (resolvedUserId) {
+          const paidAt = (invoice as any).status_transitions?.paid_at;
+          const paymentDate = toTimestamp(paidAt ?? invoice.created);
+          const amount = invoice.amount_paid || invoice.amount_due || invoice.total || 0;
+          
+          let planName = "Subscription payment";
+          const lineItem = invoice.lines?.data?.[0];
+          if (lineItem?.price?.product) {
+            const productId = typeof lineItem.price.product === "string" 
+              ? lineItem.price.product 
+              : (lineItem.price.product as any)?.id;
+            if (productId) {
+              planName = getPlanNameFromProductId(productId);
+            }
+          }
+          if (planName === "Subscription payment" || planName === "Subscription") {
+            planName = getPlanNameFromAmount(amount);
+          }
+          
+          const { error: insertError } = await supabase
+            .from("payment_history")
+            .insert({
+              user_id: resolvedUserId,
+              stripe_invoice_id: invoice.id,
+              stripe_payment_intent_id: typeof invoice.payment_intent === 'string' 
+                ? invoice.payment_intent 
+                : invoice.payment_intent?.id || null,
+              amount: amount,
+              currency: invoice.currency || 'usd',
+              status: invoice.status || 'paid',
+              payment_date: paymentDate,
+              invoice_pdf_url: invoice.invoice_pdf || invoice.hosted_invoice_url || null,
+              description: planName,
             });
-          }
 
-          let resolvedUserId: string | null = null;
-          if (customerId) {
-            const { data: subByCustomer } = await supabase
-              .from("subscriptions")
-              .select("user_id")
-              .eq("stripe_customer_id", customerId)
-              .maybeSingle();
-            resolvedUserId = subByCustomer?.user_id ?? null;
-          }
-
-          if (!resolvedUserId && subscriptionId) {
-            const { data: subBySubscription } = await supabase
-              .from("subscriptions")
-              .select("user_id")
-              .eq("stripe_subscription_id", subscriptionId)
-              .maybeSingle();
-            resolvedUserId = subBySubscription?.user_id ?? null;
-            if (resolvedUserId) {
-              logStep("Resolved invoice user via stripe_subscription_id", { subscriptionId, userId: resolvedUserId });
-            }
-          }
-
-          if (resolvedUserId) {
-            const paidAt = (invoice as any).status_transitions?.paid_at;
-            const paymentDate = toTimestamp(paidAt ?? invoice.created);
-            const amount = invoice.amount_paid || invoice.amount_due || invoice.total || 0;
-            
-            // Derive plan name from product ID or amount
-            let planName = "Subscription payment";
-            const lineItem = invoice.lines?.data?.[0];
-            if (lineItem?.price?.product) {
-              const productId = typeof lineItem.price.product === "string" 
-                ? lineItem.price.product 
-                : (lineItem.price.product as any)?.id;
-              if (productId) {
-                planName = getPlanNameFromProductId(productId);
-              }
-            }
-            // Fallback to amount-based detection
-            if (planName === "Subscription payment" || planName === "Subscription") {
-              planName = getPlanNameFromAmount(amount);
-            }
-            
-            const { error: insertError } = await supabase
-              .from("payment_history")
-              .insert({
-                user_id: resolvedUserId,
-                stripe_invoice_id: invoice.id,
-                stripe_payment_intent_id: typeof invoice.payment_intent === 'string' 
-                  ? invoice.payment_intent 
-                  : invoice.payment_intent?.id || null,
-                amount: amount,
-                currency: invoice.currency || 'usd',
-                status: invoice.status || 'paid',
-                payment_date: paymentDate,
-                invoice_pdf_url: invoice.invoice_pdf || invoice.hosted_invoice_url || null,
-                description: planName,
-              });
-
-            if (insertError) {
-              logStep("Error inserting payment history", { error: insertError.message });
-            } else {
-              logStep("Payment history recorded", { 
-                userId: resolvedUserId, 
-                amount,
-                invoiceId: invoice.id 
-              });
-            }
+          if (insertError) {
+            logStep("Error inserting payment history", { error: insertError.message });
           } else {
-            logStep("No subscription found for invoice", { customerId, subscriptionId, invoiceId: invoice.id });
+            logStep("Payment history recorded", { userId: resolvedUserId, amount });
           }
         }
       } catch (paymentError) {
         const errorMessage = paymentError instanceof Error ? paymentError.message : String(paymentError);
         logStep("Error processing invoice.paid", { error: errorMessage });
-        // Don't throw - we still want to return 200 to Stripe
       }
     }
 

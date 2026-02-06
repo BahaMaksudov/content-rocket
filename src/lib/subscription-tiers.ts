@@ -5,42 +5,56 @@ export const SUBSCRIPTION_TIERS = {
     price: 0,
     priceId: null,
     productId: null,
+    credits: 3,
     features: [
-      "5 AI content generations per month",
+      "3 AI content generations per month",
       "X threads & LinkedIn posts",
-      "1 brand voice",
+      "Standard AI",
       "Community support",
+    ],
+  },
+  starter: {
+    name: "Starter",
+    price: 9.99,
+    priceId: "price_1Sxv74BqKXDc35qoFpWfYr9i",
+    productId: "prod_TvmgZ0hR2LljbD",
+    credits: 20,
+    features: [
+      "20 AI content generations per month",
+      "All social formats + blog posts",
+      "1 brand voice",
+      "Email support",
     ],
   },
   pro: {
     name: "Pro",
-    price: 29,
-    priceId: "price_1Sw8YLBqKXDc35qoCAep9wJo",
-    productId: "prod_TtwRuGNynEpRHz", // Updated to new Pro product
+    price: 19.99,
+    priceId: "price_1Sxv8DBqKXDc35qoYhRoWiap",
+    productId: "prod_TvmhiAvWEs9spu",
+    credits: 60,
     features: [
-      "50 AI content generations per month",
-      "All 4 platform outputs",
-      "AI-powered visuals",
-      "Global translation (multiple languages supported)",
-      "Social previews",
+      "60 AI content generations per month",
+      "Style Mimicking (Brand Voice training)",
+      "Priority processing",
+      "No watermarks",
       "3 brand voices",
-      "Priority support",
       "API access",
     ],
   },
   agency: {
     name: "Agency",
-    price: 249,
-    priceId: "price_1Sw9LXBqKXDc35qouka1dA67", // Updated Agency price
-    productId: "prod_TtxGA6pKTbpMoM", // Updated Agency product
+    price: 99.99,
+    priceId: "price_1Sxv8iBqKXDc35qoP3Wj6har",
+    productId: "prod_TvmiVnuynHd9pf",
+    credits: 250,
     features: [
-      "Unlimited AI content generations",
-      "Bulk video processing (playlists)",
-      "Team workspace",
-      "Unlimited brand voices",
-      "White-label previews",
+      "250 AI content generations per month",
+      "10 brand voices",
+      "Team workspace (5 members)",
+      "Bulk export",
+      "Style Mimicking",
+      "Priority support",
       "Custom integrations",
-      "SSO & advanced security",
     ],
   },
 } as const;
@@ -51,11 +65,17 @@ export function getTierFromProductId(productId: string | null): SubscriptionTier
   if (!productId) return "free";
   if (productId === SUBSCRIPTION_TIERS.agency.productId) return "agency";
   if (productId === SUBSCRIPTION_TIERS.pro.productId) return "pro";
+  if (productId === SUBSCRIPTION_TIERS.starter.productId) return "starter";
   return "free";
 }
 
 export function getTierFromStatus(status: string): SubscriptionTier {
   if (status === "agency") return "agency";
   if (status === "pro") return "pro";
+  if (status === "starter") return "starter";
   return "free";
+}
+
+export function getCreditLimitForTier(tier: SubscriptionTier): number {
+  return SUBSCRIPTION_TIERS[tier].credits;
 }
