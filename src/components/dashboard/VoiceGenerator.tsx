@@ -359,7 +359,7 @@ export function VoiceGenerator({ scriptText, targetLanguage }: VoiceGeneratorPro
         {!isFreeUser && !isGenerating && (
           <p className="text-[10px] text-muted-foreground/60 flex items-center gap-1">
             <Volume2 className="h-2.5 w-2.5" />
-            Powered by ElevenLabs Multilingual v2
+            Powered by ElevenLabs V3 (Auto-detect)
           </p>
         )}
 
