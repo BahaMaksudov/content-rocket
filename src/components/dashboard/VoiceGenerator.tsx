@@ -347,11 +347,19 @@ export function VoiceGenerator({ scriptText, targetLanguage }: VoiceGeneratorPro
           </Button>
         </div>
 
-        {/* Free user hint */}
+      {/* Free user hint */}
         {isFreeUser && (
           <p className="text-xs text-muted-foreground flex items-center gap-1">
             <Lock className="h-3 w-3" />
             Voice generation is a Pro feature
+          </p>
+        )}
+
+        {/* v3 badge for paid users */}
+        {!isFreeUser && !isGenerating && (
+          <p className="text-[10px] text-muted-foreground/60 flex items-center gap-1">
+            <Volume2 className="h-2.5 w-2.5" />
+            Powered by ElevenLabs v3
           </p>
         )}
 
