@@ -18,9 +18,9 @@ export const SUBSCRIPTION_TIERS = {
     price: 9.99,
     priceId: "price_1Sxv74BqKXDc35qoFpWfYr9i",
     productId: "prod_TvmgZ0hR2LljbD",
-    credits: 15,
+    credits: 25,
     features: [
-      "15 AI content generations per month",
+      "25 AI content generations per month",
       "All social formats + blog posts",
       "1 brand voice",
       "Email support",

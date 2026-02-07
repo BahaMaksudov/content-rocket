@@ -699,7 +699,7 @@ function PricingSection({
       period: "/month",
       description: "For creators getting started",
       highlight: null,
-      features: ["20 generations per month", "All social formats + blog posts", "1 brand voice", "Email support"],
+      features: ["25 generations per month", "All social formats + blog posts", "1 brand voice", "Email support"],
       cta: "Get Starter",
       ctaAction: "upgrade" as const,
       tier: "starter" as const,

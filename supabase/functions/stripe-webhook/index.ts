@@ -170,7 +170,7 @@ serve(async (req) => {
               const lifetimeSoFar = currentProfile?.lifetime_credits_used ?? 0;
 
               // Determine new credit limit based on upgraded tier
-              const newCreditLimit = tier === "agency" ? 250 : tier === "pro" ? 60 : tier === "starter" ? 15 : 3;
+              const newCreditLimit = tier === "agency" ? 250 : tier === "pro" ? 60 : tier === "starter" ? 25 : 3;
 
               const { error: profileError } = await supabase
                 .from("profiles")
@@ -254,7 +254,7 @@ serve(async (req) => {
                   )
                 : 0;
               const lifetimeSoFar = currentProfile?.lifetime_credits_used ?? 0;
-              const newCreditLimit = newStatus === "agency" ? 250 : newStatus === "pro" ? 60 : newStatus === "starter" ? 15 : 3;
+              const newCreditLimit = newStatus === "agency" ? 250 : newStatus === "pro" ? 60 : newStatus === "starter" ? 25 : 3;
 
               const { error: resetError } = await supabase
                 .from("profiles")
