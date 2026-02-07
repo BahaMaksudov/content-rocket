@@ -47,7 +47,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const { tier } = useSubscription();
   const [showSignOutModal, setShowSignOutModal] = useState(false);
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
-  
+
   const currentTitle = routeTitles[location.pathname] || "Dashboard";
   const tierConfig = SUBSCRIPTION_TIERS[tier];
 
@@ -66,18 +66,18 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       // Subscribe to real-time changes
       const channel = supabase
-        .channel('profile-changes')
+        .channel("profile-changes")
         .on(
-          'postgres_changes',
+          "postgres_changes",
           {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'profiles',
+            event: "UPDATE",
+            schema: "public",
+            table: "profiles",
             filter: `user_id=eq.${user.id}`,
           },
           (payload) => {
             setProfile(payload.new as { full_name: string | null; avatar_url: string | null });
-          }
+          },
         )
         .subscribe();
 
@@ -183,14 +183,14 @@ export function AppLayout({ children }: AppLayoutProps) {
                   <div className="px-3 py-2 space-y-1">
                     <p className="text-sm font-medium truncate">{getUserDisplayName()}</p>
                     <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-                    <Badge 
-                      variant="outline" 
+                    <Badge
+                      variant="outline"
                       className={`text-xs mt-1 ${
-                        tier === "agency" 
-                          ? "bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-amber-500/30 text-amber-400" 
+                        tier === "agency"
+                          ? "bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-amber-500/30 text-amber-400"
                           : tier === "pro"
-                          ? "bg-primary/10 border-primary/30 text-primary"
-                          : "bg-muted border-border text-muted-foreground"
+                            ? "bg-primary/10 border-primary/30 text-primary"
+                            : "bg-muted border-border text-muted-foreground"
                       }`}
                     >
                       {tierConfig.name} Plan
@@ -210,8 +210,8 @@ export function AppLayout({ children }: AppLayoutProps) {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onClick={handleSignOutClick} 
+                  <DropdownMenuItem
+                    onClick={handleSignOutClick}
                     className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
@@ -221,9 +221,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               </DropdownMenu>
             </div>
           </header>
-          <div className="flex-1 p-6 overflow-auto">
-            {children}
-          </div>
+          <div className="flex-1 p-6 overflow-auto">{children}</div>
           {/* Minimalist Dashboard Footer */}
           <footer className="border-t border-border/50 px-4 py-3 bg-background/50">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
@@ -237,25 +235,16 @@ export function AppLayout({ children }: AppLayoutProps) {
                 <Link to="/terms#refunds" className="hover:text-foreground transition-colors">
                   Refund Policy
                 </Link>
-                <a 
-                  href="mailto:support@rocketcontentpro.io" 
-                  className="hover:text-foreground transition-colors"
-                >
+                <a href="mailto:support@rocketcontentpro.io" className="hover:text-foreground transition-colors">
                   Contact Support
                 </a>
               </div>
-              <span className="text-muted-foreground/70">
-                © {new Date().getFullYear()} Rocket Content LLC
-              </span>
+              <span className="text-muted-foreground/70">© {new Date().getFullYear()} Rocket Content</span>
             </div>
           </footer>
         </main>
       </div>
-      <SignOutConfirmationModal
-        open={showSignOutModal}
-        onOpenChange={setShowSignOutModal}
-        onConfirm={handleSignOut}
-      />
+      <SignOutConfirmationModal open={showSignOutModal} onOpenChange={setShowSignOutModal} onConfirm={handleSignOut} />
     </SidebarProvider>
   );
 }
