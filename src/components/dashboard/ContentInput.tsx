@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -42,6 +43,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useCredits } from "@/hooks/use-credits";
 import { PremiumModal } from "@/components/PremiumModal";
+import { useVideoExtraction, isAudioFile, isVideoFile } from "@/hooks/use-video-extraction";
 
 /* ────────────────────── Types & Constants ────────────────────── */
 
@@ -58,7 +60,7 @@ const YOUTUBE_URL_REGEX =
   /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/live\/)([a-zA-Z0-9_-]{11})/;
 const MAX_TRANSCRIPT_LENGTH = 20000;
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
-const ACCEPTED_FILE_TYPES = ".mp3,.mp4,.mpeg,.mpga,.m4a,.wav,.webm";
+const ACCEPTED_FILE_TYPES = ".mp3,.mp4,.mpeg,.mpga,.m4a,.wav,.webm,.mov,.avi";
 
 /* ────────────────────── Component ────────────────────── */
 
@@ -84,6 +86,8 @@ export function ContentInput({
   const [showHighDemandModal, setShowHighDemandModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+
+  const { extractAudio, progress: extractionProgress, isExtracting, error: extractionError } = useVideoExtraction();
 
   const manualSectionRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -154,8 +158,9 @@ export function ContentInput({
   };
 
   const handleFileSelect = (file: File) => {
-    if (file.size > MAX_FILE_SIZE) {
-      toast({ variant: "destructive", title: "File too large", description: "Maximum file size is 25 MB." });
+    // Audio files must be under 25 MB; video files will be extracted client-side
+    if (isAudioFile(file) && file.size > MAX_FILE_SIZE) {
+      toast({ variant: "destructive", title: "File too large", description: "Audio files must be under 25 MB." });
       return;
     }
     setSelectedFile(file);
@@ -265,7 +270,7 @@ export function ContentInput({
     }
   };
 
-  /* ── File upload: Whisper transcription ── */
+  /* ── File upload: extract audio (if video) → Whisper transcription ── */
   const handleFileUpload = async () => {
     if (!selectedFile) return;
     if (!isPro && !canUseCredits) {
@@ -275,8 +280,26 @@ export function ContentInput({
 
     setIsUploading(true);
     try {
+      let fileToUpload: File = selectedFile;
+
+      // If it's a video file, extract audio first using FFmpeg.wasm
+      if (isVideoFile(selectedFile)) {
+        const extracted = await extractAudio(selectedFile);
+        if (!extracted) {
+          // extractionError will be set by the hook
+          toast({
+            variant: "destructive",
+            title: "Audio extraction failed",
+            description: extractionError || "Could not extract audio from this video.",
+          });
+          setIsUploading(false);
+          return;
+        }
+        fileToUpload = extracted;
+      }
+
       const formData = new FormData();
-      formData.append("file", selectedFile);
+      formData.append("file", fileToUpload);
 
       const { data, error } = await supabase.functions.invoke("transcribe-media", {
         body: formData,
@@ -462,6 +485,9 @@ export function ContentInput({
                   <p className="font-medium text-sm">{selectedFile.name}</p>
                   <p className="text-xs text-muted-foreground">
                     {(selectedFile.size / (1024 * 1024)).toFixed(1)} MB
+                    {isVideoFile(selectedFile) && (
+                      <span className="ml-1">&bull; Audio will be extracted</span>
+                    )}
                   </p>
                   <Button
                     variant="ghost"
@@ -479,15 +505,45 @@ export function ContentInput({
                   <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
                   <p className="text-sm font-medium">Drop an audio or video file here</p>
                   <p className="text-xs text-muted-foreground">
-                    MP3, MP4, WAV, M4A, WebM &bull; Max 25 MB
+                    MP3, MP4, MOV, AVI, WAV, M4A, WebM
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Videos are processed locally &bull; Audio files max 25 MB
                   </p>
                 </div>
               )}
             </div>
 
+            {/* Extraction Progress Bar */}
+            {isExtracting && extractionProgress && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground font-medium">
+                    {extractionProgress.message}
+                  </span>
+                  <span className="text-muted-foreground">
+                    {extractionProgress.percent}%
+                  </span>
+                </div>
+                <Progress value={extractionProgress.percent} className="h-2" />
+              </div>
+            )}
+
+            {/* Extraction Error */}
+            {extractionError && !isExtracting && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>{extractionError}</AlertDescription>
+              </Alert>
+            )}
+
             {selectedFile && (
-              <Button onClick={handleFileUpload} disabled={isUploading} className="w-full">
-                {isUploading ? (
+              <Button onClick={handleFileUpload} disabled={isUploading || isExtracting} className="w-full">
+                {isExtracting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" /> Processing Video&hellip;
+                  </>
+                ) : isUploading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin mr-2" /> Transcribing&hellip;
                   </>
