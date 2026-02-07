@@ -673,7 +673,13 @@ function DemoSection() {
 }
 
 // Pricing Section
-function PricingSection({ onUpgradeClick, highlightedPlan }: { onUpgradeClick: (tier: "starter" | "pro" | "agency") => void; highlightedPlan?: string | null }) {
+function PricingSection({
+  onUpgradeClick,
+  highlightedPlan,
+}: {
+  onUpgradeClick: (tier: "starter" | "pro" | "agency") => void;
+  highlightedPlan?: string | null;
+}) {
   const plans = [
     {
       name: "Free",
@@ -693,12 +699,7 @@ function PricingSection({ onUpgradeClick, highlightedPlan }: { onUpgradeClick: (
       period: "/month",
       description: "For creators getting started",
       highlight: null,
-      features: [
-        "20 generations per month",
-        "All social formats + blog posts",
-        "1 brand voice",
-        "Email support",
-      ],
+      features: ["20 generations per month", "All social formats + blog posts", "1 brand voice", "Email support"],
       cta: "Get Starter",
       ctaAction: "upgrade" as const,
       tier: "starter" as const,
@@ -773,77 +774,77 @@ function PricingSection({ onUpgradeClick, highlightedPlan }: { onUpgradeClick: (
           {plans.map((plan, index) => {
             const isHighlighted = highlightedPlan && plan.name.toLowerCase() === highlightedPlan;
             return (
-            <motion.div
-              key={plan.name}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className={`relative ${isHighlighted ? "animate-pulse-slow ring-2 ring-primary ring-offset-2 ring-offset-background rounded-xl" : ""}`}
-            >
-              {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                  <Badge className="bg-gradient-to-r from-primary to-rocket text-white shadow-lg">
-                    <Star className="h-3 w-3 mr-1 fill-current" />
-                    Most Popular
-                  </Badge>
-                </div>
-              )}
-              {plan.highlight && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                  <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg">
-                    <Building2 className="h-3 w-3 mr-1" />
-                    {plan.highlight}
-                  </Badge>
-                </div>
-              )}
-              <Card
-                className={`h-full ${plan.popular ? "border-primary ring-2 ring-primary/20" : plan.highlight ? "border-amber-500/50 ring-2 ring-amber-500/20" : "border-border"} transition-all duration-300 hover:border-primary/50`}
+              <motion.div
+                key={plan.name}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className={`relative ${isHighlighted ? "animate-pulse-slow ring-2 ring-primary ring-offset-2 ring-offset-background rounded-xl" : ""}`}
               >
-                <CardHeader className="text-center pb-4">
-                  <CardTitle className="text-xl">{plan.name}</CardTitle>
-                  <CardDescription>{plan.description}</CardDescription>
-                  <div className="mt-4">
-                    <span className="text-4xl font-bold">{plan.price}</span>
-                    <span className="text-muted-foreground">{plan.period}</span>
+                {plan.popular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                    <Badge className="bg-gradient-to-r from-primary to-rocket text-white shadow-lg">
+                      <Star className="h-3 w-3 mr-1 fill-current" />
+                      Most Popular
+                    </Badge>
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <ul className="space-y-3">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-success shrink-0 mt-0.5" />
-                        <span className="text-sm text-muted-foreground">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  {plan.ctaAction === "upgrade" && plan.tier ? (
-                    <Button
-                      onClick={() => onUpgradeClick(plan.tier!)}
-                      className={`w-full ${
-                        plan.tier === "agency"
-                          ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
-                          : "gradient-primary text-primary-foreground"
-                      }`}
-                    >
-                      {plan.cta}
-                      <ChevronRight className="h-4 w-4 ml-1" />
-                    </Button>
-                  ) : (
-                    <Button
-                      asChild
-                      className={`w-full ${plan.popular ? "gradient-primary text-primary-foreground" : ""}`}
-                      variant={plan.popular ? "default" : "outline"}
-                    >
-                      <Link to="/auth">
+                )}
+                {plan.highlight && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                    <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg">
+                      <Building2 className="h-3 w-3 mr-1" />
+                      {plan.highlight}
+                    </Badge>
+                  </div>
+                )}
+                <Card
+                  className={`h-full ${plan.popular ? "border-primary ring-2 ring-primary/20" : plan.highlight ? "border-amber-500/50 ring-2 ring-amber-500/20" : "border-border"} transition-all duration-300 hover:border-primary/50`}
+                >
+                  <CardHeader className="text-center pb-4">
+                    <CardTitle className="text-xl">{plan.name}</CardTitle>
+                    <CardDescription>{plan.description}</CardDescription>
+                    <div className="mt-4">
+                      <span className="text-4xl font-bold">{plan.price}</span>
+                      <span className="text-muted-foreground">{plan.period}</span>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <ul className="space-y-3">
+                      {plan.features.map((feature) => (
+                        <li key={feature} className="flex items-start gap-3">
+                          <Check className="h-5 w-5 text-success shrink-0 mt-0.5" />
+                          <span className="text-sm text-muted-foreground">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    {plan.ctaAction === "upgrade" && plan.tier ? (
+                      <Button
+                        onClick={() => onUpgradeClick(plan.tier!)}
+                        className={`w-full ${
+                          plan.tier === "agency"
+                            ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+                            : "gradient-primary text-primary-foreground"
+                        }`}
+                      >
                         {plan.cta}
                         <ChevronRight className="h-4 w-4 ml-1" />
-                      </Link>
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
+                      </Button>
+                    ) : (
+                      <Button
+                        asChild
+                        className={`w-full ${plan.popular ? "gradient-primary text-primary-foreground" : ""}`}
+                        variant={plan.popular ? "default" : "outline"}
+                      >
+                        <Link to="/auth">
+                          {plan.cta}
+                          <ChevronRight className="h-4 w-4 ml-1" />
+                        </Link>
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
             );
           })}
         </div>
@@ -1047,7 +1048,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
               <span className="font-bold">Rocket Content</span>
             </div>
             <div className="text-sm text-muted-foreground space-y-1">
-              <p className="font-medium text-foreground">Rocket Content LLC</p>
+              <p className="font-medium text-foreground">Rocket Content</p>
               <div className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
                 <span>Sharon, MA USA</span>
@@ -1124,7 +1125,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
 
             {/* Copyright */}
             <p className="text-sm text-muted-foreground text-center">
-              © {new Date().getFullYear()} Rocket Content LLC. All rights reserved.
+              © {new Date().getFullYear()} Rocket Content. All rights reserved.
             </p>
           </div>
         </div>
