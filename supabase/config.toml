@@ -65,3 +65,9 @@ verify_jwt = false
 
 [functions.analyze-voice]
 verify_jwt = false
+
+[functions.fetch-web-content]
+verify_jwt = false
+
+[functions.transcribe-media]
+verify_jwt = false

@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { YouTubeInput } from "@/components/dashboard/YouTubeInput";
+import { ContentInput } from "@/components/dashboard/ContentInput";
 import { GenerationSettings } from "@/components/dashboard/GenerationSettings";
 import { ContentOutput } from "@/components/dashboard/ContentOutput";
 import { WelcomeBanner } from "@/components/dashboard/WelcomeBanner";
@@ -327,7 +327,7 @@ export default function Dashboard() {
         <div>
           <h1 className="text-3xl font-bold mb-2">Content Dashboard</h1>
           <p className="text-muted-foreground">
-            Transform your YouTube videos into multi-platform content with batch processing
+            Transform any content into multi-platform assets — from YouTube, web pages, or audio files
           </p>
         </div>
 
@@ -356,7 +356,7 @@ export default function Dashboard() {
               {/* Left column - Input & Settings */}
               <div className="lg:col-span-1 space-y-6">
                 <div ref={youtubeInputRef}>
-                  <YouTubeInput
+                  <ContentInput
                     onTranscriptFetched={handleTranscriptFetched}
                     transcript={transcript}
                     transcriptMethod={transcriptMethod}
