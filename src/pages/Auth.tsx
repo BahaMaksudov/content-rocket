@@ -350,18 +350,18 @@ export default function Auth() {
               },
             });
           } else if (errorMessage.includes("Invalid login credentials")) {
-            // Invalid credentials - could be wrong password or no account
+            // Invalid credentials - could be wrong password OR no account exists
             setAuthError({
-              type: "warning",
-              title: "Invalid Credentials",
-              message: "Invalid password for this email. Would you like to reset it?",
+              type: "info",
+              title: "No Account Found",
+              message: "We couldn't find an account with these credentials. If you're new, create a free account to get started!",
               action: {
-                label: "Reset Password",
-                onClick: () => navigate("/forgot-password"),
-              },
-              secondaryAction: {
                 label: "Create Account",
                 onClick: switchToSignup,
+              },
+              secondaryAction: {
+                label: "Reset Password",
+                onClick: () => navigate("/forgot-password"),
               },
             });
           } else {
