@@ -354,12 +354,16 @@ export default function Auth() {
             // "wrong password" from "no account"
             let accountExists = false;
             try {
-              const { data } = await supabase.rpc("check_email_exists", {
-                check_email: email,
-              });
-              accountExists = !!data;
-            } catch {
-              // If check fails, fall back to generic message
+              const { data, error: rpcError } = await supabase.rpc(
+                "check_email_exists" as any,
+                { check_email: email }
+              );
+              if (!rpcError && data === true) {
+                accountExists = true;
+              }
+              console.log("[Auth] Email check result:", { data, rpcError, accountExists });
+            } catch (e) {
+              console.error("[Auth] Email check exception:", e);
             }
 
             if (accountExists) {
