@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Rocket, Key, Lock, Code, Zap } from "lucide-react";
 
-const API_BASE_URL = "https://dhcafytgwolxijdiprdr.supabase.co";
+const API_BASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
 export function ApiDocsSection() {
   return (
