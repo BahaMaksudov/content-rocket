@@ -350,20 +350,41 @@ export default function Auth() {
               },
             });
           } else if (errorMessage.includes("Invalid login credentials")) {
-            // Invalid credentials - could be wrong password OR no account exists
-            setAuthError({
-              type: "warning",
-              title: "Invalid Credentials",
-              message: "The email or password is incorrect. Reset your password if you forgot it, or create a new account if you're new here.",
-              action: {
-                label: "Reset Password",
-                onClick: () => navigate("/forgot-password"),
-              },
-              secondaryAction: {
-                label: "Create Account",
-                onClick: switchToSignup,
-              },
-            });
+            // Check if a profile exists for this email to distinguish
+            // "wrong password" from "no account"
+            const { data: existingProfile } = await supabase
+              .from("profiles")
+              .select("id")
+              .eq("email", email)
+              .maybeSingle();
+
+            if (existingProfile) {
+              // Account exists → wrong password
+              setAuthError({
+                type: "warning",
+                title: "Incorrect Password",
+                message: "The password you entered is incorrect. Would you like to reset it?",
+                action: {
+                  label: "Reset Password",
+                  onClick: () => navigate("/forgot-password"),
+                },
+              });
+            } else {
+              // No account found → prompt to sign up
+              setAuthError({
+                type: "info",
+                title: "No Account Found",
+                message: "We don't have an account with this email. Create a free account to get started!",
+                action: {
+                  label: "Create Account",
+                  onClick: switchToSignup,
+                },
+                secondaryAction: {
+                  label: "Reset Password",
+                  onClick: () => navigate("/forgot-password"),
+                },
+              });
+            }
           } else {
             setAuthError({
               type: "error",
