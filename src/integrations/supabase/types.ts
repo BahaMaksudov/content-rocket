@@ -543,6 +543,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_email_exists: { Args: { check_email: string }; Returns: boolean }
       count_org_members: { Args: { _org_id: string }; Returns: number }
       get_user_org_id: { Args: { _user_id: string }; Returns: string }
       is_org_admin: {
