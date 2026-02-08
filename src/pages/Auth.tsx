@@ -352,16 +352,16 @@ export default function Auth() {
           } else if (errorMessage.includes("Invalid login credentials")) {
             // Invalid credentials - could be wrong password OR no account exists
             setAuthError({
-              type: "info",
-              title: "No Account Found",
-              message: "We couldn't find an account with these credentials. If you're new, create a free account to get started!",
+              type: "warning",
+              title: "Invalid Credentials",
+              message: "The email or password is incorrect. Reset your password if you forgot it, or create a new account if you're new here.",
               action: {
-                label: "Create Account",
-                onClick: switchToSignup,
-              },
-              secondaryAction: {
                 label: "Reset Password",
                 onClick: () => navigate("/forgot-password"),
+              },
+              secondaryAction: {
+                label: "Create Account",
+                onClick: switchToSignup,
               },
             });
           } else {
