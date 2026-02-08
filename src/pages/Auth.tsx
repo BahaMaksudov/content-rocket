@@ -350,20 +350,49 @@ export default function Auth() {
               },
             });
           } else if (errorMessage.includes("Invalid login credentials")) {
-            // Invalid credentials - could be wrong password or no account
-            setAuthError({
-              type: "warning",
-              title: "Invalid Credentials",
-              message: "Invalid password for this email. Would you like to reset it?",
-              action: {
-                label: "Reset Password",
-                onClick: () => navigate("/forgot-password"),
-              },
-              secondaryAction: {
-                label: "Create Account",
-                onClick: switchToSignup,
-              },
-            });
+            // Check if a profile exists for this email to distinguish
+            // "wrong password" from "no account"
+            let accountExists = false;
+            try {
+              const { data, error: rpcError } = await supabase.rpc(
+                "check_email_exists" as any,
+                { check_email: email }
+              );
+              if (!rpcError && data === true) {
+                accountExists = true;
+              }
+              console.log("[Auth] Email check result:", { data, rpcError, accountExists });
+            } catch (e) {
+              console.error("[Auth] Email check exception:", e);
+            }
+
+            if (accountExists) {
+              // Account exists → wrong password
+              setAuthError({
+                type: "warning",
+                title: "Incorrect Password",
+                message: "The password you entered is incorrect. Would you like to reset it?",
+                action: {
+                  label: "Reset Password",
+                  onClick: () => navigate("/forgot-password"),
+                },
+              });
+            } else {
+              // No account found → prompt to sign up
+              setAuthError({
+                type: "info",
+                title: "No Account Found",
+                message: "We don't have an account with this email. Create a free account to get started!",
+                action: {
+                  label: "Create Account",
+                  onClick: switchToSignup,
+                },
+                secondaryAction: {
+                  label: "Reset Password",
+                  onClick: () => navigate("/forgot-password"),
+                },
+              });
+            }
           } else {
             setAuthError({
               type: "error",

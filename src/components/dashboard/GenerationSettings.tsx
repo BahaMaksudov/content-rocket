@@ -369,7 +369,7 @@ export function GenerationSettings({
                           : "border-muted-foreground/30 text-muted-foreground"
                     }`}
                   >
-                    {creditsRemaining} / {creditLimit} credits remaining
+                    {creditsUsed} / {creditLimit} used
                   </Badge>
                 </div>
               )}
