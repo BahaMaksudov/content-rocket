@@ -16,7 +16,7 @@ export const SUBSCRIPTION_TIERS = {
   starter: {
     name: "Starter",
     price: 9.99,
-    priceId: "price_1Sxv74BqKXDc35qoFpWfYr9i",
+    priceId: import.meta.env.VITE_STRIPE_PRICE_ID_STARTER || "price_1Sxv74BqKXDc35qoFpWfYr9i",
     productId: "prod_TvmgZ0hR2LljbD",
     credits: 25,
     features: [
@@ -29,7 +29,7 @@ export const SUBSCRIPTION_TIERS = {
   pro: {
     name: "Pro",
     price: 19.99,
-    priceId: "price_1Sxv8DBqKXDc35qoYhRoWiap",
+    priceId: import.meta.env.VITE_STRIPE_PRICE_ID_PRO || "price_1Sxv8DBqKXDc35qoYhRoWiap",
     productId: "prod_TvmhiAvWEs9spu",
     credits: 60,
     features: [
@@ -44,7 +44,7 @@ export const SUBSCRIPTION_TIERS = {
   agency: {
     name: "Agency",
     price: 99.99,
-    priceId: "price_1Sxv8iBqKXDc35qoP3Wj6har",
+    priceId: import.meta.env.VITE_STRIPE_PRICE_ID_AGENCY || "price_1Sxv8iBqKXDc35qoP3Wj6har",
     productId: "prod_TvmiVnuynHd9pf",
     credits: 250,
     features: [
