@@ -7,14 +7,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform",
 };
 
-// Price IDs for subscription tiers - NEW 4-tier structure
-const VALID_PRICE_IDS = new Set([
-  "price_1Sxv74BqKXDc35qoFpWfYr9i", // Starter $9.99
-  "price_1Sxv8DBqKXDc35qoYhRoWiap", // Pro $19.99
-  "price_1Sxv8iBqKXDc35qoP3Wj6har", // Agency $99.99
-]);
-
-const DEFAULT_PRICE_ID = "price_1Sxv8DBqKXDc35qoYhRoWiap"; // Pro
+// Price IDs are now passed from the frontend via environment variables.
+// We validate that a price ID starting with "price_" is provided.
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -47,15 +41,16 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    let priceId = DEFAULT_PRICE_ID;
+    let priceId: string | undefined;
     try {
       const body = await req.json();
-      if (body.priceId && VALID_PRICE_IDS.has(body.priceId)) {
+      if (body.priceId && typeof body.priceId === "string" && body.priceId.startsWith("price_")) {
         priceId = body.priceId;
       }
     } catch {
-      // No body or invalid JSON, use default
+      // No body or invalid JSON
     }
+    if (!priceId) throw new Error("A valid priceId is required");
     logStep("Using price", { priceId });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
