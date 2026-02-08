@@ -352,13 +352,17 @@ export default function Auth() {
           } else if (errorMessage.includes("Invalid login credentials")) {
             // Check if a profile exists for this email to distinguish
             // "wrong password" from "no account"
-            const { data: existingProfile } = await supabase
-              .from("profiles")
-              .select("id")
-              .eq("email", email)
-              .maybeSingle();
+            let accountExists = false;
+            try {
+              const { data } = await supabase.rpc("check_email_exists", {
+                check_email: email,
+              });
+              accountExists = !!data;
+            } catch {
+              // If check fails, fall back to generic message
+            }
 
-            if (existingProfile) {
+            if (accountExists) {
               // Account exists → wrong password
               setAuthError({
                 type: "warning",
