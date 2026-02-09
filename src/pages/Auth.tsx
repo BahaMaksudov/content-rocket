@@ -324,9 +324,22 @@ export default function Auth() {
             });
           }
         } else {
-          console.log("[Auth] Signup successful, showing verification pending screen");
-          setPendingEmail(email);
-          setShowVerificationPending(true);
+          // Check if user was auto-confirmed (session exists immediately)
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            console.log("[Auth] Signup successful, user auto-confirmed - redirecting");
+            toast.success("Account created successfully!");
+            // Process invite token if present
+            if (inviteToken) {
+              await processInviteToken(inviteToken);
+            }
+            const targetPath = upgradeTier ? `${redirectPath}?upgrade=${upgradeTier}` : redirectPath;
+            navigate(targetPath);
+          } else {
+            console.log("[Auth] Signup successful, showing verification pending screen");
+            setPendingEmail(email);
+            setShowVerificationPending(true);
+          }
         }
       } else {
         // Login flow
