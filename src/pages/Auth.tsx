@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { Loader2, Rocket, ArrowLeft, RefreshCw, AlertCircle, UserPlus, Info, LogIn, KeyRound, Users, Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 import { VerificationPending } from "@/components/auth/VerificationPending";
-import { getEmailRedirectTo } from "@/lib/auth-redirect";
+
 
 // Component to handle invite processing when user is already logged in
 function AuthInviteProcessor({ 
@@ -237,7 +237,7 @@ export default function Auth() {
     
     setIsResendingVerification(true);
     try {
-      const redirectUrl = getEmailRedirectTo("/auth/callback");
+      const redirectUrl = `${window.location.origin}/auth/callback`;
       
       const { error } = await supabase.auth.resend({
         type: "signup",
@@ -324,22 +324,10 @@ export default function Auth() {
             });
           }
         } else {
-          // Check if user was auto-confirmed (session exists immediately)
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session) {
-            console.log("[Auth] Signup successful, user auto-confirmed - redirecting");
-            toast.success("Account created successfully!");
-            // Process invite token if present
-            if (inviteToken) {
-              await processInviteToken(inviteToken);
-            }
-            const targetPath = upgradeTier ? `${redirectPath}?upgrade=${upgradeTier}` : redirectPath;
-            navigate(targetPath);
-          } else {
-            console.log("[Auth] Signup successful, showing verification pending screen");
-            setPendingEmail(email);
-            setShowVerificationPending(true);
-          }
+          // Always show verification pending - user must confirm email
+          console.log("[Auth] Signup successful, showing verification pending screen");
+          setPendingEmail(email);
+          setShowVerificationPending(true);
         }
       } else {
         // Login flow
