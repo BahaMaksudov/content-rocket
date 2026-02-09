@@ -31,32 +31,42 @@ export default function ResetPassword() {
 
   // Check if user has a valid recovery session
   useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      // User should have a session from the recovery link
-      if (session) {
+    let resolved = false;
+
+    // Set up auth state listener FIRST to catch the PASSWORD_RECOVERY event
+    // The Supabase client processes URL hash tokens on init and fires this event
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("[ResetPassword] Auth event:", event);
+      if (event === "PASSWORD_RECOVERY" && session) {
+        resolved = true;
         setIsValidSession(true);
-      } else {
-        // Listen for the PASSWORD_RECOVERY event
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-          if (event === "PASSWORD_RECOVERY" && session) {
-            setIsValidSession(true);
-          }
-        });
-
-        // Give it a moment to process the hash
-        setTimeout(() => {
-          if (isValidSession === null) {
-            setIsValidSession(false);
-          }
-        }, 2000);
-
-        return () => subscription.unsubscribe();
+      } else if (event === "SIGNED_IN" && session) {
+        // Recovery can also come through as SIGNED_IN
+        resolved = true;
+        setIsValidSession(true);
       }
-    };
+    });
 
-    checkSession();
+    // THEN check for existing session (user may already have one from the recovery link)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session && !resolved) {
+        resolved = true;
+        setIsValidSession(true);
+      }
+    });
+
+    // Give it time to process the hash tokens from the URL
+    const timeout = setTimeout(() => {
+      if (!resolved) {
+        console.log("[ResetPassword] No session detected after timeout - marking as expired");
+        setIsValidSession(false);
+      }
+    }, 4000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
