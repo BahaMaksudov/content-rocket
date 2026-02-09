@@ -144,6 +144,7 @@ export default function AuthCallback() {
           setTimeout(() => {
             navigate("/dashboard", { replace: true });
           }, 2000);
+        } else if (inviteToken) {
           // Handle invite token without session - redirect to auth page with token
           console.log("[AuthCallback] Invite token found but no session - redirecting to auth page");
           navigate(`/auth?invite=${inviteToken}`, { replace: true });
