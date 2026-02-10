@@ -36,7 +36,12 @@ export function getEmailRedirectTo(pathname: string = "/auth/callback") {
     return new URL(pathname, origin).toString();
   }
 
-  // Use VITE_SITE_URL or production domain for all other cases
+  // Preview/dev environments (e.g. *.lovable.app) - use current origin
+  if (hostname !== "rocketcontentpro.io" && hostname !== "www.rocketcontentpro.io") {
+    return new URL(pathname, origin).toString();
+  }
+
+  // Production - use VITE_SITE_URL or production domain
   const siteUrl = getSiteUrl();
   return `${siteUrl}${pathname}`;
 }

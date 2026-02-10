@@ -100,6 +100,13 @@ export default function AuthCallback() {
             return;
           }
 
+          // Handle password recovery - redirect to reset password page
+          if (authType === "recovery") {
+            console.log("[AuthCallback] Recovery flow detected - redirecting to reset password");
+            navigate("/reset-password", { replace: true });
+            return;
+          }
+
           // Handle invite type - process team invite if present
           if (authType === "invite" || inviteToken) {
             console.log("[AuthCallback] Invite flow detected - processing team invite");
@@ -114,12 +121,21 @@ export default function AuthCallback() {
         } else if (code) {
           // PKCE flow: Exchange code for session
           console.log("[AuthCallback] Exchanging code for session (PKCE flow)");
-          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          const { data: codeData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 
           if (exchangeError) {
             console.error("[AuthCallback] Code exchange error:", exchangeError.message);
             setStatus("error");
             setErrorMessage(exchangeError.message);
+            return;
+          }
+
+          // Check if this is a recovery flow via PKCE
+          // The type param may be in query params for PKCE recovery
+          const pkceType = queryParams.get("type");
+          if (pkceType === "recovery") {
+            console.log("[AuthCallback] Recovery flow detected via PKCE - redirecting to reset password");
+            navigate("/reset-password", { replace: true });
             return;
           }
 

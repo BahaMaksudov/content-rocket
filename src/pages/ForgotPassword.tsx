@@ -33,8 +33,10 @@ export default function ForgotPassword() {
     setIsLoading(true);
 
     try {
+      const redirectUrl = `${window.location.origin}/reset-password`;
+      console.log("[ForgotPassword] Reset redirect URL:", redirectUrl);
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: "https://rocketcontentpro.io/reset-password",
+        redirectTo: redirectUrl,
       });
 
       if (error) {

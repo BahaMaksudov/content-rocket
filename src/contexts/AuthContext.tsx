@@ -3,7 +3,7 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { identifyUser, resetUser, trackSignUp, trackLogin } from "@/lib/posthog";
 import { toast } from "@/hooks/use-toast";
-import { getEmailRedirectTo } from "@/lib/auth-redirect";
+
 
 interface AuthContextType {
   user: User | null;
@@ -106,21 +106,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Helper to check if running on a custom domain (not Lovable preview)
-  const isCustomDomain = () => {
-    const hostname = window.location.hostname;
-    return !hostname.includes("lovable.app") && 
-           !hostname.includes("lovableproject.com") && 
-           !hostname.includes("localhost");
-  };
 
   const signUp = async (email: string, password: string, fullName?: string) => {
-    // Use a redirect URL that works both in editor preview and on mobile.
-    const redirectUrl = getEmailRedirectTo("/auth/callback");
-
-    console.log(
-      `[Auth] SignUp redirect configured for: ${redirectUrl} (Custom domain: ${isCustomDomain()})`
-    );
+    const redirectUrl = `${window.location.origin}/auth/callback`;
+    console.log(`[Auth] SignUp redirect: ${redirectUrl}`);
     
     const { data, error } = await supabase.auth.signUp({
       email,
