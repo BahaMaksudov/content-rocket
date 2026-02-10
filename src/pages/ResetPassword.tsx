@@ -40,9 +40,13 @@ export default function ResetPassword() {
       if (event === "PASSWORD_RECOVERY" && session) {
         resolved = true;
         setIsValidSession(true);
+      } else if (event === "SIGNED_IN" && session) {
+        // Email verification also lands here due to redirect config.
+        // Redirect to dashboard instead of showing the reset form.
+        resolved = true;
+        console.log("[ResetPassword] Non-recovery SIGNED_IN detected — redirecting to dashboard");
+        navigate("/dashboard", { replace: true });
       }
-      // Do NOT accept generic SIGNED_IN events — email verification
-      // also triggers SIGNED_IN and must not show the reset form.
     });
 
     // Give it time to process the hash tokens from the URL
