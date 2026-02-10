@@ -40,19 +40,9 @@ export default function ResetPassword() {
       if (event === "PASSWORD_RECOVERY" && session) {
         resolved = true;
         setIsValidSession(true);
-      } else if (event === "SIGNED_IN" && session) {
-        // Recovery can also come through as SIGNED_IN
-        resolved = true;
-        setIsValidSession(true);
       }
-    });
-
-    // THEN check for existing session (user may already have one from the recovery link)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session && !resolved) {
-        resolved = true;
-        setIsValidSession(true);
-      }
+      // Do NOT accept generic SIGNED_IN events — email verification
+      // also triggers SIGNED_IN and must not show the reset form.
     });
 
     // Give it time to process the hash tokens from the URL
