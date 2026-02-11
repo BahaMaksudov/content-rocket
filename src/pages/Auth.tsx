@@ -268,7 +268,8 @@ export default function Auth() {
     // Clear any previous error
     setAuthError(null);
 
-    const validation = authSchema.safeParse({ email, password });
+    const normalizedEmail = email.trim().toLowerCase();
+    const validation = authSchema.safeParse({ email: normalizedEmail, password });
     
     if (!validation.success) {
       setAuthError({
@@ -283,8 +284,8 @@ export default function Auth() {
 
     try {
       if (action === "signup") {
-        console.log("[Auth] Attempting signup for:", email);
-        const result = await signUp(email, password);
+        console.log("[Auth] Attempting signup for:", normalizedEmail);
+        const result = await signUp(normalizedEmail, password);
 
         if (result.error) {
           let errorMessage = result.error.message;
@@ -331,7 +332,7 @@ export default function Auth() {
         }
       } else {
         // Login flow
-        const result = await signIn(email, password);
+        const result = await signIn(normalizedEmail, password);
 
         if (result.error) {
           let errorMessage = result.error.message;
@@ -357,7 +358,7 @@ export default function Auth() {
             try {
               const { data, error: rpcError } = await supabase.rpc(
                 "check_email_exists" as any,
-                { check_email: email }
+                { check_email: normalizedEmail }
               );
               if (!rpcError && data === true) {
                 accountExists = true;
