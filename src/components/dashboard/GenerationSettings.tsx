@@ -5,8 +5,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSeparator } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Loader2, Sparkles, Mic, Crown, Rocket, AlertCircle, Plus, Info, FlaskConical } from "lucide-react";
+import { Loader2, Sparkles, Mic, Crown, Rocket, AlertCircle, Plus, Info, FlaskConical, Heart } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useCredits } from "@/hooks/use-credits";
@@ -36,6 +37,8 @@ interface GenerationSettingsProps {
   targetLanguage: string;
   setTargetLanguage: (language: string) => void;
   hideGenerateButton?: boolean;
+  includeSocialProof?: boolean;
+  setIncludeSocialProof?: (value: boolean) => void;
 }
 
 const tones = [
@@ -66,6 +69,8 @@ export function GenerationSettings({
   targetLanguage,
   setTargetLanguage,
   hideGenerateButton = false,
+  includeSocialProof = false,
+  setIncludeSocialProof,
 }: GenerationSettingsProps) {
   const { isPro, isAgency } = useSubscription();
   const { hasCredits, creditsUsed, creditLimit, loading: creditsLoading } = useCredits();
@@ -271,6 +276,28 @@ export function GenerationSettings({
           language={targetLanguage}
           onLanguageChange={setTargetLanguage}
         />
+
+        {/* Include Social Proof Toggle */}
+        {setIncludeSocialProof && (
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
+            <div className="flex items-center gap-2">
+              <Heart className="h-4 w-4 text-primary" />
+              <div>
+                <Label htmlFor="social-proof-toggle" className="text-sm font-medium cursor-pointer">
+                  Include Social Proof
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Weave featured testimonials into generated content
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="social-proof-toggle"
+              checked={includeSocialProof}
+              onCheckedChange={setIncludeSocialProof}
+            />
+          </div>
+        )}
 
         {/* Credits Exhausted Warning Banner */}
         {isCreditsExhausted && (
