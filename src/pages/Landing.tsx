@@ -18,6 +18,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { Heart } from "lucide-react";
 import {
   Rocket,
   Zap,
@@ -672,6 +673,132 @@ function DemoSection() {
   );
 }
 
+// Trusted by Creators - Wall of Love
+function TrustedByCreatorsSection() {
+  const sampleTestimonials = [
+    {
+      id: "1",
+      author_name: "Captain Quasar",
+      author_title: "YouTuber • 120K Subs",
+      content: "Rocket Content turned my 45-minute podcast into a week's worth of Twitter threads, LinkedIn posts, and a full blog article. I saved at least 8 hours.",
+      rating: 5,
+      source_platform: "twitter",
+    },
+    {
+      id: "2",
+      author_name: "Sarah Chen",
+      author_title: "Content Strategist",
+      content: "The Style Mimicking feature is unreal. It captured my brand voice so well that my audience couldn't tell the difference. Game changer for scaling content.",
+      rating: 5,
+      source_platform: "linkedin",
+    },
+    {
+      id: "3",
+      author_name: "Marcus Rivera",
+      author_title: "Agency Owner",
+      content: "We manage 12 clients and Rocket Content cut our content production time by 70%. The bulk processing alone pays for the Agency plan ten times over.",
+      rating: 5,
+      source_platform: "twitter",
+    },
+    {
+      id: "4",
+      author_name: "Priya Patel",
+      author_title: "SaaS Founder",
+      content: "Finally, a tool that doesn't produce generic AI slop. The testimonials integration adds real social proof to every post automatically. Brilliant.",
+      rating: 5,
+      source_platform: "linkedin",
+    },
+    {
+      id: "5",
+      author_name: "Jake Thompson",
+      author_title: "Fitness Creator • 85K Subs",
+      content: "I went from posting once a week to 5x daily across three platforms. My engagement tripled in the first month. This is the future of content.",
+      rating: 5,
+      source_platform: "twitter",
+    },
+    {
+      id: "6",
+      author_name: "Aisha Bello",
+      author_title: "Marketing Director",
+      content: "The Global Reach translation is incredibly accurate. We now publish in 4 languages without hiring translators. ROI was immediate.",
+      rating: 4,
+      source_platform: "linkedin",
+    },
+  ];
+
+  return (
+    <section className="py-20 lg:py-28 relative overflow-hidden">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-primary/5 rounded-full blur-[120px]" />
+
+      <div className="container mx-auto px-4 relative">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-14"
+        >
+          <Badge variant="outline" className="mb-4 text-primary border-primary/30">
+            <Heart className="h-3.5 w-3.5 mr-1.5 fill-primary" />
+            Wall of Love
+          </Badge>
+          <h2 className="text-3xl lg:text-5xl font-bold mb-4">
+            Trusted by <span className="text-gradient">10,000+ Creators</span>
+          </h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            See why creators, agencies, and marketers love Rocket Content
+          </p>
+        </motion.div>
+
+        <div className="columns-1 sm:columns-2 lg:columns-3 gap-5 max-w-5xl mx-auto">
+          {sampleTestimonials.map((t, index) => (
+            <motion.div
+              key={t.id}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: index * 0.08 }}
+              className="break-inside-avoid mb-5"
+            >
+              <Card className="border-border/50 bg-card/80 backdrop-blur-sm hover:border-primary/30 transition-all duration-300">
+                <CardContent className="p-5 space-y-3">
+                  <div className="flex items-center gap-0.5">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`h-4 w-4 ${star <= t.rating ? "fill-warning text-warning" : "text-muted-foreground/20"}`}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-sm text-foreground/90 leading-relaxed">"{t.content}"</p>
+                  <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                    <div className="flex items-center gap-2">
+                      <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
+                        {t.author_name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{t.author_name}</p>
+                        <p className="text-xs text-muted-foreground">{t.author_title}</p>
+                      </div>
+                    </div>
+                    <span className="text-muted-foreground">
+                      {t.source_platform === "twitter" ? (
+                        <Twitter className="h-4 w-4" />
+                      ) : (
+                        <Linkedin className="h-4 w-4" />
+                      )}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // Pricing Section
 function PricingSection({
   onUpgradeClick,
@@ -687,7 +814,13 @@ function PricingSection({
       period: "forever",
       description: "Perfect for trying out Rocket Content",
       highlight: null,
-      features: ["3 generations per month", "X threads & LinkedIn posts", "Standard AI", "Community support"],
+      features: [
+        "3 generations per month",
+        "X threads & LinkedIn posts",
+        "Standard AI",
+        "Manage up to 3 testimonials (Internal only)",
+        "Community support",
+      ],
       cta: "Start Free",
       ctaAction: "auth" as const,
       tier: null,
@@ -699,7 +832,14 @@ function PricingSection({
       period: "/month",
       description: "For creators getting started",
       highlight: null,
-      features: ["25 generations per month", "All social formats + blog posts", "1 brand voice", "Email support"],
+      features: [
+        "25 generations per month",
+        "All social formats + blog posts",
+        "1 brand voice",
+        "Social Proof Tools — Unlimited Testimonials",
+        "Embeddable Wall of Love Widget",
+        "Email support",
+      ],
       cta: "Get Starter",
       ctaAction: "upgrade" as const,
       tier: "starter" as const,
@@ -717,6 +857,8 @@ function PricingSection({
         "Priority processing",
         "No watermarks",
         "3 brand voices",
+        "Social Proof Tools — Unlimited Testimonials",
+        "Embeddable Wall of Love Widget",
         "API access",
       ],
       cta: "Go Pro",
@@ -736,6 +878,8 @@ function PricingSection({
         "Team workspace (5 members)",
         "Bulk export",
         "Style Mimicking",
+        "Social Proof Tools — Unlimited Testimonials",
+        "Embeddable Wall of Love Widget",
         "Priority support",
         "Custom integrations",
       ],
@@ -811,12 +955,22 @@ function PricingSection({
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <ul className="space-y-3">
-                      {plan.features.map((feature) => (
-                        <li key={feature} className="flex items-start gap-3">
-                          <Check className="h-5 w-5 text-success shrink-0 mt-0.5" />
-                          <span className="text-sm text-muted-foreground">{feature}</span>
-                        </li>
-                      ))}
+                      {plan.features.map((feature) => {
+                        const isSocialProof = feature.includes("Social Proof") || feature.includes("Wall of Love") || feature.includes("testimonials");
+                        return (
+                          <li key={feature} className="flex items-start gap-3">
+                            <Check className="h-5 w-5 text-success shrink-0 mt-0.5" />
+                            <span className="text-sm text-muted-foreground">
+                              {feature}
+                              {isSocialProof && (
+                                <Badge className="ml-1.5 text-[9px] px-1.5 py-0 bg-rocket/20 text-rocket border-0 align-middle">
+                                  New
+                                </Badge>
+                              )}
+                            </span>
+                          </li>
+                        );
+                      })}
                     </ul>
                     {plan.ctaAction === "upgrade" && plan.tier ? (
                       <Button
@@ -1201,6 +1355,7 @@ export default function Landing() {
     <div className="min-h-screen bg-background">
       <StickyNav />
       <HeroSection />
+      <TrustedByCreatorsSection />
       <TrustSection />
       <ProblemSection />
       <SolutionSection />
