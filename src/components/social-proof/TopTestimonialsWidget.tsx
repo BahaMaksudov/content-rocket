@@ -3,6 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Star, MessageSquareQuote } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { Tables } from "@/integrations/supabase/types";
+
+type Testimonial = Tables<"testimonials">;
 
 export function TopTestimonialsWidget() {
   const { user } = useAuth();
@@ -11,13 +14,13 @@ export function TopTestimonialsWidget() {
     queryKey: ["top-testimonials", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("testimonials" as any)
+        .from("testimonials")
         .select("*")
         .eq("user_id", user!.id)
         .order("rating", { ascending: false })
         .limit(3);
       if (error) throw error;
-      return data as any[];
+      return data as Testimonial[];
     },
     enabled: !!user,
   });
