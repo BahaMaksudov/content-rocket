@@ -163,7 +163,7 @@ serve(async (req) => {
       );
     }
 
-    // Fetch top 3 featured testimonials for social proof in blog post
+    // Fetch top testimonials for social proof across ALL content
     let socialProofContext = "";
     if (userId) {
       try {
@@ -171,7 +171,8 @@ serve(async (req) => {
         const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
         const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
-        const { data: testimonials } = await adminClient
+        // Fetch featured first, then fall back to top-rated if none featured
+        let { data: testimonials } = await adminClient
           .from("testimonials")
           .select("author_name, author_title, content, rating")
           .eq("user_id", userId)
@@ -179,30 +180,44 @@ serve(async (req) => {
           .order("rating", { ascending: false })
           .limit(3);
 
+        // Fallback: if no featured testimonials, grab top-rated ones
+        if (!testimonials || testimonials.length === 0) {
+          const { data: topRated } = await adminClient
+            .from("testimonials")
+            .select("author_name, author_title, content, rating")
+            .eq("user_id", userId)
+            .order("rating", { ascending: false })
+            .limit(3);
+          testimonials = topRated;
+        }
+
+        console.log("Testimonials for AI:", JSON.stringify(testimonials));
+
         if (testimonials && testimonials.length > 0) {
           const quotes = testimonials.map((t: any, i: number) =>
             `  ${i + 1}. "${t.content}" — ${t.author_name}${t.author_title ? `, ${t.author_title}` : ""} (${t.rating}/5 stars)`
           ).join("\n");
 
           socialProofContext = `
-## REAL CUSTOMER CONTEXT (Social Proof for ALL Content)
+## ⚠️ MANDATORY: REAL CUSTOMER TESTIMONIALS — YOU MUST USE THESE ⚠️
 
-You are an expert social media marketer. I am providing you with a YouTube transcript and 3 real customer testimonials. Use the transcript for the main content, but weave in the customer testimonials as social proof across ALL platforms.
+CRITICAL: You MUST include at least one of the provided real customer testimonials in EVERY content type below. Do NOT skip this. The user has explicitly requested social proof integration.
 
 Available customer testimonials:
 ${quotes}
 
-Rules for using these testimonials:
-- For TWITTER HOOKS: You may reference a testimonial quote or insight to validate a point (e.g., "One customer said it best: '...'"). Keep within 280 chars.
-- For LINKEDIN POST: Weave 1-2 quotes naturally into the post body as social proof, or add a "What people are saying" section near the end. Attribute each quote accurately.
-- For BLOG POST: Naturally integrate 1-3 of these exact quotes to add credibility. Use them as supporting evidence (e.g., "As [Name] puts it: '...'").
-- For TIKTOK SCRIPTS: You may briefly reference a customer success point if it fits naturally.
-- Keep the tone consistent with the video transcript.
+MANDATORY RULES (failure to follow = invalid output):
+- For TWITTER HOOKS: At least 1 of the 5 hooks MUST reference or quote a testimonial (e.g., "One user said it best: '...'"). Keep within 280 chars.
+- For LINKEDIN POST: You MUST weave at least 1-2 testimonial quotes naturally into the post body. Add a "What our users say" section if needed. Attribute each quote with exact name and title.
+- For BLOG POST: You MUST integrate at least 2 of these exact quotes as supporting evidence. Use formats like "As [Name] puts it: '...'" or dedicated testimonial callout sections.
+- For TIKTOK SCRIPTS: At least 1 script MUST reference a customer success point or quote.
 - Do NOT modify, paraphrase, or fabricate any quotes — use ONLY the exact words above.
 - Do NOT invent new testimonials or customer stories.
 - Attribute each quote accurately using the exact name and title provided.
 
 `;
+        } else {
+          console.log("No testimonials found for user:", userId);
         }
       } catch (err) {
         console.error("Failed to fetch testimonials for social proof:", err);
@@ -312,7 +327,7 @@ Generate the following content based STRICTLY on the transcript:
    - Introduction with hook and thesis FROM THE TRANSCRIPT
    - 3-4 H2 subheadings organizing key points discussed
    - Actionable takeaways mentioned by the speaker
-   - If REAL CUSTOMER CONTEXT testimonials were provided above, naturally integrate 1-3 of those exact quotes into the blog as social proof. Attribute them accurately. Do NOT fabricate any quotes.
+   - CRITICAL: If REAL CUSTOMER TESTIMONIALS were provided above, you MUST integrate at least 2 of those exact quotes into the blog. This is MANDATORY, not optional. Attribute them accurately. Do NOT fabricate any quotes.
    - Conclusion with CTA
    - Approximately 500 words
 

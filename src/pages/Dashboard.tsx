@@ -176,6 +176,10 @@ export default function Dashboard() {
         }
       }
       
+      // Log social proof toggle state for debugging
+      const socialProofUserId = includeSocialProof ? user?.id : undefined;
+      console.log("Social Proof toggle:", includeSocialProof, "| userId sent to AI:", socialProofUserId);
+
       const { data, error } = await supabase.functions.invoke("generate-content", {
         body: {
           transcript,
@@ -183,7 +187,7 @@ export default function Dashboard() {
           audience,
           brandVoice: brandVoiceData,
           translateTo: targetLanguage !== "english" ? targetLanguage : null,
-          userId: includeSocialProof ? user?.id : undefined,
+          userId: socialProofUserId,
         },
       });
 
