@@ -185,18 +185,22 @@ serve(async (req) => {
           ).join("\n");
 
           socialProofContext = `
-## REAL CUSTOMER CONTEXT (Social Proof for Blog Post)
+## REAL CUSTOMER CONTEXT (Social Proof for ALL Content)
 
-You have access to REAL customer testimonials provided below. When writing the blog post (section 4), you MUST:
-- Naturally weave 1-3 of these exact quotes into the blog post to add credibility and social proof
-- Use them as supporting evidence for the points being made
-- Attribute each quote accurately using the exact name and title provided
-- Do NOT modify, paraphrase, or fabricate any quotes — use ONLY the exact words below
-- Do NOT invent new testimonials or customer stories
-- Integrate them where they fit naturally (e.g., "As [Name] puts it: '...'")
+You are an expert social media marketer. I am providing you with a YouTube transcript and 3 real customer testimonials. Use the transcript for the main content, but weave in the customer testimonials as social proof across ALL platforms.
 
 Available customer testimonials:
 ${quotes}
+
+Rules for using these testimonials:
+- For TWITTER HOOKS: You may reference a testimonial quote or insight to validate a point (e.g., "One customer said it best: '...'"). Keep within 280 chars.
+- For LINKEDIN POST: Weave 1-2 quotes naturally into the post body as social proof, or add a "What people are saying" section near the end. Attribute each quote accurately.
+- For BLOG POST: Naturally integrate 1-3 of these exact quotes to add credibility. Use them as supporting evidence (e.g., "As [Name] puts it: '...'").
+- For TIKTOK SCRIPTS: You may briefly reference a customer success point if it fits naturally.
+- Keep the tone consistent with the video transcript.
+- Do NOT modify, paraphrase, or fabricate any quotes — use ONLY the exact words above.
+- Do NOT invent new testimonials or customer stories.
+- Attribute each quote accurately using the exact name and title provided.
 
 `;
         }
