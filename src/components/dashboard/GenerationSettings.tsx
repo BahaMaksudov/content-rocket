@@ -320,15 +320,6 @@ export function GenerationSettings({
           </div>
         )}
 
-        {/* Low Credits Warning */}
-        {showCreditsWarning && (
-          <div className="flex items-center gap-2 p-3 rounded-lg bg-warning/10 border border-warning/30 text-warning-foreground">
-            <AlertCircle className="h-4 w-4 flex-shrink-0" />
-            <span className="text-sm font-medium">
-              Only {creditsRemaining} credit{creditsRemaining !== 1 ? 's' : ''} remaining
-            </span>
-          </div>
-        )}
 
         {/* Generate Button - hidden when used in bulk mode */}
         {!hideGenerateButton && (
@@ -396,23 +387,6 @@ export function GenerationSettings({
                 )}
               </Button>
 
-              {/* Credits remaining badge for Free and Pro users (Agency has unlimited) */}
-              {!isAgency && !creditsLoading && (
-                <div className="flex justify-center">
-                  <Badge 
-                    variant="outline" 
-                    className={`text-xs ${
-                      isCreditsExhausted 
-                        ? "border-destructive/50 text-destructive" 
-                        : showCreditsWarning 
-                          ? "border-warning/50 text-warning-foreground"
-                          : "border-muted-foreground/30 text-muted-foreground"
-                    }`}
-                  >
-                    {creditsUsed} / {creditLimit} used
-                  </Badge>
-                </div>
-              )}
             </div>
 
             {!hasTranscript && !isCreditsExhausted && (
