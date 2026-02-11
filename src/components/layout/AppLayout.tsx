@@ -1,6 +1,7 @@
 import { ReactNode, useState, useEffect } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AnimatePresence } from "framer-motion";
 import { AppSidebar } from "./AppSidebar";
 import {
   Breadcrumb,
@@ -21,8 +22,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SignOutConfirmationModal } from "@/components/SignOutConfirmationModal";
+import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
+import { PageTransition } from "@/components/layout/PageTransition";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { Settings, LogOut, ChevronDown, CreditCard, User } from "lucide-react";
 import { SUBSCRIPTION_TIERS } from "@/lib/subscription-tiers";
@@ -127,15 +131,18 @@ export function AppLayout({ children }: AppLayoutProps) {
     return email;
   };
 
+  const isMobile = useIsMobile();
+
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
-        <AppSidebar />
-        <main className="flex-1 flex flex-col">
-          <header className="h-14 flex items-center justify-between border-b border-border px-4 bg-background/95 backdrop-blur-lg sticky top-0 z-50">
+      <div className="h-[100dvh] flex w-full overflow-hidden">
+        {/* Sidebar hidden on mobile, shown on desktop */}
+        {!isMobile && <AppSidebar />}
+        <main className="flex-1 flex flex-col min-h-0 overflow-hidden" style={{ height: '100%' }}>
+          <header className="h-14 flex items-center justify-between border-b border-border px-4 bg-background/95 backdrop-blur-lg sticky top-0 z-50 shrink-0">
             {/* Left side: Sidebar trigger + Breadcrumbs */}
             <div className="flex items-center">
-              <SidebarTrigger className="mr-4" />
+              {!isMobile && <SidebarTrigger className="mr-4" />}
               <Breadcrumb>
                 <BreadcrumbList>
                   <BreadcrumbItem>
@@ -161,7 +168,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             <div className="flex items-center">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-2 pl-2 pr-3 h-9">
+                  <Button variant="ghost" className="flex items-center gap-2 pl-2 pr-3 h-9 active-press">
                     <Avatar className="h-7 w-7">
                       <AvatarImage src={profile?.avatar_url || undefined} alt={getUserDisplayName()} />
                       <AvatarFallback className="text-xs bg-primary/10 text-primary">
@@ -221,9 +228,16 @@ export function AppLayout({ children }: AppLayoutProps) {
               </DropdownMenu>
             </div>
           </header>
-          <div className="flex-1 p-6 overflow-auto">{children}</div>
-          {/* Minimalist Dashboard Footer */}
-          <footer className="border-t border-border/50 px-4 py-3 bg-background/50">
+          {/* Scrollable content area */}
+          <AnimatePresence mode="wait">
+            <PageTransition>
+              <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 pb-20 md:pb-6" style={{ WebkitOverflowScrolling: 'touch' }}>
+                {children}
+              </div>
+            </PageTransition>
+          </AnimatePresence>
+          {/* Minimalist Dashboard Footer - desktop only */}
+          <footer className="hidden md:block border-t border-border/50 px-4 py-3 bg-background/50 shrink-0">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 sm:gap-4">
                 <Link to="/privacy" className="hover:text-foreground transition-colors">
@@ -244,6 +258,8 @@ export function AppLayout({ children }: AppLayoutProps) {
           </footer>
         </main>
       </div>
+      {/* Mobile bottom tab bar */}
+      {isMobile && <MobileBottomNav />}
       <SignOutConfirmationModal open={showSignOutModal} onOpenChange={setShowSignOutModal} onConfirm={handleSignOut} />
     </SidebarProvider>
   );
