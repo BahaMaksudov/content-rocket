@@ -440,6 +440,7 @@ export type Database = {
         Row: {
           author_name: string
           author_title: string | null
+          avatar_url: string | null
           content: string
           created_at: string
           id: string
@@ -453,6 +454,7 @@ export type Database = {
         Insert: {
           author_name: string
           author_title?: string | null
+          avatar_url?: string | null
           content: string
           created_at?: string
           id?: string
@@ -466,6 +468,7 @@ export type Database = {
         Update: {
           author_name?: string
           author_title?: string | null
+          avatar_url?: string | null
           content?: string
           created_at?: string
           id?: string

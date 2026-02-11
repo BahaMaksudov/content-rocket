@@ -13,6 +13,7 @@ interface TestimonialCardProps {
     source_url: string | null;
     source_platform: string | null;
     is_featured: boolean;
+    avatar_url?: string | null;
   };
   onDelete?: (id: string) => void;
   onToggleFeatured?: (id: string, featured: boolean) => void;
@@ -44,8 +45,12 @@ export function TestimonialCard({ testimonial, onDelete, onToggleFeatured, showA
         {/* Author */}
         <div className="flex items-center justify-between pt-2 border-t border-border/50">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
-              {testimonial.author_name.charAt(0).toUpperCase()}
+            <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary overflow-hidden shrink-0">
+              {testimonial.avatar_url ? (
+                <img src={testimonial.avatar_url} alt={testimonial.author_name} className="h-full w-full object-cover" />
+              ) : (
+                testimonial.author_name.charAt(0).toUpperCase()
+              )}
             </div>
             <div>
               <p className="text-sm font-medium text-foreground">{testimonial.author_name}</p>
