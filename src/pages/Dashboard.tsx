@@ -47,6 +47,7 @@ export default function Dashboard() {
   const [showBulkUpgradeModal, setShowBulkUpgradeModal] = useState(false);
   const [upgradeProcessed, setUpgradeProcessed] = useState(false);
   const [activeTab, setActiveTab] = useState<"single" | "bulk">("single");
+  const [includeSocialProof, setIncludeSocialProof] = useState(false);
 
   // One-time backfill so Billing shows historical invoices (e.g. Feb 1) even if the webhook
   // wasn't configured at the time of payment.
@@ -182,7 +183,7 @@ export default function Dashboard() {
           audience,
           brandVoice: brandVoiceData,
           translateTo: targetLanguage !== "english" ? targetLanguage : null,
-          userId: user?.id,
+          userId: includeSocialProof ? user?.id : undefined,
         },
       });
 
@@ -381,6 +382,8 @@ export default function Dashboard() {
                   hasTranscript={!!transcript}
                   targetLanguage={targetLanguage}
                   setTargetLanguage={setTargetLanguage}
+                  includeSocialProof={includeSocialProof}
+                  setIncludeSocialProof={setIncludeSocialProof}
                 />
 
                 {/* Social Proof Widget */}
