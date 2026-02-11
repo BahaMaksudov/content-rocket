@@ -72,8 +72,9 @@ export function GenerationSettings({
   includeSocialProof = false,
   setIncludeSocialProof,
 }: GenerationSettingsProps) {
-  const { isPro, isAgency } = useSubscription();
+  const { isPro, isAgency, isPaid } = useSubscription();
   const { hasCredits, creditsUsed, creditLimit, loading: creditsLoading } = useCredits();
+  const [showSocialProofGate, setShowSocialProofGate] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showCreateVoiceModal, setShowCreateVoiceModal] = useState(false);
   const [showStyleLab, setShowStyleLab] = useState(false);
@@ -283,8 +284,14 @@ export function GenerationSettings({
             <div className="flex items-center gap-2">
               <Heart className="h-4 w-4 text-primary" />
               <div>
-                <Label htmlFor="social-proof-toggle" className="text-sm font-medium cursor-pointer">
+                <Label htmlFor="social-proof-toggle" className="text-sm font-medium cursor-pointer flex items-center gap-1.5">
                   Include Social Proof
+                  {!isPaid && (
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-primary/50 text-primary">
+                      <Crown className="h-3 w-3 mr-0.5" />
+                      Starter
+                    </Badge>
+                  )}
                 </Label>
                 <p className="text-xs text-muted-foreground">
                   Weave featured testimonials into generated content
@@ -294,7 +301,13 @@ export function GenerationSettings({
             <Switch
               id="social-proof-toggle"
               checked={includeSocialProof}
-              onCheckedChange={setIncludeSocialProof}
+              onCheckedChange={(checked) => {
+                if (!isPaid && checked) {
+                  setShowSocialProofGate(true);
+                  return;
+                }
+                setIncludeSocialProof(checked);
+              }}
             />
           </div>
         )}
@@ -426,6 +439,12 @@ export function GenerationSettings({
         open={showPremiumModal} 
         onOpenChange={setShowPremiumModal}
         feature={isCreditsExhausted ? "generation-limit" : "brand-voice"}
+      />
+
+      <PremiumModal
+        open={showSocialProofGate}
+        onOpenChange={setShowSocialProofGate}
+        feature="social-proof"
       />
       
       <CreateBrandVoiceModal
