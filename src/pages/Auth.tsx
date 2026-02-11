@@ -353,68 +353,20 @@ export default function Auth() {
               },
             });
           } else if (errorMessage.includes("Invalid login credentials")) {
-            // Check if a profile exists for this email to distinguish
-            // "wrong password" from "no account"
-            let accountExists: boolean | null = null; // null = unknown/RPC failed
-            try {
-              const { data, error: rpcError } = await supabase.rpc(
-                "check_email_exists" as any,
-                { check_email: normalizedEmail }
-              );
-              console.log("[Auth] Email check result:", { data, rpcError, normalizedEmail });
-              if (rpcError) {
-                console.error("[Auth] RPC error:", rpcError);
-                accountExists = null; // RPC failed, unknown state
-              } else {
-                accountExists = data === true;
-              }
-            } catch (e) {
-              console.error("[Auth] Email check exception:", e);
-              accountExists = null; // exception, unknown state
-            }
-
-            if (accountExists === true) {
-              // Account exists → wrong password
-              setAuthError({
-                type: "warning",
-                title: "Incorrect Password",
-                message: "The password you entered is incorrect. Would you like to reset it?",
-                action: {
-                  label: "Reset Password",
-                  onClick: () => navigate("/forgot-password"),
-                },
-              });
-            } else if (accountExists === false) {
-              // Confirmed no account → prompt to sign up
-              setAuthError({
-                type: "info",
-                title: "No Account Found",
-                message: "We don't have an account with this email. Create a free account to get started!",
-                action: {
-                  label: "Create Account",
-                  onClick: switchToSignup,
-                },
-                secondaryAction: {
-                  label: "Reset Password",
-                  onClick: () => navigate("/forgot-password"),
-                },
-              });
-            } else {
-              // RPC failed — show generic message with both options
-              setAuthError({
-                type: "warning",
-                title: "Invalid Credentials",
-                message: "The email or password is incorrect. Try resetting your password or create a new account.",
-                action: {
-                  label: "Reset Password",
-                  onClick: () => navigate("/forgot-password"),
-                },
-                secondaryAction: {
-                  label: "Create Account",
-                  onClick: switchToSignup,
-                },
-              });
-            }
+            // Show a single, clear message — no RPC call needed
+            setAuthError({
+              type: "warning",
+              title: "Invalid Credentials",
+              message: "The email or password is incorrect. Try resetting your password or create a new account.",
+              action: {
+                label: "Reset Password",
+                onClick: () => navigate("/forgot-password"),
+              },
+              secondaryAction: {
+                label: "Create Account",
+                onClick: switchToSignup,
+              },
+            });
           } else {
             setAuthError({
               type: "error",
