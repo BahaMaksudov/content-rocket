@@ -268,8 +268,7 @@ export default function Auth() {
     // Clear any previous error
     setAuthError(null);
 
-    const normalizedEmail = email.trim().toLowerCase();
-    const validation = authSchema.safeParse({ email: normalizedEmail, password });
+    const validation = authSchema.safeParse({ email, password });
     
     if (!validation.success) {
       setAuthError({
@@ -280,13 +279,12 @@ export default function Auth() {
       return;
     }
 
-    console.log("[Auth] Normalized email for auth:", JSON.stringify(normalizedEmail), "length:", normalizedEmail.length);
     setIsLoading(true);
 
     try {
       if (action === "signup") {
-        console.log("[Auth] Attempting signup for:", normalizedEmail);
-        const result = await signUp(normalizedEmail, password);
+        console.log("[Auth] Attempting signup for:", email);
+        const result = await signUp(email, password);
 
         if (result.error) {
           let errorMessage = result.error.message;
@@ -333,7 +331,7 @@ export default function Auth() {
         }
       } else {
         // Login flow
-        const result = await signIn(normalizedEmail, password);
+        const result = await signIn(email, password);
 
         if (result.error) {
           let errorMessage = result.error.message;
@@ -355,25 +353,22 @@ export default function Auth() {
           } else if (errorMessage.includes("Invalid login credentials")) {
             // Check if a profile exists for this email to distinguish
             // "wrong password" from "no account"
-            let accountExists: boolean | null = null;
+            let accountExists = false;
             try {
               const { data, error: rpcError } = await supabase.rpc(
                 "check_email_exists" as any,
-                { check_email: normalizedEmail }
+                { check_email: email }
               );
-              console.log("[Auth] Email check result:", { data, rpcError, normalizedEmail });
-              if (rpcError) {
-                console.error("[Auth] RPC error:", rpcError);
-                accountExists = null;
-              } else {
-                accountExists = data === true;
+              if (!rpcError && data === true) {
+                accountExists = true;
               }
+              console.log("[Auth] Email check result:", { data, rpcError, accountExists });
             } catch (e) {
               console.error("[Auth] Email check exception:", e);
-              accountExists = null;
             }
 
-            if (accountExists === true) {
+            if (accountExists) {
+              // Account exists → wrong password
               setAuthError({
                 type: "warning",
                 title: "Incorrect Password",
@@ -383,7 +378,8 @@ export default function Auth() {
                   onClick: () => navigate("/forgot-password"),
                 },
               });
-            } else if (accountExists === false) {
+            } else {
+              // No account found → prompt to sign up
               setAuthError({
                 type: "info",
                 title: "No Account Found",
@@ -395,20 +391,6 @@ export default function Auth() {
                 secondaryAction: {
                   label: "Reset Password",
                   onClick: () => navigate("/forgot-password"),
-                },
-              });
-            } else {
-              setAuthError({
-                type: "warning",
-                title: "Invalid Credentials",
-                message: "The email or password is incorrect. Try resetting your password or create a new account.",
-                action: {
-                  label: "Reset Password",
-                  onClick: () => navigate("/forgot-password"),
-                },
-                secondaryAction: {
-                  label: "Create Account",
-                  onClick: switchToSignup,
                 },
               });
             }
@@ -576,11 +558,6 @@ export default function Auth() {
                   <Input
                     id="login-email"
                     type="email"
-                    inputMode="email"
-                    autoCapitalize="off"
-                    autoCorrect="off"
-                    autoComplete="email"
-                    spellCheck={false}
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => handleEmailChange(e.target.value)}
@@ -648,11 +625,6 @@ export default function Auth() {
                   <Input
                     id="signup-email"
                     type="email"
-                    inputMode="email"
-                    autoCapitalize="off"
-                    autoCorrect="off"
-                    autoComplete="email"
-                    spellCheck={false}
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => handleEmailChange(e.target.value)}
