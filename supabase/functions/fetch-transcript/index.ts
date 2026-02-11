@@ -144,7 +144,15 @@ serve(async (req) => {
       url: string;
       parse: (data: any) => { transcript: string; title?: string };
     }> = [
-      // PRIMARY: Supadata YouTube Transcripts API - has remaining quota (47%)
+      // PRIMARY: youtube-transcript3 - user's active subscription
+      {
+        name: "youtube_transcript3",
+        host: "youtube-transcript3.p.rapidapi.com",
+        url: `https://youtube-transcript3.p.rapidapi.com/api/transcript?videoId=${encodeURIComponent(videoId)}&lang=en`,
+        parse: extractTranscriptText,
+      },
+
+      // SECONDARY: Supadata YouTube Transcripts API
       {
         name: "youtube_transcripts_supadata",
         host: "youtube-transcripts.p.rapidapi.com",
@@ -152,7 +160,7 @@ serve(async (req) => {
         parse: extractTranscriptText,
       },
 
-      // BACKUP: YouTube API Free - additional free tier quota
+      // BACKUP: YouTube API Free
       {
         name: "youtube_api_free",
         host: "youtube-api-free.p.rapidapi.com",
@@ -160,7 +168,7 @@ serve(async (req) => {
         parse: extractTranscriptText,
       },
 
-      // FALLBACK: youtube-transcriptor.p.rapidapi.com - at capacity but try as last resort
+      // FALLBACK: youtube-transcriptor.p.rapidapi.com - at capacity
       {
         name: "youtube_transcriptor_videoId",
         host: "youtube-transcriptor.p.rapidapi.com",
