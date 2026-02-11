@@ -353,20 +353,65 @@ export default function Auth() {
               },
             });
           } else if (errorMessage.includes("Invalid login credentials")) {
-            // Show a single, clear message — no RPC call needed
-            setAuthError({
-              type: "warning",
-              title: "Invalid Credentials",
-              message: "The email or password is incorrect. Try resetting your password or create a new account.",
-              action: {
-                label: "Reset Password",
-                onClick: () => navigate("/forgot-password"),
-              },
-              secondaryAction: {
-                label: "Create Account",
-                onClick: switchToSignup,
-              },
-            });
+            // Check if a profile exists for this email to distinguish
+            // "wrong password" from "no account"
+            let accountExists: boolean | null = null;
+            try {
+              const { data, error: rpcError } = await supabase.rpc(
+                "check_email_exists" as any,
+                { check_email: normalizedEmail }
+              );
+              console.log("[Auth] Email check result:", { data, rpcError, normalizedEmail });
+              if (rpcError) {
+                console.error("[Auth] RPC error:", rpcError);
+                accountExists = null;
+              } else {
+                accountExists = data === true;
+              }
+            } catch (e) {
+              console.error("[Auth] Email check exception:", e);
+              accountExists = null;
+            }
+
+            if (accountExists === true) {
+              setAuthError({
+                type: "warning",
+                title: "Incorrect Password",
+                message: "The password you entered is incorrect. Would you like to reset it?",
+                action: {
+                  label: "Reset Password",
+                  onClick: () => navigate("/forgot-password"),
+                },
+              });
+            } else if (accountExists === false) {
+              setAuthError({
+                type: "info",
+                title: "No Account Found",
+                message: "We don't have an account with this email. Create a free account to get started!",
+                action: {
+                  label: "Create Account",
+                  onClick: switchToSignup,
+                },
+                secondaryAction: {
+                  label: "Reset Password",
+                  onClick: () => navigate("/forgot-password"),
+                },
+              });
+            } else {
+              setAuthError({
+                type: "warning",
+                title: "Invalid Credentials",
+                message: "The email or password is incorrect. Try resetting your password or create a new account.",
+                action: {
+                  label: "Reset Password",
+                  onClick: () => navigate("/forgot-password"),
+                },
+                secondaryAction: {
+                  label: "Create Account",
+                  onClick: switchToSignup,
+                },
+              });
+            }
           } else {
             setAuthError({
               type: "error",
