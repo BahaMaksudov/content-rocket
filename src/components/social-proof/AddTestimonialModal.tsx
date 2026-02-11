@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
@@ -7,7 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Star } from "lucide-react";
+import { Star, Upload, X, User } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface AddTestimonialModalProps {
   open: boolean;
@@ -19,40 +22,121 @@ interface AddTestimonialModalProps {
     rating: number;
     source_url: string;
     source_platform: string;
+    avatar_url?: string;
   }) => void;
   isSubmitting: boolean;
 }
 
 export function AddTestimonialModal({ open, onOpenChange, onSubmit, isSubmitting }: AddTestimonialModalProps) {
   const isMobile = useIsMobile();
+  const { user } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [authorName, setAuthorName] = useState("");
   const [authorTitle, setAuthorTitle] = useState("");
   const [content, setContent] = useState("");
   const [rating, setRating] = useState(5);
   const [sourceUrl, setSourceUrl] = useState("");
   const [sourcePlatform, setSourcePlatform] = useState("other");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
-  const handleSubmit = () => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Image must be under 2MB");
+      return;
+    }
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+  };
+
+  const clearAvatar = () => {
+    setAvatarFile(null);
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    setAvatarPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const uploadAvatar = async (): Promise<string | undefined> => {
+    if (!avatarFile || !user) return undefined;
+    const ext = avatarFile.name.split(".").pop();
+    const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage
+      .from("testimonial-avatars")
+      .upload(path, avatarFile, { upsert: true });
+    if (error) {
+      toast.error("Failed to upload avatar");
+      throw error;
+    }
+    const { data: urlData } = supabase.storage
+      .from("testimonial-avatars")
+      .getPublicUrl(path);
+    return urlData.publicUrl;
+  };
+
+  const handleSubmit = async () => {
     if (!authorName.trim() || !content.trim()) return;
-    onSubmit({
-      author_name: authorName.trim(),
-      author_title: authorTitle.trim(),
-      content: content.trim(),
-      rating,
-      source_url: sourceUrl.trim(),
-      source_platform: sourcePlatform,
-    });
-    // Reset
-    setAuthorName("");
-    setAuthorTitle("");
-    setContent("");
-    setRating(5);
-    setSourceUrl("");
-    setSourcePlatform("other");
+    setUploading(true);
+    try {
+      const avatarUrl = await uploadAvatar();
+      onSubmit({
+        author_name: authorName.trim(),
+        author_title: authorTitle.trim(),
+        content: content.trim(),
+        rating,
+        source_url: sourceUrl.trim(),
+        source_platform: sourcePlatform,
+        avatar_url: avatarUrl,
+      });
+      // Reset
+      setAuthorName("");
+      setAuthorTitle("");
+      setContent("");
+      setRating(5);
+      setSourceUrl("");
+      setSourcePlatform("other");
+      clearAvatar();
+    } catch {
+      // error already toasted
+    } finally {
+      setUploading(false);
+    }
   };
 
   const formContent = (
     <div className="space-y-4 p-1">
+      {/* Avatar upload */}
+      <div className="space-y-2">
+        <Label>Author Photo</Label>
+        <div className="flex items-center gap-3">
+          <div className="relative h-14 w-14 rounded-full bg-muted/50 border border-border flex items-center justify-center overflow-hidden shrink-0">
+            {avatarPreview ? (
+              <img src={avatarPreview} alt="Preview" className="h-full w-full object-cover" />
+            ) : (
+              <User className="h-6 w-6 text-muted-foreground/50" />
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+              <Upload className="h-3.5 w-3.5 mr-1.5" />
+              {avatarPreview ? "Change" : "Upload"}
+            </Button>
+            {avatarPreview && (
+              <Button type="button" variant="ghost" size="sm" onClick={clearAvatar}>
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            )}
+          </div>
+          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
+        </div>
+      </div>
+
       <div className="space-y-2">
         <Label>Author Name *</Label>
         <Input value={authorName} onChange={(e) => setAuthorName(e.target.value)} placeholder="Jane Doe" />
@@ -93,8 +177,8 @@ export function AddTestimonialModal({ open, onOpenChange, onSubmit, isSubmitting
           <Input type="url" value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)} placeholder="https://..." />
         </div>
       </div>
-      <Button onClick={handleSubmit} disabled={!authorName.trim() || !content.trim() || isSubmitting} className="w-full">
-        {isSubmitting ? "Adding..." : "Add Testimonial"}
+      <Button onClick={handleSubmit} disabled={!authorName.trim() || !content.trim() || isSubmitting || uploading} className="w-full">
+        {uploading ? "Uploading..." : isSubmitting ? "Adding..." : "Add Testimonial"}
       </Button>
     </div>
   );
