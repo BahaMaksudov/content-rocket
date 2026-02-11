@@ -182,6 +182,7 @@ export default function Dashboard() {
           audience,
           brandVoice: brandVoiceData,
           translateTo: targetLanguage !== "english" ? targetLanguage : null,
+          userId: user?.id,
         },
       });
 

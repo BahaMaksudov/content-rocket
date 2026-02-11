@@ -1,10 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 console.log("generate-content function loaded");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 function extractAndParseJSON(content: string): any {
@@ -111,7 +112,7 @@ serve(async (req) => {
   }
 
   try {
-    const { transcript, tone, audience, brandVoice, translateTo, videoTitle } = await req.json();
+    const { transcript, tone, audience, brandVoice, translateTo, videoTitle, userId } = await req.json();
 
     if (!transcript) {
       return new Response(
@@ -160,6 +161,49 @@ serve(async (req) => {
         JSON.stringify({ error: "OpenAI API key not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Fetch top 3 featured testimonials for social proof in blog post
+    let socialProofContext = "";
+    if (userId) {
+      try {
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const adminClient = createClient(supabaseUrl, supabaseServiceKey);
+
+        const { data: testimonials } = await adminClient
+          .from("testimonials")
+          .select("author_name, author_title, content, rating")
+          .eq("user_id", userId)
+          .eq("is_featured", true)
+          .order("rating", { ascending: false })
+          .limit(3);
+
+        if (testimonials && testimonials.length > 0) {
+          const quotes = testimonials.map((t: any, i: number) =>
+            `  ${i + 1}. "${t.content}" — ${t.author_name}${t.author_title ? `, ${t.author_title}` : ""} (${t.rating}/5 stars)`
+          ).join("\n");
+
+          socialProofContext = `
+## REAL CUSTOMER CONTEXT (Social Proof for Blog Post)
+
+You have access to REAL customer testimonials provided below. When writing the blog post (section 4), you MUST:
+- Naturally weave 1-3 of these exact quotes into the blog post to add credibility and social proof
+- Use them as supporting evidence for the points being made
+- Attribute each quote accurately using the exact name and title provided
+- Do NOT modify, paraphrase, or fabricate any quotes — use ONLY the exact words below
+- Do NOT invent new testimonials or customer stories
+- Integrate them where they fit naturally (e.g., "As [Name] puts it: '...'")
+
+Available customer testimonials:
+${quotes}
+
+`;
+        }
+      } catch (err) {
+        console.error("Failed to fetch testimonials for social proof:", err);
+        // Non-blocking — continue without social proof
+      }
     }
 
     console.log("Generating content with tone:", tone, "audience:", audience, "translate:", translateTo, "brandVoice:", brandVoice?.name);
@@ -216,6 +260,7 @@ CRITICAL RULES - MUST FOLLOW:
 8. Do NOT use outside knowledge or generate generic marketing text about products not mentioned in the transcript
 
 ${brandVoiceContext}
+${socialProofContext}
 
 TONE: ${tone || "professional"}
 TARGET AUDIENCE: ${audience || "general"}
@@ -263,6 +308,7 @@ Generate the following content based STRICTLY on the transcript:
    - Introduction with hook and thesis FROM THE TRANSCRIPT
    - 3-4 H2 subheadings organizing key points discussed
    - Actionable takeaways mentioned by the speaker
+   - If REAL CUSTOMER CONTEXT testimonials were provided above, naturally integrate 1-3 of those exact quotes into the blog as social proof. Attribute them accurately. Do NOT fabricate any quotes.
    - Conclusion with CTA
    - Approximately 500 words
 
