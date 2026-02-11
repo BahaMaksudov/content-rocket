@@ -5,6 +5,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+  DrawerFooter,
+} from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Crown, Check, Sparkles, Mic, Youtube, Rocket, Users, Zap } from "lucide-react";
@@ -13,6 +21,7 @@ import { useState } from "react";
 import { SUBSCRIPTION_TIERS } from "@/lib/subscription-tiers";
 import { trackUpgradeClicked } from "@/lib/posthog";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface PremiumModalProps {
   open: boolean;
@@ -65,6 +74,7 @@ function getTierIcon(tier: "starter" | "pro" | "agency") {
 export function PremiumModal({ open, onOpenChange, feature, description, tier: propTier = "pro" }: PremiumModalProps) {
   const { openCheckout } = useSubscription();
   const [isLoading, setIsLoading] = useState(false);
+  const isMobile = useIsMobile();
 
   // Auto-select minimum tier for feature-gated modals
   let tier = propTier;
@@ -124,6 +134,67 @@ export function PremiumModal({ open, onOpenChange, feature, description, tier: p
     ? "gradient-primary text-primary-foreground"
     : "bg-gradient-to-r from-info to-info/80 hover:from-info/90 hover:to-info/70 text-white";
 
+  const content = (
+    <>
+      <div className="mt-4 space-y-3">
+        {features.map((f, i) => (
+          <div key={i} className="flex items-center gap-3 text-sm">
+            <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${accent.bg}`}>
+              <f.icon className={`h-4 w-4 ${accent.text}`} />
+            </div>
+            <span>{f.text}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className={`mt-6 rounded-lg border p-4 text-center ${accent.border}`}>
+        <div className="flex items-center justify-center gap-2">
+          <span className="text-3xl font-bold">${tierConfig.price}</span>
+          <span className="text-muted-foreground">/month</span>
+        </div>
+        {tier === "pro" && (
+          <p className="text-xs text-muted-foreground mt-1">Under $20/mo — Best Value</p>
+        )}
+        <Badge variant="secondary" className={`mt-2 border-0 ${accent.badgeBg}`}>
+          Cancel anytime
+        </Badge>
+      </div>
+
+      <div className="mt-6 flex flex-col gap-2">
+        <Button
+          onClick={handleUpgrade}
+          disabled={isLoading}
+          className={`w-full ${buttonGradient}`}
+          size="lg"
+        >
+          {isLoading ? "Redirecting to Stripe..." : `Upgrade to ${tierConfig.name}`}
+        </Button>
+        <Button variant="ghost" onClick={() => onOpenChange(false)} className="w-full">
+          Maybe later
+        </Button>
+      </div>
+    </>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={onOpenChange}>
+        <DrawerContent>
+          <DrawerHeader className="text-center">
+            <div className={`mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full ${accent.bg}`}>
+              <TierIcon className={`h-7 w-7 ${accent.text}`} />
+            </div>
+            <DrawerTitle className="text-xl">{dialogTitle}</DrawerTitle>
+            <DrawerDescription className="text-base">{dialogDescription}</DrawerDescription>
+          </DrawerHeader>
+          <div className="px-4 pb-6">
+            {content}
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -134,44 +205,7 @@ export function PremiumModal({ open, onOpenChange, feature, description, tier: p
           <DialogTitle className="text-xl">{dialogTitle}</DialogTitle>
           <DialogDescription className="text-base">{dialogDescription}</DialogDescription>
         </DialogHeader>
-
-        <div className="mt-4 space-y-3">
-          {features.map((f, i) => (
-            <div key={i} className="flex items-center gap-3 text-sm">
-              <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${accent.bg}`}>
-                <f.icon className={`h-4 w-4 ${accent.text}`} />
-              </div>
-              <span>{f.text}</span>
-            </div>
-          ))}
-        </div>
-
-        <div className={`mt-6 rounded-lg border p-4 text-center ${accent.border}`}>
-          <div className="flex items-center justify-center gap-2">
-            <span className="text-3xl font-bold">${tierConfig.price}</span>
-            <span className="text-muted-foreground">/month</span>
-          </div>
-          {tier === "pro" && (
-            <p className="text-xs text-muted-foreground mt-1">Under $20/mo — Best Value</p>
-          )}
-          <Badge variant="secondary" className={`mt-2 border-0 ${accent.badgeBg}`}>
-            Cancel anytime
-          </Badge>
-        </div>
-
-        <div className="mt-6 flex flex-col gap-2">
-          <Button
-            onClick={handleUpgrade}
-            disabled={isLoading}
-            className={`w-full ${buttonGradient}`}
-            size="lg"
-          >
-            {isLoading ? "Redirecting to Stripe..." : `Upgrade to ${tierConfig.name}`}
-          </Button>
-          <Button variant="ghost" onClick={() => onOpenChange(false)} className="w-full">
-            Maybe later
-          </Button>
-        </div>
+        {content}
       </DialogContent>
     </Dialog>
   );
