@@ -138,7 +138,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       <div className="h-[100dvh] flex w-full overflow-hidden">
         {/* Sidebar hidden on mobile, shown on desktop */}
         {!isMobile && <AppSidebar />}
-        <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <main className="flex-1 flex flex-col min-h-0 overflow-hidden" style={{ height: '100%' }}>
           <header className="h-14 flex items-center justify-between border-b border-border px-4 bg-background/95 backdrop-blur-lg sticky top-0 z-50 shrink-0">
             {/* Left side: Sidebar trigger + Breadcrumbs */}
             <div className="flex items-center">
@@ -231,7 +231,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           {/* Scrollable content area */}
           <AnimatePresence mode="wait">
             <PageTransition>
-              <div className="flex-1 overflow-auto p-4 md:p-6 pb-20 md:pb-6">
+              <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 pb-20 md:pb-6" style={{ WebkitOverflowScrolling: 'touch' }}>
                 {children}
               </div>
             </PageTransition>
