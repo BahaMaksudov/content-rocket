@@ -19,6 +19,7 @@ import { DEFAULT_BRAND_VOICES, isDefaultVoiceId, getDefaultVoiceById } from "@/l
 import { useSyncPaymentHistoryOnce } from "@/hooks/use-sync-payment-history";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Video, Layers, Lock } from "lucide-react";
+import { TopTestimonialsWidget } from "@/components/social-proof/TopTestimonialsWidget";
 
 export interface GeneratedContent {
   twitterHooks: string[];
@@ -380,6 +381,9 @@ export default function Dashboard() {
                   targetLanguage={targetLanguage}
                   setTargetLanguage={setTargetLanguage}
                 />
+
+                {/* Social Proof Widget */}
+                <TopTestimonialsWidget />
               </div>
 
               {/* Right column - Output */}
