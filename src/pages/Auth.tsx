@@ -280,6 +280,7 @@ export default function Auth() {
       return;
     }
 
+    console.log("[Auth] Normalized email for auth:", JSON.stringify(normalizedEmail), "length:", normalizedEmail.length);
     setIsLoading(true);
 
     try {
@@ -559,6 +560,11 @@ export default function Auth() {
                   <Input
                     id="login-email"
                     type="email"
+                    inputMode="email"
+                    autoCapitalize="off"
+                    autoCorrect="off"
+                    autoComplete="email"
+                    spellCheck={false}
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => handleEmailChange(e.target.value)}
@@ -626,6 +632,11 @@ export default function Auth() {
                   <Input
                     id="signup-email"
                     type="email"
+                    inputMode="email"
+                    autoCapitalize="off"
+                    autoCorrect="off"
+                    autoComplete="email"
+                    spellCheck={false}
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => handleEmailChange(e.target.value)}
