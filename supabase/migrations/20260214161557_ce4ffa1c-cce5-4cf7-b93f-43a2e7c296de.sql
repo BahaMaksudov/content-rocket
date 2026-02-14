@@ -1,0 +1,1 @@
+ALTER TABLE public.generations ADD COLUMN social_proof_used boolean NOT NULL DEFAULT false;

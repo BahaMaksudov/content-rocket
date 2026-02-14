@@ -122,6 +122,7 @@ export type Database = {
           linkedin_post: string | null
           organization_id: string | null
           short_form_scripts: Json | null
+          social_proof_used: boolean
           target_language: string | null
           tone: string | null
           transcript: string | null
@@ -141,6 +142,7 @@ export type Database = {
           linkedin_post?: string | null
           organization_id?: string | null
           short_form_scripts?: Json | null
+          social_proof_used?: boolean
           target_language?: string | null
           tone?: string | null
           transcript?: string | null
@@ -160,6 +162,7 @@ export type Database = {
           linkedin_post?: string | null
           organization_id?: string | null
           short_form_scripts?: Json | null
+          social_proof_used?: boolean
           target_language?: string | null
           tone?: string | null
           transcript?: string | null

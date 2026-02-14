@@ -268,7 +268,8 @@ export default function Dashboard() {
         short_form_scripts: data.shortFormScripts,
         blog_post: data.blogPost,
         target_language: targetLanguage !== "english" ? targetLanguage : null,
-      });
+        social_proof_used: includeSocialProof,
+      } as any);
 
       // Use one credit after successful generation (this also refreshes UI)
       await useCredit();
