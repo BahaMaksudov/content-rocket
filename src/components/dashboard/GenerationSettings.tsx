@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -73,12 +76,33 @@ export function GenerationSettings({
   setIncludeSocialProof,
 }: GenerationSettingsProps) {
   const { isPro, isAgency, isPaid } = useSubscription();
+  const { user } = useAuth();
   const { hasCredits, creditsUsed, creditLimit, loading: creditsLoading } = useCredits();
   const [showSocialProofGate, setShowSocialProofGate] = useState(false);
+  const [showSocialProofLimitGate, setShowSocialProofLimitGate] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showCreateVoiceModal, setShowCreateVoiceModal] = useState(false);
   const [showStyleLab, setShowStyleLab] = useState(false);
   const [fairUseConfirmed, setFairUseConfirmed] = useState(false);
+
+  const FREE_SOCIAL_PROOF_LIMIT = 2;
+
+  // Count how many generations this free user has made with social proof enabled
+  const { data: socialProofUsageCount = 0 } = useQuery({
+    queryKey: ["socialProofUsage", user?.id],
+    queryFn: async () => {
+      const { count, error } = await (supabase
+        .from("generations")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user!.id) as any)
+        .eq("social_proof_used", true);
+      if (error) throw error;
+      return count ?? 0;
+    },
+    enabled: !!user && !isPaid,
+  });
+
+  const isFreeUserSocialProofExhausted = !isPaid && socialProofUsageCount >= FREE_SOCIAL_PROOF_LIMIT;
 
   // Auto-select default voice on first render if nothing selected
   useState(() => {
@@ -280,16 +304,23 @@ export function GenerationSettings({
 
         {/* Include Social Proof Toggle */}
         {setIncludeSocialProof && (
-          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
+          <div
+            className={`flex items-center justify-between p-3 rounded-lg border border-border ${isFreeUserSocialProofExhausted ? 'bg-muted/50 opacity-75 cursor-pointer' : 'bg-muted/30'}`}
+            onClick={isFreeUserSocialProofExhausted ? () => setShowSocialProofLimitGate(true) : undefined}
+          >
             <div className="flex items-center gap-2">
               <Heart className="h-4 w-4 text-primary" />
               <div>
                 <Label htmlFor="social-proof-toggle" className="text-sm font-medium cursor-pointer flex items-center gap-1.5">
                   Include Social Proof
-                  {!isPaid && (
+                  {!isPaid && !isFreeUserSocialProofExhausted && (
                     <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-primary/50 text-primary">
-                      <Crown className="h-3 w-3 mr-0.5" />
-                      Starter
+                      {FREE_SOCIAL_PROOF_LIMIT - socialProofUsageCount} free left
+                    </Badge>
+                  )}
+                  {isFreeUserSocialProofExhausted && (
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-destructive/50 text-destructive">
+                      Limit reached
                     </Badge>
                   )}
                 </Label>
@@ -301,9 +332,10 @@ export function GenerationSettings({
             <Switch
               id="social-proof-toggle"
               checked={includeSocialProof}
+              disabled={isFreeUserSocialProofExhausted}
               onCheckedChange={(checked) => {
-                if (!isPaid && checked) {
-                  setShowSocialProofGate(true);
+                if (isFreeUserSocialProofExhausted) {
+                  setShowSocialProofLimitGate(true);
                   return;
                 }
                 setIncludeSocialProof(checked);
@@ -419,6 +451,12 @@ export function GenerationSettings({
         open={showSocialProofGate}
         onOpenChange={setShowSocialProofGate}
         feature="social-proof"
+      />
+
+      <PremiumModal
+        open={showSocialProofLimitGate}
+        onOpenChange={setShowSocialProofLimitGate}
+        feature="social-proof-limit"
       />
       
       <CreateBrandVoiceModal
