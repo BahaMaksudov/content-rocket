@@ -73,7 +73,7 @@ export function TestimonialCard({ testimonial, onDelete, onToggleFeatured, showA
 
         {/* Actions */}
         {showActions && (
-          <div className="flex items-center gap-2 pt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-2 pt-1">
             {onToggleFeatured && (
               <Badge
                 variant={testimonial.is_featured ? "default" : "outline"}
@@ -84,7 +84,7 @@ export function TestimonialCard({ testimonial, onDelete, onToggleFeatured, showA
               </Badge>
             )}
             {onDelete && (
-              <Button variant="ghost" size="sm" onClick={() => onDelete(testimonial.id)} className="h-7 px-2 text-destructive hover:text-destructive">
+              <Button variant="ghost" size="sm" onClick={() => onDelete(testimonial.id)} className="h-7 px-2 text-destructive hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             )}
