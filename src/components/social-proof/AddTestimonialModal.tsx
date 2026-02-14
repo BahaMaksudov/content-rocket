@@ -46,12 +46,19 @@ export function AddTestimonialModal({ open, onOpenChange, onSubmit, isSubmitting
     // Reset input so the same file can be re-selected
     if (fileInputRef.current) fileInputRef.current.value = "";
     if (!file) return;
-    if (!file.type.startsWith("image/") && !file.type.startsWith("image")) {
+    
+    // On iOS, photos from library can have empty MIME type — check extension as fallback
+    const validImageTypes = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/heic", "image/heif"];
+    const ext = file.name.split(".").pop()?.toLowerCase() || "";
+    const validExtensions = ["jpg", "jpeg", "png", "gif", "webp", "heic", "heif"];
+    const isImage = file.type.startsWith("image/") || validImageTypes.includes(file.type) || validExtensions.includes(ext);
+    
+    if (!isImage) {
       toast.error("Please select an image file");
       return;
     }
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("Image must be under 2MB");
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be under 5MB");
       return;
     }
     setAvatarFile(file);
