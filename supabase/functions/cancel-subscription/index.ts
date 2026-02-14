@@ -57,8 +57,8 @@ serve(async (req) => {
     }
 
     // Determine tier for user-friendly messaging
-    const tier = subscription.status as "pro" | "agency";
-    const tierLabel = tier === "agency" ? "Agency" : "Pro";
+    const tier = subscription.status as "starter" | "pro" | "agency";
+    const tierLabel = tier === "agency" ? "Agency" : tier === "pro" ? "Pro" : "Starter";
 
     logStep("Found subscription", { 
       subscriptionId: subscription.stripe_subscription_id,
@@ -80,7 +80,10 @@ serve(async (req) => {
     });
 
     // Calculate the end date for UI feedback
-    const periodEnd = new Date(updatedSubscription.current_period_end * 1000).toISOString();
+    const periodEndTimestamp = updatedSubscription.cancel_at || updatedSubscription.current_period_end;
+    const periodEnd = periodEndTimestamp 
+      ? new Date(periodEndTimestamp * 1000).toISOString() 
+      : subscription.current_period_end || new Date().toISOString();
 
     // Note: We do NOT update the Supabase status here.
     // The user keeps their tier access until the webhook receives customer.subscription.deleted
