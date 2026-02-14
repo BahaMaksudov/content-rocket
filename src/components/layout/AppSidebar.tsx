@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Home, History, Mic, Sparkles, Clock, Code, Users, Rocket, Crown, ArrowUpRight, Zap } from "lucide-react";
+import { Home, History, Mic, Sparkles, Clock, Code, Users, Rocket, Crown, ArrowUpRight, Zap, Heart } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -26,6 +26,7 @@ import { trackUpgradeClicked } from "@/lib/posthog";
 const mainNavItems = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
   { title: "Brand Voices", url: "/brand-voices", icon: Mic },
+  { title: "Social Proof", url: "/social-proof", icon: Heart },
 ];
 
 const proNavItems = [
@@ -217,11 +218,7 @@ export function AppSidebar() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => {
-              trackUpgradeClicked("starter", "sidebar_free_user");
-              if (isMobile) setOpenMobile(false);
-              navigate("/?plan=starter");
-            }}
+            onClick={() => openUpgrade("starter")}
             className="w-full text-secondary-foreground/80 hover:text-secondary-foreground hover:bg-secondary/20 transition-all"
           >
             <Zap className="h-4 w-4 mr-2 text-secondary-foreground" />

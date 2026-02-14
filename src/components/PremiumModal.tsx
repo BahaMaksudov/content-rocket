@@ -26,7 +26,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 interface PremiumModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  feature?: "youtube" | "brand-voice" | "generation-limit" | "voice-generation" | "bulk-processing" | "team-workspace" | "style-mimicking";
+  feature?: "youtube" | "brand-voice" | "generation-limit" | "voice-generation" | "bulk-processing" | "team-workspace" | "style-mimicking" | "social-proof" | "social-proof-limit";
   description?: string;
   tier?: "starter" | "pro" | "agency";
 }
@@ -80,6 +80,7 @@ export function PremiumModal({ open, onOpenChange, feature, description, tier: p
   let tier = propTier;
   if (feature === "bulk-processing" || feature === "team-workspace") tier = "agency";
   if (feature === "style-mimicking" && tier === "starter") tier = "pro";
+  if (feature === "social-proof" || feature === "social-proof-limit") tier = "starter";
 
   const features = getFeaturesForTier(tier);
   const tierConfig = SUBSCRIPTION_TIERS[tier];
@@ -116,11 +117,17 @@ export function PremiumModal({ open, onOpenChange, feature, description, tier: p
     ? "Team workspaces let you collaborate with your team"
     : feature === "style-mimicking"
     ? "Style Mimicking lets you train AI to write in your unique voice"
+    : feature === "social-proof-limit"
+    ? "You've reached your free social proof limit! This feature increases conversion by 40%. Upgrade to Starter or Pro."
+    : feature === "social-proof"
+    ? "Social Proof is a paid feature. Add real testimonials to your AI-generated posts to increase conversion!"
     : `${tierConfig.name} features`;
 
-  const isLimitReached = feature === "generation-limit" || feature === "youtube";
+  const isLimitReached = feature === "generation-limit" || feature === "youtube" || feature === "social-proof-limit";
   
-  const dialogTitle = isLimitReached 
+  const dialogTitle = feature === "social-proof-limit"
+    ? "Social Proof Limit Reached"
+    : isLimitReached 
     ? "Out of Credits" 
     : `Upgrade to ${tierConfig.name}`;
     

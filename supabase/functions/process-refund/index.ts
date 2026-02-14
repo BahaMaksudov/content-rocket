@@ -112,31 +112,56 @@ serve(async (req) => {
 
     logStep("Found Stripe customer", { customerId });
 
-    // Get the latest invoice/charge for this subscription
-    const invoices = await stripe.invoices.list({
+    // Get the latest successful payment intent for this customer
+    const paymentIntents = await stripe.paymentIntents.list({
       customer: customerId,
-      subscription: subscription.stripe_subscription_id || undefined,
-      limit: 1,
+      limit: 5,
     });
 
-    if (invoices.data.length === 0) {
-      throw new Error("No invoices found for this subscription");
+    // Find a succeeded payment intent
+    const succeededPI = paymentIntents.data.find(pi => pi.status === "succeeded");
+
+    if (!succeededPI) {
+      // Fallback: try to find via invoice charge
+      const invoices = await stripe.invoices.list({
+        customer: customerId,
+        subscription: subscription.stripe_subscription_id || undefined,
+        limit: 1,
+        expand: ["data.charge", "data.payment_intent"],
+      });
+
+      if (invoices.data.length === 0) {
+        throw new Error("No invoices or payments found for this subscription");
+      }
+
+      const latestInvoice = invoices.data[0];
+      const chargeId = typeof latestInvoice.charge === "string" ? latestInvoice.charge : latestInvoice.charge?.id;
+      const piId = typeof latestInvoice.payment_intent === "string" ? latestInvoice.payment_intent : latestInvoice.payment_intent?.id;
+
+      logStep("Invoice fallback", { chargeId, piId });
+
+      if (chargeId) {
+        const refund = await stripe.refunds.create({ charge: chargeId, reason: "requested_by_customer" });
+        logStep("Refund created via charge", { refundId: refund.id });
+        var refundResult = refund;
+      } else if (piId) {
+        const refund = await stripe.refunds.create({ payment_intent: piId, reason: "requested_by_customer" });
+        logStep("Refund created via PI from invoice", { refundId: refund.id });
+        var refundResult = refund;
+      } else {
+        throw new Error("No charge or payment intent found on the latest invoice");
+      }
+    } else {
+      logStep("Found succeeded payment intent", { piId: succeededPI.id, amount: succeededPI.amount });
+      const refund = await stripe.refunds.create({
+        payment_intent: succeededPI.id,
+        reason: "requested_by_customer",
+      });
+      logStep("Refund created", { refundId: refund.id, status: refund.status });
+      var refundResult = refund;
     }
 
-    const latestInvoice = invoices.data[0];
-    const chargeId = latestInvoice.charge as string;
-
-    if (!chargeId) {
-      throw new Error("No charge found on the latest invoice");
-    }
-
-    logStep("Found charge to refund", { chargeId, amount: latestInvoice.amount_paid });
-
-    // Process the refund
-    const refund = await stripe.refunds.create({
-      charge: chargeId,
-      reason: "requested_by_customer",
-    });
+    const refund = refundResult!;
 
     logStep("Refund created", { refundId: refund.id, status: refund.status });
 
@@ -168,9 +193,10 @@ serve(async (req) => {
       .from("payment_history")
       .update({
         status: "refunded",
-        description: `Full refund - 7-day satisfaction guarantee (${tier === "agency" ? "Agency" : "Pro"})`,
+        description: `Full refund - 7-day satisfaction guarantee (${tier === "agency" ? "Agency" : tier === "pro" ? "Pro" : "Starter"})`,
       })
-      .eq("stripe_invoice_id", latestInvoice.id);
+      .eq("user_id", user.id)
+      .eq("status", "paid");
 
     return new Response(
       JSON.stringify({

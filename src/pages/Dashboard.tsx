@@ -19,6 +19,7 @@ import { DEFAULT_BRAND_VOICES, isDefaultVoiceId, getDefaultVoiceById } from "@/l
 import { useSyncPaymentHistoryOnce } from "@/hooks/use-sync-payment-history";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Video, Layers, Lock } from "lucide-react";
+import { TopTestimonialsWidget } from "@/components/social-proof/TopTestimonialsWidget";
 
 export interface GeneratedContent {
   twitterHooks: string[];
@@ -46,6 +47,7 @@ export default function Dashboard() {
   const [showBulkUpgradeModal, setShowBulkUpgradeModal] = useState(false);
   const [upgradeProcessed, setUpgradeProcessed] = useState(false);
   const [activeTab, setActiveTab] = useState<"single" | "bulk">("single");
+  const [includeSocialProof, setIncludeSocialProof] = useState(false);
 
   // One-time backfill so Billing shows historical invoices (e.g. Feb 1) even if the webhook
   // wasn't configured at the time of payment.
@@ -174,6 +176,10 @@ export default function Dashboard() {
         }
       }
       
+      // Log social proof toggle state for debugging
+      const socialProofUserId = includeSocialProof ? user?.id : undefined;
+      console.log("Social Proof toggle:", includeSocialProof, "| userId sent to AI:", socialProofUserId);
+
       const { data, error } = await supabase.functions.invoke("generate-content", {
         body: {
           transcript,
@@ -181,6 +187,7 @@ export default function Dashboard() {
           audience,
           brandVoice: brandVoiceData,
           translateTo: targetLanguage !== "english" ? targetLanguage : null,
+          userId: socialProofUserId,
         },
       });
 
@@ -261,7 +268,8 @@ export default function Dashboard() {
         short_form_scripts: data.shortFormScripts,
         blog_post: data.blogPost,
         target_language: targetLanguage !== "english" ? targetLanguage : null,
-      });
+        social_proof_used: includeSocialProof,
+      } as any);
 
       // Use one credit after successful generation (this also refreshes UI)
       await useCredit();
@@ -379,7 +387,12 @@ export default function Dashboard() {
                   hasTranscript={!!transcript}
                   targetLanguage={targetLanguage}
                   setTargetLanguage={setTargetLanguage}
+                  includeSocialProof={includeSocialProof}
+                  setIncludeSocialProof={setIncludeSocialProof}
                 />
+
+                {/* Social Proof Widget */}
+                <TopTestimonialsWidget />
               </div>
 
               {/* Right column - Output */}

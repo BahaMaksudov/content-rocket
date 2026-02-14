@@ -122,6 +122,7 @@ export type Database = {
           linkedin_post: string | null
           organization_id: string | null
           short_form_scripts: Json | null
+          social_proof_used: boolean
           target_language: string | null
           tone: string | null
           transcript: string | null
@@ -141,6 +142,7 @@ export type Database = {
           linkedin_post?: string | null
           organization_id?: string | null
           short_form_scripts?: Json | null
+          social_proof_used?: boolean
           target_language?: string | null
           tone?: string | null
           transcript?: string | null
@@ -160,6 +162,7 @@ export type Database = {
           linkedin_post?: string | null
           organization_id?: string | null
           short_form_scripts?: Json | null
+          social_proof_used?: boolean
           target_language?: string | null
           tone?: string | null
           transcript?: string | null
@@ -435,6 +438,51 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      testimonials: {
+        Row: {
+          author_name: string
+          author_title: string | null
+          avatar_url: string | null
+          content: string
+          created_at: string
+          id: string
+          is_featured: boolean
+          rating: number
+          source_platform: string | null
+          source_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          author_name: string
+          author_title?: string | null
+          avatar_url?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          is_featured?: boolean
+          rating?: number
+          source_platform?: string | null
+          source_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          author_name?: string
+          author_title?: string | null
+          avatar_url?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          is_featured?: boolean
+          rating?: number
+          source_platform?: string | null
+          source_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_api_keys: {
         Row: {
