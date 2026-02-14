@@ -28,6 +28,7 @@ import Contact from "./pages/Contact";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import SocialProof from "./pages/SocialProof";
+import EmbedWall from "./pages/EmbedWall";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -125,6 +126,7 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route path="/embed/:userId" element={<EmbedWall />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <CookieConsentBanner />

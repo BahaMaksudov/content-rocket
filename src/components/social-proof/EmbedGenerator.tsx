@@ -12,8 +12,10 @@ interface EmbedGeneratorProps {
 export function EmbedGenerator({ userId }: EmbedGeneratorProps) {
   const [copied, setCopied] = useState<"iframe" | "script" | null>(null);
 
+  const embedUrl = `${window.location.origin}/embed/${userId}`;
+
   const iframeCode = `<iframe
-  src="${window.location.origin}/embed/wall/${userId}"
+  src="${embedUrl}"
   width="100%"
   height="600"
   frameborder="0"
@@ -21,7 +23,15 @@ export function EmbedGenerator({ userId }: EmbedGeneratorProps) {
 ></iframe>`;
 
   const scriptCode = `<div id="wall-of-love" data-user="${userId}"></div>
-<script src="${window.location.origin}/embed/wall.js"></script>`;
+<script>
+  (function() {
+    var d = document.getElementById('wall-of-love');
+    var f = document.createElement('iframe');
+    f.src = '${embedUrl}';
+    f.style.cssText = 'width:100%;height:600px;border:none;border-radius:12px;';
+    d.appendChild(f);
+  })();
+</script>`;
 
   const copyToClipboard = (text: string, type: "iframe" | "script") => {
     navigator.clipboard.writeText(text);
