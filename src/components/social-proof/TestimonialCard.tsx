@@ -47,7 +47,7 @@ export function TestimonialCard({ testimonial, onDelete, onToggleFeatured, showA
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary overflow-hidden shrink-0">
               {testimonial.avatar_url ? (
-                <img src={testimonial.avatar_url} alt={testimonial.author_name} className="h-full w-full object-cover" />
+                <img src={`${testimonial.avatar_url}?t=${Date.now()}`} alt={testimonial.author_name} className="h-full w-full object-cover" />
               ) : (
                 testimonial.author_name.charAt(0).toUpperCase()
               )}
