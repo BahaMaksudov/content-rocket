@@ -43,7 +43,7 @@ export function CancelSubscriptionModal({
   } | null>(null);
 
   // Determine tier label for display
-  const tierLabel = eligibility?.tier === "agency" ? "Agency" : "Pro";
+  const tierLabel = eligibility?.tier === "agency" ? "Agency" : eligibility?.tier === "pro" ? "Pro" : "Starter";
 
   // Check eligibility when modal opens
   useEffect(() => {
