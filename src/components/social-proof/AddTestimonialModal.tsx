@@ -123,17 +123,20 @@ export function AddTestimonialModal({ open, onOpenChange, onSubmit, isSubmitting
             )}
           </div>
           <div className="flex gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-              <Upload className="h-3.5 w-3.5 mr-1.5" />
+            <label
+              htmlFor="avatar-upload"
+              className="inline-flex items-center justify-center gap-1.5 rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-3 cursor-pointer transition-colors"
+            >
+              <Upload className="h-3.5 w-3.5" />
               {avatarPreview ? "Change" : "Upload"}
-            </Button>
+            </label>
             {avatarPreview && (
               <Button type="button" variant="ghost" size="sm" onClick={clearAvatar}>
                 <X className="h-3.5 w-3.5" />
               </Button>
             )}
           </div>
-          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
+          <input id="avatar-upload" ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
         </div>
       </div>
 
