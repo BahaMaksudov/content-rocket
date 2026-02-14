@@ -43,8 +43,10 @@ export function AddTestimonialModal({ open, onOpenChange, onSubmit, isSubmitting
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    // Reset input so the same file can be re-selected
+    if (fileInputRef.current) fileInputRef.current.value = "";
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
+    if (!file.type.startsWith("image/") && !file.type.startsWith("image")) {
       toast.error("Please select an image file");
       return;
     }
@@ -53,6 +55,8 @@ export function AddTestimonialModal({ open, onOpenChange, onSubmit, isSubmitting
       return;
     }
     setAvatarFile(file);
+    // Revoke old preview URL to avoid memory leaks
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
     setAvatarPreview(URL.createObjectURL(file));
   };
 
