@@ -12,6 +12,7 @@ import { SessionRefreshOnRoute } from "@/components/auth/SessionRefreshOnRoute";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
+import AuthConfirm from "./pages/AuthConfirm";
 import Dashboard from "./pages/Dashboard";
 import History from "./pages/History";
 import Team from "./pages/Team";
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/auth/confirm" element={<AuthConfirm />} />
             <Route
               path="/dashboard"
               element={
