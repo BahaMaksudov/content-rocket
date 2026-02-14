@@ -200,11 +200,13 @@ export function AddTestimonialModal({ open, onOpenChange, onSubmit, isSubmitting
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className="px-4 pb-8">
-          <DrawerHeader className="px-0">
+        <DrawerContent className="px-4 pb-8 max-h-[85dvh] flex flex-col">
+          <DrawerHeader className="px-0 shrink-0">
             <DrawerTitle>Add Testimonial</DrawerTitle>
           </DrawerHeader>
-          {formContent}
+          <div className="overflow-y-auto flex-1 -mx-1 px-1 pb-[env(safe-area-inset-bottom)] overscroll-contain">
+            {formContent}
+          </div>
         </DrawerContent>
       </Drawer>
     );
