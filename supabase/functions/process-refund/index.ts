@@ -124,19 +124,23 @@ serve(async (req) => {
     }
 
     const latestInvoice = invoices.data[0];
-    const chargeId = latestInvoice.charge as string;
+    const chargeId = latestInvoice.charge as string | null;
+    const paymentIntentId = latestInvoice.payment_intent as string | null;
 
-    if (!chargeId) {
-      throw new Error("No charge found on the latest invoice");
+    logStep("Invoice details", { chargeId, paymentIntentId, amount: latestInvoice.amount_paid });
+
+    // Build refund params - prefer charge, fall back to payment_intent
+    const refundParams: Record<string, string> = { reason: "requested_by_customer" };
+    if (chargeId) {
+      refundParams.charge = chargeId;
+    } else if (paymentIntentId) {
+      refundParams.payment_intent = paymentIntentId;
+    } else {
+      throw new Error("No charge or payment intent found on the latest invoice");
     }
 
-    logStep("Found charge to refund", { chargeId, amount: latestInvoice.amount_paid });
-
     // Process the refund
-    const refund = await stripe.refunds.create({
-      charge: chargeId,
-      reason: "requested_by_customer",
-    });
+    const refund = await stripe.refunds.create(refundParams as any);
 
     logStep("Refund created", { refundId: refund.id, status: refund.status });
 
