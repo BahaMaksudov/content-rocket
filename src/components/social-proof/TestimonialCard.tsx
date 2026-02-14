@@ -84,7 +84,7 @@ export function TestimonialCard({ testimonial, onDelete, onToggleFeatured, showA
               </Badge>
             )}
             {onDelete && (
-              <Button variant="ghost" size="sm" onClick={() => onDelete(testimonial.id)} className="h-7 px-2 text-destructive hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
+              <Button variant="ghost" size="sm" onClick={() => onDelete(testimonial.id)} className="h-7 px-2 text-destructive hover:text-destructive">
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             )}
