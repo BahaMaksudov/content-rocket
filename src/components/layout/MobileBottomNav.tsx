@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { Badge } from "@/components/ui/badge";
 import { PremiumModal } from "@/components/PremiumModal";
+import { CreditsRemaining } from "@/components/dashboard/CreditsRemaining";
 import { trackUpgradeClicked } from "@/lib/posthog";
 import {
   Drawer,
@@ -124,6 +125,11 @@ export function MobileBottomNav() {
                 <Badge variant="secondary" className="ml-auto text-xs bg-primary/20 text-primary border-0">Agency</Badge>
               </button>
             )}
+
+            {/* Monthly Usage */}
+            <div className="px-1 py-2">
+              <CreditsRemaining />
+            </div>
 
             {/* Divider */}
             <div className="border-t border-border my-2" />
