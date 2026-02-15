@@ -109,6 +109,11 @@ export function ContentOutput({ content, isGenerating, onUpdateContent, targetLa
   const { toast } = useToast();
   const [showPreview, setShowPreview] = useState(false);
   const [activeTab, setActiveTab] = useState("twitter");
+  const [generatedImages, setGeneratedImages] = useState<Record<string, string>>({});
+
+  const handleImageGenerated = (platform: string, imageUrl: string) => {
+    setGeneratedImages(prev => ({ ...prev, [platform]: imageUrl }));
+  };
 
   const handleExportAll = () => {
     if (!content) return;
@@ -227,6 +232,8 @@ ${content.blogPost}
                 textContent={content.twitterHooks.join(" ")} 
                 platform="twitter"
                 targetLanguage={targetLanguage}
+                existingImage={generatedImages["twitter"]}
+                onImageGenerated={(url) => handleImageGenerated("twitter", url)}
               />
             </div>
             {content.twitterHooks.map((hook, index) => (
@@ -266,6 +273,8 @@ ${content.blogPost}
                 textContent={content.linkedinPost} 
                 platform="linkedin"
                 targetLanguage={targetLanguage}
+                existingImage={generatedImages["linkedin"]}
+                onImageGenerated={(url) => handleImageGenerated("linkedin", url)}
               />
             </div>
             <div className="p-4 rounded-lg bg-muted/50 border border-border">
@@ -292,6 +301,8 @@ ${content.blogPost}
                 textContent={content.shortFormScripts.map(s => s.title).join(" ")} 
                 platform="shorts"
                 targetLanguage={targetLanguage}
+                existingImage={generatedImages["shorts"]}
+                onImageGenerated={(url) => handleImageGenerated("shorts", url)}
               />
             </div>
             {content.shortFormScripts.map((script, index) => (
@@ -338,6 +349,8 @@ ${content.blogPost}
                 textContent={content.blogPost.substring(0, 300)} 
                 platform="blog"
                 targetLanguage={targetLanguage}
+                existingImage={generatedImages["blog"]}
+                onImageGenerated={(url) => handleImageGenerated("blog", url)}
               />
             </div>
             <div className="p-4 rounded-lg bg-muted/50 border border-border">

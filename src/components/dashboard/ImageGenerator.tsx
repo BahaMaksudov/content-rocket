@@ -9,11 +9,12 @@ interface ImageGeneratorProps {
   platform: "twitter" | "linkedin" | "shorts" | "blog";
   targetLanguage?: string | null;
   onImageGenerated?: (imageUrl: string) => void;
+  existingImage?: string | null;
 }
 
-export function ImageGenerator({ textContent, platform, targetLanguage, onImageGenerated }: ImageGeneratorProps) {
+export function ImageGenerator({ textContent, platform, targetLanguage, onImageGenerated, existingImage }: ImageGeneratorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const generatedImage = existingImage ?? null;
   const { toast } = useToast();
 
   const platformLabels = {
@@ -47,7 +48,6 @@ export function ImageGenerator({ textContent, platform, targetLanguage, onImageG
       if (error) throw error;
 
       if (data.imageUrl) {
-        setGeneratedImage(data.imageUrl);
         onImageGenerated?.(data.imageUrl);
         toast({
           title: "Image generated!",
