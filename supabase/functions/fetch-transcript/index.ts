@@ -144,19 +144,19 @@ serve(async (req) => {
       url: string;
       parse: (data: any) => { transcript: string; title?: string };
     }> = [
-      // PRIMARY: youtube-transcript3 - user's active subscription
-      {
-        name: "youtube_transcript3",
-        host: "youtube-transcript3.p.rapidapi.com",
-        url: `https://youtube-transcript3.p.rapidapi.com/api/transcript?videoId=${encodeURIComponent(videoId)}&lang=en`,
-        parse: extractTranscriptText,
-      },
-
-      // SECONDARY: Supadata YouTube Transcripts API
+      // PRIMARY: Supadata YouTube Transcripts API (moved to first for better reliability)
       {
         name: "youtube_transcripts_supadata",
         host: "youtube-transcripts.p.rapidapi.com",
         url: `https://youtube-transcripts.p.rapidapi.com/youtube/transcript?url=${encodeURIComponent(url)}&videoId=${encodeURIComponent(videoId)}&text=true&lang=en`,
+        parse: extractTranscriptText,
+      },
+
+      // SECONDARY: youtube-transcript3
+      {
+        name: "youtube_transcript3",
+        host: "youtube-transcript3.p.rapidapi.com",
+        url: `https://youtube-transcript3.p.rapidapi.com/api/transcript?videoId=${encodeURIComponent(videoId)}&lang=en`,
         parse: extractTranscriptText,
       },
 
@@ -198,6 +198,7 @@ serve(async (req) => {
         headers: {
           "X-RapidAPI-Key": rapidApiKey,
           "X-RapidAPI-Host": p.host,
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
         },
       });
 
@@ -219,6 +220,8 @@ serve(async (req) => {
         };
 
         // 403 = subscription missing, 429 = rate limit, 404 = not found - all should try next provider
+        // Throttle before trying next provider to avoid rate limits
+        await new Promise(resolve => setTimeout(resolve, 1000));
         continue;
       }
 
