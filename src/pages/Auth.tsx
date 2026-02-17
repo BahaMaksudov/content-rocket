@@ -471,8 +471,8 @@ export default function Auth() {
       <header className="border-b border-border bg-card/50 backdrop-blur-lg sticky top-0 z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <img src="/luxastream-logo.png" alt="LuxaStream" className="h-9 w-auto rounded-xl object-contain" style={{ height: '36px' }} />
-            <span className="font-semibold text-lg leading-none">LuxaStream</span>
+            <img src="/luxastream-logo.png" alt="LuxaStream" className="h-10 md:h-12 w-auto rounded-xl object-contain" />
+            <span className="font-bold text-xl md:text-2xl leading-none">LuxaStream</span>
           </Link>
           <Button variant="ghost" asChild>
             <Link to="/" className="flex items-center gap-2">
