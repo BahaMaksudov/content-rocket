@@ -31,6 +31,7 @@ import {
   Clock,
   Users,
   TrendingUp,
+  Target,
   Sparkles,
   Twitter,
   Linkedin,
@@ -133,9 +134,9 @@ function StickyNav() {
       }`}
     >
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2">
-          <img src="/luxastream-logo.png" alt="LuxaStream" className="h-9 w-9 rounded-xl object-contain" />
-          <span className="font-semibold text-lg">LuxaStream</span>
+        <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-3">
+          <img src="/luxastream-logo.png" alt="LuxaStream" className="h-10 md:h-12 w-auto rounded-xl object-contain" />
+          <span className="font-bold text-xl md:text-2xl leading-none">LuxaStream</span>
         </Link>
 
         {/* Only show navigation links for logged-out users */}
@@ -223,7 +224,7 @@ function StickyNav() {
                 <Link to="/auth">Log in</Link>
               </Button>
               <Button asChild className="gradient-primary text-primary-foreground shadow-lg btn-glow">
-                <Link to="/auth">Start Streaming Free</Link>
+                <Link to="/auth">Start Creating Free</Link>
               </Button>
             </>
           )}
@@ -259,7 +260,7 @@ function HeroSection() {
               className="px-4 py-2 text-sm font-medium bg-primary/10 text-primary border-primary/20"
             >
               <Sparkles className="h-4 w-4 mr-2" />
-              Trusted by 10,000+ creators worldwide
+              The Future of Video Content Strategy
             </Badge>
           </motion.div>
 
@@ -267,7 +268,7 @@ function HeroSection() {
           <motion.h1 variants={fadeInUp} className="text-4xl sm:text-5xl lg:text-7xl font-semibold mb-6 tracking-tight">
             Turn 1 Video into a
             <span className="block mt-2 text-gradient">
-              Content Stream
+              Content Engine
             </span>
             <span className="block mt-2">in 60 Seconds</span>
           </motion.h1>
@@ -277,8 +278,7 @@ function HeroSection() {
             variants={fadeInUp}
             className="text-lg sm:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed"
           >
-            Stop spending hours writing threads, posts, and blogs. LuxaStream transforms any YouTube video into precision-crafted
-            content for every platform — effortlessly.
+            LuxaStream converts any YouTube video into high-impact scripts, threads, and blogs—effortlessly.
           </motion.p>
 
           {/* CTA buttons */}
@@ -289,7 +289,7 @@ function HeroSection() {
               className="gradient-primary text-primary-foreground text-lg px-8 h-14 shadow-xl btn-glow hover:shadow-primary/40 transition-shadow"
             >
               <Link to="/auth" className="flex items-center gap-2">
-                Start Streaming Free
+                Start Creating Free
                 <ArrowRight className="h-5 w-5" />
               </Link>
             </Button>
@@ -671,56 +671,26 @@ function DemoSection() {
   );
 }
 
-// Trusted by Creators - Wall of Love
+// Early Access — Feature Highlights
 function TrustedByCreatorsSection() {
-  const sampleTestimonials = [
+  const featureCards = [
     {
       id: "1",
-      author_name: "Captain Quasar",
-      author_title: "YouTuber • 120K Subs",
-      content: "LuxaStream turned my 45-minute podcast into a week's worth of Twitter threads, LinkedIn posts, and a full blog article. I saved at least 8 hours.",
-      rating: 5,
-      source_platform: "twitter",
+      title: "Speed",
+      icon: Zap,
+      description: "Turn a 20-minute video into a 2,000-word blog post in under a minute.",
     },
     {
       id: "2",
-      author_name: "Sarah Chen",
-      author_title: "Content Strategist",
-      content: "The Style Mimicking feature is unreal. It captured my brand voice so well that my audience couldn't tell the difference. Game changer for scaling content.",
-      rating: 5,
-      source_platform: "linkedin",
+      title: "Precision",
+      icon: Target,
+      description: "AI-engineered to capture the core takeaways without the fluff.",
     },
     {
       id: "3",
-      author_name: "Marcus Rivera",
-      author_title: "Agency Owner",
-      content: "We manage 12 clients and LuxaStream cut our content production time by 70%. The bulk processing alone pays for the Agency plan ten times over.",
-      rating: 5,
-      source_platform: "twitter",
-    },
-    {
-      id: "4",
-      author_name: "Priya Patel",
-      author_title: "SaaS Founder",
-      content: "Finally, a tool that doesn't produce generic AI slop. The testimonials integration adds real social proof to every post automatically. Brilliant.",
-      rating: 5,
-      source_platform: "linkedin",
-    },
-    {
-      id: "5",
-      author_name: "Jake Thompson",
-      author_title: "Fitness Creator • 85K Subs",
-      content: "I went from posting once a week to 5x daily across three platforms. My engagement tripled in the first month. This is the future of content.",
-      rating: 5,
-      source_platform: "twitter",
-    },
-    {
-      id: "6",
-      author_name: "Aisha Bello",
-      author_title: "Marketing Director",
-      content: "The Global Reach translation is incredibly accurate. We now publish in 4 languages without hiring translators. ROI was immediate.",
-      rating: 4,
-      source_platform: "linkedin",
+      title: "Growth",
+      icon: TrendingUp,
+      description: "Effortlessly scale your presence across LinkedIn, X, and your personal blog.",
     },
   ];
 
@@ -737,56 +707,33 @@ function TrustedByCreatorsSection() {
           className="text-center mb-14"
         >
           <Badge variant="outline" className="mb-4 text-primary border-primary/30">
-            <Heart className="h-3.5 w-3.5 mr-1.5 fill-primary" />
-            Wall of Love
+            <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+            Early Access
           </Badge>
           <h2 className="text-3xl lg:text-5xl font-bold mb-4">
-            Trusted by <span className="text-gradient">10,000+ Creators</span>
+            The Future of <span className="text-gradient">Video Content Strategy</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            See why creators, agencies, and marketers love LuxaStream
+            Join early-access creators who are reclaiming their time with LuxaStream.
           </p>
         </motion.div>
 
-        <div className="columns-1 sm:columns-2 lg:columns-3 gap-5 max-w-5xl mx-auto">
-          {sampleTestimonials.map((t, index) => (
+        <div className="grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
+          {featureCards.map((card, index) => (
             <motion.div
-              key={t.id}
+              key={card.id}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: index * 0.08 }}
-              className="break-inside-avoid mb-5"
+              transition={{ duration: 0.4, delay: index * 0.1 }}
             >
-              <Card className="border-border/50 bg-card/80 backdrop-blur-sm hover:border-primary/30 transition-all duration-300">
-                <CardContent className="p-5 space-y-3">
-                  <div className="flex items-center gap-0.5">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`h-4 w-4 ${star <= t.rating ? "fill-warning text-warning" : "text-muted-foreground/20"}`}
-                      />
-                    ))}
+              <Card className="border-border/50 bg-card/60 backdrop-blur-sm hover:border-primary/40 transition-all duration-300 h-full">
+                <CardContent className="p-6 space-y-4 text-center">
+                  <div className="mx-auto w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <card.icon className="h-6 w-6 text-primary" />
                   </div>
-                  <p className="text-sm text-foreground/90 leading-relaxed">"{t.content}"</p>
-                  <div className="flex items-center justify-between pt-2 border-t border-border/50">
-                    <div className="flex items-center gap-2">
-                      <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
-                        {t.author_name.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-foreground">{t.author_name}</p>
-                        <p className="text-xs text-muted-foreground">{t.author_title}</p>
-                      </div>
-                    </div>
-                    <span className="text-muted-foreground">
-                      {t.source_platform === "twitter" ? (
-                        <Twitter className="h-4 w-4" />
-                      ) : (
-                        <Linkedin className="h-4 w-4" />
-                      )}
-                    </span>
-                  </div>
+                  <h3 className="text-lg font-semibold">{card.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{card.description}</p>
                 </CardContent>
               </Card>
             </motion.div>
@@ -1169,7 +1116,7 @@ const CTASection = forwardRef<HTMLElement>((_, ref) => {
               className="gradient-primary text-primary-foreground text-lg px-10 h-14 shadow-xl btn-glow"
             >
               <Link to="/auth" className="flex items-center gap-2">
-                Start Streaming Free
+                Start Creating Free
                 <Sparkles className="h-5 w-5" />
               </Link>
             </Button>

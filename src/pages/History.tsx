@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { History as HistoryIcon, ExternalLink, Trash2, Copy, Check, Twitter, Linkedin, Film, FileText } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ImageGenerator } from "@/components/dashboard/ImageGenerator";
 import { trackCopyContent } from "@/lib/posthog";
 import { SocialActionBar } from "@/components/dashboard/bulk/SocialActionBar";
@@ -175,12 +176,34 @@ export default function History() {
 
             {selectedGeneration && (
               <Tabs defaultValue="twitter" className="w-full">
-                <TabsList className="grid grid-cols-4 mb-4">
-                  <TabsTrigger value="twitter"><Twitter className="h-4 w-4" /></TabsTrigger>
-                  <TabsTrigger value="linkedin"><Linkedin className="h-4 w-4" /></TabsTrigger>
-                  <TabsTrigger value="shorts"><Film className="h-4 w-4" /></TabsTrigger>
-                  <TabsTrigger value="blog"><FileText className="h-4 w-4" /></TabsTrigger>
-                </TabsList>
+                <TooltipProvider>
+                  <TabsList className="grid grid-cols-4 mb-4">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <TabsTrigger value="twitter"><Twitter className="h-4 w-4" /></TabsTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent>X Thread</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <TabsTrigger value="linkedin"><Linkedin className="h-4 w-4" /></TabsTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent>LinkedIn Post</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <TabsTrigger value="shorts"><Film className="h-4 w-4" /></TabsTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent>TikTok Script</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <TabsTrigger value="blog"><FileText className="h-4 w-4" /></TabsTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent>SEO Blog Post</TooltipContent>
+                    </Tooltip>
+                  </TabsList>
+                </TooltipProvider>
 
                 <TabsContent value="twitter" className="space-y-3">
                   <div className="mb-4">
