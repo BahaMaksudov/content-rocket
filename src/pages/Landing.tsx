@@ -134,9 +134,9 @@ function StickyNav() {
       }`}
     >
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2">
-          <img src="/luxastream-logo.png" alt="LuxaStream" className="h-9 w-9 rounded-xl object-contain" />
-          <span className="font-semibold text-lg">LuxaStream</span>
+        <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-3">
+          <img src="/luxastream-logo.png" alt="LuxaStream" className="h-9 w-auto rounded-xl object-contain" style={{ height: '36px' }} />
+          <span className="font-semibold text-lg leading-none">LuxaStream</span>
         </Link>
 
         {/* Only show navigation links for logged-out users */}

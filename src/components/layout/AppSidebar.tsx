@@ -54,7 +54,7 @@ export function AppSidebar() {
       {/* Header with Logo */}
       <SidebarHeader className="p-5 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
-          <img src={luxaLogo} alt="LuxaStream" className="h-10 w-10 rounded-xl object-contain" />
+          <img src={luxaLogo} alt="LuxaStream" className="rounded-xl object-contain" style={{ height: '36px', width: 'auto' }} />
           <div>
             <h1 className="text-lg font-semibold text-foreground">LuxaStream</h1>
             <p className="text-xs text-muted-foreground">Content Engine</p>
