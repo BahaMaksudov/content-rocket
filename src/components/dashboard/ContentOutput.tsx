@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, Check, Edit2, Save, Twitter, Linkedin, Film, FileText, Download, Loader2 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { GeneratedContent } from "@/pages/Dashboard";
 import { ImageGenerator } from "./ImageGenerator";
 import { SocialPreview, SocialPreviewToggle } from "./SocialPreview";
@@ -200,24 +201,46 @@ ${content.blogPost}
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-4 mb-4">
-            <TabsTrigger value="twitter" className="flex items-center gap-1">
-              <Twitter className="h-4 w-4" />
-              <span className="hidden sm:inline">X Hooks</span>
-            </TabsTrigger>
-            <TabsTrigger value="linkedin" className="flex items-center gap-1">
-              <Linkedin className="h-4 w-4" />
-              <span className="hidden sm:inline">LinkedIn</span>
-            </TabsTrigger>
-            <TabsTrigger value="shorts" className="flex items-center gap-1">
-              <Film className="h-4 w-4" />
-              <span className="hidden sm:inline">Scripts</span>
-            </TabsTrigger>
-            <TabsTrigger value="blog" className="flex items-center gap-1">
-              <FileText className="h-4 w-4" />
-              <span className="hidden sm:inline">Blog</span>
-            </TabsTrigger>
-          </TabsList>
+          <TooltipProvider>
+            <TabsList className="grid grid-cols-4 mb-4">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <TabsTrigger value="twitter" className="flex items-center gap-1">
+                    <Twitter className="h-4 w-4" />
+                    <span className="hidden sm:inline">X Hooks</span>
+                  </TabsTrigger>
+                </TooltipTrigger>
+                <TooltipContent>X Thread</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <TabsTrigger value="linkedin" className="flex items-center gap-1">
+                    <Linkedin className="h-4 w-4" />
+                    <span className="hidden sm:inline">LinkedIn</span>
+                  </TabsTrigger>
+                </TooltipTrigger>
+                <TooltipContent>LinkedIn Post</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <TabsTrigger value="shorts" className="flex items-center gap-1">
+                    <Film className="h-4 w-4" />
+                    <span className="hidden sm:inline">Scripts</span>
+                  </TabsTrigger>
+                </TooltipTrigger>
+                <TooltipContent>TikTok Script</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <TabsTrigger value="blog" className="flex items-center gap-1">
+                    <FileText className="h-4 w-4" />
+                    <span className="hidden sm:inline">Blog</span>
+                  </TabsTrigger>
+                </TooltipTrigger>
+                <TooltipContent>SEO Blog Post</TooltipContent>
+              </Tooltip>
+            </TabsList>
+          </TooltipProvider>
 
           {/* Social Preview */}
           {showPreview && currentPlatform !== "blog" && (
