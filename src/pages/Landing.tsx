@@ -223,7 +223,7 @@ function StickyNav() {
                 <Link to="/auth">Log in</Link>
               </Button>
               <Button asChild className="gradient-primary text-primary-foreground shadow-lg btn-glow">
-                <Link to="/auth">Start Streaming Free</Link>
+                <Link to="/auth">Start Creating Free</Link>
               </Button>
             </>
           )}
@@ -267,7 +267,7 @@ function HeroSection() {
           <motion.h1 variants={fadeInUp} className="text-4xl sm:text-5xl lg:text-7xl font-semibold mb-6 tracking-tight">
             Turn 1 Video into a
             <span className="block mt-2 text-gradient">
-              Content Stream
+              Content Engine
             </span>
             <span className="block mt-2">in 60 Seconds</span>
           </motion.h1>
@@ -277,8 +277,7 @@ function HeroSection() {
             variants={fadeInUp}
             className="text-lg sm:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed"
           >
-            Stop spending hours writing threads, posts, and blogs. LuxaStream transforms any YouTube video into precision-crafted
-            content for every platform — effortlessly.
+            LuxaStream converts any YouTube video into high-impact scripts, threads, and blogs—effortlessly.
           </motion.p>
 
           {/* CTA buttons */}
@@ -289,7 +288,7 @@ function HeroSection() {
               className="gradient-primary text-primary-foreground text-lg px-8 h-14 shadow-xl btn-glow hover:shadow-primary/40 transition-shadow"
             >
               <Link to="/auth" className="flex items-center gap-2">
-                Start Streaming Free
+                Start Creating Free
                 <ArrowRight className="h-5 w-5" />
               </Link>
             </Button>
@@ -1169,7 +1168,7 @@ const CTASection = forwardRef<HTMLElement>((_, ref) => {
               className="gradient-primary text-primary-foreground text-lg px-10 h-14 shadow-xl btn-glow"
             >
               <Link to="/auth" className="flex items-center gap-2">
-                Start Streaming Free
+                Start Creating Free
                 <Sparkles className="h-5 w-5" />
               </Link>
             </Button>
