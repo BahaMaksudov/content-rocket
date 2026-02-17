@@ -251,11 +251,11 @@ export function AppLayout({ children }: AppLayoutProps) {
                 <Link to="/terms#refunds" className="hover:text-foreground transition-colors">
                   Refund Policy
                 </Link>
-                <a href="mailto:support@rocketcontentpro.io" className="hover:text-foreground transition-colors">
+                <a href="mailto:support@luxastream.io" className="hover:text-foreground transition-colors">
                   Contact Support
                 </a>
               </div>
-              <span className="text-muted-foreground/70">© {new Date().getFullYear()} Rocket Content</span>
+              <span className="text-muted-foreground/70">© {new Date().getFullYear()} LuxaStream</span>
             </div>
           </footer>
         </main>
