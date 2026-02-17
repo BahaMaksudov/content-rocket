@@ -22,6 +22,7 @@ import { CreditsRemaining } from "@/components/dashboard/CreditsRemaining";
 import { PremiumModal } from "@/components/PremiumModal";
 import { SUBSCRIPTION_TIERS } from "@/lib/subscription-tiers";
 import { trackUpgradeClicked } from "@/lib/posthog";
+import luxaLogo from "@/assets/luxastream-logo.png";
 
 const mainNavItems = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
@@ -43,7 +44,6 @@ export function AppSidebar() {
 
   const openUpgrade = (t: "starter" | "pro" | "agency") => {
     trackUpgradeClicked(t, `sidebar_${tier}_user`);
-    // Close mobile drawer before showing modal
     if (isMobile) setOpenMobile(false);
     setModalTier(t);
     setShowModal(true);
@@ -54,12 +54,10 @@ export function AppSidebar() {
       {/* Header with Logo */}
       <SidebarHeader className="p-5 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-primary premium-glow">
-            <Sparkles className="h-5 w-5 text-primary-foreground" />
-          </div>
+          <img src={luxaLogo} alt="LuxaStream" className="h-10 w-10 rounded-xl object-contain" />
           <div>
-            <h1 className="text-lg font-bold text-foreground">Rocket Content</h1>
-            <p className="text-xs text-muted-foreground">Content Studio</p>
+            <h1 className="text-lg font-semibold text-foreground">LuxaStream</h1>
+            <p className="text-xs text-muted-foreground">Content Engine</p>
           </div>
         </div>
       </SidebarHeader>
@@ -183,15 +181,13 @@ export function AppSidebar() {
 
       {/* Footer with Credits and Upgrades */}
       <SidebarFooter className="p-4 border-t border-sidebar-border space-y-2">
-        {/* Credits Remaining */}
         <CreditsRemaining />
 
-        {/* Upgrade to Agency - shown to all non-agency users */}
         {tier !== "agency" && (
           <Button
             variant="outline"
             onClick={() => openUpgrade("agency")}
-            className="w-full relative overflow-hidden border-accent/30 bg-gradient-to-r from-accent/10 via-accent/5 to-accent/10 hover:from-accent/20 hover:via-accent/10 hover:to-accent/20 text-accent-foreground hover:text-accent-foreground transition-all duration-300"
+            className="w-full relative overflow-hidden border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 hover:from-primary/20 hover:via-primary/10 hover:to-primary/20 text-foreground hover:text-foreground transition-all duration-300"
           >
             <Rocket className="h-4 w-4 mr-2" />
             Upgrade to Agency
@@ -199,7 +195,6 @@ export function AppSidebar() {
           </Button>
         )}
 
-        {/* Upgrade to Pro - shown to Free and Starter users */}
         {(tier === "free" || tier === "starter") && (
           <Button
             variant="ghost"
@@ -213,7 +208,6 @@ export function AppSidebar() {
           </Button>
         )}
 
-        {/* Upgrade to Starter - shown to Free users only */}
         {tier === "free" && (
           <Button
             variant="ghost"
@@ -227,18 +221,16 @@ export function AppSidebar() {
           </Button>
         )}
 
-        {/* Current Plan Indicator */}
         <div className="flex items-center justify-center gap-2 p-2 rounded-lg bg-sidebar-accent/50">
-          <Badge 
-            variant="outline" 
-            className={`text-xs ${tier === "agency" ? "bg-gradient-to-r from-accent/20 to-accent/10 border-accent/30 text-accent-foreground" : "border-primary/30 text-primary"}`}
+          <Badge
+            variant="outline"
+            className={`text-xs ${tier === "agency" ? "bg-gradient-to-r from-primary/20 to-primary/10 border-primary/30 text-primary" : "border-primary/30 text-primary"}`}
           >
             {tierConfig.name} Plan
           </Badge>
         </div>
       </SidebarFooter>
 
-      {/* Upgrade Modal */}
       <PremiumModal open={showModal} onOpenChange={setShowModal} tier={modalTier} />
     </Sidebar>
   );

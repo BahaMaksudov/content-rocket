@@ -90,10 +90,10 @@ export function WelcomeBanner({ onScrollToInput }: WelcomeBannerProps) {
               ) : (
                 <Rocket className="h-5 w-5 text-white" />
               )}
-              <h2 className="text-xl md:text-2xl font-bold text-white">
+              <h2 className="text-xl md:text-2xl font-semibold text-white">
                 {isAgencyTier
                   ? `Welcome, Agency Partner${userName ? ` ${userName}` : ""}! 🏢`
-                  : `Welcome to the Pro Club${userName ? `, ${userName}` : ""}! 🚀`}
+                  : `Welcome to LuxaStream Pro${userName ? `, ${userName}` : ""}! ✨`}
               </h2>
             </div>
             <p className="text-white/90 text-sm md:text-base max-w-xl">
@@ -110,7 +110,7 @@ export function WelcomeBanner({ onScrollToInput }: WelcomeBannerProps) {
               size="lg"
               className="w-full md:w-auto bg-white text-primary hover:bg-white/90 font-semibold shadow-lg"
             >
-              {isAgencyTier ? "Invite Team Members" : "Repurpose Your First Video"}
+              {isAgencyTier ? "Invite Team Members" : "Generate Your First Insights"}
             </Button>
           </div>
         </div>

@@ -129,15 +129,13 @@ function StickyNav() {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? "bg-background/95 backdrop-blur-lg border-b border-border shadow-lg" : "bg-transparent"
+        scrolled ? "bg-[#1a1f2e]/95 backdrop-blur-lg border-b border-border shadow-lg" : "bg-transparent"
       }`}
     >
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2">
-          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-rocket flex items-center justify-center">
-            <Rocket className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <span className="font-bold text-lg">Rocket Content</span>
+          <img src="/luxastream-logo.png" alt="LuxaStream" className="h-9 w-9 rounded-xl object-contain" />
+          <span className="font-semibold text-lg">LuxaStream</span>
         </Link>
 
         {/* Only show navigation links for logged-out users */}
@@ -224,8 +222,8 @@ function StickyNav() {
               <Button variant="ghost" asChild className="hidden sm:inline-flex">
                 <Link to="/auth">Log in</Link>
               </Button>
-              <Button asChild className="gradient-primary text-primary-foreground shadow-lg shadow-primary/25">
-                <Link to="/auth">Get Started Free</Link>
+              <Button asChild className="gradient-primary text-primary-foreground shadow-lg btn-glow">
+                <Link to="/auth">Start Streaming Free</Link>
               </Button>
             </>
           )}
@@ -266,10 +264,10 @@ function HeroSection() {
           </motion.div>
 
           {/* Main headline */}
-          <motion.h1 variants={fadeInUp} className="text-4xl sm:text-5xl lg:text-7xl font-bold mb-6 tracking-tight">
+          <motion.h1 variants={fadeInUp} className="text-4xl sm:text-5xl lg:text-7xl font-semibold mb-6 tracking-tight">
             Turn 1 Video into a
-            <span className="block mt-2 bg-gradient-to-r from-primary via-electric to-rocket bg-clip-text text-transparent">
-              Month of Content
+            <span className="block mt-2 text-gradient">
+              Content Stream
             </span>
             <span className="block mt-2">in 60 Seconds</span>
           </motion.h1>
@@ -279,8 +277,8 @@ function HeroSection() {
             variants={fadeInUp}
             className="text-lg sm:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed"
           >
-            Stop spending hours writing threads, posts, and blogs. Our AI transforms any YouTube video into viral-ready
-            content for every platform—automatically.
+            Stop spending hours writing threads, posts, and blogs. LuxaStream transforms any YouTube video into precision-crafted
+            content for every platform — effortlessly.
           </motion.p>
 
           {/* CTA buttons */}
@@ -288,10 +286,10 @@ function HeroSection() {
             <Button
               asChild
               size="lg"
-              className="gradient-primary text-primary-foreground text-lg px-8 h-14 shadow-xl shadow-primary/25 hover:shadow-primary/40 transition-shadow"
+              className="gradient-primary text-primary-foreground text-lg px-8 h-14 shadow-xl btn-glow hover:shadow-primary/40 transition-shadow"
             >
               <Link to="/auth" className="flex items-center gap-2">
-                Get Started Free
+                Start Streaming Free
                 <ArrowRight className="h-5 w-5" />
               </Link>
             </Button>
@@ -448,12 +446,12 @@ function SolutionSection() {
           <Badge variant="outline" className="mb-4 text-primary border-primary/30">
             The Solution
           </Badge>
-          <h2 className="text-3xl lg:text-5xl font-bold mb-6">
+          <h2 className="text-3xl lg:text-5xl font-semibold mb-6">
             Four Superpowers,
             <span className="text-gradient"> One Platform</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Rocket Content doesn't just repurpose—it amplifies. Every feature is designed to multiply your reach with
+            LuxaStream doesn't just repurpose — it amplifies. Every feature is designed to multiply your reach with
             minimal effort.
           </p>
         </motion.div>
@@ -509,7 +507,7 @@ function DemoSection() {
             <span className="text-gradient"> Viral Content</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Watch how Rocket Content transforms a single video into platform-optimized content in seconds.
+            Watch how LuxaStream transforms a single video into platform-optimized content in seconds.
           </p>
         </motion.div>
 
@@ -536,9 +534,9 @@ function DemoSection() {
                     className="w-full bg-transparent text-foreground text-sm lg:text-base focus:outline-none"
                   />
                 </div>
-                <Button onClick={() => setShowOutput(true)} className="gradient-primary text-primary-foreground">
-                  <Rocket className="h-4 w-4 mr-2" />
-                  Generate All
+                <Button onClick={() => setShowOutput(true)} className="gradient-primary text-primary-foreground btn-glow">
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Generate Insights
                 </Button>
               </div>
             </div>
@@ -680,7 +678,7 @@ function TrustedByCreatorsSection() {
       id: "1",
       author_name: "Captain Quasar",
       author_title: "YouTuber • 120K Subs",
-      content: "Rocket Content turned my 45-minute podcast into a week's worth of Twitter threads, LinkedIn posts, and a full blog article. I saved at least 8 hours.",
+      content: "LuxaStream turned my 45-minute podcast into a week's worth of Twitter threads, LinkedIn posts, and a full blog article. I saved at least 8 hours.",
       rating: 5,
       source_platform: "twitter",
     },
@@ -696,7 +694,7 @@ function TrustedByCreatorsSection() {
       id: "3",
       author_name: "Marcus Rivera",
       author_title: "Agency Owner",
-      content: "We manage 12 clients and Rocket Content cut our content production time by 70%. The bulk processing alone pays for the Agency plan ten times over.",
+      content: "We manage 12 clients and LuxaStream cut our content production time by 70%. The bulk processing alone pays for the Agency plan ten times over.",
       rating: 5,
       source_platform: "twitter",
     },
@@ -746,7 +744,7 @@ function TrustedByCreatorsSection() {
             Trusted by <span className="text-gradient">10,000+ Creators</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            See why creators, agencies, and marketers love Rocket Content
+            See why creators, agencies, and marketers love LuxaStream
           </p>
         </motion.div>
 
@@ -812,7 +810,7 @@ function PricingSection({
       name: "Free",
       price: "$0",
       period: "forever",
-      description: "Perfect for trying out Rocket Content",
+      description: "Perfect for trying out LuxaStream",
       highlight: null,
       features: [
         "3 generations per month",
@@ -1034,9 +1032,9 @@ function PricingSection({
 function FAQSection() {
   const faqs = [
     {
-      question: "How does Rocket Content work?",
+      question: "How does LuxaStream work?",
       answer:
-        "Simply paste a YouTube URL and our AI analyzes the transcript to generate platform-optimized content. You get X threads, LinkedIn posts, TikTok scripts, and SEO blog posts—all from one video.",
+        "Simply paste a YouTube URL and our AI analyzes the transcript to generate platform-optimized content. You get X threads, LinkedIn posts, TikTok scripts, and SEO blog posts — all from one video.",
     },
     {
       question: "What languages do you support for translation?",
@@ -1051,17 +1049,17 @@ function FAQSection() {
     {
       question: "Do I own the content generated?",
       answer:
-        "Yes, 100%. All content generated through Rocket Content is yours to use however you like—no attribution required.",
+        "Yes, 100%. All content generated through LuxaStream is yours to use however you like — no attribution required.",
     },
     {
       question: "What if I'm not satisfied?",
       answer:
-        "We offer a 7-day money-back guarantee on all paid plans. If Rocket Content isn't right for you, just reach out and we'll refund you—no questions asked.",
+        "We offer a 7-day money-back guarantee on all paid plans. If LuxaStream isn't right for you, just reach out and we'll refund you — no questions asked.",
     },
     {
       question: "Is there an API available?",
       answer:
-        "Yes! Pro and Agency plans include API access so you can integrate Rocket Content into your existing workflows and tools.",
+        "Yes! Pro and Agency plans include API access so you can integrate LuxaStream into your existing workflows and tools.",
     },
   ];
 
@@ -1080,7 +1078,7 @@ function FAQSection() {
           </Badge>
           <h2 className="text-3xl lg:text-5xl font-bold mb-6">Got Questions?</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Everything you need to know about Rocket Content.
+            Everything you need to know about LuxaStream.
           </p>
         </motion.div>
 
@@ -1168,11 +1166,11 @@ const CTASection = forwardRef<HTMLElement>((_, ref) => {
             <Button
               asChild
               size="lg"
-              className="gradient-primary text-primary-foreground text-lg px-10 h-14 shadow-xl shadow-primary/25"
+              className="gradient-primary text-primary-foreground text-lg px-10 h-14 shadow-xl btn-glow"
             >
               <Link to="/auth" className="flex items-center gap-2">
-                Get Started Free
-                <Rocket className="h-5 w-5" />
+                Start Streaming Free
+                <Sparkles className="h-5 w-5" />
               </Link>
             </Button>
           </div>
@@ -1196,13 +1194,11 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
           {/* Brand & Company Info */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-rocket flex items-center justify-center">
-                <Rocket className="h-4 w-4 text-primary-foreground" />
-              </div>
-              <span className="font-bold">Rocket Content</span>
+              <img src="/luxastream-logo.png" alt="LuxaStream" className="h-8 w-8 rounded-lg object-contain" />
+              <span className="font-semibold">LuxaStream</span>
             </div>
             <div className="text-sm text-muted-foreground space-y-1">
-              <p className="font-medium text-foreground">Rocket Content</p>
+              <p className="font-medium text-foreground">LuxaStream</p>
               <div className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
                 <span>Sharon, MA USA</span>
@@ -1252,8 +1248,8 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
           <div className="space-y-4">
             <h4 className="font-semibold text-sm">Support</h4>
             <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-              <a href="mailto:support@rocketcontentpro.io" className="hover:text-foreground transition-colors">
-                support@rocketcontentpro.io
+              <a href="mailto:support@luxastream.io" className="hover:text-foreground transition-colors">
+                support@luxastream.io
               </a>
               <Link to="/contact" className="hover:text-foreground transition-colors">
                 Contact Sales
@@ -1279,7 +1275,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
 
             {/* Copyright */}
             <p className="text-sm text-muted-foreground text-center">
-              © {new Date().getFullYear()} Rocket Content. All rights reserved.
+              © {new Date().getFullYear()} LuxaStream. All rights reserved.
             </p>
           </div>
         </div>
@@ -1339,8 +1335,8 @@ export default function Landing() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-rocket flex items-center justify-center animate-pulse">
-          <Rocket className="h-5 w-5 text-primary-foreground" />
+        <div className="h-9 w-9 rounded-xl flex items-center justify-center animate-pulse">
+          <img src="/luxastream-logo.png" alt="Loading" className="h-9 w-9 rounded-xl object-contain" />
         </div>
       </div>
     );
