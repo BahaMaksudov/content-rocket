@@ -1,15 +1,15 @@
 {
-  "name": "Rocket Content",
-  "short_name": "Rocket Content",
-  "description": "Repurpose your long-form videos into viral social media threads, blog posts, and scripts in seconds with Rocket Content.",
+  "name": "LuxaStream",
+  "short_name": "LuxaStream",
+  "description": "Transform your long-form videos into precision-crafted social content, blog posts, and scripts in seconds with LuxaStream.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0a0f",
-  "theme_color": "#3B82F6",
+  "background_color": "#0F172A",
+  "theme_color": "#06B6D4",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/rocket-icon.png",
+      "src": "/luxastream-logo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

@@ -471,10 +471,8 @@ export default function Auth() {
       <header className="border-b border-border bg-card/50 backdrop-blur-lg sticky top-0 z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-rocket flex items-center justify-center">
-              <Rocket className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="font-bold text-lg">Rocket Content</span>
+            <img src="/luxastream-logo.png" alt="LuxaStream" className="h-9 w-9 rounded-xl object-contain" />
+            <span className="font-semibold text-lg">LuxaStream</span>
           </Link>
           <Button variant="ghost" asChild>
             <Link to="/" className="flex items-center gap-2">
@@ -489,9 +487,9 @@ export default function Auth() {
       <main className="container mx-auto px-4 py-16 max-w-md">
         <Card className="border-border bg-card">
           <CardHeader className="text-center">
-            <CardTitle className="text-xl">Welcome</CardTitle>
+            <CardTitle className="text-xl">Welcome to LuxaStream</CardTitle>
             <CardDescription>
-              Transform your YouTube content into viral posts
+              The intelligent flow of clarity starts here
             </CardDescription>
           </CardHeader>
           <CardContent>
