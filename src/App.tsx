@@ -31,6 +31,9 @@ import ResetPassword from "./pages/ResetPassword";
 import SocialProof from "./pages/SocialProof";
 import EmbedWall from "./pages/EmbedWall";
 import NotFound from "./pages/NotFound";
+import YouTubeToLinkedIn from "./pages/tools/YouTubeToLinkedIn";
+import Blog from "./pages/Blog";
+import HowToRepurposeYouTubeVideos from "./pages/blog/HowToRepurposeYouTubeVideos";
 
 const queryClient = new QueryClient();
 
@@ -129,6 +132,9 @@ const App = () => (
               }
             />
             <Route path="/embed/:userId" element={<EmbedWall />} />
+            <Route path="/tools/youtube-to-linkedin" element={<YouTubeToLinkedIn />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/how-to-repurpose-youtube-videos" element={<HowToRepurposeYouTubeVideos />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <CookieConsentBanner />
