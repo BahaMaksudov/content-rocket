@@ -370,7 +370,7 @@ export default function Dashboard() {
                     transcriptMethod={transcriptMethod}
                     youtubeUrl={youtubeUrl}
                     setYoutubeUrl={setYoutubeUrl}
-                    onCreditUsed={refreshCredits}
+                    
                   />
                 </div>
                 
