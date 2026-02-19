@@ -13,7 +13,6 @@ import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { History as HistoryIcon, ExternalLink, Trash2, Copy, Check, Twitter, Linkedin, Film, FileText } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ImageGenerator } from "@/components/dashboard/ImageGenerator";
 import { trackCopyContent } from "@/lib/posthog";
 import { SocialActionBar } from "@/components/dashboard/bulk/SocialActionBar";
 
@@ -206,13 +205,6 @@ export default function History() {
                 </TooltipProvider>
 
                 <TabsContent value="twitter" className="space-y-3">
-                  <div className="mb-4">
-                    <ImageGenerator 
-                      textContent={(selectedGeneration.twitter_hooks as string[] | null)?.join(" ") || ""} 
-                      platform="twitter"
-                      targetLanguage={selectedGeneration.target_language}
-                    />
-                  </div>
                   {(selectedGeneration.twitter_hooks as string[] | null)?.map((hook, i) => (
                     <div key={i} className="p-3 rounded-lg bg-muted/50 flex justify-between items-start gap-2">
                       <p className="flex-1">{hook}</p>
@@ -227,13 +219,6 @@ export default function History() {
                 </TabsContent>
 
                 <TabsContent value="linkedin">
-                  <div className="mb-4">
-                    <ImageGenerator 
-                      textContent={selectedGeneration.linkedin_post || ""} 
-                      platform="linkedin"
-                      targetLanguage={selectedGeneration.target_language}
-                    />
-                  </div>
                   <div className="p-3 rounded-lg bg-muted/50">
                     <div className="flex justify-end mb-2">
                       <CopyButton text={selectedGeneration.linkedin_post || ""} contentType="linkedin_post" platform="linkedin" />
@@ -248,13 +233,6 @@ export default function History() {
                 </TabsContent>
 
                 <TabsContent value="shorts" className="space-y-4">
-                  <div className="mb-4">
-                    <ImageGenerator 
-                      textContent={(selectedGeneration.short_form_scripts as Array<{ title: string; script: string; duration: string }> | null)?.map(s => s.title).join(" ") || ""} 
-                      platform="shorts"
-                      targetLanguage={selectedGeneration.target_language}
-                    />
-                  </div>
                   {(selectedGeneration.short_form_scripts as Array<{ title: string; script: string; duration: string }> | null)?.map((script, i) => (
                     <div key={i} className="p-3 rounded-lg bg-muted/50">
                       <div className="flex justify-between items-start mb-2">
@@ -275,13 +253,6 @@ export default function History() {
                 </TabsContent>
 
                 <TabsContent value="blog">
-                  <div className="mb-4">
-                    <ImageGenerator 
-                      textContent={selectedGeneration.blog_post?.substring(0, 300) || ""} 
-                      platform="blog"
-                      targetLanguage={selectedGeneration.target_language}
-                    />
-                  </div>
                   <div className="p-3 rounded-lg bg-muted/50">
                     <div className="flex justify-end mb-2">
                       <CopyButton text={selectedGeneration.blog_post || ""} contentType="blog_post" platform="blog" />
