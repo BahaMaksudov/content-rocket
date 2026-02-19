@@ -133,10 +133,16 @@ function StickyNav() {
         scrolled ? "bg-[#1a1f2e]/95 backdrop-blur-lg border-b border-border shadow-lg" : "bg-transparent"
       }`}
     >
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+      <div className="container mx-auto px-4 h-[68px] flex items-center justify-between">
         <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-3">
-          <img src="/luxastream-logo.png" alt="LuxaStream" className="h-10 md:h-12 w-auto rounded-xl object-contain" />
-          <span className="font-bold text-xl md:text-2xl leading-none">LuxaStream</span>
+          <img
+            src="/vidlogic-logo.png"
+            alt="VidLogic AI"
+            className="h-[44px] w-[44px] object-contain transition-all duration-300 hover:scale-[1.4] hover:drop-shadow-[0_0_10px_rgba(6,182,212,0.5)]"
+          />
+          <span className="font-bold text-xl md:text-2xl leading-none">
+            VidLogic <span className="text-primary">AI</span>
+          </span>
         </Link>
 
         {/* Only show navigation links for logged-out users */}
@@ -260,17 +266,15 @@ function HeroSection() {
               className="px-4 py-2 text-sm font-medium bg-primary/10 text-primary border-primary/20"
             >
               <Sparkles className="h-4 w-4 mr-2" />
-              The Future of Video Content Strategy
+              Intelligent YouTube Content Engine
             </Badge>
           </motion.div>
 
           {/* Main headline */}
           <motion.h1 variants={fadeInUp} className="text-4xl sm:text-5xl lg:text-7xl font-semibold mb-6 tracking-tight">
-            Turn 1 Video into a
-            <span className="block mt-2 text-gradient">
-              Content Engine
-            </span>
-            <span className="block mt-2">in 60 Seconds</span>
+            Turn Video into
+            <span className="block mt-2 text-gradient">Logic</span>
+            <span className="block mt-2">Extract Real Intelligence</span>
           </motion.h1>
 
           {/* Subheadline */}
@@ -278,7 +282,8 @@ function HeroSection() {
             variants={fadeInUp}
             className="text-lg sm:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed"
           >
-            LuxaStream converts any YouTube video into high-impact scripts, threads, and blogs—effortlessly.
+            VidLogic AI extracts intelligence from any YouTube video — delivering precise, structured content for every
+            platform.
           </motion.p>
 
           {/* CTA buttons */}
@@ -289,8 +294,7 @@ function HeroSection() {
               className="gradient-primary text-primary-foreground text-lg px-8 h-14 shadow-xl btn-glow hover:shadow-primary/40 transition-shadow"
             >
               <Link to="/auth" className="flex items-center gap-2">
-                Start Creating Free
-                <ArrowRight className="h-5 w-5" />
+                Generate Content Free ✨
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="text-lg px-8 h-14 border-border hover:bg-card">
@@ -447,12 +451,12 @@ function SolutionSection() {
             The Solution
           </Badge>
           <h2 className="text-3xl lg:text-5xl font-semibold mb-6">
-            Four Superpowers,
+            Four Core Capabilities,
             <span className="text-gradient"> One Platform</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            LuxaStream doesn't just repurpose — it amplifies. Every feature is designed to multiply your reach with
-            minimal effort.
+            VidLogic AI doesn't just repurpose — it analyzes, structures, and delivers. Every feature is engineered for
+            accuracy and precision.
           </p>
         </motion.div>
 
@@ -504,10 +508,10 @@ function DemoSection() {
           </Badge>
           <h2 className="text-3xl lg:text-5xl font-bold mb-6">
             From YouTube URL to
-            <span className="text-gradient"> Viral Content</span>
+            <span className="text-gradient"> Structured Intelligence</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Watch how LuxaStream transforms a single video into platform-optimized content in seconds.
+            Watch how VidLogic AI analyzes a single video and generates precise, logic-driven content in seconds.
           </p>
         </motion.div>
 
@@ -534,9 +538,12 @@ function DemoSection() {
                     className="w-full bg-transparent text-foreground text-sm lg:text-base focus:outline-none"
                   />
                 </div>
-                <Button onClick={() => setShowOutput(true)} className="gradient-primary text-primary-foreground btn-glow">
+                <Button
+                  onClick={() => setShowOutput(true)}
+                  className="gradient-primary text-primary-foreground btn-glow"
+                >
                   <Sparkles className="h-4 w-4 mr-2" />
-                  Generate Insights
+                  Analyze Video
                 </Button>
               </div>
             </div>
@@ -711,10 +718,10 @@ function TrustedByCreatorsSection() {
             Early Access
           </Badge>
           <h2 className="text-3xl lg:text-5xl font-bold mb-4">
-            The Future of <span className="text-gradient">Video Content Strategy</span>
+            Logic-Driven <span className="text-gradient">Video Intelligence</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Join early-access creators who are reclaiming their time with LuxaStream.
+            Join early-access creators using VidLogic AI to extract structured insights from every video.
           </p>
         </motion.div>
 
@@ -757,7 +764,7 @@ function PricingSection({
       name: "Free",
       price: "$0",
       period: "forever",
-      description: "Perfect for trying out LuxaStream",
+      description: "Perfect for trying out VidLogic AI",
       highlight: null,
       features: [
         "3 generations per month",
@@ -901,7 +908,10 @@ function PricingSection({
                   <CardContent className="space-y-6">
                     <ul className="space-y-3">
                       {plan.features.map((feature) => {
-                        const isSocialProof = feature.includes("Social Proof") || feature.includes("Wall of Love") || feature.includes("testimonials");
+                        const isSocialProof =
+                          feature.includes("Social Proof") ||
+                          feature.includes("Wall of Love") ||
+                          feature.includes("testimonials");
                         return (
                           <li key={feature} className="flex items-start gap-3">
                             <Check className="h-5 w-5 text-success shrink-0 mt-0.5" />
@@ -979,9 +989,9 @@ function PricingSection({
 function FAQSection() {
   const faqs = [
     {
-      question: "How does LuxaStream work?",
+      question: "How does VidLogic AI work?",
       answer:
-        "Simply paste a YouTube URL and our AI analyzes the transcript to generate platform-optimized content. You get X threads, LinkedIn posts, TikTok scripts, and SEO blog posts — all from one video.",
+        "Simply paste a YouTube URL and our AI analyzes the transcript to extract intelligence and generate platform-optimized content. You get X threads, LinkedIn posts, TikTok scripts, and SEO blog posts — all from one video.",
     },
     {
       question: "What languages do you support for translation?",
@@ -996,17 +1006,17 @@ function FAQSection() {
     {
       question: "Do I own the content generated?",
       answer:
-        "Yes, 100%. All content generated through LuxaStream is yours to use however you like — no attribution required.",
+        "Yes, 100%. All content generated through VidLogic AI is yours to use however you like — no attribution required.",
     },
     {
       question: "What if I'm not satisfied?",
       answer:
-        "We offer a 7-day money-back guarantee on all paid plans. If LuxaStream isn't right for you, just reach out and we'll refund you — no questions asked.",
+        "We offer a 7-day money-back guarantee on all paid plans. If VidLogic AI isn't right for you, just reach out and we'll refund you — no questions asked.",
     },
     {
       question: "Is there an API available?",
       answer:
-        "Yes! Pro and Agency plans include API access so you can integrate LuxaStream into your existing workflows and tools.",
+        "Yes! Pro and Agency plans include API access so you can integrate VidLogic AI into your existing workflows and tools.",
     },
   ];
 
@@ -1025,7 +1035,7 @@ function FAQSection() {
           </Badge>
           <h2 className="text-3xl lg:text-5xl font-bold mb-6">Got Questions?</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Everything you need to know about LuxaStream.
+            Everything you need to know about VidLogic AI.
           </p>
         </motion.div>
 
@@ -1116,7 +1126,7 @@ const CTASection = forwardRef<HTMLElement>((_, ref) => {
               className="gradient-primary text-primary-foreground text-lg px-10 h-14 shadow-xl btn-glow"
             >
               <Link to="/auth" className="flex items-center gap-2">
-                Start Creating Free
+                Generate Your First Content Free
                 <Sparkles className="h-5 w-5" />
               </Link>
             </Button>
@@ -1141,11 +1151,13 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
           {/* Brand & Company Info */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <img src="/luxastream-logo.png" alt="LuxaStream" className="h-8 w-8 rounded-lg object-contain" />
-              <span className="font-semibold">LuxaStream</span>
+              <img src="/vidlogic-logo.png" alt="VidLogic AI" className="h-8 w-8 object-contain" />
+              <span className="font-semibold">
+                VidLogic <span className="text-primary">AI</span>
+              </span>
             </div>
             <div className="text-sm text-muted-foreground space-y-1">
-              <p className="font-medium text-foreground">LuxaStream</p>
+              <p className="font-medium text-foreground">VidLogic AI</p>
               <div className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
                 <span>Sharon, MA USA</span>
@@ -1195,8 +1207,8 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
           <div className="space-y-4">
             <h4 className="font-semibold text-sm">Support</h4>
             <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-              <a href="mailto:support@luxastream.io" className="hover:text-foreground transition-colors">
-                support@luxastream.io
+              <a href="mailto:support@vidlogicai.com" className="hover:text-foreground transition-colors">
+                support@vidlogicai.com
               </a>
               <Link to="/contact" className="hover:text-foreground transition-colors">
                 Contact Sales
@@ -1222,7 +1234,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
 
             {/* Copyright */}
             <p className="text-sm text-muted-foreground text-center">
-              © {new Date().getFullYear()} LuxaStream. All rights reserved.
+              © {new Date().getFullYear()} VidLogic AI. All rights reserved.
             </p>
           </div>
         </div>
@@ -1282,8 +1294,8 @@ export default function Landing() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="h-9 w-9 rounded-xl flex items-center justify-center animate-pulse">
-          <img src="/luxastream-logo.png" alt="Loading" className="h-9 w-9 rounded-xl object-contain" />
+        <div className="h-9 w-9 rounded-full flex items-center justify-center animate-pulse">
+          <img src="/vidlogic-logo.png" alt="Loading" className="h-9 w-9 rounded-full object-contain" />
         </div>
       </div>
     );
