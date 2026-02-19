@@ -53,7 +53,7 @@ export default function Blog() {
               className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors group"
             >
               <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
-              <img src="/vidlogic-logo.png" alt="VidLogic AI" className="h-6 w-6 object-contain" />
+              <img src="/vidlogic-logo.png" alt="VidLogic AI" className="h-10 w-10 object-contain" />
               <span className="font-bold text-foreground">
                 VidLogic <span className="text-primary">AI</span>
               </span>
