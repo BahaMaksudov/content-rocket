@@ -22,7 +22,6 @@ import {
   Link2,
   FileText,
   Check,
-  Crown,
   Eye,
   Copy,
   Pencil,
@@ -34,9 +33,6 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useSubscription } from "@/contexts/SubscriptionContext";
-import { useCredits } from "@/hooks/use-credits";
-import { PremiumModal } from "@/components/PremiumModal";
 
 interface YouTubeInputProps {
   onTranscriptFetched: (transcript: string, method: "auto" | "manual", title?: string) => void;
@@ -44,7 +40,6 @@ interface YouTubeInputProps {
   transcriptMethod: "auto" | "manual" | null;
   youtubeUrl: string;
   setYoutubeUrl: (url: string) => void;
-  onCreditUsed?: () => Promise<void>;
 }
 
 const YOUTUBE_URL_REGEX =
@@ -57,13 +52,11 @@ export function YouTubeInput({
   transcriptMethod,
   youtubeUrl,
   setYoutubeUrl,
-  onCreditUsed,
 }: YouTubeInputProps) {
   const [isFetching, setIsFetching] = useState(false);
   const [manualTranscript, setManualTranscript] = useState("");
   const [showManual, setShowManual] = useState(false);
   const [showHelpGuide, setShowHelpGuide] = useState(false);
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editableTranscript, setEditableTranscript] = useState("");
@@ -71,8 +64,6 @@ export function YouTubeInput({
   const [showHighDemandModal, setShowHighDemandModal] = useState(false);
   const manualSectionRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  const { isPro } = useSubscription();
-  const { canUseCredits, useCredit, creditsAvailable } = useCredits();
 
   // Clear manual transcript when URL changes
   useEffect(() => {
@@ -133,12 +124,6 @@ export function YouTubeInput({
   const isOverLimit = manualTranscript.length > MAX_TRANSCRIPT_LENGTH;
 
   const handleFetchTranscript = async () => {
-    // Check if free user has remaining credits
-    if (!isPro && !canUseCredits) {
-      setShowPremiumModal(true);
-      return;
-    }
-
     if (!isValidUrl) {
       toast({
         variant: "destructive",
@@ -161,12 +146,6 @@ export function YouTubeInput({
       if (data?.transcript) {
         onTranscriptFetched(data.transcript, "auto", data.title);
         setAdWarning(null);
-
-        // Use one credit after successful fetch (for free users)
-        if (!isPro) {
-          await useCredit();
-          onCreditUsed?.();
-        }
 
         toast({
           title: "Transcript fetched!",
@@ -309,11 +288,6 @@ export function YouTubeInput({
               >
                 {isFetching ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : !isPro && !canUseCredits ? (
-                  <>
-                  <Crown className="h-3.5 w-3.5" />
-                    <span className="text-xs font-medium">Fetch</span>
-                  </>
                 ) : (
                   <>
                     <Sparkles className="h-3.5 w-3.5" />
@@ -461,8 +435,6 @@ export function YouTubeInput({
           </div>
         )}
       </CardContent>
-
-      <PremiumModal open={showPremiumModal} onOpenChange={setShowPremiumModal} feature="youtube" />
 
       {/* Preview Transcript Modal */}
       <Dialog
