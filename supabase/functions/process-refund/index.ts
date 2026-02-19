@@ -119,7 +119,7 @@ serve(async (req) => {
     });
 
     // Find a succeeded payment intent
-    const succeededPI = paymentIntents.data.find(pi => pi.status === "succeeded");
+    const succeededPI = paymentIntents.data.find((pi: { status: string }) => pi.status === "succeeded");
 
     if (!succeededPI) {
       // Fallback: try to find via invoice charge
