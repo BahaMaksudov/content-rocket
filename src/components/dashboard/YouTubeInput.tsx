@@ -323,7 +323,7 @@ export function YouTubeInput({
                 ) : (
                   <>
                     <Sparkles className="h-3.5 w-3.5" />
-                    <span className="text-xs font-medium">Analyze</span>
+                    <span className="text-xs font-medium">Fetch</span>
                   </>
                 )}
               </Button>
