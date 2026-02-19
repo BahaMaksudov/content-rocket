@@ -357,34 +357,31 @@ export function GenerationSettings({
         {!hideGenerateButton && (
           <>
             {/* Responsible Creation Checkbox */}
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border">
+            <div className="flex items-center gap-3 py-1">
               <Checkbox
                 id="fair-use-confirmation"
                 checked={fairUseConfirmed}
                 onCheckedChange={(checked) => setFairUseConfirmed(checked === true)}
-                className="mt-0.5"
               />
-              <div className="flex-1 space-y-1">
-                <div className="flex items-center gap-1.5">
-                  <Label 
-                    htmlFor="fair-use-confirmation" 
-                    className="text-sm font-medium cursor-pointer leading-tight"
-                  >
-                    I confirm I have the right to use this content or am transforming it for Fair Use (commentary, education, or news reporting).
-                  </Label>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="h-4 w-4 text-muted-foreground flex-shrink-0 cursor-help" />
-                      </TooltipTrigger>
-                      <TooltipContent side="top" className="max-w-xs">
-                        <p className="text-sm">
-                          Fair Use generally allows summarizing others' work if you add your own unique value or commentary.
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
+              <div className="flex items-center gap-1.5 flex-1">
+                <Label 
+                  htmlFor="fair-use-confirmation" 
+                  className="text-sm text-muted-foreground cursor-pointer leading-tight"
+                >
+                  I confirm this usage falls under Fair Use (Commentary/Education).
+                </Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0 cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-xs">
+                      <p className="text-sm">
+                        Fair Use generally allows summarizing others' work if you add your own unique value or commentary.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </div>
 
