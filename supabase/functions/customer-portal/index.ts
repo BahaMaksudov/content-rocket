@@ -81,7 +81,7 @@ serve(async (req) => {
       logStep("Found Stripe customer from database", { customerId });
     }
 
-    const origin = req.headers.get("origin") || "https://rocketcontentpro.io";
+    const origin = req.headers.get("origin") || "https://vidlogicai.com";
     if (!customerId) throw new Error("Unable to determine Stripe customer id");
 
     let portalSession: Stripe.BillingPortal.Session;
