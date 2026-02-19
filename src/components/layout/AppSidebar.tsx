@@ -54,7 +54,7 @@ export function AppSidebar() {
       {/* Header with Logo */}
       <SidebarHeader className="p-5 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
-          <img src={vidlogicLogo} alt="VidLogic AI" className="h-[44px] w-[44px] rounded-full object-contain transition-all duration-300 hover:scale-[1.4] hover:drop-shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
+          <img src={vidlogicLogo} alt="VidLogic AI" className="h-[44px] w-[44px] object-contain transition-all duration-300 hover:scale-[1.4] hover:drop-shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
           <div>
             <h1 className="text-xl font-bold text-foreground">VidLogic AI</h1>
             <p className="text-xs text-muted-foreground">Intelligent Content Engine</p>

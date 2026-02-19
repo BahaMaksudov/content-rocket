@@ -135,7 +135,7 @@ function StickyNav() {
     >
       <div className="container mx-auto px-4 h-[68px] flex items-center justify-between">
         <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-3">
-          <img src="/vidlogic-logo.png" alt="VidLogic AI" className="h-[44px] w-[44px] rounded-full object-contain transition-all duration-300 hover:scale-[1.4] hover:drop-shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
+          <img src="/vidlogic-logo.png" alt="VidLogic AI" className="h-[44px] w-[44px] object-contain transition-all duration-300 hover:scale-[1.4] hover:drop-shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
           <span className="font-bold text-xl md:text-2xl leading-none">VidLogic <span className="text-primary">AI</span></span>
         </Link>
 
@@ -1139,7 +1139,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
           {/* Brand & Company Info */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <img src="/vidlogic-logo.png" alt="VidLogic AI" className="h-8 w-8 rounded-full object-contain" />
+              <img src="/vidlogic-logo.png" alt="VidLogic AI" className="h-8 w-8 object-contain" />
               <span className="font-semibold">VidLogic <span className="text-primary">AI</span></span>
             </div>
             <div className="text-sm text-muted-foreground space-y-1">
