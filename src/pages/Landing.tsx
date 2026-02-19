@@ -160,6 +160,9 @@ function StickyNav() {
             <a href="#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               FAQ
             </a>
+            <Link to="/blog" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Blog
+            </Link>
           </div>
         )}
 
@@ -1147,7 +1150,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
     <footer ref={ref} className="py-12 border-t border-border bg-card/30">
       <div className="container mx-auto px-4">
         {/* Main footer grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 mb-10">
           {/* Brand & Company Info */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
@@ -1200,6 +1203,22 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
               <a href="#faq" className="hover:text-foreground transition-colors">
                 FAQ
               </a>
+            </div>
+          </div>
+
+          {/* Resources */}
+          <div className="space-y-4">
+            <h4 className="font-semibold text-sm">Resources</h4>
+            <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+              <Link to="/blog" className="hover:text-foreground transition-colors">
+                Blog
+              </Link>
+              <Link to="/blog/how-to-repurpose-youtube-videos" className="hover:text-foreground transition-colors">
+                Repurpose YouTube Videos
+              </Link>
+              <Link to="/tools/youtube-to-linkedin" className="hover:text-foreground transition-colors">
+                YouTube to LinkedIn
+              </Link>
             </div>
           </div>
 
