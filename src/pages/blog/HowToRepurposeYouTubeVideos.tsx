@@ -59,6 +59,7 @@ export default function HowToRepurposeYouTubeVideos() {
   return (
     <>
       <title>How to Repurpose YouTube Videos into a Month of Content | VidLogic AI Blog</title>
+      <link rel="canonical" href="https://vidlogicai.com/blog/how-to-repurpose-youtube-videos" />
 
       <div className="min-h-screen bg-background text-foreground">
         {/* Nav */}

@@ -1,16 +1,17 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
+# Allow all search engines to crawl the site
 User-agent: *
-Allow: /
 
+# Don't crawl private user areas (prevents broken/empty dashboard previews in search)
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /api/
+Disallow: /login
+Disallow: /signup
+
+# Allow everything else (Blog, Tools, Landing Page)
+Allow: /
+Allow: /blog/
+Allow: /tools/
+
+# Tell Google where your sitemap is
 Sitemap: https://vidlogicai.com/sitemap.xml
