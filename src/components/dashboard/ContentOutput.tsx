@@ -116,6 +116,14 @@ export function ContentOutput({ content, isGenerating, onUpdateContent, targetLa
     setGeneratedImages(prev => ({ ...prev, [platform]: imageUrl }));
   };
 
+  const handleImageDismissed = (platform: string) => {
+    setGeneratedImages(prev => {
+      const updated = { ...prev };
+      delete updated[platform];
+      return updated;
+    });
+  };
+
   const handleExportAll = () => {
     if (!content) return;
     
@@ -251,12 +259,13 @@ ${content.blogPost}
 
           <TabsContent value="twitter" className="space-y-3">
             <div className="mb-4">
-              <ImageGenerator 
+            <ImageGenerator 
                 textContent={content.twitterHooks.join(" ")} 
                 platform="twitter"
                 targetLanguage={targetLanguage}
                 existingImage={generatedImages["twitter"]}
                 onImageGenerated={(url) => handleImageGenerated("twitter", url)}
+                onImageDismissed={() => handleImageDismissed("twitter")}
               />
             </div>
             {content.twitterHooks.map((hook, index) => (
@@ -298,6 +307,7 @@ ${content.blogPost}
                 targetLanguage={targetLanguage}
                 existingImage={generatedImages["linkedin"]}
                 onImageGenerated={(url) => handleImageGenerated("linkedin", url)}
+                onImageDismissed={() => handleImageDismissed("linkedin")}
               />
             </div>
             <div className="p-4 rounded-lg bg-muted/50 border border-border">
@@ -326,6 +336,7 @@ ${content.blogPost}
                 targetLanguage={targetLanguage}
                 existingImage={generatedImages["shorts"]}
                 onImageGenerated={(url) => handleImageGenerated("shorts", url)}
+                onImageDismissed={() => handleImageDismissed("shorts")}
               />
             </div>
             {content.shortFormScripts.map((script, index) => (
@@ -374,6 +385,7 @@ ${content.blogPost}
                 targetLanguage={targetLanguage}
                 existingImage={generatedImages["blog"]}
                 onImageGenerated={(url) => handleImageGenerated("blog", url)}
+                onImageDismissed={() => handleImageDismissed("blog")}
               />
             </div>
             <div className="p-4 rounded-lg bg-muted/50 border border-border">
