@@ -311,8 +311,8 @@ export function YouTubeInput({
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : !isPro && !canUseCredits ? (
                   <>
-                    <Crown className="h-3.5 w-3.5" />
-                    <span className="text-xs font-medium">Analyze</span>
+                  <Crown className="h-3.5 w-3.5" />
+                    <span className="text-xs font-medium">Fetch</span>
                   </>
                 ) : (
                   <>
