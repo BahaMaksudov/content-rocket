@@ -33,6 +33,8 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useFetchTracking } from "@/hooks/use-fetch-tracking";
+import { useCredits } from "@/hooks/use-credits";
 
 interface YouTubeInputProps {
   onTranscriptFetched: (transcript: string, method: "auto" | "manual", title?: string) => void;
@@ -40,6 +42,7 @@ interface YouTubeInputProps {
   transcriptMethod: "auto" | "manual" | null;
   youtubeUrl: string;
   setYoutubeUrl: (url: string) => void;
+  onFetchCountReset?: (url: string) => void;
 }
 
 const YOUTUBE_URL_REGEX =
@@ -64,6 +67,8 @@ export function YouTubeInput({
   const [showHighDemandModal, setShowHighDemandModal] = useState(false);
   const manualSectionRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { incrementFetchCount } = useFetchTracking();
+  const { useCredit, refreshCredits } = useCredits();
 
   // Clear manual transcript when URL changes
   useEffect(() => {
@@ -132,6 +137,36 @@ export function YouTubeInput({
       });
       return;
     }
+
+    // ── Same-video fetch protection ──────────────────────────────────────────
+    const newCount = await incrementFetchCount(youtubeUrl);
+
+    if (newCount === 2) {
+      // 2nd fetch: warn but proceed for free
+      toast({
+        title: "⚠️ Heads-up",
+        description:
+          "You have fetched this transcript twice. A 3rd fetch for the same video will deduct 1 generation credit.",
+      });
+    } else if (newCount >= 3) {
+      // 3rd+ fetch: deduct 1 credit before proceeding
+      const deducted = await useCredit();
+      if (!deducted) {
+        toast({
+          variant: "destructive",
+          title: "Not enough credits",
+          description:
+            "You need at least 1 credit to fetch this transcript again. Please generate content first or upgrade your plan.",
+        });
+        return;
+      }
+      await refreshCredits();
+      toast({
+        title: "1 credit deducted",
+        description: "1 generation credit was deducted for repeated transcript fetching.",
+      });
+    }
+    // ────────────────────────────────────────────────────────────────────────
 
     setIsFetching(true);
     setAdWarning(null);

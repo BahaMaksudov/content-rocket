@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { useCredits } from "@/hooks/use-credits";
+import { useFetchTracking } from "@/hooks/use-fetch-tracking";
 import { trackGenerationStarted, trackUpgradeClicked } from "@/lib/posthog";
 import { toast as sonnerToast } from "sonner";
 import { DEFAULT_BRAND_VOICES, isDefaultVoiceId, getDefaultVoiceById } from "@/lib/default-brand-voices";
@@ -55,6 +56,8 @@ export default function Dashboard() {
   
   // Unified credits tracking
   const { canUseCredits, useCredit, refreshCredits } = useCredits();
+  // Fetch count tracking for same-video credit protection
+  const { resetFetchCount } = useFetchTracking();
   
   // Target language state (always used now)
   const [targetLanguage, setTargetLanguage] = useState("english");
@@ -273,6 +276,11 @@ export default function Dashboard() {
 
       // Use one credit after successful generation (this also refreshes UI)
       await useCredit();
+
+      // Reset the fetch counter for this URL — generation resets the "same-video" clock
+      if (youtubeUrl) {
+        await resetFetchCount(youtubeUrl);
+      }
 
       toast({
         title: "All assets generated!",

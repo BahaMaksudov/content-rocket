@@ -484,6 +484,39 @@ export type Database = {
         }
         Relationships: []
       }
+      transcript_fetch_tracking: {
+        Row: {
+          created_at: string
+          fetch_count: number
+          generated_at: string | null
+          id: string
+          last_fetched_at: string
+          updated_at: string
+          user_id: string
+          youtube_url: string
+        }
+        Insert: {
+          created_at?: string
+          fetch_count?: number
+          generated_at?: string | null
+          id?: string
+          last_fetched_at?: string
+          updated_at?: string
+          user_id: string
+          youtube_url: string
+        }
+        Update: {
+          created_at?: string
+          fetch_count?: number
+          generated_at?: string | null
+          id?: string
+          last_fetched_at?: string
+          updated_at?: string
+          user_id?: string
+          youtube_url?: string
+        }
+        Relationships: []
+      }
       user_api_keys: {
         Row: {
           created_at: string
