@@ -389,8 +389,8 @@ serve(async (req) => {
       const htmlContent = getEmail1Html(user_name || "", unsubscribeUrl);
 
       const { error: emailError } = await resend.emails.send({
-        from: "Rocket Content <notifications@rocketcontentpro.io>",
-        replyTo: "notifications@rocketcontentpro.io",
+        from: "VidLogic AI <notifications@vidlogicai.com>",
+        replyTo: "support@vidlogicai.com",
         to: [user_email],
         subject: "🚀 You're cleared for takeoff! (Plus a gift inside)",
         html: htmlContent,
@@ -432,8 +432,8 @@ serve(async (req) => {
           const htmlContent = getEmail2Html(user.user_name || "", unsubscribeUrl);
 
           await resend.emails.send({
-            from: "Rocket Content <notifications@rocketcontentpro.io>",
-            replyTo: "notifications@rocketcontentpro.io",
+            from: "VidLogic AI <notifications@vidlogicai.com>",
+            replyTo: "support@vidlogicai.com",
             to: [user.user_email],
             subject: "Did you know you speak 3 languages? 🌍",
             html: htmlContent,
@@ -468,8 +468,8 @@ serve(async (req) => {
           const htmlContent = getEmail3Html(user.user_name || "", unsubscribeUrl);
 
           await resend.emails.send({
-            from: "Rocket Content <notifications@rocketcontentpro.io>",
-            replyTo: "notifications@rocketcontentpro.io",
+            from: "VidLogic AI <notifications@vidlogicai.com>",
+            replyTo: "support@vidlogicai.com",
             to: [user.user_email],
             subject: "How Sarah saved 20 hours this week ⭐",
             html: htmlContent,

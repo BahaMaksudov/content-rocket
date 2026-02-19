@@ -68,7 +68,7 @@ async function sendBatchCompletionEmail(
 
   try {
     await resend.emails.send({
-      from: "Rocket Content Pro <notifications@rocketcontentpro.io>",
+      from: "VidLogic AI <notifications@vidlogicai.com>",
       to: [userEmail],
       subject: `🚀 Your bulk processing is complete! (${completedCount}/${totalVideos} videos)`,
       html: `
@@ -115,7 +115,7 @@ async function sendBatchCompletionEmail(
           </div>
           
           <div style="text-align: center; margin-bottom: 30px;">
-            <a href="https://rocketcontentpro.io/history" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; font-size: 16px;">View Your Generated Content</a>
+            <a href="https://vidlogicai.com/history" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; font-size: 16px;">View Your Generated Content</a>
           </div>
           
           ${failedCount > 0 ? `

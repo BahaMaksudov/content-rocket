@@ -168,14 +168,14 @@ serve(async (req: Request) => {
     logStep("Invite created", { inviteId: invite.id });
 
     // Send invite email - Use VITE_SITE_URL for production domain
-    const siteUrl = Deno.env.get("VITE_SITE_URL") || "https://rocketcontentpro.io";
+    const siteUrl = Deno.env.get("VITE_SITE_URL") || "https://vidlogicai.com";
     const inviteUrl = `${siteUrl}/auth?invite=${invite.token}`;
     logStep("Invite URL generated", { siteUrl, inviteUrl });
     const inviterName = inviterProfile?.full_name || inviterProfile?.email || "A teammate";
     const orgName = org?.name || "a team";
 
     const { error: emailError } = await resend.emails.send({
-      from: "RocketContent <notifications@rocketcontentpro.io>",
+      from: "VidLogic AI <notifications@vidlogicai.com>",
       to: [email],
       subject: `${inviterName} invited you to join ${orgName} on RocketContent`,
       html: `
