@@ -16,6 +16,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { toast as sonnerToast } from "sonner";
 import {
   Loader2,
   Youtube,
@@ -65,6 +66,8 @@ export function YouTubeInput({
   const [editableTranscript, setEditableTranscript] = useState("");
   const [adWarning, setAdWarning] = useState<string | null>(null);
   const [showHighDemandModal, setShowHighDemandModal] = useState(false);
+  // 2nd-fetch confirmation modal
+  const [showSecondFetchModal, setShowSecondFetchModal] = useState(false);
   const manualSectionRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { incrementFetchCount } = useFetchTracking();
@@ -128,46 +131,8 @@ export function YouTubeInput({
   const isValidUrl = YOUTUBE_URL_REGEX.test(youtubeUrl);
   const isOverLimit = manualTranscript.length > MAX_TRANSCRIPT_LENGTH;
 
-  const handleFetchTranscript = async () => {
-    if (!isValidUrl) {
-      toast({
-        variant: "destructive",
-        title: "Invalid URL",
-        description: "Please enter a valid YouTube URL.",
-      });
-      return;
-    }
-
-    // ── Same-video fetch protection ──────────────────────────────────────────
-    const newCount = await incrementFetchCount(youtubeUrl);
-
-    if (newCount === 2) {
-      // 2nd fetch: warn but proceed for free
-      toast({
-        title: "⚠️ Heads-up",
-        description:
-          "You have fetched this transcript twice. A 3rd fetch for the same video will deduct 1 generation credit.",
-      });
-    } else if (newCount >= 3) {
-      // 3rd+ fetch: deduct 1 credit before proceeding
-      const deducted = await useCredit();
-      if (!deducted) {
-        toast({
-          variant: "destructive",
-          title: "Not enough credits",
-          description:
-            "You need at least 1 credit to fetch this transcript again. Please generate content first or upgrade your plan.",
-        });
-        return;
-      }
-      await refreshCredits();
-      toast({
-        title: "1 credit deducted",
-        description: "1 generation credit was deducted for repeated transcript fetching.",
-      });
-    }
-    // ────────────────────────────────────────────────────────────────────────
-
+  // Core fetch logic (called after any warnings/confirmations have been handled)
+  const executeFetch = async (skipCountIncrement = false) => {
     setIsFetching(true);
     setAdWarning(null);
 
@@ -181,28 +146,18 @@ export function YouTubeInput({
       if (data?.transcript) {
         onTranscriptFetched(data.transcript, "auto", data.title);
         setAdWarning(null);
-
-        toast({
-          title: "Transcript fetched!",
-          description: `Got transcript for "${data.title}"`,
-        });
+        // Use sonner so this doesn't collide with the shadcn toast stack
+        sonnerToast.success(`Transcript fetched for "${data.title}"`);
       } else {
-        // Auto-expand manual section on any failure
         setShowManual(true);
+        if (data?.details) console.log("Transcript fetch details:", data.details);
 
-        // Log technical details for developers only
-        if (data?.details) {
-          console.log("Transcript fetch details:", data.details);
-        }
-
-        // Check for advertisement detection
         if (data?.errorCode === "AD_DETECTED") {
           setAdWarning("We detected an advertisement instead of the video transcript.");
           scrollToManualSection();
           return;
         }
 
-        // Check for quota/rate limit errors (429) - show friendly modal
         const isQuotaError =
           data?.details?.includes("429") ||
           data?.error?.toLowerCase().includes("rate limit") ||
@@ -213,24 +168,19 @@ export function YouTubeInput({
           return;
         }
 
-        // Generic "no captions" message without technical details
         toast({
           title: "Transcript not available",
           description: "This video's captions couldn't be fetched. Try pasting the transcript manually.",
         });
 
-        // Scroll to manual section
         setTimeout(() => {
           manualSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
         }, 100);
       }
     } catch (error: any) {
       console.error("Fetch error:", error);
-
-      // Auto-expand manual section on any failure
       setShowManual(true);
 
-      // Check if it's a quota/rate limit error
       const errorMessage = error?.message?.toLowerCase() || "";
       const isQuotaError =
         errorMessage.includes("429") ||
@@ -248,13 +198,59 @@ export function YouTubeInput({
         description: "No worries! You can paste the transcript manually below.",
       });
 
-      // Scroll to manual section
       setTimeout(() => {
         manualSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       }, 100);
     } finally {
       setIsFetching(false);
     }
+  };
+
+  const handleFetchTranscript = async () => {
+    if (!isValidUrl) {
+      toast({
+        variant: "destructive",
+        title: "Invalid URL",
+        description: "Please enter a valid YouTube URL.",
+      });
+      return;
+    }
+
+    // ── Same-video fetch protection ──────────────────────────────────────────
+    const newCount = await incrementFetchCount(youtubeUrl);
+
+    if (newCount === 2) {
+      // Show blocking confirmation modal — the user must explicitly continue
+      setShowSecondFetchModal(true);
+      return; // Pause here; fetch resumes only if user clicks "Continue"
+    } else if (newCount >= 3) {
+      // 3rd+ fetch: deduct 1 credit before proceeding
+      const deducted = await useCredit();
+      if (!deducted) {
+        toast({
+          variant: "destructive",
+          title: "Not enough credits",
+          description:
+            "You need at least 1 credit to fetch this transcript again. Please generate content first or upgrade your plan.",
+        });
+        return;
+      }
+      await refreshCredits();
+      // Show a persistent warning using sonner (8 s) so it doesn't vanish with the success message
+      sonnerToast.warning("1 credit deducted for repeated fetching", {
+        description: "1 generation credit was deducted because you fetched this transcript more than twice.",
+        duration: 8000,
+      });
+    }
+    // ────────────────────────────────────────────────────────────────────────
+
+    await executeFetch();
+  };
+
+  // Called when user clicks "Continue" in the 2nd-fetch modal
+  const handleSecondFetchConfirm = async () => {
+    setShowSecondFetchModal(false);
+    await executeFetch();
   };
 
   const handleManualSubmit = () => {
@@ -570,6 +566,62 @@ export function YouTubeInput({
             <Button onClick={scrollToManualSection}>
               <ChevronDown className="h-4 w-4 mr-1" />
               Show me how to paste manually
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 2nd Fetch Warning Modal */}
+      <Dialog open={showSecondFetchModal} onOpenChange={setShowSecondFetchModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-yellow-500" />
+              <span>Second Fetch — Heads Up!</span>
+            </DialogTitle>
+            <DialogDescription className="pt-2 text-base leading-relaxed">
+              <span className="block">
+                You have already fetched the transcript for this video once. This will be your{" "}
+                <strong className="text-foreground">2nd fetch</strong>.
+              </span>
+              <span className="block mt-2 font-semibold text-yellow-600 dark:text-yellow-400">
+                ⚠️ A 3rd fetch for the same video will automatically deduct{" "}
+                <strong>1 generation credit</strong> from your balance.
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Visual credit-cost callout */}
+          <div className="mx-1 rounded-lg border border-yellow-300 bg-yellow-50 dark:border-yellow-700 dark:bg-yellow-950/20 px-4 py-3 text-sm text-yellow-800 dark:text-yellow-300 flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-yellow-500" />
+            <span>
+              To avoid losing credits, consider using{" "}
+              <button
+                className="underline underline-offset-2 font-medium"
+                onClick={() => {
+                  setShowSecondFetchModal(false);
+                  scrollToManualSection();
+                }}
+              >
+                manual paste
+              </button>{" "}
+              instead of fetching again.
+            </span>
+          </div>
+
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowSecondFetchModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSecondFetchConfirm}
+              variant="default"
+              className="bg-yellow-500 hover:bg-yellow-600 text-white border-0"
+            >
+              I understand — Continue
             </Button>
           </DialogFooter>
         </DialogContent>
