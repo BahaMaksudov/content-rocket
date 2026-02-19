@@ -3,6 +3,9 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Calendar, Clock, Tag, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import socialMediaToolImg from "@/assets/blog/youtube-to-social-media-ai-tool.png";
+import linkedinToolImg from "@/assets/blog/youtube-to-linkedin-ai-tool.png";
+import twitterToolImg from "@/assets/blog/youtube-to-x-twitter-ai-tool.png";
 
 const TOC = [
   { id: "why-repurpose", label: "Why Repurpose YouTube Content?" },
@@ -197,6 +200,11 @@ export default function HowToRepurposeYouTubeVideos() {
               </table>
             </div>
 
+            <figure className="my-8">
+              <img src={socialMediaToolImg} alt="VidLogic AI Logic Bar extracting intelligence from a YouTube URL" className="w-full rounded-xl border border-border shadow-lg" />
+              <figcaption className="mt-3 text-center text-sm text-muted-foreground italic">The VidLogic AI Logic Bar extracting intelligence from a YouTube URL.</figcaption>
+            </figure>
+
             {/* ── Section 3 ── */}
             <h2 id="linkedin" className="mt-12 scroll-mt-28 text-2xl font-bold tracking-tight">
               Step 1 — LinkedIn Posts
@@ -210,6 +218,11 @@ export default function HowToRepurposeYouTubeVideos() {
             <blockquote className="my-6 border-l-4 border-primary pl-5 italic text-muted-foreground">
               "The best LinkedIn posts don't recap your video — they reveal the professional insight buried inside it. VidLogic AI surfaces that insight automatically."
             </blockquote>
+
+            <figure className="my-8">
+              <img src={linkedinToolImg} alt="AI-generated LinkedIn thought leadership post ready to publish" className="w-full rounded-xl border border-border shadow-lg" />
+              <figcaption className="mt-3 text-center text-sm text-muted-foreground italic">AI-generated LinkedIn thought leadership post ready to publish.</figcaption>
+            </figure>
 
             {/* ── Section 4 ── */}
             <h2 id="twitter" className="mt-12 scroll-mt-28 text-2xl font-bold tracking-tight">
@@ -236,6 +249,11 @@ export default function HowToRepurposeYouTubeVideos() {
                 </li>
               ))}
             </ol>
+
+            <figure className="my-8">
+              <img src={twitterToolImg} alt="AI-generated Twitter / X Thread thought leadership post ready to publish" className="w-full rounded-xl border border-border shadow-lg" />
+              <figcaption className="mt-3 text-center text-sm text-muted-foreground italic">AI-generated Twitter / X Thread thought leadership post ready to publish.</figcaption>
+            </figure>
 
             {/* ── Section 5 ── */}
             <h2 id="blog" className="mt-12 scroll-mt-28 text-2xl font-bold tracking-tight">
