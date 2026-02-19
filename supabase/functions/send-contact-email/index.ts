@@ -148,7 +148,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Rocket Content <notifications@rocketcontentpro.io>",
+        from: "VidLogic AI <notifications@vidlogicai.com>",
         to: ["bmaksudov@gmail.com"],
         subject: `New Rocket Content Inquiry from ${safeName}`,
         html: `

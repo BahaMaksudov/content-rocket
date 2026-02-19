@@ -62,7 +62,7 @@ serve(async (req) => {
       logStep("Found existing Stripe customer", { customerId });
     }
 
-    const origin = req.headers.get("origin") || "https://rocketcontentpro.io";
+    const origin = req.headers.get("origin") || "https://vidlogicai.com";
     
     const session = await stripe.checkout.sessions.create({
       customer: customerId,

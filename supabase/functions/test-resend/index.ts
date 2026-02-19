@@ -49,8 +49,8 @@ serve(async (req) => {
     const resend = new Resend(resendApiKey);
 
     const { data, error } = await resend.emails.send({
-      from: "Rocket Content <notifications@rocketcontentpro.io>",
-      replyTo: "notifications@rocketcontentpro.io",
+      from: "VidLogic AI <notifications@vidlogicai.com>",
+      replyTo: "support@vidlogicai.com",
       to: [to],
       subject: subject,
       html: `
@@ -60,7 +60,7 @@ serve(async (req) => {
           <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
           <p style="color: #666; font-size: 14px;">
             <strong>Sent at:</strong> ${new Date().toISOString()}<br>
-            <strong>From domain:</strong> rocketcontentpro.io<br>
+            <strong>From domain:</strong> vidlogicai.com<br>
             <strong>Status:</strong> If you're reading this, Resend is working! ✅
           </p>
         </div>
