@@ -133,9 +133,9 @@ function StickyNav() {
         scrolled ? "bg-[#1a1f2e]/95 backdrop-blur-lg border-b border-border shadow-lg" : "bg-transparent"
       }`}
     >
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+      <div className="container mx-auto px-4 h-[68px] flex items-center justify-between">
         <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-3">
-          <img src="/vidlogic-logo.png" alt="VidLogic AI" className="h-12 w-12 rounded-full object-contain transition-transform duration-300 hover:scale-125" />
+          <img src="/vidlogic-logo.png" alt="VidLogic AI" className="h-[44px] w-[44px] rounded-full object-contain transition-all duration-300 hover:scale-[1.4] hover:drop-shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
           <span className="font-bold text-xl md:text-2xl leading-none">VidLogic <span className="text-primary">AI</span></span>
         </Link>
 
