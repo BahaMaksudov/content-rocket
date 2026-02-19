@@ -135,7 +135,7 @@ function StickyNav() {
     >
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-3">
-          <img src="/vidlogic-logo.png" alt="VidLogic AI" className="h-10 w-10 rounded-full object-contain" />
+          <img src="/vidlogic-logo.png" alt="VidLogic AI" className="h-12 w-12 rounded-full object-contain transition-transform duration-300 hover:scale-125" />
           <span className="font-bold text-xl md:text-2xl leading-none">VidLogic <span className="text-primary">AI</span></span>
         </Link>
 
@@ -289,8 +289,7 @@ function HeroSection() {
               className="gradient-primary text-primary-foreground text-lg px-8 h-14 shadow-xl btn-glow hover:shadow-primary/40 transition-shadow"
             >
               <Link to="/auth" className="flex items-center gap-2">
-                Analyze Video Free
-                <Sparkles className="h-5 w-5" />
+                Generate Content Free ✨
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="text-lg px-8 h-14 border-border hover:bg-card">
