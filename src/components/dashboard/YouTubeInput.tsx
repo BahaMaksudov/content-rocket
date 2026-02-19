@@ -30,6 +30,7 @@ import {
   HelpCircle,
   ChevronDown,
   Info,
+  Sparkles,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -292,41 +293,54 @@ export function YouTubeInput({
           </p>
         </div>
         <div className="space-y-3">
-          <Label htmlFor="youtube-url">Video URL</Label>
-          {/* Full-width URL input */}
-          <div className="relative w-full">
-            <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
+          <Label htmlFor="youtube-url">Logic Bar</Label>
+          {/* Logic Bar: single sleek input with Generate button inside */}
+          <div className="relative flex items-center w-full rounded-xl border border-border bg-muted/30 focus-within:border-primary/60 focus-within:ring-1 focus-within:ring-primary/30 transition-all">
+            <Link2 className="absolute left-4 h-4 w-4 text-muted-foreground shrink-0 pointer-events-none" />
+            <input
               id="youtube-url"
-              placeholder="https://youtube.com/watch?v=..."
+              type="url"
+              placeholder="Paste a YouTube URL to analyze..."
               value={youtubeUrl}
               onChange={(e) => handleUrlChange(e.target.value)}
-              className="pl-10 w-full"
+              onKeyDown={(e) => e.key === "Enter" && isValidUrl && !isFetching && handleFetchTranscript()}
+              className="flex-1 bg-transparent text-sm pl-10 pr-2 py-3 focus:outline-none text-foreground placeholder:text-muted-foreground"
             />
+            <div className="pr-2 shrink-0">
+              <Button
+                onClick={handleFetchTranscript}
+                disabled={!isValidUrl || isFetching}
+                size="sm"
+                className="gradient-primary text-primary-foreground btn-glow h-8 px-3 gap-1.5"
+              >
+                {isFetching ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : !isPro && !canUseCredits ? (
+                  <>
+                    <Crown className="h-3.5 w-3.5" />
+                    <span className="text-xs font-medium">Analyze</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span className="text-xs font-medium">Analyze</span>
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
           {youtubeUrl && !isValidUrl && <p className="text-sm text-destructive">Please enter a valid YouTube URL</p>}
-          {/* Buttons row below input */}
-          <div className="flex flex-wrap gap-2 mt-2">
-            <Button onClick={handleFetchTranscript} disabled={!isValidUrl || isFetching} className="shrink-0">
-              {isFetching ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : !isPro && !canUseCredits ? (
-                <>
-                  <Crown className="h-4 w-4 mr-1" />
-                  Fetch
-                </>
-              ) : (
-                "Fetch"
-              )}
-            </Button>
+          {/* Preview button below */}
+          <div className="flex gap-2">
             <Button
               onClick={() => setShowPreviewModal(true)}
               disabled={!transcript}
               variant="outline"
+              size="sm"
               className="shrink-0"
             >
               <Eye className="h-4 w-4 mr-1" />
-              Preview
+              Preview Transcript
             </Button>
           </div>
         </div>

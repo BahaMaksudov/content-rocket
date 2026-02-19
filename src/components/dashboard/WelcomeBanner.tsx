@@ -93,7 +93,7 @@ export function WelcomeBanner({ onScrollToInput }: WelcomeBannerProps) {
               <h2 className="text-xl md:text-2xl font-semibold text-white">
                 {isAgencyTier
                   ? `Welcome, Agency Partner${userName ? ` ${userName}` : ""}! 🏢`
-                  : `Welcome to LuxaStream Pro${userName ? `, ${userName}` : ""}! ✨`}
+                  : `Welcome to VidLogic AI Pro${userName ? `, ${userName}` : ""}! ✨`}
               </h2>
             </div>
             <p className="text-white/90 text-sm md:text-base max-w-xl">
