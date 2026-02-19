@@ -13,7 +13,7 @@ const TOC = [
   { id: "linkedin", label: "Step 1 — LinkedIn Posts" },
   { id: "twitter", label: "Step 2 — Twitter / X Threads" },
   { id: "blog", label: "Step 3 — Blog Articles" },
-  { id: "micro-nuggets", label: "Step 4 — Micro-Nuggets" },
+  { id: "audio", label: "Step 4 — Micro-Nuggets" },
   { id: "community", label: "Step 5 — Community Teasing" },
   { id: "tools", label: "The Right Tools Make It Easy" },
   { id: "conclusion", label: "Conclusion" },
@@ -269,7 +269,7 @@ export default function HowToRepurposeYouTubeVideos() {
             <ol className="mt-4 space-y-3 pl-5 text-muted-foreground">
               {[
                 "Post 3a — Hot Take: one bold, polarising sentence from your video's thesis",
-                "Post 3b — Listicle Thread: '7 things I learned from this video' (One insight per tweet).",
+                "Post 3b — Listicle Thread: 'X things I learned from [topic]' (one per tweet)",
                 "Tweet 2 of thread: your strongest data point or surprising stat",
                 "Final tweet: CTA linking to the full video with a reason to click",
               ].map((item, i) => (
@@ -309,7 +309,7 @@ export default function HowToRepurposeYouTubeVideos() {
             </p>
 
             {/* ── Section 6 ── */}
-            <h2 id="micro-nuggets" className="mt-12 scroll-mt-28 text-2xl font-bold tracking-tight">
+            <h2 id="audio" className="mt-12 scroll-mt-28 text-2xl font-bold tracking-tight">
               Step 4 — Micro-Nuggets (Posts 5–8)
             </h2>
             <p className="mt-4 leading-relaxed text-muted-foreground">
@@ -325,7 +325,7 @@ export default function HowToRepurposeYouTubeVideos() {
               compounding your views over time.
             </p>
 
-            {/* ── Section 7 ── */}
+            {/* ── Section 5 ── */}
             <h2 id="community" className="mt-12 scroll-mt-28 text-2xl font-bold tracking-tight">
               Step 5 — Community Teasing (Posts 9–10)
             </h2>
@@ -406,7 +406,7 @@ export default function HowToRepurposeYouTubeVideos() {
               <div>
                 <p className="text-sm font-semibold">VidLogic AI Team</p>
                 <p className="text-xs text-muted-foreground">
-                  Helping creators turn one video into a month of content since 2024.
+                  Helping creators turn one video into a month of content since 2025.
                 </p>
               </div>
             </div>
