@@ -13,7 +13,7 @@ const TOC = [
   { id: "linkedin", label: "Step 1 — LinkedIn Posts" },
   { id: "twitter", label: "Step 2 — Twitter / X Threads" },
   { id: "blog", label: "Step 3 — Blog Articles" },
-  { id: "audio", label: "Step 4 — Micro-Nuggets" },
+  { id: "micro-nuggets", label: "Step 4 — Micro-Nuggets" },
   { id: "community", label: "Step 5 — Community Teasing" },
   { id: "tools", label: "The Right Tools Make It Easy" },
   { id: "conclusion", label: "Conclusion" },
@@ -49,7 +49,7 @@ export default function HowToRepurposeYouTubeVideos() {
           if (entry.isIntersecting) setActiveId(entry.target.id);
         });
       },
-      { rootMargin: "0px 0px -60% 0px", threshold: 0 }
+      { rootMargin: "0px 0px -60% 0px", threshold: 0 },
     );
 
     headings.forEach((el) => observer.observe(el));
@@ -81,9 +81,13 @@ export default function HowToRepurposeYouTubeVideos() {
         {/* Breadcrumb */}
         <div className="mx-auto max-w-6xl px-4 pt-6">
           <nav className="flex items-center gap-1.5 text-xs text-muted-foreground" aria-label="Breadcrumb">
-            <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
+            <Link to="/" className="hover:text-foreground transition-colors">
+              Home
+            </Link>
             <ChevronRight className="h-3 w-3" />
-            <Link to="/blog" className="hover:text-foreground transition-colors">Blog</Link>
+            <Link to="/blog" className="hover:text-foreground transition-colors">
+              Blog
+            </Link>
             <ChevronRight className="h-3 w-3" />
             <span className="text-foreground">How to Repurpose YouTube Videos</span>
           </nav>
@@ -91,7 +95,6 @@ export default function HowToRepurposeYouTubeVideos() {
 
         {/* Layout: sidebar + article */}
         <div className="mx-auto grid max-w-6xl gap-12 px-4 pb-24 pt-10 lg:grid-cols-[240px_1fr]">
-
           {/* ── Table of Contents (sticky sidebar) ── */}
           <aside className="hidden lg:block">
             <div className="sticky top-24 rounded-xl border border-border bg-card p-5">
@@ -107,7 +110,7 @@ export default function HowToRepurposeYouTubeVideos() {
                       "block rounded-md px-3 py-1.5 text-sm transition-colors",
                       activeId === id
                         ? "bg-primary/10 font-medium text-primary"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
                     )}
                   >
                     {label}
@@ -138,7 +141,8 @@ export default function HowToRepurposeYouTubeVideos() {
             </h1>
 
             <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
-              The most successful creators in 2026 don't work harder; they work logically. By using VidLogic AI, you can turn a single video into a week's worth of cross-platform content in under 60 seconds.
+              The most successful creators in 2026 don't work harder; they work logically. By using VidLogic AI, you can
+              turn a single video into a week's worth of cross-platform content in under 60 seconds.
             </p>
 
             {/* Top CTA */}
@@ -149,7 +153,9 @@ export default function HowToRepurposeYouTubeVideos() {
               Why Repurpose YouTube Content?
             </h2>
             <p className="mt-4 leading-relaxed text-muted-foreground">
-              Your YouTube video is not just a video — it's a research document, a thought-leadership essay, a podcast script, and a social media goldmine all at once. Repurposing is about recognising that the hard work (the thinking, the scripting, the expertise) is already done. All that's left is formatting.
+              Your YouTube video is not just a video — it's a research document, a thought-leadership essay, a podcast
+              script, and a social media goldmine all at once. Repurposing is about recognising that the hard work (the
+              thinking, the scripting, the expertise) is already done. All that's left is formatting.
             </p>
             <ul className="mt-4 space-y-2 pl-5 text-muted-foreground">
               {[
@@ -170,7 +176,9 @@ export default function HowToRepurposeYouTubeVideos() {
               The 1-Video → Many-Pieces System
             </h2>
             <p className="mt-4 leading-relaxed text-muted-foreground">
-              The core idea is simple: treat your YouTube video as the <em>source of truth</em> for a content cluster. Every piece of written, visual, or audio content you publish that week derives from that single recording. Here's the exact breakdown:
+              The core idea is simple: treat your YouTube video as the <em>source of truth</em> for a content cluster.
+              Every piece of written, visual, or audio content you publish that week derives from that single recording.
+              Here's the exact breakdown:
             </p>
             <div className="mt-6 overflow-hidden rounded-xl border border-border">
               <table className="w-full text-sm">
@@ -201,8 +209,14 @@ export default function HowToRepurposeYouTubeVideos() {
             </div>
 
             <figure className="my-8">
-              <img src={socialMediaToolImg} alt="VidLogic AI Logic Bar extracting intelligence from a YouTube URL" className="w-full rounded-xl border border-border shadow-lg" />
-              <figcaption className="mt-3 text-center text-sm text-muted-foreground italic">The VidLogic AI Logic Bar extracting intelligence from a YouTube URL.</figcaption>
+              <img
+                src={socialMediaToolImg}
+                alt="VidLogic AI Logic Bar extracting intelligence from a YouTube URL"
+                className="w-full rounded-xl border border-border shadow-lg"
+              />
+              <figcaption className="mt-3 text-center text-sm text-muted-foreground italic">
+                The VidLogic AI Logic Bar extracting intelligence from a YouTube URL.
+              </figcaption>
             </figure>
 
             {/* ── Section 3 ── */}
@@ -210,18 +224,31 @@ export default function HowToRepurposeYouTubeVideos() {
               Step 1 — LinkedIn Posts
             </h2>
             <p className="mt-4 leading-relaxed text-muted-foreground">
-              LinkedIn is your thought-leadership platform. Your audience here doesn't want a summary of your video — they want the <em>lesson you learned</em> making it. Frame your post around the core <strong className="text-foreground">"Why"</strong> behind your video's topic: why it matters, why most people get it wrong, and why your perspective is worth following.
+              LinkedIn is your thought-leadership platform. Your audience here doesn't want a summary of your video —
+              they want the <em>lesson you learned</em> making it. Frame your post around the core{" "}
+              <strong className="text-foreground">"Why"</strong> behind your video's topic: why it matters, why most
+              people get it wrong, and why your perspective is worth following.
             </p>
             <p className="mt-4 leading-relaxed text-muted-foreground">
-              Start with a bold, professional hook — a counterintuitive truth or a hard-won insight from your niche. Then build your post as a mini thought-leadership essay: 3–5 short paragraphs that show your expertise without selling anything. Close with an open-ended question to drive comments and signal to the algorithm that your content generates conversation.
+              Start with a bold, professional hook — a counterintuitive truth or a hard-won insight from your niche.
+              Then build your post as a mini thought-leadership essay: 3–5 short paragraphs that show your expertise
+              without selling anything. Close with an open-ended question to drive comments and signal to the algorithm
+              that your content generates conversation.
             </p>
             <blockquote className="my-6 border-l-4 border-primary pl-5 italic text-muted-foreground">
-              "The best LinkedIn posts don't recap your video — they reveal the professional insight buried inside it. VidLogic AI surfaces that insight automatically."
+              "The best LinkedIn posts don't recap your video — they reveal the professional insight buried inside it.
+              VidLogic AI surfaces that insight automatically."
             </blockquote>
 
             <figure className="my-8">
-              <img src={linkedinToolImg} alt="AI-generated LinkedIn thought leadership post ready to publish" className="w-full rounded-xl border border-border shadow-lg" />
-              <figcaption className="mt-3 text-center text-sm text-muted-foreground italic">AI-generated LinkedIn thought leadership post ready to publish.</figcaption>
+              <img
+                src={linkedinToolImg}
+                alt="AI-generated LinkedIn thought leadership post ready to publish"
+                className="w-full rounded-xl border border-border shadow-lg"
+              />
+              <figcaption className="mt-3 text-center text-sm text-muted-foreground italic">
+                AI-generated LinkedIn thought leadership post ready to publish.
+              </figcaption>
             </figure>
 
             {/* ── Section 4 ── */}
@@ -229,15 +256,20 @@ export default function HowToRepurposeYouTubeVideos() {
               Step 2 — Twitter / X Threads
             </h2>
             <p className="mt-4 leading-relaxed text-muted-foreground">
-              X rewards two types of posts: the <strong className="text-foreground">Engagement Hook</strong> and the <strong className="text-foreground">Listicle</strong>. Pull both from the same video for Posts 3 and 4 of your content week.
+              X rewards two types of posts: the <strong className="text-foreground">Engagement Hook</strong> and the{" "}
+              <strong className="text-foreground">Listicle</strong>. Pull both from the same video for Posts 3 and 4 of
+              your content week.
             </p>
             <p className="mt-4 leading-relaxed text-muted-foreground">
-              The <em>Hot Take</em> post is your engagement hook — a single, bold, slightly controversial statement drawn from your video's core argument. Keep it under 280 characters and watch the replies flood in. The <em>Listicle Thread</em> is the deep-dive: 8–10 tweets, each covering one key insight from your transcript, structured as a numbered list that people save and share.
+              The <em>Hot Take</em> post is your engagement hook — a single, bold, slightly controversial statement
+              drawn from your video's core argument. Keep it under 280 characters and watch the replies flood in. The{" "}
+              <em>Listicle Thread</em> is the deep-dive: 8–10 tweets, each covering one key insight from your
+              transcript, structured as a numbered list that people save and share.
             </p>
             <ol className="mt-4 space-y-3 pl-5 text-muted-foreground">
               {[
                 "Post 3a — Hot Take: one bold, polarising sentence from your video's thesis",
-                "Post 3b — Listicle Thread: 'X things I learned from [topic]' (one per tweet)",
+                "Post 3b — Listicle Thread: '7 things I learned from this video' (One insight per tweet).",
                 "Tweet 2 of thread: your strongest data point or surprising stat",
                 "Final tweet: CTA linking to the full video with a reason to click",
               ].map((item, i) => (
@@ -251,8 +283,14 @@ export default function HowToRepurposeYouTubeVideos() {
             </ol>
 
             <figure className="my-8">
-              <img src={twitterToolImg} alt="AI-generated Twitter / X Thread thought leadership post ready to publish" className="w-full rounded-xl border border-border shadow-lg" />
-              <figcaption className="mt-3 text-center text-sm text-muted-foreground italic">AI-generated Twitter / X Thread thought leadership post ready to publish.</figcaption>
+              <img
+                src={twitterToolImg}
+                alt="AI-generated Twitter / X Thread thought leadership post ready to publish"
+                className="w-full rounded-xl border border-border shadow-lg"
+              />
+              <figcaption className="mt-3 text-center text-sm text-muted-foreground italic">
+                AI-generated Twitter / X Thread thought leadership post ready to publish.
+              </figcaption>
             </figure>
 
             {/* ── Section 5 ── */}
@@ -260,29 +298,42 @@ export default function HowToRepurposeYouTubeVideos() {
               Step 3 — Blog Articles
             </h2>
             <p className="mt-4 leading-relaxed text-muted-foreground">
-              This is the highest-effort format, but also the longest-lasting. A well-structured blog post can rank on Google for years and drive compounding organic traffic. The good news: your YouTube transcript is already 80% of the work.
+              This is the highest-effort format, but also the longest-lasting. A well-structured blog post can rank on
+              Google for years and drive compounding organic traffic. The good news: your YouTube transcript is already
+              80% of the work.
             </p>
             <p className="mt-4 leading-relaxed text-muted-foreground">
-              Start with the transcript, remove filler words and verbal tics, add subheadings every 300–400 words, embed the YouTube video at the top, and add a meta description and FAQ section at the bottom. A 20-minute YouTube video can easily become a 2,000-word blog post with minimal editing.
+              Start with the transcript, remove filler words and verbal tics, add subheadings every 300–400 words, embed
+              the YouTube video at the top, and add a meta description and FAQ section at the bottom. A 20-minute
+              YouTube video can easily become a 2,000-word blog post with minimal editing.
             </p>
 
             {/* ── Section 6 ── */}
-            <h2 id="audio" className="mt-12 scroll-mt-28 text-2xl font-bold tracking-tight">
+            <h2 id="micro-nuggets" className="mt-12 scroll-mt-28 text-2xl font-bold tracking-tight">
               Step 4 — Micro-Nuggets (Posts 5–8)
             </h2>
             <p className="mt-4 leading-relaxed text-muted-foreground">
-              Every YouTube video is implicitly divided into chapters — distinct segments where you shift topics or make a new point. Each of those chapters is a <strong className="text-foreground">standalone value bomb</strong> waiting to be extracted. VidLogic AI identifies these natural breaks in your transcript and turns each one into a short-form post.
+              Every YouTube video is implicitly divided into chapters — distinct segments where you shift topics or make
+              a new point. Each of those chapters is a{" "}
+              <strong className="text-foreground">standalone value bomb</strong> waiting to be extracted. VidLogic AI
+              identifies these natural breaks in your transcript and turns each one into a short-form post.
             </p>
             <p className="mt-4 leading-relaxed text-muted-foreground">
-              Think of these as micro-content: 150–300 words, punchy, self-contained, and shareable. Post one per day across Instagram captions, LinkedIn carousels, or short-form scripts for TikTok and Reels. Four chapters = four days of content, all from a single video. Each micro-nugget links back to the original video, compounding your views over time.
+              Think of these as micro-content: 150–300 words, punchy, self-contained, and shareable. Post one per day
+              across Instagram captions, LinkedIn carousels, or short-form scripts for TikTok and Reels. Four chapters =
+              four days of content, all from a single video. Each micro-nugget links back to the original video,
+              compounding your views over time.
             </p>
 
-            {/* ── Section 5 ── */}
+            {/* ── Section 7 ── */}
             <h2 id="community" className="mt-12 scroll-mt-28 text-2xl font-bold tracking-tight">
               Step 5 — Community Teasing (Posts 9–10)
             </h2>
             <p className="mt-4 leading-relaxed text-muted-foreground">
-              The final two posts in your content week are the most underused — and often the most engaging. These are your <strong className="text-foreground">Behind-the-Scenes</strong> and <strong className="text-foreground">FAQ</strong> posts, designed to build community trust and extend the life of your video's reach.
+              The final two posts in your content week are the most underused — and often the most engaging. These are
+              your <strong className="text-foreground">Behind-the-Scenes</strong> and{" "}
+              <strong className="text-foreground">FAQ</strong> posts, designed to build community trust and extend the
+              life of your video's reach.
             </p>
             <ul className="mt-4 space-y-2 pl-5 text-muted-foreground">
               {[
@@ -296,7 +347,8 @@ export default function HowToRepurposeYouTubeVideos() {
               ))}
             </ul>
             <blockquote className="my-6 border-l-4 border-primary pl-5 italic text-muted-foreground">
-              "Your community doesn't just want your best ideas — they want to feel like they're part of the journey. Posts 9 and 10 make that happen."
+              "Your community doesn't just want your best ideas — they want to feel like they're part of the journey.
+              Posts 9 and 10 make that happen."
             </blockquote>
 
             {/* ── Section 7 ── */}
@@ -304,7 +356,8 @@ export default function HowToRepurposeYouTubeVideos() {
               The Right Tools Make It Easy
             </h2>
             <p className="mt-4 leading-relaxed text-muted-foreground">
-              Doing all of this manually is time-consuming. The right AI tool can compress the entire repurposing workflow from hours to minutes. Here's what to look for:
+              Doing all of this manually is time-consuming. The right AI tool can compress the entire repurposing
+              workflow from hours to minutes. Here's what to look for:
             </p>
             <ul className="mt-4 space-y-2 pl-5 text-muted-foreground">
               {[
@@ -329,10 +382,14 @@ export default function HowToRepurposeYouTubeVideos() {
               Conclusion
             </h2>
             <p className="mt-4 leading-relaxed text-muted-foreground">
-              Repurposing your YouTube content is one of the highest-leverage activities a modern creator or marketer can do. The research and expertise are already inside your videos — you just need a system to extract and redistribute them.
+              Repurposing your YouTube content is one of the highest-leverage activities a modern creator or marketer
+              can do. The research and expertise are already inside your videos — you just need a system to extract and
+              redistribute them.
             </p>
             <p className="mt-4 leading-relaxed text-muted-foreground">
-              Start with LinkedIn (highest ROI, lowest friction), build the habit, and then expand to Twitter threads, blog posts, and podcast show notes. With AI tools like VidLogic AI, the entire workflow takes less time than it took to brew your morning coffee.
+              Start with LinkedIn (highest ROI, lowest friction), build the habit, and then expand to Twitter threads,
+              blog posts, and podcast show notes. With AI tools like VidLogic AI, the entire workflow takes less time
+              than it took to brew your morning coffee.
             </p>
             <p className="mt-4 leading-relaxed text-muted-foreground font-medium text-foreground">
               Your video already did the hard work. Let AI do the rest.
@@ -361,9 +418,15 @@ export default function HowToRepurposeYouTubeVideos() {
           <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 sm:flex-row">
             <span>© {new Date().getFullYear()} VidLogic AI. All rights reserved.</span>
             <div className="flex gap-4">
-              <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
-              <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
-              <Link to="/contact" className="hover:text-foreground transition-colors">Contact</Link>
+              <Link to="/privacy" className="hover:text-foreground transition-colors">
+                Privacy
+              </Link>
+              <Link to="/terms" className="hover:text-foreground transition-colors">
+                Terms
+              </Link>
+              <Link to="/contact" className="hover:text-foreground transition-colors">
+                Contact
+              </Link>
             </div>
           </div>
         </footer>
