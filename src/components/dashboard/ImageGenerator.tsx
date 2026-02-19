@@ -2,17 +2,18 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ImagePlus, Loader2, Download } from "lucide-react";
+import { ImagePlus, Loader2, Download, X } from "lucide-react";
 
 interface ImageGeneratorProps {
   textContent: string;
   platform: "twitter" | "linkedin" | "shorts" | "blog";
   targetLanguage?: string | null;
   onImageGenerated?: (imageUrl: string) => void;
+  onImageDismissed?: () => void;
   existingImage?: string | null;
 }
 
-export function ImageGenerator({ textContent, platform, targetLanguage, onImageGenerated, existingImage }: ImageGeneratorProps) {
+export function ImageGenerator({ textContent, platform, targetLanguage, onImageGenerated, onImageDismissed, existingImage }: ImageGeneratorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const generatedImage = existingImage ?? null;
   const { toast } = useToast();
@@ -111,6 +112,12 @@ export function ImageGenerator({ textContent, platform, targetLanguage, onImageG
               <Download className="h-4 w-4 mr-1" />
               Download
             </Button>
+            {onImageDismissed && (
+              <Button size="sm" variant="secondary" onClick={onImageDismissed}>
+                <X className="h-4 w-4 mr-1" />
+                Dismiss
+              </Button>
+            )}
           </div>
           <p className="text-xs text-center text-muted-foreground py-2 bg-muted/50">
             Suggested: {platformLabels[platform]}
