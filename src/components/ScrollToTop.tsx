@@ -7,16 +7,21 @@ export function ScrollToTop() {
 
   useEffect(() => {
     if (navType !== "POP") {
-      // Immediate scroll reset
+      // The #root element is the actual scroll container (overflow-y: auto in index.css)
+      const rootEl = document.getElementById("root");
+
+      // Reset all possible scroll containers
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
+      if (rootEl) rootEl.scrollTop = 0;
 
       // Also scroll after the next paint to catch late-rendering pages
       requestAnimationFrame(() => {
         window.scrollTo({ top: 0, left: 0, behavior: "instant" });
         document.documentElement.scrollTop = 0;
         document.body.scrollTop = 0;
+        if (rootEl) rootEl.scrollTop = 0;
       });
     }
   }, [pathname, navType]);
