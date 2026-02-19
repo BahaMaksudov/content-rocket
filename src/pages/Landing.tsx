@@ -543,7 +543,7 @@ function DemoSection() {
                   className="gradient-primary text-primary-foreground btn-glow"
                 >
                   <Sparkles className="h-4 w-4 mr-2" />
-                  Analyze Video
+                  Create All Assets
                 </Button>
               </div>
             </div>
