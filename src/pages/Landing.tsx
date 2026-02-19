@@ -272,9 +272,9 @@ function HeroSection() {
 
           {/* Main headline */}
           <motion.h1 variants={fadeInUp} className="text-4xl sm:text-5xl lg:text-7xl font-semibold mb-6 tracking-tight">
-            Turn Video into
-            <span className="block mt-2 text-gradient">Logic</span>
-            <span className="block mt-2">Extract Real Intelligence</span>
+            Turn YouTube Videos Into
+            <span className="block mt-2 text-gradient">Viral Content in 60 Seconds</span>
+            {/* <span className="block mt-2">for LinkedIn, X (Twitter) & Instagram </span> */}
           </motion.h1>
 
           {/* Subheadline */}
@@ -543,7 +543,7 @@ function DemoSection() {
                   className="gradient-primary text-primary-foreground btn-glow"
                 >
                   <Sparkles className="h-4 w-4 mr-2" />
-                  Create All Assets
+                  Analyze Video
                 </Button>
               </div>
             </div>
