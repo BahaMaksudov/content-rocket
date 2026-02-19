@@ -67,7 +67,8 @@ export default function YouTubeToLinkedIn() {
         {/* ── Minimal top nav ───────────────────────────────────────────── */}
         <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-lg">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-            <Link to="/" className="text-lg font-bold tracking-tight text-foreground">
+            <Link to="/" className="flex items-center gap-2 text-lg font-bold tracking-tight text-foreground">
+              <img src="/vidlogic-logo.png" alt="VidLogic AI" className="h-10 w-10 object-contain" />
               VidLogic <span className="text-primary">AI</span>
             </Link>
             <Link to="/auth">
