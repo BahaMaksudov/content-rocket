@@ -7,11 +7,17 @@ export function ScrollToTop() {
 
   useEffect(() => {
     if (navType !== "POP") {
-      // Scroll both window and any scrollable containers to top
+      // Immediate scroll reset
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-      // Also reset any overflow containers (e.g., main content areas)
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
+
+      // Also scroll after the next paint to catch late-rendering pages
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      });
     }
   }, [pathname, navType]);
 
