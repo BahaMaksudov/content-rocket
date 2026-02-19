@@ -135,8 +135,14 @@ function StickyNav() {
     >
       <div className="container mx-auto px-4 h-[68px] flex items-center justify-between">
         <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-3">
-          <img src="/vidlogic-logo.png" alt="VidLogic AI" className="h-[44px] w-[44px] object-contain transition-all duration-300 hover:scale-[1.4] hover:drop-shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
-          <span className="font-bold text-xl md:text-2xl leading-none">VidLogic <span className="text-primary">AI</span></span>
+          <img
+            src="/vidlogic-logo.png"
+            alt="VidLogic AI"
+            className="h-[44px] w-[44px] object-contain transition-all duration-300 hover:scale-[1.4] hover:drop-shadow-[0_0_10px_rgba(6,182,212,0.5)]"
+          />
+          <span className="font-bold text-xl md:text-2xl leading-none">
+            VidLogic <span className="text-primary">AI</span>
+          </span>
         </Link>
 
         {/* Only show navigation links for logged-out users */}
@@ -267,9 +273,7 @@ function HeroSection() {
           {/* Main headline */}
           <motion.h1 variants={fadeInUp} className="text-4xl sm:text-5xl lg:text-7xl font-semibold mb-6 tracking-tight">
             Turn Video into
-            <span className="block mt-2 text-gradient">
-              Logic
-            </span>
+            <span className="block mt-2 text-gradient">Logic</span>
             <span className="block mt-2">Extract Real Intelligence</span>
           </motion.h1>
 
@@ -278,7 +282,8 @@ function HeroSection() {
             variants={fadeInUp}
             className="text-lg sm:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed"
           >
-            VidLogic AI extracts intelligence from any YouTube video — delivering precise, structured content for every platform.
+            VidLogic AI extracts intelligence from any YouTube video — delivering precise, structured content for every
+            platform.
           </motion.p>
 
           {/* CTA buttons */}
@@ -450,7 +455,8 @@ function SolutionSection() {
             <span className="text-gradient"> One Platform</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            VidLogic AI doesn't just repurpose — it analyzes, structures, and delivers. Every feature is engineered for accuracy and precision.
+            VidLogic AI doesn't just repurpose — it analyzes, structures, and delivers. Every feature is engineered for
+            accuracy and precision.
           </p>
         </motion.div>
 
@@ -532,7 +538,10 @@ function DemoSection() {
                     className="w-full bg-transparent text-foreground text-sm lg:text-base focus:outline-none"
                   />
                 </div>
-                <Button onClick={() => setShowOutput(true)} className="gradient-primary text-primary-foreground btn-glow">
+                <Button
+                  onClick={() => setShowOutput(true)}
+                  className="gradient-primary text-primary-foreground btn-glow"
+                >
                   <Sparkles className="h-4 w-4 mr-2" />
                   Analyze Video
                 </Button>
@@ -899,7 +908,10 @@ function PricingSection({
                   <CardContent className="space-y-6">
                     <ul className="space-y-3">
                       {plan.features.map((feature) => {
-                        const isSocialProof = feature.includes("Social Proof") || feature.includes("Wall of Love") || feature.includes("testimonials");
+                        const isSocialProof =
+                          feature.includes("Social Proof") ||
+                          feature.includes("Wall of Love") ||
+                          feature.includes("testimonials");
                         return (
                           <li key={feature} className="flex items-start gap-3">
                             <Check className="h-5 w-5 text-success shrink-0 mt-0.5" />
@@ -1114,7 +1126,7 @@ const CTASection = forwardRef<HTMLElement>((_, ref) => {
               className="gradient-primary text-primary-foreground text-lg px-10 h-14 shadow-xl btn-glow"
             >
               <Link to="/auth" className="flex items-center gap-2">
-                Analyze Your First Video Free
+                Generate Your First Content Free
                 <Sparkles className="h-5 w-5" />
               </Link>
             </Button>
@@ -1140,7 +1152,9 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <img src="/vidlogic-logo.png" alt="VidLogic AI" className="h-8 w-8 object-contain" />
-              <span className="font-semibold">VidLogic <span className="text-primary">AI</span></span>
+              <span className="font-semibold">
+                VidLogic <span className="text-primary">AI</span>
+              </span>
             </div>
             <div className="text-sm text-muted-foreground space-y-1">
               <p className="font-medium text-foreground">VidLogic AI</p>
