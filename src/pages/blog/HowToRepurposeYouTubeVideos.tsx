@@ -10,7 +10,8 @@ const TOC = [
   { id: "linkedin", label: "Step 1 — LinkedIn Posts" },
   { id: "twitter", label: "Step 2 — Twitter / X Threads" },
   { id: "blog", label: "Step 3 — Blog Articles" },
-  { id: "audio", label: "Step 4 — Podcast Clips" },
+  { id: "audio", label: "Step 4 — Micro-Nuggets" },
+  { id: "community", label: "Step 5 — Community Teasing" },
   { id: "tools", label: "The Right Tools Make It Easy" },
   { id: "conclusion", label: "Conclusion" },
 ];
@@ -134,7 +135,7 @@ export default function HowToRepurposeYouTubeVideos() {
             </h1>
 
             <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
-              Most creators spend 10 hours filming and editing a video — then publish it once and move on. That's leaving an enormous amount of value on the table. In this guide, we'll show you how to systematically turn a single YouTube video into weeks of high-quality content across every major platform.
+              The most successful creators in 2026 don't work harder; they work logically. By using VidLogic AI, you can turn a single video into a week's worth of cross-platform content in under 60 seconds.
             </p>
 
             {/* Top CTA */}
@@ -201,13 +202,13 @@ export default function HowToRepurposeYouTubeVideos() {
               Step 1 — LinkedIn Posts
             </h2>
             <p className="mt-4 leading-relaxed text-muted-foreground">
-              LinkedIn is the highest-ROI repurposing destination for most B2B creators and professionals. A single insightful post can generate thousands of organic impressions without any paid promotion.
+              LinkedIn is your thought-leadership platform. Your audience here doesn't want a summary of your video — they want the <em>lesson you learned</em> making it. Frame your post around the core <strong className="text-foreground">"Why"</strong> behind your video's topic: why it matters, why most people get it wrong, and why your perspective is worth following.
             </p>
             <p className="mt-4 leading-relaxed text-muted-foreground">
-              The key is extracting the <strong className="text-foreground">one big idea</strong> from your video — the insight that made someone say "wow, I didn't know that." Open with a bold hook (a surprising statistic, a counterintuitive claim, or a relatable problem), expand with 3–5 supporting points drawn from your transcript, and end with a question that invites comments.
+              Start with a bold, professional hook — a counterintuitive truth or a hard-won insight from your niche. Then build your post as a mini thought-leadership essay: 3–5 short paragraphs that show your expertise without selling anything. Close with an open-ended question to drive comments and signal to the algorithm that your content generates conversation.
             </p>
             <blockquote className="my-6 border-l-4 border-primary pl-5 italic text-muted-foreground">
-              "The algorithm rewards consistency, but your audience rewards insight. Use AI to stay consistent, and your video to stay insightful."
+              "The best LinkedIn posts don't recap your video — they reveal the professional insight buried inside it. VidLogic AI surfaces that insight automatically."
             </blockquote>
 
             {/* ── Section 4 ── */}
@@ -215,14 +216,17 @@ export default function HowToRepurposeYouTubeVideos() {
               Step 2 — Twitter / X Threads
             </h2>
             <p className="mt-4 leading-relaxed text-muted-foreground">
-              A YouTube video naturally contains 5–10 discrete points. Each of those points can become a tweet in a thread. The structure practically writes itself:
+              X rewards two types of posts: the <strong className="text-foreground">Engagement Hook</strong> and the <strong className="text-foreground">Listicle</strong>. Pull both from the same video for Posts 3 and 4 of your content week.
+            </p>
+            <p className="mt-4 leading-relaxed text-muted-foreground">
+              The <em>Hot Take</em> post is your engagement hook — a single, bold, slightly controversial statement drawn from your video's core argument. Keep it under 280 characters and watch the replies flood in. The <em>Listicle Thread</em> is the deep-dive: 8–10 tweets, each covering one key insight from your transcript, structured as a numbered list that people save and share.
             </p>
             <ol className="mt-4 space-y-3 pl-5 text-muted-foreground">
               {[
-                "Tweet 1: The bold hook / promise of the thread",
-                "Tweets 2–8: One key insight per tweet, pulled from your transcript",
-                "Tweet 9: A summary or contrarian take",
-                "Tweet 10: CTA — link to the full video or your product",
+                "Post 3a — Hot Take: one bold, polarising sentence from your video's thesis",
+                "Post 3b — Listicle Thread: 'X things I learned from [topic]' (one per tweet)",
+                "Tweet 2 of thread: your strongest data point or surprising stat",
+                "Final tweet: CTA linking to the full video with a reason to click",
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-2 leading-relaxed">
                   <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
@@ -246,11 +250,36 @@ export default function HowToRepurposeYouTubeVideos() {
 
             {/* ── Section 6 ── */}
             <h2 id="audio" className="mt-12 scroll-mt-28 text-2xl font-bold tracking-tight">
-              Step 4 — Podcast Clips &amp; Show Notes
+              Step 4 — Micro-Nuggets (Posts 5–8)
             </h2>
             <p className="mt-4 leading-relaxed text-muted-foreground">
-              If your YouTube video is interview-style or presentation-style, the audio layer is already a podcast episode. Extract it, clean it up slightly, and upload it to Spotify and Apple Podcasts. Pair it with AI-generated show notes (a summary, key timestamps, and a CTA) for maximum discoverability.
+              Every YouTube video is implicitly divided into chapters — distinct segments where you shift topics or make a new point. Each of those chapters is a <strong className="text-foreground">standalone value bomb</strong> waiting to be extracted. VidLogic AI identifies these natural breaks in your transcript and turns each one into a short-form post.
             </p>
+            <p className="mt-4 leading-relaxed text-muted-foreground">
+              Think of these as micro-content: 150–300 words, punchy, self-contained, and shareable. Post one per day across Instagram captions, LinkedIn carousels, or short-form scripts for TikTok and Reels. Four chapters = four days of content, all from a single video. Each micro-nugget links back to the original video, compounding your views over time.
+            </p>
+
+            {/* ── Section 5 ── */}
+            <h2 id="community" className="mt-12 scroll-mt-28 text-2xl font-bold tracking-tight">
+              Step 5 — Community Teasing (Posts 9–10)
+            </h2>
+            <p className="mt-4 leading-relaxed text-muted-foreground">
+              The final two posts in your content week are the most underused — and often the most engaging. These are your <strong className="text-foreground">Behind-the-Scenes</strong> and <strong className="text-foreground">FAQ</strong> posts, designed to build community trust and extend the life of your video's reach.
+            </p>
+            <ul className="mt-4 space-y-2 pl-5 text-muted-foreground">
+              {[
+                "Post 9 — Behind the Scenes: Share the process of making the video. What surprised you? What almost didn't make the cut? This humanises your brand and rewards loyal followers with insider access.",
+                "Post 10 — Community FAQ: Pull the top questions from your video's comment section and answer them in a dedicated post. This signals responsiveness, rewards your community, and creates a content loop that drives people back to the original video.",
+              ].map((item) => (
+                <li key={item} className="flex items-start gap-2 leading-relaxed">
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <blockquote className="my-6 border-l-4 border-primary pl-5 italic text-muted-foreground">
+              "Your community doesn't just want your best ideas — they want to feel like they're part of the journey. Posts 9 and 10 make that happen."
+            </blockquote>
 
             {/* ── Section 7 ── */}
             <h2 id="tools" className="mt-12 scroll-mt-28 text-2xl font-bold tracking-tight">
