@@ -11,7 +11,7 @@
  * 3. Otherwise, use the configured site URL
  */
 
-const PRODUCTION_DOMAIN = "https://rocketcontentpro.io";
+const PRODUCTION_DOMAIN = "https://vidlogicai.com";
 
 /**
  * Gets the base site URL from environment or defaults to production domain
@@ -37,7 +37,7 @@ export function getEmailRedirectTo(pathname: string = "/auth/callback") {
   }
 
   // Preview/dev environments (e.g. *.lovable.app) - use current origin
-  if (hostname !== "rocketcontentpro.io" && hostname !== "www.rocketcontentpro.io") {
+  if (hostname !== "vidlogicai.com" && hostname !== "www.vidlogicai.com") {
     return new URL(pathname, origin).toString();
   }
 

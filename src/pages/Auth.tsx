@@ -471,8 +471,8 @@ export default function Auth() {
       <header className="border-b border-border bg-card/50 backdrop-blur-lg sticky top-0 z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <img src="/luxastream-logo.png" alt="LuxaStream" className="h-10 md:h-12 w-auto rounded-xl object-contain" />
-            <span className="font-bold text-xl md:text-2xl leading-none">LuxaStream</span>
+            <img src="/vidlogic-logo.png" alt="VidLogic AI" className="h-10 w-10 rounded-full object-contain" />
+            <span className="font-bold text-xl md:text-2xl leading-none">VidLogic <span className="text-primary">AI</span></span>
           </Link>
           <Button variant="ghost" asChild>
             <Link to="/" className="flex items-center gap-2">
@@ -487,9 +487,9 @@ export default function Auth() {
       <main className="container mx-auto px-4 py-16 max-w-md">
         <Card className="border-border bg-card">
           <CardHeader className="text-center">
-            <CardTitle className="text-xl">Welcome to LuxaStream</CardTitle>
+            <CardTitle className="text-xl">Welcome to VidLogic AI</CardTitle>
             <CardDescription>
-              The intelligent flow of clarity starts here
+              Extract intelligence from any YouTube video
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -693,7 +693,7 @@ export default function Auth() {
       {/* Simple Footer */}
       <footer className="border-t border-border py-8 mt-16">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Rocket Content. All rights reserved.
+          © {new Date().getFullYear()} VidLogic AI. All rights reserved.
         </div>
       </footer>
     </div>

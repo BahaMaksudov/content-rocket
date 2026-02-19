@@ -22,7 +22,7 @@ import { CreditsRemaining } from "@/components/dashboard/CreditsRemaining";
 import { PremiumModal } from "@/components/PremiumModal";
 import { SUBSCRIPTION_TIERS } from "@/lib/subscription-tiers";
 import { trackUpgradeClicked } from "@/lib/posthog";
-import luxaLogo from "@/assets/luxastream-logo.png";
+import vidlogicLogo from "@/assets/vidlogic-logo.png";
 
 const mainNavItems = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
@@ -54,10 +54,10 @@ export function AppSidebar() {
       {/* Header with Logo */}
       <SidebarHeader className="p-5 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
-          <img src={luxaLogo} alt="LuxaStream" className="h-10 md:h-12 w-auto rounded-xl object-contain" />
+          <img src={vidlogicLogo} alt="VidLogic AI" className="h-10 w-10 rounded-full object-contain" />
           <div>
-            <h1 className="text-xl font-bold text-foreground">LuxaStream</h1>
-            <p className="text-xs text-muted-foreground">Content Engine</p>
+            <h1 className="text-xl font-bold text-foreground">VidLogic AI</h1>
+            <p className="text-xs text-muted-foreground">Intelligent Content Engine</p>
           </div>
         </div>
       </SidebarHeader>
