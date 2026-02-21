@@ -494,7 +494,6 @@ function SolutionSection() {
 
 // Interactive Demo Section
 function DemoSection() {
-  const [showOutput, setShowOutput] = useState(false);
 
   return (
     <section id="demo" className="py-20 lg:py-32 relative overflow-hidden">
@@ -524,157 +523,24 @@ function DemoSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="max-w-5xl mx-auto"
+          className="max-w-5xl mx-auto relative"
         >
-          <div className="rounded-2xl border border-border bg-card p-6 lg:p-8 shadow-2xl shadow-primary/5">
-            {/* URL Input mockup */}
-            <div className="mb-8">
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-border">
-                <div className="h-10 w-10 rounded-lg bg-destructive/10 flex items-center justify-center">
-                  <Play className="h-5 w-5 text-destructive" />
-                </div>
-                <div className="flex-1">
-                  <input
-                    type="text"
-                    readOnly
-                    value="https://youtube.com/watch?v=your-awesome-video"
-                    className="w-full bg-transparent text-foreground text-sm lg:text-base focus:outline-none"
-                  />
-                </div>
-                <Button
-                  onClick={() => setShowOutput(true)}
-                  className="gradient-primary text-primary-foreground btn-glow"
-                >
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  Analyze Video
-                </Button>
-              </div>
-            </div>
-
-            {/* Output preview */}
-            <motion.div
-              initial={false}
-              animate={{ opacity: showOutput ? 1 : 0.3 }}
-              className="grid lg:grid-cols-2 gap-6"
-            >
-              {/* X Thread preview */}
-              <div className="rounded-xl border border-border bg-background p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <Twitter className="h-5 w-5 text-primary" />
-                  <span className="font-medium">X Thread</span>
-                  {showOutput && (
-                    <Badge className="ml-auto bg-success/10 text-success border-success/30">Generated</Badge>
-                  )}
-                </div>
-                <div className="space-y-3">
-                  {[
-                    "🧵 The secret to 10x productivity that nobody talks about...",
-                    "1/ Most people think working harder is the answer. They're wrong.",
-                    "2/ After interviewing 100+ top performers, I found ONE thing in common...",
-                  ].map((tweet, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: showOutput ? 1 : 0.5, x: 0 }}
-                      transition={{ delay: showOutput ? i * 0.2 : 0 }}
-                      className="text-sm text-muted-foreground bg-muted/30 rounded-lg p-3 border-l-2 border-primary"
-                    >
-                      {tweet}
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-
-              {/* LinkedIn preview */}
-              <div className="rounded-xl border border-border bg-background p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <Linkedin className="h-5 w-5 text-info" />
-                  <span className="font-medium">LinkedIn Post</span>
-                  {showOutput && (
-                    <Badge className="ml-auto bg-success/10 text-success border-success/30">Generated</Badge>
-                  )}
-                </div>
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: showOutput ? 1 : 0.5 }}
-                  transition={{ delay: showOutput ? 0.4 : 0 }}
-                  className="text-sm text-muted-foreground"
-                >
-                  <p className="mb-3">
-                    <strong>I used to work 80-hour weeks.</strong>
-                  </p>
-                  <p className="mb-3">Then I discovered a system that changed everything.</p>
-                  <p className="text-primary">... see more</p>
-                </motion.div>
-              </div>
-
-              {/* TikTok Script preview */}
-              <div className="rounded-xl border border-border bg-background p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <Video className="h-5 w-5 text-rocket" />
-                  <span className="font-medium">TikTok Script</span>
-                  {showOutput && (
-                    <Badge className="ml-auto bg-success/10 text-success border-success/30">Generated</Badge>
-                  )}
-                </div>
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: showOutput ? 1 : 0.5 }}
-                  transition={{ delay: showOutput ? 0.6 : 0 }}
-                  className="text-sm space-y-2"
-                >
-                  <div className="flex gap-2">
-                    <Badge variant="outline" className="text-xs">
-                      0:00
-                    </Badge>
-                    <span className="text-muted-foreground">Hook: "Stop scrolling. This changed my life."</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <Badge variant="outline" className="text-xs">
-                      0:05
-                    </Badge>
-                    <span className="text-muted-foreground">Point 1: The productivity myth...</span>
-                  </div>
-                </motion.div>
-              </div>
-
-              {/* Blog preview */}
-              <div className="rounded-xl border border-border bg-background p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <FileText className="h-5 w-5 text-success" />
-                  <span className="font-medium">SEO Blog Post</span>
-                  {showOutput && (
-                    <Badge className="ml-auto bg-success/10 text-success border-success/30">Generated</Badge>
-                  )}
-                </div>
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: showOutput ? 1 : 0.5 }}
-                  transition={{ delay: showOutput ? 0.8 : 0 }}
-                  className="text-sm text-muted-foreground"
-                >
-                  <h4 className="font-semibold text-foreground mb-2">The Ultimate Guide to 10x Productivity</h4>
-                  <p>
-                    In today's fast-paced world, productivity isn't just about working harder—it's about working
-                    smarter...
-                  </p>
-                </motion.div>
-              </div>
-            </motion.div>
-
-            {!showOutput && (
-              <div className="text-center mt-8">
-                <Button
-                  size="lg"
-                  onClick={() => setShowOutput(true)}
-                  className="gradient-primary text-primary-foreground"
-                >
-                  <Play className="h-5 w-5 mr-2" />
-                  Click to See the Magic
-                </Button>
-              </div>
-            )}
-          </div>
+          {/* Cyan glow effect behind video */}
+          <div
+            aria-hidden
+            className="absolute -inset-4 rounded-3xl opacity-40 blur-2xl"
+            style={{ background: "radial-gradient(ellipse at center, hsl(var(--primary) / 0.3), transparent 70%)" }}
+          />
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="relative w-full rounded-2xl border border-white/10 shadow-2xl shadow-primary/10"
+            style={{ backgroundColor: "hsl(var(--background))" }}
+          >
+            <source src="/videos/VidLogicAI_Demo.mp4" type="video/mp4" />
+          </video>
         </motion.div>
       </div>
     </section>
