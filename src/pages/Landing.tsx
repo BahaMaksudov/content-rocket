@@ -277,7 +277,7 @@ function HeroSection() {
           <motion.h1 variants={fadeInUp} className="text-4xl sm:text-5xl lg:text-7xl font-semibold mb-6 tracking-tight">
             Turn YouTube Videos Into Viral Content
             <span className="block mt-2 text-gradient">for LinkedIn, X, Instagram & TikTok</span>
-            <span className="block mt-2"> in 60 Seconds</span>
+            <span className="block mt-2">in 60 Seconds</span>
           </motion.h1>
 
           {/* Subheadline */}
