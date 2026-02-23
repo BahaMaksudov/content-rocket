@@ -276,7 +276,7 @@ function HeroSection() {
           {/* Main headline */}
           <motion.h1 variants={fadeInUp} className="text-4xl sm:text-5xl lg:text-7xl font-semibold mb-6 tracking-tight">
             Turn YouTube Videos Into Viral Content
-            <span className="block mt-2 text-gradient">for LinkedIn, X, Instagram & TikTok</span>
+            <span className="block mt-2 text-gradient">for LinkedIn, X & Instagram</span>
             <span className="block mt-2">in 60 Seconds</span>
           </motion.h1>
 
@@ -494,7 +494,6 @@ function SolutionSection() {
 
 // Interactive Demo Section
 function DemoSection() {
-
   return (
     <section id="demo" className="py-20 lg:py-32 relative overflow-hidden">
       <div className="container mx-auto px-4">
