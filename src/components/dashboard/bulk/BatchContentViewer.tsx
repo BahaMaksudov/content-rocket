@@ -243,19 +243,19 @@ export function BatchContentViewer({ batchJob, isProcessing }: BatchContentViewe
         {currentGeneration && (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid grid-cols-4 mb-4">
-              <TabsTrigger value="twitter" className="flex items-center gap-1.5">
+              <TabsTrigger value="twitter" className="flex items-center gap-1.5 transition-all duration-200 hover:text-foreground/80 data-[state=active]:text-primary data-[state=active]:bg-primary/10 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">
                 <Twitter className="h-4 w-4" />
                 <span className="hidden sm:inline">Hooks</span>
               </TabsTrigger>
-              <TabsTrigger value="linkedin" className="flex items-center gap-1.5">
+              <TabsTrigger value="linkedin" className="flex items-center gap-1.5 transition-all duration-200 hover:text-foreground/80 data-[state=active]:text-primary data-[state=active]:bg-primary/10 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">
                 <Linkedin className="h-4 w-4" />
                 <span className="hidden sm:inline">LinkedIn</span>
               </TabsTrigger>
-              <TabsTrigger value="shorts" className="flex items-center gap-1.5">
+              <TabsTrigger value="shorts" className="flex items-center gap-1.5 transition-all duration-200 hover:text-foreground/80 data-[state=active]:text-primary data-[state=active]:bg-primary/10 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">
                 <Film className="h-4 w-4" />
                 <span className="hidden sm:inline">Scripts</span>
               </TabsTrigger>
-              <TabsTrigger value="blog" className="flex items-center gap-1.5">
+              <TabsTrigger value="blog" className="flex items-center gap-1.5 transition-all duration-200 hover:text-foreground/80 data-[state=active]:text-primary data-[state=active]:bg-primary/10 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">
                 <FileText className="h-4 w-4" />
                 <span className="hidden sm:inline">Blog</span>
               </TabsTrigger>
