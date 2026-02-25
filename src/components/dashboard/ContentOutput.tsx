@@ -213,7 +213,14 @@ ${content.blogPost}
             <TabsList className="grid grid-cols-4 mb-4">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="twitter" className="flex items-center gap-1 bg-slate-800/50 text-slate-400 hover:text-slate-200 data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950 data-[state=active]:shadow-[0_0_15px_rgba(6,182,212,0.4)]">
+                  <TabsTrigger
+                    value="twitter"
+                    className={`flex items-center gap-1 rounded-lg transition-all duration-200 ${
+                      activeTab === "twitter"
+                        ? "bg-cyan-500 text-slate-950 shadow-[0_0_15px_rgba(6,182,212,0.4)]"
+                        : "bg-slate-800/50 text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
                     <Twitter className="h-4 w-4" />
                     <span className="hidden sm:inline">X Hooks</span>
                   </TabsTrigger>
@@ -222,7 +229,14 @@ ${content.blogPost}
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="linkedin" className="flex items-center gap-1 bg-slate-800/50 text-slate-400 hover:text-slate-200 data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950 data-[state=active]:shadow-[0_0_15px_rgba(6,182,212,0.4)]">
+                  <TabsTrigger
+                    value="linkedin"
+                    className={`flex items-center gap-1 rounded-lg transition-all duration-200 ${
+                      activeTab === "linkedin"
+                        ? "bg-cyan-500 text-slate-950 shadow-[0_0_15px_rgba(6,182,212,0.4)]"
+                        : "bg-slate-800/50 text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
                     <Linkedin className="h-4 w-4" />
                     <span className="hidden sm:inline">LinkedIn</span>
                   </TabsTrigger>
@@ -231,7 +245,14 @@ ${content.blogPost}
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="shorts" className="flex items-center gap-1 bg-slate-800/50 text-slate-400 hover:text-slate-200 data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950 data-[state=active]:shadow-[0_0_15px_rgba(6,182,212,0.4)]">
+                  <TabsTrigger
+                    value="shorts"
+                    className={`flex items-center gap-1 rounded-lg transition-all duration-200 ${
+                      activeTab === "shorts"
+                        ? "bg-cyan-500 text-slate-950 shadow-[0_0_15px_rgba(6,182,212,0.4)]"
+                        : "bg-slate-800/50 text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
                     <Film className="h-4 w-4" />
                     <span className="hidden sm:inline">Scripts</span>
                   </TabsTrigger>
@@ -240,7 +261,14 @@ ${content.blogPost}
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="blog" className="flex items-center gap-1 bg-slate-800/50 text-slate-400 hover:text-slate-200 data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950 data-[state=active]:shadow-[0_0_15px_rgba(6,182,212,0.4)]">
+                  <TabsTrigger
+                    value="blog"
+                    className={`flex items-center gap-1 rounded-lg transition-all duration-200 ${
+                      activeTab === "blog"
+                        ? "bg-cyan-500 text-slate-950 shadow-[0_0_15px_rgba(6,182,212,0.4)]"
+                        : "bg-slate-800/50 text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
                     <FileText className="h-4 w-4" />
                     <span className="hidden sm:inline">Blog</span>
                   </TabsTrigger>
