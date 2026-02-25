@@ -179,25 +179,25 @@ export default function History() {
                   <TabsList className="grid grid-cols-4 mb-4">
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <TabsTrigger value="twitter"><Twitter className="h-4 w-4" /></TabsTrigger>
+                        <TabsTrigger value="twitter" className="transition-all duration-200 hover:text-foreground/80 data-[state=active]:text-primary data-[state=active]:bg-primary/10 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none"><Twitter className="h-4 w-4" /></TabsTrigger>
                       </TooltipTrigger>
                       <TooltipContent>X Thread</TooltipContent>
                     </Tooltip>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <TabsTrigger value="linkedin"><Linkedin className="h-4 w-4" /></TabsTrigger>
+                        <TabsTrigger value="linkedin" className="transition-all duration-200 hover:text-foreground/80 data-[state=active]:text-primary data-[state=active]:bg-primary/10 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none"><Linkedin className="h-4 w-4" /></TabsTrigger>
                       </TooltipTrigger>
                       <TooltipContent>LinkedIn Post</TooltipContent>
                     </Tooltip>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <TabsTrigger value="shorts"><Film className="h-4 w-4" /></TabsTrigger>
+                        <TabsTrigger value="shorts" className="transition-all duration-200 hover:text-foreground/80 data-[state=active]:text-primary data-[state=active]:bg-primary/10 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none"><Film className="h-4 w-4" /></TabsTrigger>
                       </TooltipTrigger>
                       <TooltipContent>TikTok Script</TooltipContent>
                     </Tooltip>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <TabsTrigger value="blog"><FileText className="h-4 w-4" /></TabsTrigger>
+                        <TabsTrigger value="blog" className="transition-all duration-200 hover:text-foreground/80 data-[state=active]:text-primary data-[state=active]:bg-primary/10 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none"><FileText className="h-4 w-4" /></TabsTrigger>
                       </TooltipTrigger>
                       <TooltipContent>SEO Blog Post</TooltipContent>
                     </Tooltip>
