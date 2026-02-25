@@ -213,7 +213,7 @@ ${content.blogPost}
             <TabsList className="grid grid-cols-4 mb-4">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="twitter" className="flex items-center gap-1">
+                  <TabsTrigger value="twitter" className="flex items-center gap-1 transition-all duration-200 hover:text-foreground/80 data-[state=active]:text-primary data-[state=active]:bg-primary/10 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">
                     <Twitter className="h-4 w-4" />
                     <span className="hidden sm:inline">X Hooks</span>
                   </TabsTrigger>
@@ -222,7 +222,7 @@ ${content.blogPost}
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="linkedin" className="flex items-center gap-1">
+                  <TabsTrigger value="linkedin" className="flex items-center gap-1 transition-all duration-200 hover:text-foreground/80 data-[state=active]:text-primary data-[state=active]:bg-primary/10 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">
                     <Linkedin className="h-4 w-4" />
                     <span className="hidden sm:inline">LinkedIn</span>
                   </TabsTrigger>
@@ -231,7 +231,7 @@ ${content.blogPost}
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="shorts" className="flex items-center gap-1">
+                  <TabsTrigger value="shorts" className="flex items-center gap-1 transition-all duration-200 hover:text-foreground/80 data-[state=active]:text-primary data-[state=active]:bg-primary/10 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">
                     <Film className="h-4 w-4" />
                     <span className="hidden sm:inline">Scripts</span>
                   </TabsTrigger>
@@ -240,7 +240,7 @@ ${content.blogPost}
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="blog" className="flex items-center gap-1">
+                  <TabsTrigger value="blog" className="flex items-center gap-1 transition-all duration-200 hover:text-foreground/80 data-[state=active]:text-primary data-[state=active]:bg-primary/10 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">
                     <FileText className="h-4 w-4" />
                     <span className="hidden sm:inline">Blog</span>
                   </TabsTrigger>
