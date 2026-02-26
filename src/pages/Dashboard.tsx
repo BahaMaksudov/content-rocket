@@ -180,7 +180,7 @@ export default function Dashboard() {
     if (title) setVideoTitle(title);
   };
 
-  const handleGenerate = async () => {
+  const handleGenerate = () => {
     if (!transcript) {
       toast({
         variant: "destructive",
@@ -196,198 +196,190 @@ export default function Dashboard() {
       return;
     }
 
+    // 1. Show spinner immediately
     setIsGenerating(true);
 
-    // Auto-scroll to the content panel so the user sees the loading overlay
+    // 2. Scroll to content panel right away
     contentOutputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    
-    // Track generation started event
-    trackGenerationStarted({
-      hasYoutubeUrl: !!youtubeUrl,
-      transcriptMethod,
-      hasBrandVoice: !!selectedBrandVoice,
-      tone,
-      audience,
-      targetLanguage,
-    });
 
-    try {
-      // Build brand voice data - check if it's a default voice or user voice
-      let brandVoiceData = null;
-      
-      if (selectedBrandVoice) {
-        if (isDefaultVoiceId(selectedBrandVoice)) {
-          // Use the default voice description
-          const defaultVoice = getDefaultVoiceById(selectedBrandVoice);
-          if (defaultVoice) {
-            brandVoiceData = {
-              name: defaultVoice.name,
-              writingStyle: defaultVoice.description, // The full description becomes the writing style
-              tone: null,
-              keyPhrases: null,
-              targetAudience: null,
-            };
-          }
-        } else {
-          // Use the user's custom voice from database
-          const selectedVoice = brandVoices?.find(v => v.id === selectedBrandVoice);
-          if (selectedVoice) {
-            brandVoiceData = {
-              name: selectedVoice.name,
-              writingStyle: selectedVoice.writing_style || selectedVoice.description,
-              tone: selectedVoice.tone,
-              keyPhrases: selectedVoice.key_phrases,
-              targetAudience: selectedVoice.target_audience,
-            };
-          }
-        }
-      }
-      
-      // Log social proof toggle state for debugging
-      const socialProofUserId = includeSocialProof ? user?.id : undefined;
-      console.log("Social Proof toggle:", includeSocialProof, "| userId sent to AI:", socialProofUserId);
-
-      const { data, error } = await supabase.functions.invoke("generate-content", {
-        body: {
-          transcript,
-          tone,
-          audience,
-          brandVoice: brandVoiceData,
-          translateTo: targetLanguage !== "english" ? targetLanguage : null,
-          userId: socialProofUserId,
-        },
+    // 3. Defer heavy work so the browser paints the spinner first
+    setTimeout(async () => {
+      // Track generation started event
+      trackGenerationStarted({
+        hasYoutubeUrl: !!youtubeUrl,
+        transcriptMethod,
+        hasBrandVoice: !!selectedBrandVoice,
+        tone,
+        audience,
+        targetLanguage,
       });
 
-      if (error) {
-        const status = error?.context?.status;
-        const message = typeof error?.message === "string" ? error.message : "";
+      try {
+        // Build brand voice data
+        let brandVoiceData = null;
+        
+        if (selectedBrandVoice) {
+          if (isDefaultVoiceId(selectedBrandVoice)) {
+            const defaultVoice = getDefaultVoiceById(selectedBrandVoice);
+            if (defaultVoice) {
+              brandVoiceData = {
+                name: defaultVoice.name,
+                writingStyle: defaultVoice.description,
+                tone: null,
+                keyPhrases: null,
+                targetAudience: null,
+              };
+            }
+          } else {
+            const selectedVoice = brandVoices?.find(v => v.id === selectedBrandVoice);
+            if (selectedVoice) {
+              brandVoiceData = {
+                name: selectedVoice.name,
+                writingStyle: selectedVoice.writing_style || selectedVoice.description,
+                tone: selectedVoice.tone,
+                keyPhrases: selectedVoice.key_phrases,
+                targetAudience: selectedVoice.target_audience,
+              };
+            }
+          }
+        }
+        
+        const socialProofUserId = includeSocialProof ? user?.id : undefined;
+        console.log("Social Proof toggle:", includeSocialProof, "| userId sent to AI:", socialProofUserId);
 
-        // Project-level AI gateway exhaustion (NOT user credits)
+        const { data, error } = await supabase.functions.invoke("generate-content", {
+          body: {
+            transcript,
+            tone,
+            audience,
+            brandVoice: brandVoiceData,
+            translateTo: targetLanguage !== "english" ? targetLanguage : null,
+            userId: socialProofUserId,
+          },
+        });
+
+        if (error) {
+          const status = error?.context?.status;
+          const message = typeof error?.message === "string" ? error.message : "";
+
+          if (
+            status === 402 ||
+            status === 503 ||
+            message.includes("AI_CREDITS_EXHAUSTED") ||
+            message.toLowerCase().includes("ai credits exhausted")
+          ) {
+            toast({
+              variant: "destructive",
+              title: "AI service credits exhausted",
+              description:
+                "This project's AI service has run out of credits. Please add more credits to resume generating content.",
+            });
+            return;
+          }
+
+          if (message.includes("INSUFFICIENT_CREDITS")) {
+            await refreshCredits();
+            setShowCreditsModal(true);
+            return;
+          }
+
+          throw error;
+        }
+
+        if (data?.error) {
+          if (data.code === "AI_CREDITS_EXHAUSTED" || String(data.error).toLowerCase().includes("ai service credits")) {
+            toast({
+              variant: "destructive",
+              title: "AI service credits exhausted",
+              description:
+                "This project's AI service has run out of credits. Please add more credits to resume generating content.",
+            });
+            return;
+          }
+
+          if (data.code === "INSUFFICIENT_CREDITS" || data.error?.includes("INSUFFICIENT_CREDITS")) {
+            await refreshCredits();
+            setShowCreditsModal(true);
+            return;
+          }
+
+          throw new Error(data.error);
+        }
+
+        setGeneratedContent(data);
+        
+        setTimeout(() => {
+          contentOutputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 100);
+
+        const isDefaultVoice = selectedBrandVoice && isDefaultVoiceId(selectedBrandVoice);
+        const brandVoiceIdForDb = isDefaultVoice ? null : selectedBrandVoice;
+        
+        await supabase.from("generations").insert({
+          user_id: user!.id,
+          youtube_url: youtubeUrl || null,
+          video_title: videoTitle || null,
+          transcript: transcript || null,
+          transcript_method: transcriptMethod || null,
+          brand_voice_id: brandVoiceIdForDb,
+          tone: tone || null,
+          audience: audience || null,
+          twitter_hooks: data.twitterHooks,
+          linkedin_post: data.linkedinPost,
+          short_form_scripts: data.shortFormScripts,
+          blog_post: data.blogPost,
+          target_language: targetLanguage !== "english" ? targetLanguage : null,
+          social_proof_used: includeSocialProof,
+        } as any);
+
+        await useCredit();
+
+        if (youtubeUrl) {
+          await resetFetchCount(youtubeUrl);
+        }
+
+        toast({
+          title: "All assets generated!",
+          description: targetLanguage !== "english"
+            ? `Content created in ${targetLanguage}. Saved to history.`
+            : "Your multi-platform content has been saved to history.",
+        });
+      } catch (error: any) {
+        console.error("Generation error:", error);
+        
+        const status = error?.context?.status;
+        const errorMessage = typeof error?.message === "string" ? error.message : "";
+
         if (
           status === 402 ||
           status === 503 ||
-          message.includes("AI_CREDITS_EXHAUSTED") ||
-          message.toLowerCase().includes("ai credits exhausted")
+          errorMessage.includes("AI_CREDITS_EXHAUSTED") ||
+          errorMessage.toLowerCase().includes("ai credits exhausted")
         ) {
           toast({
             variant: "destructive",
             title: "AI service credits exhausted",
             description:
-              "This project’s AI service has run out of credits. Please add more credits to resume generating content.",
+              "This project's AI service has run out of credits. Please add more credits to resume generating content.",
           });
           return;
         }
 
-        // (Optional) If we ever enforce user credits server-side, handle it explicitly by code.
-        if (message.includes("INSUFFICIENT_CREDITS")) {
+        if (errorMessage.includes("INSUFFICIENT_CREDITS")) {
           await refreshCredits();
           setShowCreditsModal(true);
           return;
         }
-
-        throw error;
-      }
-
-      // Also check for error in data response (edge function might return error in body)
-      if (data?.error) {
-        if (data.code === "AI_CREDITS_EXHAUSTED" || String(data.error).toLowerCase().includes("ai service credits")) {
-          toast({
-            variant: "destructive",
-            title: "AI service credits exhausted",
-            description:
-              "This project’s AI service has run out of credits. Please add more credits to resume generating content.",
-          });
-          return;
-        }
-
-        if (data.code === "INSUFFICIENT_CREDITS" || data.error?.includes("INSUFFICIENT_CREDITS")) {
-          await refreshCredits();
-          setShowCreditsModal(true);
-          return;
-        }
-
-        throw new Error(data.error);
-      }
-
-      setGeneratedContent(data);
-      
-      // Scroll to top of content output after generation
-      setTimeout(() => {
-        contentOutputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 100);
-
-      // Save to history - ensure brand_voice_id is a valid UUID or null
-      // Default voice IDs (like "default_friendly_peer") are not in the database
-      const isDefaultVoice = selectedBrandVoice && isDefaultVoiceId(selectedBrandVoice);
-      const brandVoiceIdForDb = isDefaultVoice ? null : selectedBrandVoice;
-      
-      await supabase.from("generations").insert({
-        user_id: user!.id,
-        youtube_url: youtubeUrl || null,
-        video_title: videoTitle || null,
-        transcript: transcript || null,
-        transcript_method: transcriptMethod || null,
-        brand_voice_id: brandVoiceIdForDb,
-        tone: tone || null,
-        audience: audience || null,
-        twitter_hooks: data.twitterHooks,
-        linkedin_post: data.linkedinPost,
-        short_form_scripts: data.shortFormScripts,
-        blog_post: data.blogPost,
-        target_language: targetLanguage !== "english" ? targetLanguage : null,
-        social_proof_used: includeSocialProof,
-      } as any);
-
-      // Use one credit after successful generation (this also refreshes UI)
-      await useCredit();
-
-      // Reset the fetch counter for this URL — generation resets the "same-video" clock
-      if (youtubeUrl) {
-        await resetFetchCount(youtubeUrl);
-      }
-
-      toast({
-        title: "All assets generated!",
-        description: targetLanguage !== "english"
-          ? `Content created in ${targetLanguage}. Saved to history.`
-          : "Your multi-platform content has been saved to history.",
-      });
-    } catch (error: any) {
-      console.error("Generation error:", error);
-      
-      const status = error?.context?.status;
-      const errorMessage = typeof error?.message === "string" ? error.message : "";
-
-      // Project-level AI gateway exhaustion (NOT user credits)
-      if (
-        status === 402 ||
-        status === 503 ||
-        errorMessage.includes("AI_CREDITS_EXHAUSTED") ||
-        errorMessage.toLowerCase().includes("ai credits exhausted")
-      ) {
+        
         toast({
           variant: "destructive",
-          title: "AI service credits exhausted",
-          description:
-            "This project’s AI service has run out of credits. Please add more credits to resume generating content.",
+          title: "Generation failed",
+          description: errorMessage || "Failed to generate content. Please try again.",
         });
-        return;
+      } finally {
+        setIsGenerating(false);
       }
-
-      if (errorMessage.includes("INSUFFICIENT_CREDITS")) {
-        await refreshCredits();
-        setShowCreditsModal(true);
-        return;
-      }
-      
-      toast({
-        variant: "destructive",
-        title: "Generation failed",
-        description: errorMessage || "Failed to generate content. Please try again.",
-      });
-    } finally {
-      setIsGenerating(false);
-    }
+    }, 0);
   };
 
   const handleUpdateContent = (updated: GeneratedContent) => {
