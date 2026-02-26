@@ -50,6 +50,7 @@ interface YouTubeInputProps {
   isGenerating?: boolean;
   fairUseConfirmed?: boolean;
   setFairUseConfirmed?: (v: boolean) => void;
+  hasPersistedContent?: boolean;
 }
 
 const YOUTUBE_URL_REGEX =
@@ -66,6 +67,7 @@ export function YouTubeInput({
   isGenerating,
   fairUseConfirmed,
   setFairUseConfirmed,
+  hasPersistedContent,
 }: YouTubeInputProps) {
   const [isFetching, setIsFetching] = useState(false);
   const [manualTranscript, setManualTranscript] = useState("");
@@ -305,6 +307,16 @@ export function YouTubeInput({
         <CardDescription>Enter a YouTube URL to extract the transcript</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+
+        {/* Prompt when previous results exist but no transcript loaded yet */}
+        {!transcript && hasPersistedContent && (
+          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-primary/5 border border-primary/10">
+            <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />
+            <p className="text-xs text-muted-foreground">
+              Ready for a new video? Paste a link to start.
+            </p>
+          </div>
+        )}
         
         <div className="space-y-3">
           <Label htmlFor="youtube-url">Logic Bar</Label>
