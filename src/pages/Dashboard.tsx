@@ -37,7 +37,16 @@ function loadPersistedState(): PersistedDashboardState | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as PersistedDashboardState;
+    const parsed = JSON.parse(raw) as PersistedDashboardState;
+    // Only persist generated content and active tab — input state resets on mount
+    return {
+      generatedContent: parsed.generatedContent,
+      youtubeUrl: "",
+      videoTitle: "",
+      transcript: "",
+      transcriptMethod: null,
+      contentActiveTab: parsed.contentActiveTab ?? "twitter",
+    };
   } catch {
     return null;
   }
@@ -434,6 +443,7 @@ export default function Dashboard() {
                     isGenerating={isGenerating}
                     fairUseConfirmed={fairUseConfirmed}
                     setFairUseConfirmed={setFairUseConfirmed}
+                    hasPersistedContent={!!generatedContent}
                   />
                 </div>
                 
