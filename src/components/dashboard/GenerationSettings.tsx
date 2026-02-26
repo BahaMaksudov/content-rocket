@@ -42,6 +42,8 @@ interface GenerationSettingsProps {
   hideGenerateButton?: boolean;
   includeSocialProof?: boolean;
   setIncludeSocialProof?: (value: boolean) => void;
+  fairUseConfirmed?: boolean;
+  setFairUseConfirmed?: (value: boolean) => void;
 }
 
 const tones = [
@@ -74,6 +76,8 @@ export function GenerationSettings({
   hideGenerateButton = false,
   includeSocialProof = false,
   setIncludeSocialProof,
+  fairUseConfirmed: externalFairUse,
+  setFairUseConfirmed: externalSetFairUse,
 }: GenerationSettingsProps) {
   const { isPro, isAgency, isPaid } = useSubscription();
   const { user } = useAuth();
@@ -83,7 +87,9 @@ export function GenerationSettings({
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showCreateVoiceModal, setShowCreateVoiceModal] = useState(false);
   const [showStyleLab, setShowStyleLab] = useState(false);
-  const [fairUseConfirmed, setFairUseConfirmed] = useState(false);
+  const [internalFairUse, setInternalFairUse] = useState(false);
+  const fairUseConfirmed = externalFairUse ?? internalFairUse;
+  const setFairUseConfirmed = externalSetFairUse ?? setInternalFairUse;
 
   const FREE_SOCIAL_PROOF_LIMIT = 2;
 
@@ -389,12 +395,10 @@ export function GenerationSettings({
               <Button
                 onClick={onGenerate}
                 disabled={!hasTranscript || isGenerating || isCreditsExhausted || !fairUseConfirmed}
-                className={`w-full ${
-                  isCreditsExhausted 
-                    ? "bg-muted text-muted-foreground cursor-not-allowed" 
-                    : !fairUseConfirmed
-                      ? "bg-muted text-muted-foreground cursor-not-allowed"
-                      : "gradient-primary text-primary-foreground"
+                className={`w-full transition-all duration-300 ${
+                  isCreditsExhausted || !fairUseConfirmed || !hasTranscript
+                    ? "bg-[rgba(6,182,212,0.1)] text-muted-foreground border-2 border-[#06b6d44d] opacity-100"
+                    : "!bg-[#06b6d4] !text-black font-bold shadow-[0_0_20px_rgba(6,182,212,0.6)]"
                 }`}
                 size="lg"
               >

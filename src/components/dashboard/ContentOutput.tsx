@@ -9,7 +9,7 @@ import { Copy, Check, Edit2, Save, Twitter, Linkedin, Film, FileText, Download, 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { GeneratedContent } from "@/pages/Dashboard";
 import { ImageGenerator } from "./ImageGenerator";
-import { SocialPreview, SocialPreviewToggle } from "./SocialPreview";
+// SocialPreview removed
 import { VoiceGenerator } from "./VoiceGenerator";
 import { trackCopyContent } from "@/lib/posthog";
 import { SocialActionBar } from "./bulk/SocialActionBar";
@@ -20,6 +20,8 @@ interface ContentOutputProps {
   onUpdateContent: (content: GeneratedContent) => void;
   targetLanguage?: string | null;
   youtubeUrl?: string | null;
+  activeTab?: string;
+  onActiveTabChange?: (tab: string) => void;
 }
 
 function CopyButton({ text, contentType, platform }: { text: string; contentType?: string; platform?: string }) {
@@ -106,10 +108,11 @@ function EditableContent({
   );
 }
 
-export function ContentOutput({ content, isGenerating, onUpdateContent, targetLanguage, youtubeUrl }: ContentOutputProps) {
+export function ContentOutput({ content, isGenerating, onUpdateContent, targetLanguage, youtubeUrl, activeTab: externalActiveTab, onActiveTabChange }: ContentOutputProps) {
   const { toast } = useToast();
-  const [showPreview, setShowPreview] = useState(false);
-  const [activeTab, setActiveTab] = useState("twitter");
+  const [internalActiveTab, setInternalActiveTab] = useState("twitter");
+  const activeTab = externalActiveTab ?? internalActiveTab;
+  const setActiveTab = onActiveTabChange ?? setInternalActiveTab;
   const [generatedImages, setGeneratedImages] = useState<Record<string, string>>({});
 
   const handleImageGenerated = (platform: string, imageUrl: string) => {
@@ -160,21 +163,7 @@ ${content.blogPost}
     toast({ title: "Content exported!", description: "Downloaded as Markdown file." });
   };
 
-  if (isGenerating) {
-    return (
-      <Card className="border-border bg-card h-full flex items-center justify-center min-h-[500px]">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
-          <div>
-            <p className="font-medium">Generating all platform assets...</p>
-            <p className="text-sm text-muted-foreground">Creating X hooks, LinkedIn post, TikTok scripts, and blog post</p>
-          </div>
-        </div>
-      </Card>
-    );
-  }
-
-  if (!content) {
+  if (!content && !isGenerating) {
     return (
       <Card className="border-border bg-card h-full flex items-center justify-center min-h-[500px]">
         <div className="text-center space-y-2 p-8">
@@ -190,22 +179,42 @@ ${content.blogPost}
     );
   }
 
-  const currentPlatform = activeTab as "twitter" | "linkedin" | "shorts" | "blog";
+  if (!content && isGenerating) {
+    return (
+      <Card className="border-border bg-card relative overflow-hidden min-h-[500px]">
+        <div className="absolute inset-0 z-50 flex items-start justify-center pt-24 bg-background/80 backdrop-blur-sm rounded-[inherit]">
+          <div className="text-center space-y-4">
+            <Loader2 className="h-14 w-14 animate-spin text-primary mx-auto" />
+            <div>
+              <p className="font-medium text-lg">Generating all platform assets...</p>
+              <p className="text-sm text-muted-foreground">Creating X hooks, LinkedIn post, TikTok scripts, and blog post</p>
+            </div>
+          </div>
+        </div>
+      </Card>
+    );
+  }
 
   return (
-    <Card className="border-border bg-card">
+    <Card className="border-border bg-card relative overflow-hidden">
+      {/* Generating overlay */}
+      {isGenerating && (
+        <div className="absolute inset-0 z-50 flex items-start justify-center pt-24 bg-background/80 backdrop-blur-sm rounded-[inherit]">
+          <div className="text-center space-y-4">
+            <Loader2 className="h-14 w-14 animate-spin text-primary mx-auto" />
+            <div>
+              <p className="font-medium text-lg">Generating all platform assets...</p>
+              <p className="text-sm text-muted-foreground">Creating X hooks, LinkedIn post, TikTok scripts, and blog post</p>
+            </div>
+          </div>
+        </div>
+      )}
       <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
         <CardTitle>Generated Content</CardTitle>
-        <div className="flex items-center gap-2">
-          <SocialPreviewToggle 
-            showPreview={showPreview} 
-            onToggle={() => setShowPreview(!showPreview)} 
-          />
-          <Button onClick={handleExportAll} variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Export All
-          </Button>
-        </div>
+        <Button onClick={handleExportAll} variant="outline" size="sm">
+          <Download className="h-4 w-4 mr-2" />
+          Export All
+        </Button>
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -213,7 +222,14 @@ ${content.blogPost}
             <TabsList className="grid grid-cols-4 mb-4">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="twitter" className="flex items-center gap-1">
+                  <TabsTrigger
+                    value="twitter"
+                    className={`flex items-center gap-1 rounded-lg transition-all duration-200 ${
+                      activeTab === "twitter"
+                        ? "bg-cyan-500 text-slate-950 shadow-[0_0_15px_rgba(6,182,212,0.4)]"
+                        : "bg-slate-800/50 text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
                     <Twitter className="h-4 w-4" />
                     <span className="hidden sm:inline">X Hooks</span>
                   </TabsTrigger>
@@ -222,7 +238,14 @@ ${content.blogPost}
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="linkedin" className="flex items-center gap-1">
+                  <TabsTrigger
+                    value="linkedin"
+                    className={`flex items-center gap-1 rounded-lg transition-all duration-200 ${
+                      activeTab === "linkedin"
+                        ? "bg-cyan-500 text-slate-950 shadow-[0_0_15px_rgba(6,182,212,0.4)]"
+                        : "bg-slate-800/50 text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
                     <Linkedin className="h-4 w-4" />
                     <span className="hidden sm:inline">LinkedIn</span>
                   </TabsTrigger>
@@ -231,7 +254,14 @@ ${content.blogPost}
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="shorts" className="flex items-center gap-1">
+                  <TabsTrigger
+                    value="shorts"
+                    className={`flex items-center gap-1 rounded-lg transition-all duration-200 ${
+                      activeTab === "shorts"
+                        ? "bg-cyan-500 text-slate-950 shadow-[0_0_15px_rgba(6,182,212,0.4)]"
+                        : "bg-slate-800/50 text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
                     <Film className="h-4 w-4" />
                     <span className="hidden sm:inline">Scripts</span>
                   </TabsTrigger>
@@ -240,7 +270,14 @@ ${content.blogPost}
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="blog" className="flex items-center gap-1">
+                  <TabsTrigger
+                    value="blog"
+                    className={`flex items-center gap-1 rounded-lg transition-all duration-200 ${
+                      activeTab === "blog"
+                        ? "bg-cyan-500 text-slate-950 shadow-[0_0_15px_rgba(6,182,212,0.4)]"
+                        : "bg-slate-800/50 text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
                     <FileText className="h-4 w-4" />
                     <span className="hidden sm:inline">Blog</span>
                   </TabsTrigger>
@@ -249,13 +286,6 @@ ${content.blogPost}
               </Tooltip>
             </TabsList>
           </TooltipProvider>
-
-          {/* Social Preview */}
-          {showPreview && currentPlatform !== "blog" && (
-            <div className="mb-4">
-              <SocialPreview content={content} platform={currentPlatform} />
-            </div>
-          )}
 
           <TabsContent value="twitter" className="space-y-3">
             <div className="mb-4">

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -22,6 +22,42 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Video, Layers, Lock } from "lucide-react";
 import { TopTestimonialsWidget } from "@/components/social-proof/TopTestimonialsWidget";
 
+const STORAGE_KEY = "vidlogic_dashboard_state";
+
+interface PersistedDashboardState {
+  generatedContent: GeneratedContent | null;
+  youtubeUrl: string;
+  videoTitle: string;
+  transcript: string;
+  transcriptMethod: "auto" | "manual" | null;
+  contentActiveTab: string;
+}
+
+function loadPersistedState(): PersistedDashboardState | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PersistedDashboardState;
+    // Only persist generated content and active tab — input state resets on mount
+    return {
+      generatedContent: parsed.generatedContent,
+      youtubeUrl: "",
+      videoTitle: "",
+      transcript: "",
+      transcriptMethod: null,
+      contentActiveTab: parsed.contentActiveTab ?? "twitter",
+    };
+  } catch {
+    return null;
+  }
+}
+
+function savePersistedState(state: PersistedDashboardState) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch { /* quota exceeded – ignore */ }
+}
+
 export interface GeneratedContent {
   twitterHooks: string[];
   linkedinPost: string;
@@ -34,21 +70,43 @@ export default function Dashboard() {
   const { openCheckout, loading: subscriptionLoading, isAgency } = useSubscription();
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [transcript, setTranscript] = useState("");
-  const [transcriptMethod, setTranscriptMethod] = useState<"auto" | "manual" | null>(null);
-  const [videoTitle, setVideoTitle] = useState("");
-  const [youtubeUrl, setYoutubeUrl] = useState("");
+
+  // Restore persisted state on mount
+  const persisted = useRef(loadPersistedState());
+
+  const [transcript, setTranscript] = useState(persisted.current?.transcript ?? "");
+  const [transcriptMethod, setTranscriptMethod] = useState<"auto" | "manual" | null>(persisted.current?.transcriptMethod ?? null);
+  const [videoTitle, setVideoTitle] = useState(persisted.current?.videoTitle ?? "");
+  const [youtubeUrl, setYoutubeUrl] = useState(persisted.current?.youtubeUrl ?? "");
   // Default to "The Friendly Peer" preset
   const [selectedBrandVoice, setSelectedBrandVoice] = useState<string | null>("default_friendly_peer");
   const [tone, setTone] = useState("professional");
   const [audience, setAudience] = useState("general");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null);
+  const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(persisted.current?.generatedContent ?? null);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
   const [showBulkUpgradeModal, setShowBulkUpgradeModal] = useState(false);
   const [upgradeProcessed, setUpgradeProcessed] = useState(false);
   const [activeTab, setActiveTab] = useState<"single" | "bulk">("single");
   const [includeSocialProof, setIncludeSocialProof] = useState(false);
+  const [fairUseConfirmed, setFairUseConfirmed] = useState(false);
+  const [contentActiveTab, setContentActiveTab] = useState(persisted.current?.contentActiveTab ?? "twitter");
+
+  // Persist state whenever generated content or active content tab changes
+  const persistState = useCallback(() => {
+    savePersistedState({
+      generatedContent,
+      youtubeUrl,
+      videoTitle,
+      transcript,
+      transcriptMethod,
+      contentActiveTab,
+    });
+  }, [generatedContent, youtubeUrl, videoTitle, transcript, transcriptMethod, contentActiveTab]);
+
+  useEffect(() => {
+    persistState();
+  }, [persistState]);
 
   // One-time backfill so Billing shows historical invoices (e.g. Feb 1) even if the webhook
   // wasn't configured at the time of payment.
@@ -114,13 +172,20 @@ export default function Dashboard() {
   });
 
   const handleTranscriptFetched = (text: string, method: "auto" | "manual", title?: string) => {
+    // Clear previous generated content when fetching a new transcript
+    setGeneratedContent(null);
+    setContentActiveTab("twitter");
     setTranscript(text);
     setTranscriptMethod(method);
     if (title) setVideoTitle(title);
   };
 
-  const handleGenerate = async () => {
+  const handleGenerate = () => {
+    // 1) Set loading state first so overlay can render immediately
+    setIsGenerating(true);
+
     if (!transcript) {
+      setIsGenerating(false);
       toast({
         variant: "destructive",
         title: "No transcript",
@@ -131,199 +196,195 @@ export default function Dashboard() {
 
     // Check if user can generate (credit check)
     if (!canUseCredits) {
+      setIsGenerating(false);
       setShowCreditsModal(true);
       return;
     }
 
+    // 1. Show spinner immediately
     setIsGenerating(true);
-    
-    // Track generation started event
-    trackGenerationStarted({
-      hasYoutubeUrl: !!youtubeUrl,
-      transcriptMethod,
-      hasBrandVoice: !!selectedBrandVoice,
-      tone,
-      audience,
-      targetLanguage,
-    });
 
-    try {
-      // Build brand voice data - check if it's a default voice or user voice
-      let brandVoiceData = null;
-      
-      if (selectedBrandVoice) {
-        if (isDefaultVoiceId(selectedBrandVoice)) {
-          // Use the default voice description
-          const defaultVoice = getDefaultVoiceById(selectedBrandVoice);
-          if (defaultVoice) {
-            brandVoiceData = {
-              name: defaultVoice.name,
-              writingStyle: defaultVoice.description, // The full description becomes the writing style
-              tone: null,
-              keyPhrases: null,
-              targetAudience: null,
-            };
-          }
-        } else {
-          // Use the user's custom voice from database
-          const selectedVoice = brandVoices?.find(v => v.id === selectedBrandVoice);
-          if (selectedVoice) {
-            brandVoiceData = {
-              name: selectedVoice.name,
-              writingStyle: selectedVoice.writing_style || selectedVoice.description,
-              tone: selectedVoice.tone,
-              keyPhrases: selectedVoice.key_phrases,
-              targetAudience: selectedVoice.target_audience,
-            };
-          }
-        }
-      }
-      
-      // Log social proof toggle state for debugging
-      const socialProofUserId = includeSocialProof ? user?.id : undefined;
-      console.log("Social Proof toggle:", includeSocialProof, "| userId sent to AI:", socialProofUserId);
+    // 2. Scroll to content panel right away
+    contentOutputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 
-      const { data, error } = await supabase.functions.invoke("generate-content", {
-        body: {
-          transcript,
-          tone,
-          audience,
-          brandVoice: brandVoiceData,
-          translateTo: targetLanguage !== "english" ? targetLanguage : null,
-          userId: socialProofUserId,
-        },
+    // 3. Defer heavy work so the browser paints the spinner first
+    setTimeout(async () => {
+      // Track generation started event
+      trackGenerationStarted({
+        hasYoutubeUrl: !!youtubeUrl,
+        transcriptMethod,
+        hasBrandVoice: !!selectedBrandVoice,
+        tone,
+        audience,
+        targetLanguage,
       });
 
-      if (error) {
-        const status = error?.context?.status;
-        const message = typeof error?.message === "string" ? error.message : "";
+      try {
+        // Build brand voice data
+        let brandVoiceData = null;
+        
+        if (selectedBrandVoice) {
+          if (isDefaultVoiceId(selectedBrandVoice)) {
+            const defaultVoice = getDefaultVoiceById(selectedBrandVoice);
+            if (defaultVoice) {
+              brandVoiceData = {
+                name: defaultVoice.name,
+                writingStyle: defaultVoice.description,
+                tone: null,
+                keyPhrases: null,
+                targetAudience: null,
+              };
+            }
+          } else {
+            const selectedVoice = brandVoices?.find(v => v.id === selectedBrandVoice);
+            if (selectedVoice) {
+              brandVoiceData = {
+                name: selectedVoice.name,
+                writingStyle: selectedVoice.writing_style || selectedVoice.description,
+                tone: selectedVoice.tone,
+                keyPhrases: selectedVoice.key_phrases,
+                targetAudience: selectedVoice.target_audience,
+              };
+            }
+          }
+        }
+        
+        const socialProofUserId = includeSocialProof ? user?.id : undefined;
+        console.log("Social Proof toggle:", includeSocialProof, "| userId sent to AI:", socialProofUserId);
 
-        // Project-level AI gateway exhaustion (NOT user credits)
+        const { data, error } = await supabase.functions.invoke("generate-content", {
+          body: {
+            transcript,
+            tone,
+            audience,
+            brandVoice: brandVoiceData,
+            translateTo: targetLanguage !== "english" ? targetLanguage : null,
+            userId: socialProofUserId,
+          },
+        });
+
+        if (error) {
+          const status = error?.context?.status;
+          const message = typeof error?.message === "string" ? error.message : "";
+
+          if (
+            status === 402 ||
+            status === 503 ||
+            message.includes("AI_CREDITS_EXHAUSTED") ||
+            message.toLowerCase().includes("ai credits exhausted")
+          ) {
+            toast({
+              variant: "destructive",
+              title: "AI service credits exhausted",
+              description:
+                "This project's AI service has run out of credits. Please add more credits to resume generating content.",
+            });
+            return;
+          }
+
+          if (message.includes("INSUFFICIENT_CREDITS")) {
+            await refreshCredits();
+            setShowCreditsModal(true);
+            return;
+          }
+
+          throw error;
+        }
+
+        if (data?.error) {
+          if (data.code === "AI_CREDITS_EXHAUSTED" || String(data.error).toLowerCase().includes("ai service credits")) {
+            toast({
+              variant: "destructive",
+              title: "AI service credits exhausted",
+              description:
+                "This project's AI service has run out of credits. Please add more credits to resume generating content.",
+            });
+            return;
+          }
+
+          if (data.code === "INSUFFICIENT_CREDITS" || data.error?.includes("INSUFFICIENT_CREDITS")) {
+            await refreshCredits();
+            setShowCreditsModal(true);
+            return;
+          }
+
+          throw new Error(data.error);
+        }
+
+        setGeneratedContent(data);
+        
+        setTimeout(() => {
+          contentOutputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 100);
+
+        const isDefaultVoice = selectedBrandVoice && isDefaultVoiceId(selectedBrandVoice);
+        const brandVoiceIdForDb = isDefaultVoice ? null : selectedBrandVoice;
+        
+        await supabase.from("generations").insert({
+          user_id: user!.id,
+          youtube_url: youtubeUrl || null,
+          video_title: videoTitle || null,
+          transcript: transcript || null,
+          transcript_method: transcriptMethod || null,
+          brand_voice_id: brandVoiceIdForDb,
+          tone: tone || null,
+          audience: audience || null,
+          twitter_hooks: data.twitterHooks,
+          linkedin_post: data.linkedinPost,
+          short_form_scripts: data.shortFormScripts,
+          blog_post: data.blogPost,
+          target_language: targetLanguage !== "english" ? targetLanguage : null,
+          social_proof_used: includeSocialProof,
+        } as any);
+
+        await useCredit();
+
+        if (youtubeUrl) {
+          await resetFetchCount(youtubeUrl);
+        }
+
+        toast({
+          title: "All assets generated!",
+          description: targetLanguage !== "english"
+            ? `Content created in ${targetLanguage}. Saved to history.`
+            : "Your multi-platform content has been saved to history.",
+        });
+      } catch (error: any) {
+        console.error("Generation error:", error);
+        
+        const status = error?.context?.status;
+        const errorMessage = typeof error?.message === "string" ? error.message : "";
+
         if (
           status === 402 ||
           status === 503 ||
-          message.includes("AI_CREDITS_EXHAUSTED") ||
-          message.toLowerCase().includes("ai credits exhausted")
+          errorMessage.includes("AI_CREDITS_EXHAUSTED") ||
+          errorMessage.toLowerCase().includes("ai credits exhausted")
         ) {
           toast({
             variant: "destructive",
             title: "AI service credits exhausted",
             description:
-              "This project’s AI service has run out of credits. Please add more credits to resume generating content.",
+              "This project's AI service has run out of credits. Please add more credits to resume generating content.",
           });
           return;
         }
 
-        // (Optional) If we ever enforce user credits server-side, handle it explicitly by code.
-        if (message.includes("INSUFFICIENT_CREDITS")) {
+        if (errorMessage.includes("INSUFFICIENT_CREDITS")) {
           await refreshCredits();
           setShowCreditsModal(true);
           return;
         }
-
-        throw error;
-      }
-
-      // Also check for error in data response (edge function might return error in body)
-      if (data?.error) {
-        if (data.code === "AI_CREDITS_EXHAUSTED" || String(data.error).toLowerCase().includes("ai service credits")) {
-          toast({
-            variant: "destructive",
-            title: "AI service credits exhausted",
-            description:
-              "This project’s AI service has run out of credits. Please add more credits to resume generating content.",
-          });
-          return;
-        }
-
-        if (data.code === "INSUFFICIENT_CREDITS" || data.error?.includes("INSUFFICIENT_CREDITS")) {
-          await refreshCredits();
-          setShowCreditsModal(true);
-          return;
-        }
-
-        throw new Error(data.error);
-      }
-
-      setGeneratedContent(data);
-      
-      // Scroll to top of content output after generation
-      setTimeout(() => {
-        contentOutputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 100);
-
-      // Save to history - ensure brand_voice_id is a valid UUID or null
-      // Default voice IDs (like "default_friendly_peer") are not in the database
-      const isDefaultVoice = selectedBrandVoice && isDefaultVoiceId(selectedBrandVoice);
-      const brandVoiceIdForDb = isDefaultVoice ? null : selectedBrandVoice;
-      
-      await supabase.from("generations").insert({
-        user_id: user!.id,
-        youtube_url: youtubeUrl || null,
-        video_title: videoTitle || null,
-        transcript: transcript || null,
-        transcript_method: transcriptMethod || null,
-        brand_voice_id: brandVoiceIdForDb,
-        tone: tone || null,
-        audience: audience || null,
-        twitter_hooks: data.twitterHooks,
-        linkedin_post: data.linkedinPost,
-        short_form_scripts: data.shortFormScripts,
-        blog_post: data.blogPost,
-        target_language: targetLanguage !== "english" ? targetLanguage : null,
-        social_proof_used: includeSocialProof,
-      } as any);
-
-      // Use one credit after successful generation (this also refreshes UI)
-      await useCredit();
-
-      // Reset the fetch counter for this URL — generation resets the "same-video" clock
-      if (youtubeUrl) {
-        await resetFetchCount(youtubeUrl);
-      }
-
-      toast({
-        title: "All assets generated!",
-        description: targetLanguage !== "english"
-          ? `Content created in ${targetLanguage}. Saved to history.`
-          : "Your multi-platform content has been saved to history.",
-      });
-    } catch (error: any) {
-      console.error("Generation error:", error);
-      
-      const status = error?.context?.status;
-      const errorMessage = typeof error?.message === "string" ? error.message : "";
-
-      // Project-level AI gateway exhaustion (NOT user credits)
-      if (
-        status === 402 ||
-        status === 503 ||
-        errorMessage.includes("AI_CREDITS_EXHAUSTED") ||
-        errorMessage.toLowerCase().includes("ai credits exhausted")
-      ) {
+        
         toast({
           variant: "destructive",
-          title: "AI service credits exhausted",
-          description:
-            "This project’s AI service has run out of credits. Please add more credits to resume generating content.",
+          title: "Generation failed",
+          description: errorMessage || "Failed to generate content. Please try again.",
         });
-        return;
+      } finally {
+        setIsGenerating(false);
       }
-
-      if (errorMessage.includes("INSUFFICIENT_CREDITS")) {
-        await refreshCredits();
-        setShowCreditsModal(true);
-        return;
-      }
-      
-      toast({
-        variant: "destructive",
-        title: "Generation failed",
-        description: errorMessage || "Failed to generate content. Please try again.",
-      });
-    } finally {
-      setIsGenerating(false);
-    }
+    }, 0);
   };
 
   const handleUpdateContent = (updated: GeneratedContent) => {
@@ -378,7 +439,11 @@ export default function Dashboard() {
                     transcriptMethod={transcriptMethod}
                     youtubeUrl={youtubeUrl}
                     setYoutubeUrl={setYoutubeUrl}
-                    
+                    onGenerate={handleGenerate}
+                    isGenerating={isGenerating}
+                    fairUseConfirmed={fairUseConfirmed}
+                    setFairUseConfirmed={setFairUseConfirmed}
+                    hasPersistedContent={!!generatedContent}
                   />
                 </div>
                 
@@ -397,6 +462,8 @@ export default function Dashboard() {
                   setTargetLanguage={setTargetLanguage}
                   includeSocialProof={includeSocialProof}
                   setIncludeSocialProof={setIncludeSocialProof}
+                  fairUseConfirmed={fairUseConfirmed}
+                  setFairUseConfirmed={setFairUseConfirmed}
                 />
 
                 {/* Social Proof Widget */}
@@ -411,6 +478,8 @@ export default function Dashboard() {
                   onUpdateContent={handleUpdateContent}
                   targetLanguage={targetLanguage !== "english" ? targetLanguage : null}
                   youtubeUrl={youtubeUrl || null}
+                  activeTab={contentActiveTab}
+                  onActiveTabChange={setContentActiveTab}
                 />
               </div>
             </div>

@@ -57,6 +57,7 @@ export default function History() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [selectedGeneration, setSelectedGeneration] = useState<Generation | null>(null);
+  const [historyTab, setHistoryTab] = useState("twitter");
 
   const { data: generations, isLoading, refetch } = useQuery({
     queryKey: ["generations", user?.id],
@@ -174,30 +175,30 @@ export default function History() {
             </DialogHeader>
 
             {selectedGeneration && (
-              <Tabs defaultValue="twitter" className="w-full">
+              <Tabs defaultValue="twitter" onValueChange={(v) => setHistoryTab(v)} className="w-full">
                 <TooltipProvider>
                   <TabsList className="grid grid-cols-4 mb-4">
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <TabsTrigger value="twitter"><Twitter className="h-4 w-4" /></TabsTrigger>
+                        <TabsTrigger value="twitter" className={`rounded-lg transition-all duration-200 ${historyTab === "twitter" ? "bg-cyan-500 text-slate-950 shadow-[0_0_15px_rgba(6,182,212,0.4)]" : "bg-slate-800/50 text-slate-400 hover:text-slate-200"}`}><Twitter className="h-4 w-4" /></TabsTrigger>
                       </TooltipTrigger>
                       <TooltipContent>X Thread</TooltipContent>
                     </Tooltip>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <TabsTrigger value="linkedin"><Linkedin className="h-4 w-4" /></TabsTrigger>
+                        <TabsTrigger value="linkedin" className={`rounded-lg transition-all duration-200 ${historyTab === "linkedin" ? "bg-cyan-500 text-slate-950 shadow-[0_0_15px_rgba(6,182,212,0.4)]" : "bg-slate-800/50 text-slate-400 hover:text-slate-200"}`}><Linkedin className="h-4 w-4" /></TabsTrigger>
                       </TooltipTrigger>
                       <TooltipContent>LinkedIn Post</TooltipContent>
                     </Tooltip>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <TabsTrigger value="shorts"><Film className="h-4 w-4" /></TabsTrigger>
+                        <TabsTrigger value="shorts" className={`rounded-lg transition-all duration-200 ${historyTab === "shorts" ? "bg-cyan-500 text-slate-950 shadow-[0_0_15px_rgba(6,182,212,0.4)]" : "bg-slate-800/50 text-slate-400 hover:text-slate-200"}`}><Film className="h-4 w-4" /></TabsTrigger>
                       </TooltipTrigger>
                       <TooltipContent>TikTok Script</TooltipContent>
                     </Tooltip>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <TabsTrigger value="blog"><FileText className="h-4 w-4" /></TabsTrigger>
+                        <TabsTrigger value="blog" className={`rounded-lg transition-all duration-200 ${historyTab === "blog" ? "bg-cyan-500 text-slate-950 shadow-[0_0_15px_rgba(6,182,212,0.4)]" : "bg-slate-800/50 text-slate-400 hover:text-slate-200"}`}><FileText className="h-4 w-4" /></TabsTrigger>
                       </TooltipTrigger>
                       <TooltipContent>SEO Blog Post</TooltipContent>
                     </Tooltip>
