@@ -319,53 +319,49 @@ export function YouTubeInput({
           </div>
         )}
         
-        <div className="space-y-3">
-          <Label htmlFor="youtube-url">Logic Bar</Label>
-          {/* Logic Bar: single sleek input with Generate button inside */}
-          <div className="relative flex items-center w-full rounded-xl border border-border bg-muted/30 focus-within:border-primary/60 focus-within:ring-1 focus-within:ring-primary/30 transition-all">
-            <Link2 className="absolute left-4 h-4 w-4 text-muted-foreground shrink-0 pointer-events-none" />
-            <input
-              id="youtube-url"
-              type="url"
-              placeholder="Paste a YouTube URL to analyze..."
-              value={youtubeUrl}
-              onChange={(e) => handleUrlChange(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && isValidUrl && !isFetching && handleFetchTranscript()}
-              className="flex-1 bg-transparent text-sm pl-10 pr-2 py-3 focus:outline-none text-foreground placeholder:text-muted-foreground"
-            />
-            <div className="pr-2 shrink-0">
-              <Button
-                onClick={handleFetchTranscript}
-                disabled={!isValidUrl || isFetching}
-                size="sm"
-                className="gradient-primary text-primary-foreground btn-glow h-8 px-3 gap-1.5"
-              >
-                {isFetching ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <>
-                    <Sparkles className="h-3.5 w-3.5" />
-                    <span className="text-xs font-medium">Fetch</span>
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-          {youtubeUrl && !isValidUrl && <p className="text-sm text-destructive">Please enter a valid YouTube URL</p>}
-          {/* Preview button below */}
-          <div className="flex gap-2">
+        {/* URL input */}
+        <div className="relative flex items-center w-full rounded-xl border border-border bg-muted/30 focus-within:border-primary/60 focus-within:ring-1 focus-within:ring-primary/30 transition-all">
+          <Link2 className="absolute left-4 h-4 w-4 text-muted-foreground shrink-0 pointer-events-none" />
+          <input
+            id="youtube-url"
+            type="url"
+            placeholder="Paste a YouTube URL to analyze..."
+            value={youtubeUrl}
+            onChange={(e) => handleUrlChange(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && isValidUrl && !isFetching && handleFetchTranscript()}
+            className="flex-1 bg-transparent text-sm pl-10 pr-2 py-3 focus:outline-none text-foreground placeholder:text-muted-foreground"
+          />
+          <div className="pr-2 shrink-0">
             <Button
-              onClick={() => setShowPreviewModal(true)}
-              disabled={!transcript}
-              variant="outline"
+              onClick={handleFetchTranscript}
+              disabled={!isValidUrl || isFetching}
               size="sm"
-              className="shrink-0"
+              className="gradient-primary text-primary-foreground btn-glow h-8 px-3 gap-1.5"
             >
-              <Eye className="h-4 w-4 mr-1" />
-              Preview Transcript
+              {isFetching ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <>
+                  <Sparkles className="h-3.5 w-3.5" />
+                  <span className="text-xs font-medium">Fetch</span>
+                </>
+              )}
             </Button>
           </div>
         </div>
+        {youtubeUrl && !isValidUrl && <p className="text-sm text-destructive">Please enter a valid YouTube URL</p>}
+
+        {/* Preview button */}
+        <Button
+          onClick={() => setShowPreviewModal(true)}
+          disabled={!transcript}
+          variant="outline"
+          size="sm"
+          className="shrink-0"
+        >
+          <Eye className="h-4 w-4 mr-1" />
+          Preview Transcript
+        </Button>
 
         {/* Advertisement Warning */}
         {adWarning && (
@@ -386,9 +382,9 @@ export function YouTubeInput({
           </div>
         )}
 
-        {/* Fair Use + Generate — always visible */}
+        {/* Fair Use + Generate — always visible, never conditionally removed */}
         {onGenerate && setFairUseConfirmed && (
-          <div className="p-3 rounded-lg border border-border bg-muted/20 space-y-3">
+          <div className="space-y-3">
             <div className="flex items-center gap-2.5">
               <Checkbox
                 id="fair-use-quick"
@@ -403,41 +399,28 @@ export function YouTubeInput({
                 I confirm this usage falls under Fair Use (Commentary/Education).
               </Label>
             </div>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="w-full inline-block">
-                    <Button
-                      onClick={onGenerate}
-                      disabled={isGenerating || !fairUseConfirmed || !transcript}
-                      size="sm"
-                      className={`w-full transition-all duration-300 ${
-                        fairUseConfirmed && transcript
-                          ? "bg-primary text-primary-foreground shadow-[0_0_15px_rgba(6,182,212,0.5)] opacity-100 font-bold"
-                          : "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
-                      }`}
-                    >
-                      {isGenerating ? (
-                        <>
-                          <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
-                          Generating...
-                        </>
-                      ) : (
-                        <>
-                          <Rocket className="h-3.5 w-3.5 mr-1.5" />
-                          Generate All Assets
-                        </>
-                      )}
-                    </Button>
-                  </span>
-                </TooltipTrigger>
-                {(!transcript || !fairUseConfirmed) && (
-                  <TooltipContent>
-                    <p>Please fetch a video and confirm Fair Use to generate.</p>
-                  </TooltipContent>
-                )}
-              </Tooltip>
-            </TooltipProvider>
+            <Button
+              onClick={onGenerate}
+              disabled={isGenerating || !fairUseConfirmed || !transcript}
+              size="sm"
+              className={`w-full transition-all duration-300 ${
+                fairUseConfirmed && transcript
+                  ? "!bg-[#06b6d4] !text-black font-bold shadow-[0_0_20px_rgba(6,182,212,0.6)]"
+                  : "bg-[rgba(6,182,212,0.1)] text-muted-foreground border-2 border-[#06b6d44d] opacity-100"
+              }`}
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Rocket className="h-3.5 w-3.5 mr-1.5" />
+                  Generate All Assets
+                </>
+              )}
+            </Button>
           </div>
         )}
 
