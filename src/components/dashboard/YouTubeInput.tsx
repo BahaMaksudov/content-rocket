@@ -388,8 +388,34 @@ export function YouTubeInput({
 
         {/* Fair Use + Generate — always visible */}
         {onGenerate && setFairUseConfirmed && (
-          <div className="p-3 rounded-lg border border-border bg-muted/20 space-y-2.5">
+          <div
+            className={`p-4 rounded-lg space-y-3 transition-all duration-300 ${
+              transcript
+                ? "border border-primary/30 bg-muted/40"
+                : "border border-border bg-muted/20"
+            }`}
+          >
+            {/* Hint: nudge user to confirm fair use */}
+            {transcript && !fairUseConfirmed && (
+              <div className="flex items-center gap-2 animate-fade-in">
+                <span className="relative flex h-2.5 w-2.5 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary" />
+                </span>
+                <p className="text-xs font-medium text-primary">
+                  Confirm Fair Use to start generating.
+                </p>
+              </div>
+            )}
+
             <div className="flex items-center gap-2.5">
+              {/* Pulsing cyan dot when transcript loaded but toggle unchecked */}
+              {transcript && !fairUseConfirmed && (
+                <span className="relative flex h-2 w-2 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
+                </span>
+              )}
               <Checkbox
                 id="fair-use-quick"
                 checked={fairUseConfirmed}
@@ -398,7 +424,9 @@ export function YouTubeInput({
               />
               <Label
                 htmlFor="fair-use-quick"
-                className="text-xs text-muted-foreground cursor-pointer leading-tight"
+                className={`text-xs cursor-pointer leading-tight transition-colors ${
+                  transcript ? "text-foreground font-medium" : "text-muted-foreground"
+                }`}
               >
                 I confirm this usage falls under Fair Use (Commentary/Education).
               </Label>
@@ -411,10 +439,10 @@ export function YouTubeInput({
                       onClick={onGenerate}
                       disabled={isGenerating || !fairUseConfirmed || !transcript}
                       size="sm"
-                      className={`w-full ${
+                      className={`w-full transition-all duration-300 ${
                         !fairUseConfirmed || !transcript
-                          ? "bg-muted text-muted-foreground cursor-not-allowed"
-                          : "gradient-primary text-primary-foreground"
+                          ? "bg-muted text-muted-foreground cursor-not-allowed opacity-60"
+                          : "gradient-primary text-primary-foreground shadow-[0_0_20px_rgba(6,182,212,0.45)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] hover:scale-[1.02]"
                       }`}
                     >
                       {isGenerating ? (
