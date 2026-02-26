@@ -530,16 +530,16 @@ function DemoSection() {
             className="absolute -inset-4 rounded-3xl opacity-40 blur-2xl"
             style={{ background: "radial-gradient(ellipse at center, hsl(var(--primary) / 0.3), transparent 70%)" }}
           />
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="relative w-full rounded-2xl border border-white/10 shadow-2xl shadow-primary/10"
-            style={{ backgroundColor: "hsl(var(--background))" }}
-          >
-            <source src="/videos/VidLogicAI_Demo.mp4" type="video/mp4" />
-          </video>
+          <div className="relative w-full rounded-xl overflow-hidden shadow-[0_0_20px_rgba(6,182,212,0.3)] border border-white/10" style={{ aspectRatio: "16 / 9" }}>
+            <iframe
+              src="https://www.youtube.com/embed/nrQTqTrKqBM?rel=0"
+              title="VidLogic AI Demo"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              loading="lazy"
+              className="absolute inset-0 w-full h-full"
+            />
+          </div>
         </motion.div>
       </div>
     </section>
