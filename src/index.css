@@ -222,6 +222,23 @@
     transition: transform 0.1s ease;
   }
 
+  /* Fix browser autofill white background on dark theme */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0px 1000px hsl(222 47% 13%) inset !important;
+    -webkit-text-fill-color: hsl(210 40% 98%) !important;
+    transition: background-color 5000s ease-in-out 0s;
+    border-color: hsl(var(--border)) !important;
+    caret-color: hsl(210 40% 98%);
+  }
+
+  input:-webkit-autofill::first-line {
+    font-size: inherit;
+    font-family: inherit;
+  }
+
   /* Remove hover effects on touch devices */
   @media (hover: none) and (pointer: coarse) {
     .hover\:bg-accent:hover,
