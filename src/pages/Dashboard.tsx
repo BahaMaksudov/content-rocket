@@ -80,6 +80,7 @@ export default function Dashboard() {
   const [upgradeProcessed, setUpgradeProcessed] = useState(false);
   const [activeTab, setActiveTab] = useState<"single" | "bulk">("single");
   const [includeSocialProof, setIncludeSocialProof] = useState(false);
+  const [fairUseConfirmed, setFairUseConfirmed] = useState(false);
   const [contentActiveTab, setContentActiveTab] = useState(persisted.current?.contentActiveTab ?? "twitter");
 
   // Persist state whenever generated content or active content tab changes
@@ -429,7 +430,10 @@ export default function Dashboard() {
                     transcriptMethod={transcriptMethod}
                     youtubeUrl={youtubeUrl}
                     setYoutubeUrl={setYoutubeUrl}
-                    
+                    onGenerate={handleGenerate}
+                    isGenerating={isGenerating}
+                    fairUseConfirmed={fairUseConfirmed}
+                    setFairUseConfirmed={setFairUseConfirmed}
                   />
                 </div>
                 
@@ -448,6 +452,8 @@ export default function Dashboard() {
                   setTargetLanguage={setTargetLanguage}
                   includeSocialProof={includeSocialProof}
                   setIncludeSocialProof={setIncludeSocialProof}
+                  fairUseConfirmed={fairUseConfirmed}
+                  setFairUseConfirmed={setFairUseConfirmed}
                 />
 
                 {/* Social Proof Widget */}

@@ -9,7 +9,7 @@ import { Copy, Check, Edit2, Save, Twitter, Linkedin, Film, FileText, Download, 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { GeneratedContent } from "@/pages/Dashboard";
 import { ImageGenerator } from "./ImageGenerator";
-import { SocialPreview, SocialPreviewToggle } from "./SocialPreview";
+// SocialPreview removed
 import { VoiceGenerator } from "./VoiceGenerator";
 import { trackCopyContent } from "@/lib/posthog";
 import { SocialActionBar } from "./bulk/SocialActionBar";
@@ -110,7 +110,6 @@ function EditableContent({
 
 export function ContentOutput({ content, isGenerating, onUpdateContent, targetLanguage, youtubeUrl, activeTab: externalActiveTab, onActiveTabChange }: ContentOutputProps) {
   const { toast } = useToast();
-  const [showPreview, setShowPreview] = useState(false);
   const [internalActiveTab, setInternalActiveTab] = useState("twitter");
   const activeTab = externalActiveTab ?? internalActiveTab;
   const setActiveTab = onActiveTabChange ?? setInternalActiveTab;
@@ -194,22 +193,14 @@ ${content.blogPost}
     );
   }
 
-  const currentPlatform = activeTab as "twitter" | "linkedin" | "shorts" | "blog";
-
   return (
     <Card className="border-border bg-card">
       <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
         <CardTitle>Generated Content</CardTitle>
-        <div className="flex items-center gap-2">
-          <SocialPreviewToggle 
-            showPreview={showPreview} 
-            onToggle={() => setShowPreview(!showPreview)} 
-          />
-          <Button onClick={handleExportAll} variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Export All
-          </Button>
-        </div>
+        <Button onClick={handleExportAll} variant="outline" size="sm">
+          <Download className="h-4 w-4 mr-2" />
+          Export All
+        </Button>
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -281,13 +272,6 @@ ${content.blogPost}
               </Tooltip>
             </TabsList>
           </TooltipProvider>
-
-          {/* Social Preview */}
-          {showPreview && currentPlatform !== "blog" && (
-            <div className="mb-4">
-              <SocialPreview content={content} platform={currentPlatform} />
-            </div>
-          )}
 
           <TabsContent value="twitter" className="space-y-3">
             <div className="mb-4">

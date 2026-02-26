@@ -42,6 +42,8 @@ interface GenerationSettingsProps {
   hideGenerateButton?: boolean;
   includeSocialProof?: boolean;
   setIncludeSocialProof?: (value: boolean) => void;
+  fairUseConfirmed?: boolean;
+  setFairUseConfirmed?: (value: boolean) => void;
 }
 
 const tones = [
@@ -74,6 +76,8 @@ export function GenerationSettings({
   hideGenerateButton = false,
   includeSocialProof = false,
   setIncludeSocialProof,
+  fairUseConfirmed: externalFairUse,
+  setFairUseConfirmed: externalSetFairUse,
 }: GenerationSettingsProps) {
   const { isPro, isAgency, isPaid } = useSubscription();
   const { user } = useAuth();
@@ -83,7 +87,9 @@ export function GenerationSettings({
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showCreateVoiceModal, setShowCreateVoiceModal] = useState(false);
   const [showStyleLab, setShowStyleLab] = useState(false);
-  const [fairUseConfirmed, setFairUseConfirmed] = useState(false);
+  const [internalFairUse, setInternalFairUse] = useState(false);
+  const fairUseConfirmed = externalFairUse ?? internalFairUse;
+  const setFairUseConfirmed = externalSetFairUse ?? setInternalFairUse;
 
   const FREE_SOCIAL_PROOF_LIMIT = 2;
 
