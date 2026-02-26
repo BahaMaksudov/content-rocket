@@ -181,7 +181,11 @@ export default function Dashboard() {
   };
 
   const handleGenerate = () => {
+    // 1) Set loading state first so overlay can render immediately
+    setIsGenerating(true);
+
     if (!transcript) {
+      setIsGenerating(false);
       toast({
         variant: "destructive",
         title: "No transcript",
@@ -192,6 +196,7 @@ export default function Dashboard() {
 
     // Check if user can generate (credit check)
     if (!canUseCredits) {
+      setIsGenerating(false);
       setShowCreditsModal(true);
       return;
     }

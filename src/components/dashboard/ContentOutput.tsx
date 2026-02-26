@@ -163,9 +163,7 @@ ${content.blogPost}
     toast({ title: "Content exported!", description: "Downloaded as Markdown file." });
   };
 
-  // Generating overlay is now rendered inline below, not as a full replacement
-
-  if (!content) {
+  if (!content && !isGenerating) {
     return (
       <Card className="border-border bg-card h-full flex items-center justify-center min-h-[500px]">
         <div className="text-center space-y-2 p-8">
@@ -176,6 +174,22 @@ ${content.blogPost}
           <p className="text-sm text-muted-foreground max-w-sm">
             Fetch a YouTube transcript and click "Generate All Assets" to create multi-platform content
           </p>
+        </div>
+      </Card>
+    );
+  }
+
+  if (!content && isGenerating) {
+    return (
+      <Card className="border-border bg-card relative overflow-hidden min-h-[500px]">
+        <div className="absolute inset-0 z-50 flex items-start justify-center pt-24 bg-background/80 backdrop-blur-sm rounded-[inherit]">
+          <div className="text-center space-y-4">
+            <Loader2 className="h-14 w-14 animate-spin text-primary mx-auto" />
+            <div>
+              <p className="font-medium text-lg">Generating all platform assets...</p>
+              <p className="text-sm text-muted-foreground">Creating X hooks, LinkedIn post, TikTok scripts, and blog post</p>
+            </div>
+          </div>
         </div>
       </Card>
     );
