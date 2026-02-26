@@ -20,6 +20,8 @@ interface ContentOutputProps {
   onUpdateContent: (content: GeneratedContent) => void;
   targetLanguage?: string | null;
   youtubeUrl?: string | null;
+  activeTab?: string;
+  onActiveTabChange?: (tab: string) => void;
 }
 
 function CopyButton({ text, contentType, platform }: { text: string; contentType?: string; platform?: string }) {
@@ -106,10 +108,12 @@ function EditableContent({
   );
 }
 
-export function ContentOutput({ content, isGenerating, onUpdateContent, targetLanguage, youtubeUrl }: ContentOutputProps) {
+export function ContentOutput({ content, isGenerating, onUpdateContent, targetLanguage, youtubeUrl, activeTab: externalActiveTab, onActiveTabChange }: ContentOutputProps) {
   const { toast } = useToast();
   const [showPreview, setShowPreview] = useState(false);
-  const [activeTab, setActiveTab] = useState("twitter");
+  const [internalActiveTab, setInternalActiveTab] = useState("twitter");
+  const activeTab = externalActiveTab ?? internalActiveTab;
+  const setActiveTab = onActiveTabChange ?? setInternalActiveTab;
   const [generatedImages, setGeneratedImages] = useState<Record<string, string>>({});
 
   const handleImageGenerated = (platform: string, imageUrl: string) => {
