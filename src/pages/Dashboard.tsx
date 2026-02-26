@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -22,6 +22,33 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Video, Layers, Lock } from "lucide-react";
 import { TopTestimonialsWidget } from "@/components/social-proof/TopTestimonialsWidget";
 
+const STORAGE_KEY = "vidlogic_dashboard_state";
+
+interface PersistedDashboardState {
+  generatedContent: GeneratedContent | null;
+  youtubeUrl: string;
+  videoTitle: string;
+  transcript: string;
+  transcriptMethod: "auto" | "manual" | null;
+  contentActiveTab: string;
+}
+
+function loadPersistedState(): PersistedDashboardState | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as PersistedDashboardState;
+  } catch {
+    return null;
+  }
+}
+
+function savePersistedState(state: PersistedDashboardState) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch { /* quota exceeded – ignore */ }
+}
+
 export interface GeneratedContent {
   twitterHooks: string[];
   linkedinPost: string;
@@ -34,21 +61,42 @@ export default function Dashboard() {
   const { openCheckout, loading: subscriptionLoading, isAgency } = useSubscription();
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [transcript, setTranscript] = useState("");
-  const [transcriptMethod, setTranscriptMethod] = useState<"auto" | "manual" | null>(null);
-  const [videoTitle, setVideoTitle] = useState("");
-  const [youtubeUrl, setYoutubeUrl] = useState("");
+
+  // Restore persisted state on mount
+  const persisted = useRef(loadPersistedState());
+
+  const [transcript, setTranscript] = useState(persisted.current?.transcript ?? "");
+  const [transcriptMethod, setTranscriptMethod] = useState<"auto" | "manual" | null>(persisted.current?.transcriptMethod ?? null);
+  const [videoTitle, setVideoTitle] = useState(persisted.current?.videoTitle ?? "");
+  const [youtubeUrl, setYoutubeUrl] = useState(persisted.current?.youtubeUrl ?? "");
   // Default to "The Friendly Peer" preset
   const [selectedBrandVoice, setSelectedBrandVoice] = useState<string | null>("default_friendly_peer");
   const [tone, setTone] = useState("professional");
   const [audience, setAudience] = useState("general");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null);
+  const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(persisted.current?.generatedContent ?? null);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
   const [showBulkUpgradeModal, setShowBulkUpgradeModal] = useState(false);
   const [upgradeProcessed, setUpgradeProcessed] = useState(false);
   const [activeTab, setActiveTab] = useState<"single" | "bulk">("single");
   const [includeSocialProof, setIncludeSocialProof] = useState(false);
+  const [contentActiveTab, setContentActiveTab] = useState(persisted.current?.contentActiveTab ?? "twitter");
+
+  // Persist state whenever generated content or active content tab changes
+  const persistState = useCallback(() => {
+    savePersistedState({
+      generatedContent,
+      youtubeUrl,
+      videoTitle,
+      transcript,
+      transcriptMethod,
+      contentActiveTab,
+    });
+  }, [generatedContent, youtubeUrl, videoTitle, transcript, transcriptMethod, contentActiveTab]);
+
+  useEffect(() => {
+    persistState();
+  }, [persistState]);
 
   // One-time backfill so Billing shows historical invoices (e.g. Feb 1) even if the webhook
   // wasn't configured at the time of payment.
@@ -114,6 +162,9 @@ export default function Dashboard() {
   });
 
   const handleTranscriptFetched = (text: string, method: "auto" | "manual", title?: string) => {
+    // Clear previous generated content when fetching a new transcript
+    setGeneratedContent(null);
+    setContentActiveTab("twitter");
     setTranscript(text);
     setTranscriptMethod(method);
     if (title) setVideoTitle(title);
@@ -411,6 +462,8 @@ export default function Dashboard() {
                   onUpdateContent={handleUpdateContent}
                   targetLanguage={targetLanguage !== "english" ? targetLanguage : null}
                   youtubeUrl={youtubeUrl || null}
+                  activeTab={contentActiveTab}
+                  onActiveTabChange={setContentActiveTab}
                 />
               </div>
             </div>
