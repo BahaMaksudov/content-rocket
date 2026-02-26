@@ -197,6 +197,9 @@ export default function Dashboard() {
     }
 
     setIsGenerating(true);
+
+    // Auto-scroll to the content panel so the user sees the loading overlay
+    contentOutputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     
     // Track generation started event
     trackGenerationStarted({

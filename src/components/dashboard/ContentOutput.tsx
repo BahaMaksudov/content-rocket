@@ -163,19 +163,7 @@ ${content.blogPost}
     toast({ title: "Content exported!", description: "Downloaded as Markdown file." });
   };
 
-  if (isGenerating) {
-    return (
-      <Card className="border-border bg-card h-full flex items-center justify-center min-h-[500px]">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
-          <div>
-            <p className="font-medium">Generating all platform assets...</p>
-            <p className="text-sm text-muted-foreground">Creating X hooks, LinkedIn post, TikTok scripts, and blog post</p>
-          </div>
-        </div>
-      </Card>
-    );
-  }
+  // Generating overlay is now rendered inline below, not as a full replacement
 
   if (!content) {
     return (
@@ -194,7 +182,19 @@ ${content.blogPost}
   }
 
   return (
-    <Card className="border-border bg-card">
+    <Card className="border-border bg-card relative overflow-hidden">
+      {/* Generating overlay */}
+      {isGenerating && (
+        <div className="absolute inset-0 z-50 flex items-start justify-center pt-24 bg-background/80 backdrop-blur-sm rounded-[inherit]">
+          <div className="text-center space-y-4">
+            <Loader2 className="h-14 w-14 animate-spin text-primary mx-auto" />
+            <div>
+              <p className="font-medium text-lg">Generating all platform assets...</p>
+              <p className="text-sm text-muted-foreground">Creating X hooks, LinkedIn post, TikTok scripts, and blog post</p>
+            </div>
+          </div>
+        </div>
+      )}
       <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
         <CardTitle>Generated Content</CardTitle>
         <Button onClick={handleExportAll} variant="outline" size="sm">
