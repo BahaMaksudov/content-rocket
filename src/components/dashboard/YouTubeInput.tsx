@@ -16,6 +16,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast as sonnerToast } from "sonner";
 import {
   Loader2,
@@ -376,56 +377,67 @@ export function YouTubeInput({
 
         {/* Transcript status */}
         {transcript && (
-          <div className="space-y-3">
-            <div className="p-3 rounded-lg bg-success/10 border border-success/20 flex items-center gap-2">
-              <Check className="h-4 w-4 text-success" />
-              <span className="text-sm text-success">Transcript loaded</span>
-              <Badge variant="secondary" className="ml-auto">
-                {transcriptMethod === "auto" ? "Auto-fetched" : "Manual"}
-              </Badge>
-            </div>
+          <div className="p-3 rounded-lg bg-success/10 border border-success/20 flex items-center gap-2">
+            <Check className="h-4 w-4 text-success" />
+            <span className="text-sm text-success">Transcript loaded</span>
+            <Badge variant="secondary" className="ml-auto">
+              {transcriptMethod === "auto" ? "Auto-fetched" : "Manual"}
+            </Badge>
+          </div>
+        )}
 
-            {/* Quick Generate section */}
-            {onGenerate && setFairUseConfirmed && (
-              <div className="p-3 rounded-lg border border-border bg-muted/20 space-y-2.5">
-                <div className="flex items-center gap-2.5">
-                  <Checkbox
-                    id="fair-use-quick"
-                    checked={fairUseConfirmed}
-                    onCheckedChange={(checked) => setFairUseConfirmed(checked === true)}
-                    className="h-3.5 w-3.5"
-                  />
-                  <Label
-                    htmlFor="fair-use-quick"
-                    className="text-xs text-muted-foreground cursor-pointer leading-tight"
-                  >
-                    I confirm this usage falls under Fair Use (Commentary/Education).
-                  </Label>
-                </div>
-                <Button
-                  onClick={onGenerate}
-                  disabled={isGenerating || !fairUseConfirmed}
-                  size="sm"
-                  className={`w-full ${
-                    !fairUseConfirmed
-                      ? "bg-muted text-muted-foreground cursor-not-allowed"
-                      : "gradient-primary text-primary-foreground"
-                  }`}
-                >
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <Rocket className="h-3.5 w-3.5 mr-1.5" />
-                      Generate All Assets
-                    </>
-                  )}
-                </Button>
-              </div>
-            )}
+        {/* Fair Use + Generate — always visible */}
+        {onGenerate && setFairUseConfirmed && (
+          <div className="p-3 rounded-lg border border-border bg-muted/20 space-y-2.5">
+            <div className="flex items-center gap-2.5">
+              <Checkbox
+                id="fair-use-quick"
+                checked={fairUseConfirmed}
+                onCheckedChange={(checked) => setFairUseConfirmed(checked === true)}
+                className="h-3.5 w-3.5"
+              />
+              <Label
+                htmlFor="fair-use-quick"
+                className="text-xs text-muted-foreground cursor-pointer leading-tight"
+              >
+                I confirm this usage falls under Fair Use (Commentary/Education).
+              </Label>
+            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="w-full inline-block">
+                    <Button
+                      onClick={onGenerate}
+                      disabled={isGenerating || !fairUseConfirmed || !transcript}
+                      size="sm"
+                      className={`w-full ${
+                        !fairUseConfirmed || !transcript
+                          ? "bg-muted text-muted-foreground cursor-not-allowed"
+                          : "gradient-primary text-primary-foreground"
+                      }`}
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Rocket className="h-3.5 w-3.5 mr-1.5" />
+                          Generate All Assets
+                        </>
+                      )}
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                {(!transcript || !fairUseConfirmed) && (
+                  <TooltipContent>
+                    <p>Please fetch a video and confirm Fair Use to generate.</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
           </div>
         )}
 
