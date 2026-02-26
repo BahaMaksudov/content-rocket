@@ -31,7 +31,9 @@ import {
   ChevronDown,
   Info,
   Sparkles,
+  Rocket,
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useFetchTracking } from "@/hooks/use-fetch-tracking";
@@ -44,6 +46,10 @@ interface YouTubeInputProps {
   youtubeUrl: string;
   setYoutubeUrl: (url: string) => void;
   onFetchCountReset?: (url: string) => void;
+  onGenerate?: () => void;
+  isGenerating?: boolean;
+  fairUseConfirmed?: boolean;
+  setFairUseConfirmed?: (v: boolean) => void;
 }
 
 const YOUTUBE_URL_REGEX =
@@ -56,6 +62,10 @@ export function YouTubeInput({
   transcriptMethod,
   youtubeUrl,
   setYoutubeUrl,
+  onGenerate,
+  isGenerating,
+  fairUseConfirmed,
+  setFairUseConfirmed,
 }: YouTubeInputProps) {
   const [isFetching, setIsFetching] = useState(false);
   const [manualTranscript, setManualTranscript] = useState("");
@@ -354,12 +364,56 @@ export function YouTubeInput({
 
         {/* Transcript status */}
         {transcript && (
-          <div className="p-3 rounded-lg bg-success/10 border border-success/20 flex items-center gap-2">
-            <Check className="h-4 w-4 text-success" />
-            <span className="text-sm text-success">Transcript loaded</span>
-            <Badge variant="secondary" className="ml-auto">
-              {transcriptMethod === "auto" ? "Auto-fetched" : "Manual"}
-            </Badge>
+          <div className="space-y-3">
+            <div className="p-3 rounded-lg bg-success/10 border border-success/20 flex items-center gap-2">
+              <Check className="h-4 w-4 text-success" />
+              <span className="text-sm text-success">Transcript loaded</span>
+              <Badge variant="secondary" className="ml-auto">
+                {transcriptMethod === "auto" ? "Auto-fetched" : "Manual"}
+              </Badge>
+            </div>
+
+            {/* Quick Generate section */}
+            {onGenerate && setFairUseConfirmed && (
+              <div className="p-3 rounded-lg border border-border bg-muted/20 space-y-2.5">
+                <div className="flex items-center gap-2.5">
+                  <Checkbox
+                    id="fair-use-quick"
+                    checked={fairUseConfirmed}
+                    onCheckedChange={(checked) => setFairUseConfirmed(checked === true)}
+                    className="h-3.5 w-3.5"
+                  />
+                  <Label
+                    htmlFor="fair-use-quick"
+                    className="text-xs text-muted-foreground cursor-pointer leading-tight"
+                  >
+                    I confirm this usage falls under Fair Use (Commentary/Education).
+                  </Label>
+                </div>
+                <Button
+                  onClick={onGenerate}
+                  disabled={isGenerating || !fairUseConfirmed}
+                  size="sm"
+                  className={`w-full ${
+                    !fairUseConfirmed
+                      ? "bg-muted text-muted-foreground cursor-not-allowed"
+                      : "gradient-primary text-primary-foreground"
+                  }`}
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Rocket className="h-3.5 w-3.5 mr-1.5" />
+                      Generate All Assets
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
         )}
 
