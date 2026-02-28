@@ -19,8 +19,9 @@ import { toast as sonnerToast } from "sonner";
 import { DEFAULT_BRAND_VOICES, isDefaultVoiceId, getDefaultVoiceById } from "@/lib/default-brand-voices";
 import { useSyncPaymentHistoryOnce } from "@/hooks/use-sync-payment-history";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Video, Layers, Lock } from "lucide-react";
+import { Video, Layers, Lock, Flame } from "lucide-react";
 import { TopTestimonialsWidget } from "@/components/social-proof/TopTestimonialsWidget";
+import { ViralScriptGenerator } from "@/components/dashboard/ViralScriptGenerator";
 
 const STORAGE_KEY = "vidlogic_dashboard_state";
 
@@ -87,7 +88,7 @@ export default function Dashboard() {
   const [showCreditsModal, setShowCreditsModal] = useState(false);
   const [showBulkUpgradeModal, setShowBulkUpgradeModal] = useState(false);
   const [upgradeProcessed, setUpgradeProcessed] = useState(false);
-  const [activeTab, setActiveTab] = useState<"single" | "bulk">("single");
+  const [activeTab, setActiveTab] = useState<"single" | "viral" | "bulk">("single");
   const [includeSocialProof, setIncludeSocialProof] = useState(false);
   const [fairUseConfirmed, setFairUseConfirmed] = useState(false);
   const [contentActiveTab, setContentActiveTab] = useState(persisted.current?.contentActiveTab ?? "twitter");
@@ -414,12 +415,16 @@ export default function Dashboard() {
             setShowBulkUpgradeModal(true);
             return;
           }
-          setActiveTab(v as "single" | "bulk");
+          setActiveTab(v as "single" | "viral" | "bulk");
         }}>
-          <TabsList className="grid grid-cols-2 w-full max-w-md">
+          <TabsList className="grid grid-cols-3 w-full max-w-lg">
             <TabsTrigger value="single" className="flex items-center gap-2">
               <Video className="h-4 w-4" />
               Single Video
+            </TabsTrigger>
+            <TabsTrigger value="viral" className="flex items-center gap-2">
+              <Flame className="h-4 w-4" />
+              Viral Script
             </TabsTrigger>
             <TabsTrigger value="bulk" className="flex items-center gap-2 relative">
               <Layers className="h-4 w-4" />
@@ -482,6 +487,12 @@ export default function Dashboard() {
                   onActiveTabChange={setContentActiveTab}
                 />
               </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="viral" className="mt-6">
+            <div className="max-w-4xl mx-auto">
+              <ViralScriptGenerator />
             </div>
           </TabsContent>
 
