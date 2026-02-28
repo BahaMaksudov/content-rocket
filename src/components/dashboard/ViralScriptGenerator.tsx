@@ -10,8 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { HookLab } from "./viral/HookLab";
 import { SceneBreakdown } from "./viral/SceneBreakdown";
 import { CaptionsSection } from "./viral/CaptionsSection";
-import type { ViralScriptResult, Duration, Tone } from "./viral/types";
-import { DURATION_OPTIONS, TONE_OPTIONS } from "./viral/types";
+import type { ViralScriptResult, Duration, Tone, Platform } from "./viral/types";
+import { DURATION_OPTIONS, TONE_OPTIONS, PLATFORM_OPTIONS } from "./viral/types";
 
 const VIRAL_STORAGE_KEY = "vidlogic_viral_script_v2";
 
@@ -22,6 +22,7 @@ export function ViralScriptGenerator() {
   const [topic, setTopic] = useState("");
   const [duration, setDuration] = useState<Duration>("30s");
   const [tone, setTone] = useState<Tone>("hype");
+  const [platform, setPlatform] = useState<Platform>("tiktok");
   const [voiceMode, setVoiceMode] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [result, setResult] = useState<ViralScriptResult | null>(() => {
@@ -47,7 +48,7 @@ export function ViralScriptGenerator() {
 
     try {
       const { data, error } = await supabase.functions.invoke("generate-viral-script", {
-        body: { topic: topic.trim(), duration, tone, voiceMode },
+        body: { topic: topic.trim(), duration, tone, platform, voiceMode },
       });
 
       if (error) {
@@ -117,6 +118,26 @@ export function ViralScriptGenerator() {
                     className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 border ${
                       tone === opt.value
                         ? "border-cyan-500 bg-cyan-500/10 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.25)]"
+                        : "border-border bg-muted/30 text-muted-foreground hover:text-foreground hover:border-muted-foreground/50"
+                    }`}
+                  >
+                    <span className="mr-1">{opt.emoji}</span>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-muted-foreground mb-2 block">Platform</label>
+              <div className="flex flex-wrap gap-2">
+                {PLATFORM_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setPlatform(opt.value)}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 border ${
+                      platform === opt.value
+                        ? "border-cyan-500 bg-cyan-500/10 text-cyan-400 shadow-[0_0_10px_#06b6d4]"
                         : "border-border bg-muted/30 text-muted-foreground hover:text-foreground hover:border-muted-foreground/50"
                     }`}
                   >

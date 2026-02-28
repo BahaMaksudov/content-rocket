@@ -33,7 +33,7 @@ serve(async (req) => {
   }
 
   try {
-    const { topic, duration = "30s", tone = "hype", voiceMode = false } = await req.json();
+    const { topic, duration = "30s", tone = "hype", platform = "tiktok", voiceMode = false } = await req.json();
 
     if (!topic || topic.trim().length === 0) {
       return new Response(
@@ -66,6 +66,32 @@ serve(async (req) => {
     };
 
     const toneInstruction = toneGuides[tone] || toneGuides["hype"];
+
+    const platformGuides: Record<string, string> = {
+      "tiktok": `PLATFORM: TikTok
+Strategy: High-speed, high-tension content optimized for the For You Page.
+- Start with a massive "Pattern Interrupt" hook that stops the scroll instantly.
+- Use "You" and "We" frequently to create a direct, personal connection.
+- Include TikTok-specific visual cues: [Green Screen], [Quick Cut], [Reaction], [Duet Setup], [Stitch Hook].
+- Pacing should feel rapid-fire with jump cuts implied in the scene transitions.
+- Hashtags MUST include TikTok-native tags: #foryou, #fyp, #foryoupage, #tiktok, plus 3-4 niche tags.`,
+      "youtube-shorts": `PLATFORM: YouTube Shorts
+Strategy: Curiosity and Storytelling optimized for YouTube's algorithm.
+- Focus on the "Curiosity Gap" — hooks MUST promise a payoff at the end (e.g., "Wait for the result...", "Watch till the end").
+- Use a mini story arc even in short durations: Setup → Tension → Payoff.
+- Visual cues should suggest [Text Overlays], [B-Roll Transition], [Subscribe Animation], [End Screen CTA].
+- Include a subtle call-to-action for subscribing or watching a longer video.
+- Hashtags MUST include YouTube-native tags: #shorts, #youtubeshorts, #subscribe, plus 3-4 niche tags.`,
+      "instagram-reels": `PLATFORM: Instagram Reels
+Strategy: Aesthetic and Direct, optimized for Instagram's visual-first audience.
+- Keep the language cleaner, more polished, and professional.
+- Focus on "Value-First" delivery — lead with the benefit, not the problem.
+- Visual cues should suggest [High-Quality B-Roll], [Smooth Transitions], [Aesthetic Color Grading], [Cinematic Slow-Mo].
+- The overall vibe should feel curated and visually aspirational.
+- Hashtags MUST include Instagram-native tags: #reels, #reelsinstagram, #instareels, #explore, plus 3-4 niche tags.`,
+    };
+
+    const platformInstruction = platformGuides[platform] || platformGuides["tiktok"];
 
     const voiceModeInstruction = voiceMode
       ? `\n\nVOICE-OPTIMIZED MODE (ACTIVE):
@@ -107,6 +133,10 @@ TONE & VOICE (CRITICAL):
 ${toneInstruction}
 - Avoid corporate jargon.
 - The tone MUST permeate every section: the hooks, the scene scripts, the visual/effect ideas, AND the captions.
+
+PLATFORM OPTIMIZATION (CRITICAL):
+${platformInstruction}
+- The platform context MUST influence the visual cues, hashtags, and overall script style.
 ${voiceModeInstruction}
 
 You must return the response as valid JSON with exactly these keys:
