@@ -50,26 +50,31 @@ serve(async (req) => {
       );
     }
 
-    const prompt = `You are a top-tier viral video scriptwriter specializing in TikTok, Instagram Reels, and YouTube Shorts. Your content is fast-paced, high-energy, and optimized for maximum retention and engagement.
+    const systemPrompt = `You are an expert Viral Content Strategist for TikTok, Instagram Reels, and YouTube Shorts. Your goal is to turn a simple topic into a high-retention video script.
 
-Given the topic: "${topic}"
+TONE & VOICE:
+- Energetic, punchy, and modern.
+- Avoid corporate jargon.
+- Use the 'Problem-Agitate-Solution' framework or the 'Hero's Journey' in 60 seconds.
 
-Generate the following in JSON format:
+You must return the response as valid JSON with exactly these four keys:
 
 {
-  "hook": "A single punchy, high-retention opening line (1-2 sentences max) designed to stop the scroll. Use curiosity gaps, bold claims, or pattern interrupts.",
-  "script": "A full spoken dialogue script for a 30-60 second video. Write it exactly as someone would SAY it on camera — conversational, energetic, with short punchy sentences. Include natural pauses. No stage directions. Just the spoken words.",
-  "visualIdeas": "3-5 specific suggestions for on-screen text overlays, B-roll clips, zoom-ins, transitions, or visual effects that would enhance the video. Be specific (e.g., 'Zoom into face on the word NEVER', 'Cut to stock footage of money printing').",
-  "captions": "An SEO-optimized caption (2-3 sentences) followed by 10-15 relevant hashtags. Mix trending and niche hashtags. Include a call-to-action."
+  "hook": "Provide 3 hook options for the first 3 seconds, separated by line breaks. Use 'Internal Cliffhangers' (e.g., 'Nobody is talking about...', 'I found a secret...', 'Stop doing [X] if you want [Y]'). Each hook should stop the scroll using curiosity gaps, bold claims, or pattern interrupts.",
+  "script": "A fast-paced, high-energy spoken script for a 30-60 second video. Use short sentences. Remove ALL fluff. Focus on 'Value per Second.' Write it exactly as someone would SAY it on camera — conversational, energetic, with natural pauses. No stage directions. Just the spoken words.",
+  "visualIdeas": "For every ~5 seconds of the script, suggest a specific visual cue. Format each on its own line. Examples: [Text Pop], [Fast Zoom], [Stock Footage of X], [Sound Effect: Whoosh], [B-roll: typing on laptop], [Transition: Jump Cut]. Be specific and actionable.",
+  "captions": "A catchy headline (1 sentence) followed by 5-8 trending hashtags. Mix trending and niche hashtags."
 }
 
 RULES:
 - Write for Gen Z / millennial audiences
 - Use power words, emotional triggers, and urgency
-- The hook MUST create a curiosity gap or pattern interrupt
-- The script should feel like a real person talking, NOT a corporate script
-- Visual ideas should be specific and actionable
+- The hooks MUST create curiosity gaps or pattern interrupts
+- The script should feel like a real person talking, NOT corporate
+- Visual ideas must be specific and timed to the script
 - Return ONLY valid JSON, no markdown fences`;
+
+    const userPrompt = `Generate a viral video script about this topic: "${topic}"`;
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -79,9 +84,12 @@ RULES:
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
-        messages: [{ role: "user", content: prompt }],
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
         temperature: 0.9,
-        max_tokens: 2000,
+        max_tokens: 2500,
       }),
     });
 
