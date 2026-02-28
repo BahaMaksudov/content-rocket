@@ -131,20 +131,27 @@ export function ViralScriptGenerator() {
             <div>
               <label className="text-sm font-medium text-muted-foreground mb-2 block">Platform</label>
               <div className="flex flex-wrap gap-2">
-                {PLATFORM_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setPlatform(opt.value)}
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 border ${
-                      platform === opt.value
-                        ? "border-cyan-500 bg-cyan-500/10 text-cyan-400 shadow-[0_0_10px_#06b6d4]"
-                        : "border-border bg-muted/30 text-muted-foreground hover:text-foreground hover:border-muted-foreground/50"
-                    }`}
-                  >
-                    <span className="mr-1">{opt.emoji}</span>
-                    {opt.label}
-                  </button>
-                ))}
+                {PLATFORM_OPTIONS.map((opt) => {
+                  const brandStyles: Record<string, string> = {
+                    "tiktok": "border-pink-500 bg-gradient-to-r from-[#ff0050]/15 to-[#00f2ea]/15 text-pink-400 shadow-[0_0_10px_rgba(255,0,80,0.4)]",
+                    "youtube-shorts": "border-red-500 bg-red-500/15 text-red-400 shadow-[0_0_10px_rgba(255,0,0,0.4)]",
+                    "instagram-reels": "border-fuchsia-500 bg-gradient-to-r from-[#f58529]/15 via-[#dd2a7b]/15 to-[#8134af]/15 text-fuchsia-400 shadow-[0_0_10px_rgba(221,42,123,0.4)]",
+                  };
+                  return (
+                    <button
+                      key={opt.value}
+                      onClick={() => setPlatform(opt.value)}
+                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 border ${
+                        platform === opt.value
+                          ? brandStyles[opt.value]
+                          : "border-border bg-muted/30 text-muted-foreground hover:text-foreground hover:border-muted-foreground/50"
+                      }`}
+                    >
+                      <span className="mr-1">{opt.emoji}</span>
+                      {opt.label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
