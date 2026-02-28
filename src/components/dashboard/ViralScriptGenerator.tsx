@@ -2,59 +2,29 @@ import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Loader2, Flame, Mic, Clapperboard, FileText, Copy, Check, Sparkles } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Loader2, Sparkles, Mic } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { HookLab } from "./viral/HookLab";
+import { SceneBreakdown } from "./viral/SceneBreakdown";
+import { CaptionsSection } from "./viral/CaptionsSection";
+import type { ViralScriptResult, Duration, Tone } from "./viral/types";
+import { DURATION_OPTIONS, TONE_OPTIONS } from "./viral/types";
 
-const VIRAL_STORAGE_KEY = "vidlogic_viral_script";
+const VIRAL_STORAGE_KEY = "vidlogic_viral_script_v2";
 
-export interface ViralScriptContent {
-  hook: string;
-  script: string;
-  visualIdeas: string;
-  captions: string;
-}
-
-function CopyBtn({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-  const { toast } = useToast();
-  const copy = async () => {
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    toast({ title: "Copied!" });
-    setTimeout(() => setCopied(false), 2000);
-  };
-  return (
-    <Button size="sm" variant="ghost" onClick={copy} className="shrink-0">
-      {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-    </Button>
-  );
-}
-
-type Duration = "15s" | "30s" | "60s";
-type Tone = "hype" | "educational" | "funny" | "mysterious";
-
-const DURATION_OPTIONS: { value: Duration; label: string }[] = [
-  { value: "15s", label: "15s" },
-  { value: "30s", label: "30s" },
-  { value: "60s", label: "60s" },
-];
-
-const TONE_OPTIONS: { value: Tone; emoji: string; label: string }[] = [
-  { value: "hype", emoji: "🔥", label: "Hype" },
-  { value: "educational", emoji: "🧠", label: "Educational" },
-  { value: "funny", emoji: "🤣", label: "Funny" },
-  { value: "mysterious", emoji: "🤫", label: "Mysterious" },
-];
+export type { ViralScriptResult as ViralScriptContent };
 
 export function ViralScriptGenerator() {
   const { toast } = useToast();
   const [topic, setTopic] = useState("");
   const [duration, setDuration] = useState<Duration>("30s");
   const [tone, setTone] = useState<Tone>("hype");
+  const [voiceMode, setVoiceMode] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [result, setResult] = useState<ViralScriptContent | null>(() => {
+  const [result, setResult] = useState<ViralScriptResult | null>(() => {
     try {
       const raw = localStorage.getItem(VIRAL_STORAGE_KEY);
       return raw ? JSON.parse(raw) : null;
@@ -62,11 +32,8 @@ export function ViralScriptGenerator() {
   });
   const outputRef = useRef<HTMLDivElement>(null);
 
-  // Persist result to localStorage
   useEffect(() => {
-    if (result) {
-      localStorage.setItem(VIRAL_STORAGE_KEY, JSON.stringify(result));
-    }
+    if (result) localStorage.setItem(VIRAL_STORAGE_KEY, JSON.stringify(result));
   }, [result]);
 
   const handleGenerate = async () => {
@@ -78,46 +45,32 @@ export function ViralScriptGenerator() {
     setIsGenerating(true);
     outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 
-    setTimeout(async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke("generate-viral-script", {
-          body: { topic: topic.trim(), duration, tone },
-        });
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-viral-script", {
+        body: { topic: topic.trim(), duration, tone, voiceMode },
+      });
 
-        if (error) {
-          const status = error?.context?.status;
-          const message = typeof error?.message === "string" ? error.message : "";
-
-          if (status === 402 || message.includes("AI_CREDITS_EXHAUSTED")) {
-            toast({ variant: "destructive", title: "AI credits exhausted", description: "Please add more credits to continue." });
-            return;
-          }
-          throw error;
+      if (error) {
+        const status = error?.context?.status;
+        const message = typeof error?.message === "string" ? error.message : "";
+        if (status === 402 || message.includes("AI_CREDITS_EXHAUSTED")) {
+          toast({ variant: "destructive", title: "AI credits exhausted", description: "Please add more credits to continue." });
+          return;
         }
-
-        if (data?.error) throw new Error(data.error);
-
-        setResult(data as ViralScriptContent);
-        toast({ title: "Script generated!", description: "Your viral video script is ready." });
-
-        setTimeout(() => {
-          outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-        }, 100);
-      } catch (err: any) {
-        console.error("Viral script error:", err);
-        toast({ variant: "destructive", title: "Generation failed", description: err.message || "Please try again." });
-      } finally {
-        setIsGenerating(false);
+        throw error;
       }
-    }, 0);
-  };
 
-  const sections = result ? [
-    { icon: Flame, emoji: "🔥", label: "Hook", content: result.hook, color: "text-orange-400" },
-    { icon: Mic, emoji: "🎙️", label: "Script", content: result.script, color: "text-primary" },
-    { icon: Clapperboard, emoji: "🎬", label: "Visual/Effect Ideas", content: result.visualIdeas, color: "text-violet-400" },
-    { icon: FileText, emoji: "📝", label: "Captions", content: result.captions, color: "text-emerald-400" },
-  ] : [];
+      if (data?.error) throw new Error(data.error);
+      setResult(data as ViralScriptResult);
+      toast({ title: "Script generated!", description: "Your viral video script is ready." });
+      setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+    } catch (err: any) {
+      console.error("Viral script error:", err);
+      toast({ variant: "destructive", title: "Generation failed", description: err.message || "Please try again." });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -133,7 +86,7 @@ export function ViralScriptGenerator() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Duration & Tone Selectors */}
+          {/* Duration, Tone & Voice Mode */}
           <div className="flex flex-wrap items-start gap-6">
             <div>
               <label className="text-sm font-medium text-muted-foreground mb-2 block">Duration</label>
@@ -171,6 +124,22 @@ export function ViralScriptGenerator() {
                     {opt.label}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col justify-end">
+              <label className="text-sm font-medium text-muted-foreground mb-2 block">Voice</label>
+              <div className="flex items-center gap-2 rounded-full border border-border bg-muted/30 px-3 py-1.5">
+                <Mic className="h-4 w-4 text-muted-foreground" />
+                <Label htmlFor="voice-mode" className="text-sm cursor-pointer select-none">
+                  Voice-Optimized
+                </Label>
+                <Switch
+                  id="voice-mode"
+                  checked={voiceMode}
+                  onCheckedChange={setVoiceMode}
+                  className="ml-1"
+                />
               </div>
             </div>
           </div>
@@ -211,7 +180,7 @@ export function ViralScriptGenerator() {
                 <Loader2 className="h-14 w-14 animate-spin text-primary mx-auto" />
                 <div>
                   <p className="font-medium text-lg">Crafting your viral script…</p>
-                  <p className="text-sm text-muted-foreground">Creating hook, script, visuals & captions</p>
+                  <p className="text-sm text-muted-foreground">Building hooks, scenes, overlays & captions</p>
                 </div>
               </div>
             </div>
@@ -226,29 +195,20 @@ export function ViralScriptGenerator() {
                   <Loader2 className="h-14 w-14 animate-spin text-primary mx-auto" />
                   <div>
                     <p className="font-medium text-lg">Crafting your viral script…</p>
-                    <p className="text-sm text-muted-foreground">Creating hook, script, visuals & captions</p>
+                    <p className="text-sm text-muted-foreground">Building hooks, scenes, overlays & captions</p>
                   </div>
                 </div>
               </div>
             )}
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              {sections.map(({ emoji, label, content, color }) => (
-                <Card key={label} className="border-border bg-card">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <Badge variant="secondary" className="text-sm">
-                        <span className="mr-1.5">{emoji}</span>
-                        {label}
-                      </Badge>
-                      <CopyBtn text={content} />
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="whitespace-pre-wrap text-sm leading-relaxed">{content}</p>
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="space-y-4">
+              <HookLab hooks={result.hooks} />
+              <SceneBreakdown scenes={result.scenes} />
+              <CaptionsSection
+                overlays={result.overlays}
+                socialCaption={result.socialCaption}
+                hashtags={result.hashtags}
+              />
             </div>
           </div>
         )}
