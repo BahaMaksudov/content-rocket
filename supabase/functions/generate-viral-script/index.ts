@@ -69,13 +69,32 @@ serve(async (req) => {
 
     const voiceModeInstruction = voiceMode
       ? `\n\nVOICE-OPTIMIZED MODE (ACTIVE):
-The user has enabled Voice-Optimized Mode for AI text-to-speech generation. You MUST apply these rules to ALL script dialogue in the "scenes" array:
-- Use short sentences (max 12 words each).
-- Insert [pause] tags where the speaker should take a breath or create dramatic effect.
-- Avoid abbreviations — spell out numbers and acronyms (e.g., "five" not "5", "artificial intelligence" not "AI").
-- Use phonetic-friendly phrasing — avoid tongue twisters, complex compound words, or ambiguous pronunciations.
-- Add [emphasis] tags around key words that should be stressed.
-- Example: "This [emphasis]one trick[/emphasis] changed everything. [pause] And nobody is talking about it."`
+The user has enabled Voice-Optimized Mode for AI text-to-speech generation (e.g., ElevenLabs). You MUST apply ALL of the following rules to EVERY scene's "script" field:
+
+1. PACING & BREATH:
+   - Insert "..." (ellipses) or "[pause]" between ideas for natural breathing transitions.
+   - Keep every sentence to a maximum of 10–12 words. Break longer thoughts into two sentences.
+
+2. PHONETIC CLARITY:
+   - For complex technical terms, brand names, or acronyms, provide the phonetic spelling in brackets the FIRST time it appears. Example: "VidLogic [Vid-Loj-Ik]".
+   - Spell out all numbers (e.g., "three" not "3") and acronyms (e.g., "artificial intelligence" not "AI").
+
+3. EMPHASIS & TONE:
+   - Wrap words the AI voice should stress in *italics* (e.g., "This is *everything* you need.").
+   - Use Sentence Case only — NEVER use All Caps for any word in the script. TTS engines spell out capitalized words letter-by-letter.
+
+4. CONTRACTIONS (MANDATORY):
+   - Always use contractions: "don't" not "do not", "you're" not "you are", "it's" not "it is", "can't" not "cannot", "won't" not "will not".
+   - This makes the script sound natural and conversational, not robotic.
+
+5. THE HOOK PUNCH:
+   - The first 5 words of every hook and the first scene's script MUST be punchy, single-syllable words spoken fast. Example: "Stop. Look. This. Changes. All."
+   - Avoid multi-syllable words in the opening line.
+
+6. GENERAL:
+   - Avoid tongue twisters, complex compound words, or ambiguous pronunciations.
+   - Write exactly as someone would *say* it — conversational, warm, human.
+   - Example scene script: "Here's the thing... [pause] most people *don't* know this. But it's so simple. [pause] Let me show you."`
       : "";
 
     const systemPrompt = `You are an expert Viral Content Strategist for TikTok, Instagram Reels, and YouTube Shorts. Your goal is to turn a simple topic into a high-retention video script.
