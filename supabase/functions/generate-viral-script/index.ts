@@ -33,7 +33,7 @@ serve(async (req) => {
   }
 
   try {
-    const { topic, duration = "30s" } = await req.json();
+    const { topic, duration = "30s", tone = "hype" } = await req.json();
 
     if (!topic || topic.trim().length === 0) {
       return new Response(
@@ -58,16 +58,25 @@ serve(async (req) => {
 
     const durationInstruction = durationGuides[duration] || durationGuides["30s"];
 
+    const toneGuides: Record<string, string> = {
+      "hype": "TONE: 🔥 HYPE — High energy and LOUD. Use ALL CAPS for emphasis on key words. Short, punchy sentences. Exclamation points! The script should feel like the creator is FIRED UP and shouting at the camera. Suggest visual effects like Fast Cuts, Shake Effects, Bass Drops, and Flash Transitions.",
+      "educational": "TONE: 🧠 EDUCATIONAL — Authoritative and clear. Use phrases like 'Did you know…', 'Here's the breakdown', 'Let me explain.' Focus on clarity, credibility, and delivering value. The voice should feel like a trusted expert. Suggest visual effects like Clean Text Pops, Diagrams, Step-by-step Annotations, and Smooth Transitions.",
+      "funny": "TONE: 🤣 FUNNY — Witty and relatable. Incorporate self-deprecating humor, exaggeration, or relatable 'POV' scenarios. Use comedic timing with pauses and punchlines. The script should make someone smile or laugh out loud. Suggest visual effects like Meme Overlays, Reaction Cuts, Sound Effects (Record Scratch, Sad Trombone), and Zoom-ins on facial expressions.",
+      "mysterious": "TONE: 🤫 MYSTERIOUS — Curiosity-gap and quiet energy. Start with a whisper-style hook. Use pauses (…) to build tension. The script should feel like you're revealing a secret. Keep the energy low but gripping. Suggest visual effects like Slow Zooms, Dark Overlays, Eerie Sound Effects, Vignette Filters, and Cinematic Letterboxing.",
+    };
+
+    const toneInstruction = toneGuides[tone] || toneGuides["hype"];
+
     const systemPrompt = `You are an expert Viral Content Strategist for TikTok, Instagram Reels, and YouTube Shorts. Your goal is to turn a simple topic into a high-retention video script.
 
 DURATION CONSTRAINT (CRITICAL):
 ${durationInstruction}
 You must strictly adhere to the word count limits for this duration to ensure the script fits the timeframe when spoken at a fast, energetic pace.
 
-TONE & VOICE:
-- Energetic, punchy, and modern.
+TONE & VOICE (CRITICAL):
+${toneInstruction}
 - Avoid corporate jargon.
-- Use the 'Problem-Agitate-Solution' framework or the 'Hero's Journey' in 60 seconds.
+- The tone MUST permeate every section: the hooks, the script body, the visual/effect ideas, AND the captions.
 
 You must return the response as valid JSON with exactly these four keys:
 
