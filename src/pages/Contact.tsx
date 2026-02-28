@@ -75,7 +75,7 @@ export default function Contact() {
       }, 5000);
     } catch (error: any) {
       console.error("Error sending contact form:", error);
-      toast.error("System busy. Please try again or email us directly at support@rocketcontentpro.io");
+      toast.error("System busy. Please try again or email us directly at support@vidlogicai.com");
     } finally {
       setIsSubmitting(false);
     }
@@ -90,7 +90,7 @@ export default function Contact() {
             <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-rocket flex items-center justify-center">
               <Rocket className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="font-bold text-lg">Rocket Content</span>
+            <span className="font-bold text-lg">VidLogic AI</span>
           </Link>
           <Button variant="ghost" asChild>
             <Link to="/" className="flex items-center gap-2">
@@ -235,10 +235,10 @@ export default function Contact() {
             Prefer email? Reach us directly at
           </p>
           <a
-            href="mailto:support@rocketcontentpro.io"
+            href="mailto:support@vidlogicai.com"
             className="text-primary hover:underline font-medium"
           >
-            support@rocketcontentpro.io
+            support@vidlogicai.com
           </a>
         </div> */}
       </main>
@@ -246,7 +246,7 @@ export default function Contact() {
       {/* Simple Footer */}
       <footer className="border-t border-border py-8 mt-16">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Rocket Content. All rights reserved.
+          © {new Date().getFullYear()} VidLogic AI. All rights reserved.
         </div>
       </footer>
     </div>
