@@ -33,6 +33,7 @@ function CopyBtn({ text }: { text: string }) {
 }
 
 type Duration = "15s" | "30s" | "60s";
+type Tone = "hype" | "educational" | "funny" | "mysterious";
 
 const DURATION_OPTIONS: { value: Duration; label: string }[] = [
   { value: "15s", label: "15s" },
@@ -40,10 +41,18 @@ const DURATION_OPTIONS: { value: Duration; label: string }[] = [
   { value: "60s", label: "60s" },
 ];
 
+const TONE_OPTIONS: { value: Tone; emoji: string; label: string }[] = [
+  { value: "hype", emoji: "🔥", label: "Hype" },
+  { value: "educational", emoji: "🧠", label: "Educational" },
+  { value: "funny", emoji: "🤣", label: "Funny" },
+  { value: "mysterious", emoji: "🤫", label: "Mysterious" },
+];
+
 export function ViralScriptGenerator() {
   const { toast } = useToast();
   const [topic, setTopic] = useState("");
   const [duration, setDuration] = useState<Duration>("30s");
+  const [tone, setTone] = useState<Tone>("hype");
   const [isGenerating, setIsGenerating] = useState(false);
   const [result, setResult] = useState<ViralScriptContent | null>(() => {
     try {
@@ -72,7 +81,7 @@ export function ViralScriptGenerator() {
     setTimeout(async () => {
       try {
         const { data, error } = await supabase.functions.invoke("generate-viral-script", {
-          body: { topic: topic.trim(), duration },
+          body: { topic: topic.trim(), duration, tone },
         });
 
         if (error) {
@@ -124,23 +133,45 @@ export function ViralScriptGenerator() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Duration Selector */}
-          <div>
-            <label className="text-sm font-medium text-muted-foreground mb-2 block">Duration</label>
-            <div className="flex rounded-full bg-slate-800 p-1 w-fit">
-              {DURATION_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => setDuration(opt.value)}
-                  className={`px-5 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
-                    duration === opt.value
-                      ? "bg-cyan-500 text-slate-950 shadow-[0_0_12px_rgba(6,182,212,0.4)]"
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
+          {/* Duration & Tone Selectors */}
+          <div className="flex flex-wrap items-start gap-6">
+            <div>
+              <label className="text-sm font-medium text-muted-foreground mb-2 block">Duration</label>
+              <div className="flex rounded-full bg-slate-800 p-1 w-fit">
+                {DURATION_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setDuration(opt.value)}
+                    className={`px-5 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
+                      duration === opt.value
+                        ? "bg-cyan-500 text-slate-950 shadow-[0_0_12px_rgba(6,182,212,0.4)]"
+                        : "text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-muted-foreground mb-2 block">Tone</label>
+              <div className="flex flex-wrap gap-2">
+                {TONE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setTone(opt.value)}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 border ${
+                      tone === opt.value
+                        ? "border-cyan-500 bg-cyan-500/10 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.25)]"
+                        : "border-border bg-muted/30 text-muted-foreground hover:text-foreground hover:border-muted-foreground/50"
+                    }`}
+                  >
+                    <span className="mr-1">{opt.emoji}</span>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
