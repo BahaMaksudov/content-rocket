@@ -418,15 +418,15 @@ export default function Dashboard() {
           setActiveTab(v as "single" | "viral" | "bulk");
         }}>
           <TabsList className="grid grid-cols-3 w-full max-w-lg">
-            <TabsTrigger value="single" className="flex items-center gap-2">
+            <TabsTrigger value="single" className="flex items-center gap-2 data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950 data-[state=active]:shadow-[0_0_15px_rgba(6,182,212,0.4)]">
               <Video className="h-4 w-4" />
               Single Video
             </TabsTrigger>
-            <TabsTrigger value="viral" className="flex items-center gap-2">
+            <TabsTrigger value="viral" className="flex items-center gap-2 data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950 data-[state=active]:shadow-[0_0_15px_rgba(6,182,212,0.4)]">
               <Flame className="h-4 w-4" />
               Viral Script
             </TabsTrigger>
-            <TabsTrigger value="bulk" className="flex items-center gap-2 relative">
+            <TabsTrigger value="bulk" className="flex items-center gap-2 relative data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950 data-[state=active]:shadow-[0_0_15px_rgba(6,182,212,0.4)]">
               <Layers className="h-4 w-4" />
               Bulk Upload
               {!isAgency && <Lock className="h-3 w-3 ml-1 text-muted-foreground" />}
