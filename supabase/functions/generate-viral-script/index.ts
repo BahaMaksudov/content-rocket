@@ -33,7 +33,7 @@ serve(async (req) => {
   }
 
   try {
-    const { topic } = await req.json();
+    const { topic, duration = "30s" } = await req.json();
 
     if (!topic || topic.trim().length === 0) {
       return new Response(
@@ -50,7 +50,19 @@ serve(async (req) => {
       );
     }
 
+    const durationGuides: Record<string, string> = {
+      "15s": "The user has selected a 15-SECOND duration. This is a 'One-Tip Wonder' or 'Quick Hack' format. The SCRIPT must be strictly 40-50 words. Keep it ultra-punchy — one core idea, no fluff. Only 1 hook option needed.",
+      "30s": "The user has selected a 30-SECOND duration. This is a 'Problem/Solution' format with moderate detail. The SCRIPT must be strictly 80-90 words. Use the Problem-Agitate-Solution framework.",
+      "60s": "The user has selected a 60-SECOND duration. This is a 'Storytelling' or 'Top 3 List' format. The SCRIPT must be strictly 160-180 words. Use the Hero's Journey or a ranked list structure.",
+    };
+
+    const durationInstruction = durationGuides[duration] || durationGuides["30s"];
+
     const systemPrompt = `You are an expert Viral Content Strategist for TikTok, Instagram Reels, and YouTube Shorts. Your goal is to turn a simple topic into a high-retention video script.
+
+DURATION CONSTRAINT (CRITICAL):
+${durationInstruction}
+You must strictly adhere to the word count limits for this duration to ensure the script fits the timeframe when spoken at a fast, energetic pace.
 
 TONE & VOICE:
 - Energetic, punchy, and modern.
