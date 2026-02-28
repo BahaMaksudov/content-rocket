@@ -12,7 +12,7 @@ export default function Terms() {
             <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-rocket flex items-center justify-center">
               <Rocket className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="font-bold text-lg">Rocket Content</span>
+            <span className="font-bold text-lg">VidLogic AI</span>
           </Link>
           <Button variant="ghost" asChild>
             <Link to="/" className="flex items-center gap-2">
@@ -34,7 +34,7 @@ export default function Terms() {
               1. Agreement to Terms
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              By accessing or using Rocket Content ("the Service"), you agree to be bound by these Terms of Service
+              By accessing or using VidLogic AI ("the Service"), you agree to be bound by these Terms of Service
               ("Terms"). If you disagree with any part of the terms, you may not access the Service. These Terms apply
               to all visitors, users, and others who access or use the Service.
             </p>
@@ -45,7 +45,7 @@ export default function Terms() {
               2. Description of Service
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              Rocket Content is an AI-powered content repurposing platform that transforms YouTube videos into
+              VidLogic AI is an AI-powered content repurposing platform that transforms YouTube videos into
               multi-platform content including social media posts, blog articles, and visual assets. The Service uses
               artificial intelligence to analyze, transcribe, and generate derivative content.
             </p>
@@ -97,7 +97,7 @@ export default function Terms() {
 
             <h3 className="text-xl font-medium text-foreground mt-6 mb-3">4.5 Chargeback Policy</h3>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              Users agree to contact Rocket Content support at support@rocketcontentpro.io before initiating a chargeback 
+              Users agree to contact VidLogic AI support at support@vidlogicai.com before initiating a chargeback 
               through their bank. Unauthorized chargebacks may result in immediate account termination.
             </p>
 
@@ -112,7 +112,7 @@ export default function Terms() {
               5. Refund and Cancellation Policy
             </h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              We want you to be completely satisfied with Rocket Content. Please review our refund and cancellation
+              We want you to be completely satisfied with VidLogic AI. Please review our refund and cancellation
               policies below.
             </p>
 
@@ -124,7 +124,7 @@ export default function Terms() {
 
             <h4 className="text-lg font-semibold text-foreground mt-4 mb-2">Eligibility</h4>
             <ul className="list-disc list-inside text-muted-foreground space-y-2 mb-4">
-              <li>You must be a first-time subscriber to Rocket Content</li>
+              <li>You must be a first-time subscriber to VidLogic AI</li>
               <li>Your refund request must be submitted within 7 days of your initial subscription date</li>
               <li>You must have used fewer than 3 AI Generation credits during your subscription period</li>
               <li>The refund applies only to your first subscription payment, not renewals or upgrades</li>
@@ -140,8 +140,8 @@ export default function Terms() {
             <ul className="list-disc list-inside text-muted-foreground space-y-2 mb-4">
               <li>
                 Email us at{" "}
-                <a href="mailto:support@rocketcontentpro.io" className="text-primary hover:underline">
-                  support@rocketcontentpro.io
+                <a href="mailto:support@vidlogicai.com" className="text-primary hover:underline">
+                  support@vidlogicai.com
                 </a>{" "}
                 with the subject line "Refund Request"
               </li>
@@ -172,8 +172,8 @@ export default function Terms() {
               If a technical error on our platform prevents an AI generation from completing successfully, we will, at
               our discretion, either refund the AI Generation credit to your account balance or issue a partial monetary
               refund. To report a technical issue, please contact us at{" "}
-              <a href="mailto:support@rocketcontentpro.io" className="text-primary hover:underline">
-                support@rocketcontentpro.io
+              <a href="mailto:support@vidlogicai.com" className="text-primary hover:underline">
+                support@vidlogicai.com
               </a>{" "}
               with details of the error, including any error messages received and the approximate time of the incident.
             </p>
@@ -250,7 +250,7 @@ export default function Terms() {
               10. Limitation of Liability
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              To the maximum extent permitted by law, Rocket Content shall not be liable for any indirect, incidental,
+              To the maximum extent permitted by law, VidLogic AI shall not be liable for any indirect, incidental,
               special, consequential, or punitive damages, including loss of profits, data, or goodwill, arising from
               your use of the Service. Our total liability shall not exceed the amount you paid us in the twelve months
               preceding the claim.
@@ -285,7 +285,7 @@ export default function Terms() {
             </h2>
             <p className="text-muted-foreground leading-relaxed">
               These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which
-              Rocket Content operates, without regard to its conflict of law provisions.
+              VidLogic AI operates, without regard to its conflict of law provisions.
             </p>
           </section>
 
@@ -294,7 +294,7 @@ export default function Terms() {
               14. Third-Party Providers
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              Rocket Content utilizes third-party AI providers (such as OpenAI and Google). By using the Service, 
+              VidLogic AI utilizes third-party AI providers (such as OpenAI and Google). By using the Service, 
               you also agree to be bound by the relevant usage policies of these third-party providers. We are not 
               responsible for the availability or accuracy of these third-party AI models.
             </p>
@@ -304,8 +304,8 @@ export default function Terms() {
             <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">15. Contact Us</h2>
             <p className="text-muted-foreground leading-relaxed">
               If you have questions about these Terms, please contact us at{" "}
-              <a href="mailto:legal@rocketcontentpro.io" className="text-primary hover:underline">
-                legal@rocketcontentpro.io
+              <a href="mailto:support@vidlogicai.com" className="text-primary hover:underline">
+                support@vidlogicai.com
               </a>{" "}
               or visit our{" "}
               <Link to="/contact" className="text-primary hover:underline">
@@ -320,7 +320,7 @@ export default function Terms() {
       {/* Simple Footer */}
       <footer className="border-t border-border py-8">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Rocket Content. All rights reserved.
+          © {new Date().getFullYear()} VidLogic AI. All rights reserved.
         </div>
       </footer>
     </div>
