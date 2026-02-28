@@ -32,9 +32,18 @@ function CopyBtn({ text }: { text: string }) {
   );
 }
 
+type Duration = "15s" | "30s" | "60s";
+
+const DURATION_OPTIONS: { value: Duration; label: string }[] = [
+  { value: "15s", label: "15s" },
+  { value: "30s", label: "30s" },
+  { value: "60s", label: "60s" },
+];
+
 export function ViralScriptGenerator() {
   const { toast } = useToast();
   const [topic, setTopic] = useState("");
+  const [duration, setDuration] = useState<Duration>("30s");
   const [isGenerating, setIsGenerating] = useState(false);
   const [result, setResult] = useState<ViralScriptContent | null>(() => {
     try {
@@ -63,7 +72,7 @@ export function ViralScriptGenerator() {
     setTimeout(async () => {
       try {
         const { data, error } = await supabase.functions.invoke("generate-viral-script", {
-          body: { topic: topic.trim() },
+          body: { topic: topic.trim(), duration },
         });
 
         if (error) {
@@ -115,6 +124,26 @@ export function ViralScriptGenerator() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Duration Selector */}
+          <div>
+            <label className="text-sm font-medium text-muted-foreground mb-2 block">Duration</label>
+            <div className="flex rounded-full bg-slate-800 p-1 w-fit">
+              {DURATION_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setDuration(opt.value)}
+                  className={`px-5 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
+                    duration === opt.value
+                      ? "bg-cyan-500 text-slate-950 shadow-[0_0_12px_rgba(6,182,212,0.4)]"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <Textarea
             placeholder='e.g. "The future of AI agents" or "5 money habits that changed my life"'
             value={topic}
