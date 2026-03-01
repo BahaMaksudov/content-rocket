@@ -17,6 +17,8 @@ interface SceneBreakdownProps {
   onRegenerate?: () => void;
   isRegenerating?: boolean;
   hideSave?: boolean;
+  isSavedToHistory?: boolean;
+  onSavedToHistory?: () => void;
 }
 
 function highlightVisualKeywords(text: string) {
@@ -30,7 +32,7 @@ function highlightVisualKeywords(text: string) {
   );
 }
 
-export function SceneBreakdown({ scenes, selectedDuration, topic, tone, platform, result, onRegenerate, isRegenerating, hideSave }: SceneBreakdownProps) {
+export function SceneBreakdown({ scenes, selectedDuration, topic, tone, platform, result, onRegenerate, isRegenerating, hideSave, isSavedToHistory, onSavedToHistory }: SceneBreakdownProps) {
   const isMobile = useIsMobile();
   const dialogueOnly = scenes.map((s) => s.script).join("\n\n");
 
@@ -99,7 +101,7 @@ export function SceneBreakdown({ scenes, selectedDuration, topic, tone, platform
           ))}
         </CardContent>
         {regenerateButton}
-        <SceneBlueprintFooter scenes={scenes} selectedDuration={selectedDuration} topic={topic} tone={tone} platform={platform} result={result} hideSave={hideSave} />
+        <SceneBlueprintFooter scenes={scenes} selectedDuration={selectedDuration} topic={topic} tone={tone} platform={platform} result={result} hideSave={hideSave} isSavedToHistory={isSavedToHistory} onSavedToHistory={onSavedToHistory} />
       </Card>
     );
   }
@@ -134,7 +136,7 @@ export function SceneBreakdown({ scenes, selectedDuration, topic, tone, platform
         </table>
       </CardContent>
       {regenerateButton}
-      <SceneBlueprintFooter scenes={scenes} selectedDuration={selectedDuration} topic={topic} tone={tone} platform={platform} result={result} hideSave={hideSave} />
+      <SceneBlueprintFooter scenes={scenes} selectedDuration={selectedDuration} topic={topic} tone={tone} platform={platform} result={result} hideSave={hideSave} isSavedToHistory={isSavedToHistory} onSavedToHistory={onSavedToHistory} />
     </Card>
   );
 }

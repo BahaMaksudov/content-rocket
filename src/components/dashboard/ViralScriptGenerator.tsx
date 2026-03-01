@@ -28,6 +28,7 @@ export function ViralScriptGenerator() {
   const [voiceMode, setVoiceMode] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [regenerating, setRegenerating] = useState<RegeneratingSection>(null);
+  const [isSavedToHistory, setIsSavedToHistory] = useState(false);
   const [result, setResult] = useState<ViralScriptResult | null>(() => {
     try {
       const raw = localStorage.getItem(VIRAL_STORAGE_KEY);
@@ -66,6 +67,7 @@ export function ViralScriptGenerator() {
 
       if (data?.error) throw new Error(data.error);
       setResult(data as ViralScriptResult);
+      setIsSavedToHistory(false);
       toast({ title: "Script generated!", description: "Your viral video script is ready." });
       setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
     } catch (err: any) {
@@ -112,6 +114,7 @@ export function ViralScriptGenerator() {
         return prev;
       });
 
+      setIsSavedToHistory(false);
       toast({ title: "Section regenerated!", description: `${section.charAt(0).toUpperCase() + section.slice(1)} have been refreshed.` });
     } catch (err: any) {
       console.error(`Regenerate ${section} error:`, err);
@@ -292,6 +295,8 @@ export function ViralScriptGenerator() {
                 result={result}
                 onRegenerate={() => handleRegenerateSection("scenes")}
                 isRegenerating={regenerating === "scenes"}
+                isSavedToHistory={isSavedToHistory}
+                onSavedToHistory={() => setIsSavedToHistory(true)}
               />
               <CaptionsSection
                 overlays={result.overlays}
