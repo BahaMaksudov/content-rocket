@@ -1,22 +1,49 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Flame } from "lucide-react";
+import { Loader2, RotateCw } from "lucide-react";
 import { CopyButton } from "./CopyButton";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { HookOption } from "./types";
 
 interface HookLabProps {
   hooks: HookOption[];
+  onRegenerate?: () => void;
+  isRegenerating?: boolean;
 }
 
-export function HookLab({ hooks }: HookLabProps) {
+export function HookLab({ hooks, onRegenerate, isRegenerating }: HookLabProps) {
   const [selectedId, setSelectedId] = useState<number>(hooks[0]?.id ?? 1);
 
   return (
-    <Card className="border-border bg-card">
+    <Card className="border-border bg-card relative">
+      {isRegenerating && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/70 backdrop-blur-sm rounded-[inherit]">
+          <div className="text-center space-y-2">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+            <p className="text-sm text-muted-foreground">Regenerating hooks…</p>
+          </div>
+        </div>
+      )}
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <span>🎣</span> Hook Lab
+        <CardTitle className="flex items-center justify-between text-base">
+          <span className="flex items-center gap-2"><span>🎣</span> Hook Lab</span>
+          {onRegenerate && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={onRegenerate}
+                    disabled={isRegenerating}
+                    className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50"
+                  >
+                    <RotateCw className="h-4 w-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent><p>Regenerate Hooks</p></TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
         </CardTitle>
         <p className="text-xs text-muted-foreground">Click a hook to select it for your video</p>
       </CardHeader>
