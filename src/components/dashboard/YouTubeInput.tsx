@@ -408,62 +408,6 @@ export function YouTubeInput({
           </div>
         )}
 
-        {/* Fair Use + Generate — always visible, never conditionally removed */}
-        {onGenerate && setFairUseConfirmed && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2.5">
-              <Checkbox
-                id="fair-use-quick"
-                checked={fairUseConfirmed}
-                onCheckedChange={(checked) => setFairUseConfirmed(checked === true)}
-                className="h-3.5 w-3.5"
-              />
-              <div className="flex items-center gap-1.5 flex-1">
-                <Label
-                  htmlFor="fair-use-quick"
-                  className="text-xs text-muted-foreground cursor-pointer leading-tight"
-                >
-                  I confirm this usage falls under Fair Use (Commentary/Education).
-                </Label>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0 cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="max-w-xs">
-                      <p className="text-sm">
-                        Fair Use generally allows summarizing others' work if you add your own unique value or commentary.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-            </div>
-            <Button
-              onClick={onGenerate}
-              disabled={isGenerating || !fairUseConfirmed || !transcript}
-              size="sm"
-              className={`w-full transition-all duration-300 ${
-                fairUseConfirmed && transcript
-                  ? "!bg-[#06b6d4] !text-black font-bold shadow-[0_0_20px_rgba(6,182,212,0.6)]"
-                  : "bg-[rgba(6,182,212,0.1)] text-muted-foreground border-2 border-[#06b6d44d] opacity-100"
-              }`}
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Rocket className="h-3.5 w-3.5 mr-1.5" />
-                  Generate All Assets
-                </>
-              )}
-            </Button>
-          </div>
-        )}
-
         {/* Manual transcript toggle */}
         {!transcript && (
           <button
@@ -563,6 +507,62 @@ export function YouTubeInput({
               disabled={!manualTranscript.trim() || isOverLimit}
             >
               Use This Transcript
+            </Button>
+          </div>
+        )}
+
+        {/* Fair Use + Generate — always visible, never conditionally removed */}
+        {onGenerate && setFairUseConfirmed && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2.5">
+              <Checkbox
+                id="fair-use-quick"
+                checked={fairUseConfirmed}
+                onCheckedChange={(checked) => setFairUseConfirmed(checked === true)}
+                className="h-3.5 w-3.5"
+              />
+              <div className="flex items-center gap-1.5 flex-1">
+                <Label
+                  htmlFor="fair-use-quick"
+                  className="text-xs text-muted-foreground cursor-pointer leading-tight"
+                >
+                  I confirm this usage falls under Fair Use (Commentary/Education).
+                </Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0 cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-xs">
+                      <p className="text-sm">
+                        Fair Use generally allows summarizing others' work if you add your own unique value or commentary.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            </div>
+            <Button
+              onClick={onGenerate}
+              disabled={isGenerating || !fairUseConfirmed || !transcript}
+              size="sm"
+              className={`w-full transition-all duration-300 ${
+                fairUseConfirmed && transcript
+                  ? "!bg-[#06b6d4] !text-black font-bold shadow-[0_0_20px_rgba(6,182,212,0.6)]"
+                  : "bg-[rgba(6,182,212,0.1)] text-muted-foreground border-2 border-[#06b6d44d] opacity-100"
+              }`}
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Rocket className="h-3.5 w-3.5 mr-1.5" />
+                  Generate All Assets
+                </>
+              )}
             </Button>
           </div>
         )}
