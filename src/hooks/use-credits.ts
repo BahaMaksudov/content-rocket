@@ -35,6 +35,13 @@ type CreditsQueryData = {
   creditsLastReset: string | null;
 };
 
+/** Get billing cycle start date by subtracting 1 month from period end */
+function getBillingCycleStart(subscriptionEnd: string): Date {
+  const cycleStart = new Date(subscriptionEnd);
+  cycleStart.setMonth(cycleStart.getMonth() - 1);
+  return cycleStart;
+}
+
 /** Check if the billing cycle has ended based on subscription period end date */
 function shouldResetForBillingCycle(lastReset: string | null, subscriptionEnd: string | null): boolean {
   if (!subscriptionEnd) {
@@ -52,8 +59,6 @@ function shouldResetForBillingCycle(lastReset: string | null, subscriptionEnd: s
   if (!lastReset) return true;
   
   const lastResetDate = new Date(lastReset);
-  // Reset if last reset was before the period end and we're now past it
-  // OR if period end is in the past (new cycle started)
   return lastResetDate < periodEnd && now >= periodEnd;
 }
 
@@ -119,9 +124,49 @@ export function useCredits(): Credits {
         };
       }
 
-      // If payment failed, don't reset — return current values
+      // If payment failed, don't reset — keep account in limited state
       if (needsReset && isPaymentFailed) {
         console.log("[Credits] Reset blocked — payment failed, subscription not active");
+      }
+
+      // Auto-heal for users incorrectly reset mid-cycle (e.g., reset on 1st instead of billing anniversary)
+      if (subscriptionEnd && !needsReset) {
+        const cycleStart = getBillingCycleStart(subscriptionEnd);
+        const periodEnd = new Date(subscriptionEnd);
+        const now = new Date();
+        const lastResetDate = lastReset ? new Date(lastReset) : null;
+
+        const resetHappenedInsideCurrentCycle =
+          !!lastResetDate &&
+          lastResetDate > cycleStart &&
+          now < periodEnd;
+
+        if (resetHappenedInsideCurrentCycle) {
+          const { count: cycleGenerationsCount } = await supabase
+            .from("generations")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", user.id)
+            .gte("created_at", cycleStart.toISOString())
+            .lt("created_at", subscriptionEnd);
+
+          const recoveredUsed = Math.max(cycleGenerationsCount ?? 0, computeEffectiveUsed(profile));
+          const recoveredAvailable = Math.max(0, creditLimit - recoveredUsed);
+
+          await supabase
+            .from("profiles")
+            .update({
+              credits_available: recoveredAvailable,
+              credits_used: recoveredUsed,
+              credits_last_reset: cycleStart.toISOString(),
+            })
+            .eq("user_id", user.id);
+
+          return {
+            creditsAvailable: recoveredAvailable,
+            creditsUsed: recoveredUsed,
+            creditsLastReset: cycleStart.toISOString(),
+          };
+        }
       }
 
       const effectiveUsed = computeEffectiveUsed(profile);
@@ -158,7 +203,7 @@ export function useCredits(): Credits {
   const creditsLastReset = data?.creditsLastReset ?? null;
 
   const hasCredits = creditsAvailable > 0;
-  const canUseCredits = hasCredits;
+  const canUseCredits = hasCredits && !(isPaymentFailed && tier !== "free");
 
   const refreshCredits = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ["credits", user?.id] });
@@ -207,6 +252,7 @@ export function useCredits(): Credits {
 
   const useCredit = useCallback(async (): Promise<boolean> => {
     if (!user?.id) return false;
+    if (isPaymentFailed && tier !== "free") return false;
 
     const { data: freshProfile, error: fetchError } = await supabase
       .from("profiles")
@@ -253,7 +299,7 @@ export function useCredits(): Credits {
     void refreshCredits();
 
     return true;
-  }, [user?.id, refreshCredits, queryClient, creditLimit]);
+  }, [user?.id, refreshCredits, queryClient, creditLimit, isPaymentFailed, tier]);
 
   return {
     creditsAvailable,
