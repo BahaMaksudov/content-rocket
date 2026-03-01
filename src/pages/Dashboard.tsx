@@ -56,7 +56,9 @@ function loadPersistedState(): PersistedDashboardState | null {
 function savePersistedState(state: PersistedDashboardState) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch { /* quota exceeded – ignore */ }
+  } catch {
+    /* quota exceeded – ignore */
+  }
 }
 
 export interface GeneratedContent {
@@ -76,7 +78,9 @@ export default function Dashboard() {
   const persisted = useRef(loadPersistedState());
 
   const [transcript, setTranscript] = useState(persisted.current?.transcript ?? "");
-  const [transcriptMethod, setTranscriptMethod] = useState<"auto" | "manual" | null>(persisted.current?.transcriptMethod ?? null);
+  const [transcriptMethod, setTranscriptMethod] = useState<"auto" | "manual" | null>(
+    persisted.current?.transcriptMethod ?? null,
+  );
   const [videoTitle, setVideoTitle] = useState(persisted.current?.videoTitle ?? "");
   const [youtubeUrl, setYoutubeUrl] = useState(persisted.current?.youtubeUrl ?? "");
   // Default to "The Friendly Peer" preset
@@ -84,7 +88,9 @@ export default function Dashboard() {
   const [tone, setTone] = useState("professional");
   const [audience, setAudience] = useState("general");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(persisted.current?.generatedContent ?? null);
+  const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(
+    persisted.current?.generatedContent ?? null,
+  );
   const [showCreditsModal, setShowCreditsModal] = useState(false);
   const [showBulkUpgradeModal, setShowBulkUpgradeModal] = useState(false);
   const [upgradeProcessed, setUpgradeProcessed] = useState(false);
@@ -112,15 +118,15 @@ export default function Dashboard() {
   // One-time backfill so Billing shows historical invoices (e.g. Feb 1) even if the webhook
   // wasn't configured at the time of payment.
   useSyncPaymentHistoryOnce();
-  
+
   // Unified credits tracking
   const { canUseCredits, useCredit, refreshCredits } = useCredits();
   // Fetch count tracking for same-video credit protection
   const { resetFetchCount } = useFetchTracking();
-  
+
   // Target language state (always used now)
   const [targetLanguage, setTargetLanguage] = useState("english");
-  
+
   // Ref for scrolling to content output
   const contentOutputRef = useRef<HTMLDivElement>(null);
   // Ref for scrolling to YouTube input
@@ -129,17 +135,17 @@ export default function Dashboard() {
   // Handle upgrade query parameter from landing page
   useEffect(() => {
     const upgradeTier = searchParams.get("upgrade") as "starter" | "pro" | "agency" | null;
-    
+
     if (upgradeTier && !subscriptionLoading && !upgradeProcessed) {
       setUpgradeProcessed(true);
-      
+
       // Clear the upgrade param from URL
       searchParams.delete("upgrade");
       setSearchParams(searchParams, { replace: true });
-      
+
       // Track and trigger checkout
       trackUpgradeClicked(upgradeTier, "landing_page_redirect");
-      
+
       openCheckout(upgradeTier).catch((error) => {
         console.error("Checkout error from landing redirect:", error);
         const errorMessage = error instanceof Error ? error.message : "Failed to start checkout";
@@ -156,17 +162,17 @@ export default function Dashboard() {
         .select("*")
         .order("is_default", { ascending: false })
         .order("created_at", { ascending: false });
-      
+
       if (error) throw error;
-      
+
       // Auto-select default brand voice if none selected
       if (data && data.length > 0 && !selectedBrandVoice) {
-        const defaultVoice = data.find(v => v.is_default);
+        const defaultVoice = data.find((v) => v.is_default);
         if (defaultVoice) {
           setSelectedBrandVoice(defaultVoice.id);
         }
       }
-      
+
       return data;
     },
     enabled: !!user,
@@ -243,7 +249,7 @@ export default function Dashboard() {
       try {
         // Build brand voice data
         let brandVoiceData = null;
-        
+
         if (selectedBrandVoice) {
           if (isDefaultVoiceId(selectedBrandVoice)) {
             const defaultVoice = getDefaultVoiceById(selectedBrandVoice);
@@ -257,7 +263,7 @@ export default function Dashboard() {
               };
             }
           } else {
-            const selectedVoice = brandVoices?.find(v => v.id === selectedBrandVoice);
+            const selectedVoice = brandVoices?.find((v) => v.id === selectedBrandVoice);
             if (selectedVoice) {
               brandVoiceData = {
                 name: selectedVoice.name,
@@ -269,7 +275,7 @@ export default function Dashboard() {
             }
           }
         }
-        
+
         const socialProofUserId = includeSocialProof ? user?.id : undefined;
         console.log("Social Proof toggle:", includeSocialProof, "| userId sent to AI:", socialProofUserId);
 
@@ -333,14 +339,14 @@ export default function Dashboard() {
         }
 
         setGeneratedContent(data);
-        
+
         setTimeout(() => {
           contentOutputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
         }, 100);
 
         const isDefaultVoice = selectedBrandVoice && isDefaultVoiceId(selectedBrandVoice);
         const brandVoiceIdForDb = isDefaultVoice ? null : selectedBrandVoice;
-        
+
         await supabase.from("generations").insert({
           user_id: user!.id,
           youtube_url: youtubeUrl || null,
@@ -366,13 +372,14 @@ export default function Dashboard() {
 
         toast({
           title: "All assets generated!",
-          description: targetLanguage !== "english"
-            ? `Content created in ${targetLanguage}. Saved to history.`
-            : "Your multi-platform content has been saved to history.",
+          description:
+            targetLanguage !== "english"
+              ? `Content created in ${targetLanguage}. Saved to history.`
+              : "Your multi-platform content has been saved to history.",
         });
       } catch (error: any) {
         console.error("Generation error:", error);
-        
+
         const status = error?.context?.status;
         const errorMessage = typeof error?.message === "string" ? error.message : "";
 
@@ -396,7 +403,7 @@ export default function Dashboard() {
           setShowCreditsModal(true);
           return;
         }
-        
+
         toast({
           variant: "destructive",
           title: "Generation failed",
@@ -421,32 +428,44 @@ export default function Dashboard() {
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Welcome Banner for Pro/Agency users */}
         <WelcomeBanner onScrollToInput={scrollToYouTubeInput} />
-        
+
         <div>
-          <h1 className="text-3xl font-bold mb-2">Content Dashboard</h1>
+          <h1 className="text-3xl font-bold mb-2">VidLogic AI Dashboard</h1>
           <p className="text-muted-foreground">
             Transform your YouTube videos into multi-platform content with batch processing
           </p>
         </div>
 
         {/* Mode Toggle Tabs */}
-        <Tabs value={activeTab} onValueChange={(v) => {
-          if (v === "bulk" && !isAgency) {
-            setShowBulkUpgradeModal(true);
-            return;
-          }
-          setActiveTab(v as "single" | "viral" | "bulk");
-        }}>
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => {
+            if (v === "bulk" && !isAgency) {
+              setShowBulkUpgradeModal(true);
+              return;
+            }
+            setActiveTab(v as "single" | "viral" | "bulk");
+          }}
+        >
           <TabsList className="grid grid-cols-3 w-full max-w-lg">
-            <TabsTrigger value="single" className="flex items-center gap-2 data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950 data-[state=active]:shadow-[0_0_15px_rgba(6,182,212,0.4)]">
+            <TabsTrigger
+              value="single"
+              className="flex items-center gap-2 data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950 data-[state=active]:shadow-[0_0_15px_rgba(6,182,212,0.4)]"
+            >
               <Video className="h-4 w-4" />
               Single Video
             </TabsTrigger>
-            <TabsTrigger value="viral" className="flex items-center gap-2 data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950 data-[state=active]:shadow-[0_0_15px_rgba(6,182,212,0.4)]">
+            <TabsTrigger
+              value="viral"
+              className="flex items-center gap-2 data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950 data-[state=active]:shadow-[0_0_15px_rgba(6,182,212,0.4)]"
+            >
               <Flame className="h-4 w-4" />
               Viral Script
             </TabsTrigger>
-            <TabsTrigger value="bulk" className="flex items-center gap-2 relative data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950 data-[state=active]:shadow-[0_0_15px_rgba(6,182,212,0.4)]">
+            <TabsTrigger
+              value="bulk"
+              className="flex items-center gap-2 relative data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950 data-[state=active]:shadow-[0_0_15px_rgba(6,182,212,0.4)]"
+            >
               <Layers className="h-4 w-4" />
               Bulk Upload
               {!isAgency && <Lock className="h-3 w-3 ml-1 text-muted-foreground" />}
@@ -472,7 +491,7 @@ export default function Dashboard() {
                     hasPersistedContent={!!generatedContent}
                   />
                 </div>
-                
+
                 <GenerationSettings
                   brandVoices={brandVoices || []}
                   selectedBrandVoice={selectedBrandVoice}
@@ -522,31 +541,24 @@ export default function Dashboard() {
             <BulkUpload
               tone={tone}
               audience={audience}
-              brandVoice={selectedBrandVoice ? (
-                isDefaultVoiceId(selectedBrandVoice) 
-                  ? getDefaultVoiceById(selectedBrandVoice)
-                  : brandVoices?.find(v => v.id === selectedBrandVoice)
-              ) : undefined}
+              brandVoice={
+                selectedBrandVoice
+                  ? isDefaultVoiceId(selectedBrandVoice)
+                    ? getDefaultVoiceById(selectedBrandVoice)
+                    : brandVoices?.find((v) => v.id === selectedBrandVoice)
+                  : undefined
+              }
               targetLanguage={targetLanguage}
             />
           </TabsContent>
         </Tabs>
       </div>
-      
+
       {/* Credits exhausted modal */}
-      <PremiumModal 
-        open={showCreditsModal} 
-        onOpenChange={setShowCreditsModal}
-        feature="generation-limit"
-      />
+      <PremiumModal open={showCreditsModal} onOpenChange={setShowCreditsModal} feature="generation-limit" />
 
       {/* Bulk processing upgrade modal */}
-      <PremiumModal 
-        open={showBulkUpgradeModal} 
-        onOpenChange={setShowBulkUpgradeModal}
-        feature="bulk-processing"
-      />
+      <PremiumModal open={showBulkUpgradeModal} onOpenChange={setShowBulkUpgradeModal} feature="bulk-processing" />
     </AppLayout>
   );
 }
-
