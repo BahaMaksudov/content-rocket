@@ -224,8 +224,9 @@ export function ViralScriptGenerator() {
 
       setIsSavedToHistory(false);
       await refreshCredits();
-      const remaining = Math.max(0, creditsAvailable - 1);
-      toast({ title: "Section regenerated!", description: `1 credit used. ${remaining} remaining.` });
+      const remaining = Math.max(0, creditsAvailable - 0.5);
+      const fmt = (n: number) => Number.isInteger(n) ? String(n) : n.toFixed(1);
+      toast({ title: "Section regenerated!", description: `0.5 credit used. ${fmt(remaining)} remaining.` });
     } catch (err: any) {
       console.error(`Regenerate ${section} error:`, err);
       toast({ variant: "destructive", title: "Regeneration failed", description: err.message || "Please try again." });
