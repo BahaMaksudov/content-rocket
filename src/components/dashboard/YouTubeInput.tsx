@@ -28,6 +28,7 @@ import {
   Copy,
   Pencil,
   AlertTriangle,
+  AlertCircle,
   HelpCircle,
   ChevronDown,
   Info,
@@ -42,6 +43,7 @@ import { useCredits } from "@/hooks/use-credits";
 
 interface YouTubeInputProps {
   onTranscriptFetched: (transcript: string, method: "auto" | "manual", title?: string) => void;
+  onFetchError?: () => void;
   transcript: string;
   transcriptMethod: "auto" | "manual" | null;
   youtubeUrl: string;
@@ -60,6 +62,7 @@ const MAX_TRANSCRIPT_LENGTH = 20000;
 
 export function YouTubeInput({
   onTranscriptFetched,
+  onFetchError,
   transcript,
   transcriptMethod,
   youtubeUrl,
@@ -78,6 +81,7 @@ export function YouTubeInput({
   const [isEditMode, setIsEditMode] = useState(false);
   const [editableTranscript, setEditableTranscript] = useState("");
   const [adWarning, setAdWarning] = useState<string | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [showHighDemandModal, setShowHighDemandModal] = useState(false);
   // 2nd-fetch confirmation modal
   const [showSecondFetchModal, setShowSecondFetchModal] = useState(false);
@@ -148,6 +152,7 @@ export function YouTubeInput({
   const executeFetch = async (skipCountIncrement = false) => {
     setIsFetching(true);
     setAdWarning(null);
+    setFetchError(null);
 
     try {
       const { data, error } = await supabase.functions.invoke("fetch-transcript", {
@@ -159,14 +164,17 @@ export function YouTubeInput({
       if (data?.transcript) {
         onTranscriptFetched(data.transcript, "auto", data.title);
         setAdWarning(null);
-        // Use sonner so this doesn't collide with the shadcn toast stack
+        setFetchError(null);
         sonnerToast.success(`Transcript fetched for "${data.title}"`);
       } else {
+        // Fetch failed — notify parent to wipe state
+        onFetchError?.();
         setShowManual(true);
         if (data?.details) console.log("Transcript fetch details:", data.details);
 
         if (data?.errorCode === "AD_DETECTED") {
           setAdWarning("We detected an advertisement instead of the video transcript.");
+          setFetchError("Transcript not available. Advertisement detected instead of video content. Try pasting the transcript manually.");
           scrollToManualSection();
           return;
         }
@@ -178,13 +186,11 @@ export function YouTubeInput({
 
         if (isQuotaError) {
           setShowHighDemandModal(true);
+          setFetchError("Transcript not available. Our automated service is at capacity. Try pasting the transcript manually.");
           return;
         }
 
-        toast({
-          title: "Transcript not available",
-          description: "This video's captions couldn't be fetched. Try pasting the transcript manually.",
-        });
+        setFetchError("Transcript not available. This video's captions couldn't be fetched. Try pasting the transcript manually.");
 
         setTimeout(() => {
           manualSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -192,6 +198,8 @@ export function YouTubeInput({
       }
     } catch (error: any) {
       console.error("Fetch error:", error);
+      // Notify parent to wipe state
+      onFetchError?.();
       setShowManual(true);
 
       const errorMessage = error?.message?.toLowerCase() || "";
@@ -203,13 +211,11 @@ export function YouTubeInput({
 
       if (isQuotaError) {
         setShowHighDemandModal(true);
+        setFetchError("Transcript not available. Our automated service is at capacity. Try pasting the transcript manually.");
         return;
       }
 
-      toast({
-        title: "Couldn't fetch transcript",
-        description: "No worries! You can paste the transcript manually below.",
-      });
+      setFetchError("Transcript not available. This video's captions couldn't be fetched. Try pasting the transcript manually.");
 
       setTimeout(() => {
         manualSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -283,6 +289,7 @@ export function YouTubeInput({
       });
       return;
     }
+    setFetchError(null);
     onTranscriptFetched(manualTranscript.trim(), "manual");
     toast({
       title: "Transcript added!",
@@ -292,6 +299,7 @@ export function YouTubeInput({
 
   const handleUrlChange = (value: string) => {
     setYoutubeUrl(value);
+    setFetchError(null);
     // Clear any existing manual transcript when entering a new URL
     if (value !== youtubeUrl) {
       setManualTranscript("");
@@ -350,6 +358,24 @@ export function YouTubeInput({
           </div>
         </div>
         {youtubeUrl && !isValidUrl && <p className="text-sm text-destructive">Please enter a valid YouTube URL</p>}
+
+        {/* Persistent inline fetch error */}
+        {fetchError && !transcript && (
+          <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+            <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+            <div className="text-sm text-destructive">
+              <span>{fetchError}</span>
+              {!showManual && (
+                <button
+                  onClick={() => { setShowManual(true); setTimeout(() => manualSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 100); }}
+                  className="ml-1 underline underline-offset-2 font-medium hover:opacity-80"
+                >
+                  Paste manually →
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Preview button */}
         <Button
