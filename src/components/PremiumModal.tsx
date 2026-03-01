@@ -26,7 +26,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 interface PremiumModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  feature?: "youtube" | "brand-voice" | "generation-limit" | "voice-generation" | "bulk-processing" | "team-workspace" | "style-mimicking" | "social-proof" | "social-proof-limit";
+  feature?: "youtube" | "brand-voice" | "generation-limit" | "voice-generation" | "bulk-processing" | "team-workspace" | "style-mimicking" | "social-proof" | "social-proof-limit" | "viral-voice-mode" | "viral-scene-blueprint" | "viral-platform-tone" | "viral-regeneration";
   description?: string;
   tier?: "starter" | "pro" | "agency";
 }
@@ -81,6 +81,11 @@ export function PremiumModal({ open, onOpenChange, feature, description, tier: p
   if (feature === "bulk-processing" || feature === "team-workspace") tier = "agency";
   if (feature === "style-mimicking" && tier === "starter") tier = "pro";
   if (feature === "social-proof" || feature === "social-proof-limit") tier = "starter";
+  if (feature === "viral-voice-mode" || feature === "viral-regeneration") tier = "pro";
+  if (feature === "viral-scene-blueprint" || feature === "viral-platform-tone") {
+    if (tier === "starter") tier = "starter"; // starter gets basic scene blueprint
+    else tier = "starter";
+  }
 
   const features = getFeaturesForTier(tier);
   const tierConfig = SUBSCRIPTION_TIERS[tier];
@@ -121,6 +126,14 @@ export function PremiumModal({ open, onOpenChange, feature, description, tier: p
     ? "You've reached your free social proof limit! This feature increases conversion by 40%. Upgrade to Starter or Pro."
     : feature === "social-proof"
     ? "Social Proof is a paid feature. Add real testimonials to your AI-generated posts to increase conversion!"
+    : feature === "viral-voice-mode"
+    ? "Voice-Optimized Mode formats your scripts for TTS tools like ElevenLabs. Upgrade to Pro for this feature."
+    : feature === "viral-scene-blueprint"
+    ? "Scene-by-Scene Blueprints give you detailed visual cues and timing for every scene."
+    : feature === "viral-platform-tone"
+    ? "Platform-specific outputs and tone selectors help you tailor content for each audience."
+    : feature === "viral-regeneration"
+    ? "Unlimited section regeneration lets you refine hooks, scenes, and captions individually."
     : `${tierConfig.name} features`;
 
   const isLimitReached = feature === "generation-limit" || feature === "youtube" || feature === "social-proof-limit";
