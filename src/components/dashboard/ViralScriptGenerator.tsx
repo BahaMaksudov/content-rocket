@@ -363,7 +363,7 @@ export function ViralScriptGenerator() {
           />
           <Button
             onClick={handleGenerate}
-            disabled={isGenerating || !topic.trim()}
+            disabled={isGenerating || !topic.trim() || creditsAvailable < 1}
             className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
           >
             {isGenerating ? (
