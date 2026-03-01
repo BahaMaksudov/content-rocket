@@ -70,6 +70,8 @@ interface SceneBlueprintFooterProps {
   platform: Platform;
   result: ViralScriptResult;
   hideSave?: boolean;
+  isSavedToHistory?: boolean;
+  onSavedToHistory?: () => void;
 }
 
 export function SceneBlueprintFooter({
@@ -80,6 +82,8 @@ export function SceneBlueprintFooter({
   platform,
   result,
   hideSave,
+  isSavedToHistory,
+  onSavedToHistory,
 }: SceneBlueprintFooterProps) {
   const { toast } = useToast();
   const [saved, setSaved] = useState(false);
@@ -102,9 +106,12 @@ export function SceneBlueprintFooter({
     };
     saveViralHistoryEntry(entry);
     setSaved(true);
+    onSavedToHistory?.();
     toast({ title: "Script saved to history!" });
     setTimeout(() => setSaved(false), 3000);
   };
+
+  const isDisabled = saved || !!isSavedToHistory;
 
   return (
     <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-muted/30 rounded-b-lg">
@@ -124,10 +131,10 @@ export function SceneBlueprintFooter({
             size="sm"
             variant="outline"
             onClick={handleSave}
-            disabled={saved}
+            disabled={isDisabled}
             className="gap-2"
           >
-            {saved ? (
+            {(saved || isSavedToHistory) ? (
               <>
                 <Check className="h-4 w-4" />
                 Saved
