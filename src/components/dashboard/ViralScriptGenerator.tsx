@@ -14,31 +14,104 @@ import type { ViralScriptResult, Duration, Tone, Platform } from "./viral/types"
 import { DURATION_OPTIONS, TONE_OPTIONS, PLATFORM_OPTIONS } from "./viral/types";
 
 const VIRAL_STORAGE_KEY = "vidlogic_viral_script_v2";
+const VIRAL_HISTORY_KEY = "vidlogic_viral_history";
 
 export type { ViralScriptResult as ViralScriptContent };
 
 type RegeneratingSection = "hooks" | "scenes" | "captions" | null;
 
+type PersistedViralScript = {
+  topic: string;
+  duration: Duration;
+  tone: Tone;
+  platform: Platform;
+  voiceMode: boolean;
+  result: ViralScriptResult | null;
+};
+
+function loadPersistedViralScript(): PersistedViralScript {
+  try {
+    const raw = localStorage.getItem(VIRAL_STORAGE_KEY);
+    if (!raw) {
+      return {
+        topic: "",
+        duration: "30s",
+        tone: "hype",
+        platform: "tiktok",
+        voiceMode: false,
+        result: null,
+      };
+    }
+
+    const parsed = JSON.parse(raw);
+
+    // Backward compatibility: old payload stored result only
+    if (parsed?.hooks && parsed?.scenes) {
+      return {
+        topic: "",
+        duration: "30s",
+        tone: "hype",
+        platform: "tiktok",
+        voiceMode: false,
+        result: parsed as ViralScriptResult,
+      };
+    }
+
+    return {
+      topic: parsed?.topic ?? "",
+      duration: parsed?.duration ?? "30s",
+      tone: parsed?.tone ?? "hype",
+      platform: parsed?.platform ?? "tiktok",
+      voiceMode: parsed?.voiceMode ?? false,
+      result: parsed?.result ?? null,
+    };
+  } catch {
+    return {
+      topic: "",
+      duration: "30s",
+      tone: "hype",
+      platform: "tiktok",
+      voiceMode: false,
+      result: null,
+    };
+  }
+}
+
+function isResultSavedToHistory(result: ViralScriptResult): boolean {
+  try {
+    const raw = localStorage.getItem(VIRAL_HISTORY_KEY);
+    const entries = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(entries)) return false;
+
+    const target = JSON.stringify(result);
+    return entries.some((entry) => JSON.stringify(entry?.result) === target);
+  } catch {
+    return false;
+  }
+}
+
 export function ViralScriptGenerator() {
   const { toast } = useToast();
-  const [topic, setTopic] = useState("");
-  const [duration, setDuration] = useState<Duration>("30s");
-  const [tone, setTone] = useState<Tone>("hype");
-  const [platform, setPlatform] = useState<Platform>("tiktok");
-  const [voiceMode, setVoiceMode] = useState(false);
+  const persistedRef = useRef<PersistedViralScript>(loadPersistedViralScript());
+
+  const [topic, setTopic] = useState(persistedRef.current.topic);
+  const [duration, setDuration] = useState<Duration>(persistedRef.current.duration);
+  const [tone, setTone] = useState<Tone>(persistedRef.current.tone);
+  const [platform, setPlatform] = useState<Platform>(persistedRef.current.platform);
+  const [voiceMode, setVoiceMode] = useState(persistedRef.current.voiceMode);
   const [isGenerating, setIsGenerating] = useState(false);
   const [regenerating, setRegenerating] = useState<RegeneratingSection>(null);
   const [isSavedToHistory, setIsSavedToHistory] = useState(false);
-  const [result, setResult] = useState<ViralScriptResult | null>(() => {
-    try {
-      const raw = localStorage.getItem(VIRAL_STORAGE_KEY);
-      return raw ? JSON.parse(raw) : null;
-    } catch { return null; }
-  });
+  const [result, setResult] = useState<ViralScriptResult | null>(persistedRef.current.result);
   const outputRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (result) localStorage.setItem(VIRAL_STORAGE_KEY, JSON.stringify(result));
+    if (!result) return;
+    localStorage.setItem(VIRAL_STORAGE_KEY, JSON.stringify({ topic, duration, tone, platform, voiceMode, result }));
+  }, [result, topic, duration, tone, platform, voiceMode]);
+
+  useEffect(() => {
+    setIsSavedToHistory(result ? isResultSavedToHistory(result) : false);
   }, [result]);
 
   const handleGenerate = async () => {
@@ -79,12 +152,14 @@ export function ViralScriptGenerator() {
   };
 
   const handleRegenerateSection = async (section: "hooks" | "scenes" | "captions") => {
-    if (!result || !topic.trim()) return;
+    if (!result) return;
+
+    const topicForRegeneration = topic.trim() || "Viral video topic";
 
     setRegenerating(section);
     try {
       const { data, error } = await supabase.functions.invoke("regenerate-viral-section", {
-        body: { section, topic: topic.trim(), tone, platform, duration, currentResult: result },
+        body: { section, topic: topicForRegeneration, tone, platform, duration, currentResult: result },
       });
 
       if (error) {
@@ -289,7 +364,7 @@ export function ViralScriptGenerator() {
               <SceneBreakdown
                 scenes={result.scenes}
                 selectedDuration={duration}
-                topic={topic}
+                topic={topic.trim() || "Untitled viral script"}
                 tone={tone}
                 platform={platform}
                 result={result}
