@@ -35,14 +35,31 @@ type CreditsQueryData = {
   creditsLastReset: string | null;
 };
 
-function monthKey(dateIso: string) {
-  const d = new Date(dateIso);
-  return `${d.getFullYear()}-${d.getMonth()}`;
+/** Check if the billing cycle has ended based on subscription period end date */
+function shouldResetForBillingCycle(lastReset: string | null, subscriptionEnd: string | null): boolean {
+  if (!subscriptionEnd) {
+    // Free users: fall back to calendar month reset
+    if (!lastReset) return true;
+    const lastResetDate = new Date(lastReset);
+    const now = new Date();
+    return lastResetDate.getFullYear() !== now.getFullYear() || lastResetDate.getMonth() !== now.getMonth();
+  }
+
+  // Paid users: reset when we've crossed the period end boundary
+  const periodEnd = new Date(subscriptionEnd);
+  const now = new Date();
+  
+  if (!lastReset) return true;
+  
+  const lastResetDate = new Date(lastReset);
+  // Reset if last reset was before the period end and we're now past it
+  // OR if period end is in the past (new cycle started)
+  return lastResetDate < periodEnd && now >= periodEnd;
 }
 
 export function useCredits(): Credits {
   const { user } = useAuth();
-  const { tier, loading: subscriptionLoading } = useSubscription();
+  const { tier, loading: subscriptionLoading, subscriptionEnd, isPaymentFailed } = useSubscription();
   const queryClient = useQueryClient();
 
   const creditLimit = getCreditLimitForTier(tier);
@@ -81,9 +98,9 @@ export function useCredits(): Credits {
 
       const lastReset = profile.credits_last_reset;
       const nowIso = new Date().toISOString();
-      const needsMonthlyReset = !lastReset || monthKey(lastReset) !== monthKey(nowIso);
+      const needsReset = shouldResetForBillingCycle(lastReset, subscriptionEnd);
 
-      if (needsMonthlyReset) {
+      if (needsReset && !isPaymentFailed) {
         await supabase
           .from("profiles")
           .update({
@@ -100,6 +117,11 @@ export function useCredits(): Credits {
           creditsUsed: 0,
           creditsLastReset: nowIso,
         };
+      }
+
+      // If payment failed, don't reset — return current values
+      if (needsReset && isPaymentFailed) {
+        console.log("[Credits] Reset blocked — payment failed, subscription not active");
       }
 
       const effectiveUsed = computeEffectiveUsed(profile);
