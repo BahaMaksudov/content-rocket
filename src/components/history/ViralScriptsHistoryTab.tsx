@@ -126,6 +126,7 @@ export function ViralScriptsHistoryTab() {
                 tone={selectedEntry.tone}
                 platform={selectedEntry.platform}
                 result={selectedEntry.result}
+                hideSave
               />
               <CaptionsSection
                 overlays={selectedEntry.result.overlays}

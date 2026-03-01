@@ -16,6 +16,7 @@ interface SceneBreakdownProps {
   result: ViralScriptResult;
   onRegenerate?: () => void;
   isRegenerating?: boolean;
+  hideSave?: boolean;
 }
 
 function highlightVisualKeywords(text: string) {
@@ -29,7 +30,7 @@ function highlightVisualKeywords(text: string) {
   );
 }
 
-export function SceneBreakdown({ scenes, selectedDuration, topic, tone, platform, result, onRegenerate, isRegenerating }: SceneBreakdownProps) {
+export function SceneBreakdown({ scenes, selectedDuration, topic, tone, platform, result, onRegenerate, isRegenerating, hideSave }: SceneBreakdownProps) {
   const isMobile = useIsMobile();
   const dialogueOnly = scenes.map((s) => s.script).join("\n\n");
 
@@ -98,7 +99,7 @@ export function SceneBreakdown({ scenes, selectedDuration, topic, tone, platform
           ))}
         </CardContent>
         {regenerateButton}
-        <SceneBlueprintFooter scenes={scenes} selectedDuration={selectedDuration} topic={topic} tone={tone} platform={platform} result={result} />
+        <SceneBlueprintFooter scenes={scenes} selectedDuration={selectedDuration} topic={topic} tone={tone} platform={platform} result={result} hideSave={hideSave} />
       </Card>
     );
   }
@@ -133,7 +134,7 @@ export function SceneBreakdown({ scenes, selectedDuration, topic, tone, platform
         </table>
       </CardContent>
       {regenerateButton}
-      <SceneBlueprintFooter scenes={scenes} selectedDuration={selectedDuration} topic={topic} tone={tone} platform={platform} result={result} />
+      <SceneBlueprintFooter scenes={scenes} selectedDuration={selectedDuration} topic={topic} tone={tone} platform={platform} result={result} hideSave={hideSave} />
     </Card>
   );
 }
