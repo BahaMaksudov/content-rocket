@@ -17,6 +17,8 @@ const VIRAL_STORAGE_KEY = "vidlogic_viral_script_v2";
 
 export type { ViralScriptResult as ViralScriptContent };
 
+type RegeneratingSection = "hooks" | "scenes" | "captions" | null;
+
 export function ViralScriptGenerator() {
   const { toast } = useToast();
   const [topic, setTopic] = useState("");
@@ -25,6 +27,7 @@ export function ViralScriptGenerator() {
   const [platform, setPlatform] = useState<Platform>("tiktok");
   const [voiceMode, setVoiceMode] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [regenerating, setRegenerating] = useState<RegeneratingSection>(null);
   const [result, setResult] = useState<ViralScriptResult | null>(() => {
     try {
       const raw = localStorage.getItem(VIRAL_STORAGE_KEY);
@@ -70,6 +73,51 @@ export function ViralScriptGenerator() {
       toast({ variant: "destructive", title: "Generation failed", description: err.message || "Please try again." });
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleRegenerateSection = async (section: "hooks" | "scenes" | "captions") => {
+    if (!result || !topic.trim()) return;
+
+    setRegenerating(section);
+    try {
+      const { data, error } = await supabase.functions.invoke("regenerate-viral-section", {
+        body: { section, topic: topic.trim(), tone, platform, duration, currentResult: result },
+      });
+
+      if (error) {
+        const status = error?.context?.status;
+        const message = typeof error?.message === "string" ? error.message : "";
+        if (status === 402 || message.includes("AI_CREDITS_EXHAUSTED")) {
+          toast({ variant: "destructive", title: "AI credits exhausted", description: "Please add more credits to continue." });
+          return;
+        }
+        throw error;
+      }
+
+      if (data?.error) throw new Error(data.error);
+
+      setResult((prev) => {
+        if (!prev) return prev;
+        if (section === "hooks" && data.hooks) return { ...prev, hooks: data.hooks };
+        if (section === "scenes" && data.scenes) return { ...prev, scenes: data.scenes };
+        if (section === "captions") {
+          return {
+            ...prev,
+            ...(data.overlays && { overlays: data.overlays }),
+            ...(data.socialCaption && { socialCaption: data.socialCaption }),
+            ...(data.hashtags && { hashtags: data.hashtags }),
+          };
+        }
+        return prev;
+      });
+
+      toast({ title: "Section regenerated!", description: `${section.charAt(0).toUpperCase() + section.slice(1)} have been refreshed.` });
+    } catch (err: any) {
+      console.error(`Regenerate ${section} error:`, err);
+      toast({ variant: "destructive", title: "Regeneration failed", description: err.message || "Please try again." });
+    } finally {
+      setRegenerating(null);
     }
   };
 
@@ -230,7 +278,11 @@ export function ViralScriptGenerator() {
             )}
 
             <div className="space-y-4">
-              <HookLab hooks={result.hooks} />
+              <HookLab
+                hooks={result.hooks}
+                onRegenerate={() => handleRegenerateSection("hooks")}
+                isRegenerating={regenerating === "hooks"}
+              />
               <SceneBreakdown
                 scenes={result.scenes}
                 selectedDuration={duration}
@@ -238,11 +290,15 @@ export function ViralScriptGenerator() {
                 tone={tone}
                 platform={platform}
                 result={result}
+                onRegenerate={() => handleRegenerateSection("scenes")}
+                isRegenerating={regenerating === "scenes"}
               />
               <CaptionsSection
                 overlays={result.overlays}
                 socialCaption={result.socialCaption}
                 hashtags={result.hashtags}
+                onRegenerate={() => handleRegenerateSection("captions")}
+                isRegenerating={regenerating === "captions"}
               />
             </div>
           </div>
