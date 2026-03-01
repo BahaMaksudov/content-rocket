@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Loader2, RotateCw } from "lucide-react";
 import { CopyButton } from "./CopyButton";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { HookOption } from "./types";
 
 interface HookLabProps {
@@ -26,24 +26,8 @@ export function HookLab({ hooks, onRegenerate, isRegenerating }: HookLabProps) {
         </div>
       )}
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center justify-between text-base">
+        <CardTitle className="text-base">
           <span className="flex items-center gap-2"><span>🎣</span> Hook Lab</span>
-          {onRegenerate && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={onRegenerate}
-                    disabled={isRegenerating}
-                    className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50"
-                  >
-                    <RotateCw className="h-4 w-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent><p>Regenerate Hooks</p></TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
         </CardTitle>
         <p className="text-xs text-muted-foreground">Click a hook to select it for your video</p>
       </CardHeader>
@@ -72,6 +56,21 @@ export function HookLab({ hooks, onRegenerate, isRegenerating }: HookLabProps) {
             </button>
           );
         })}
+
+        {onRegenerate && (
+          <div className="pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRegenerate}
+              disabled={isRegenerating}
+              className="w-full gap-2 text-muted-foreground hover:text-foreground"
+            >
+              <RotateCw className="h-4 w-4" />
+              🔄 Regenerate Hooks
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

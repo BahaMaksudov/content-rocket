@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Loader2, RotateCw } from "lucide-react";
 import { CopyButton } from "./CopyButton";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface CaptionsSectionProps {
   overlays: string[];
@@ -33,25 +33,7 @@ export function CaptionsSection({ overlays, socialCaption, hashtags, onRegenerat
               <CardTitle className="flex items-center gap-2 text-base">
                 <span>🎯</span> On-Screen Overlays
               </CardTitle>
-              <div className="flex items-center gap-1">
-                <CopyButton text={overlays.join("\n")} />
-                {onRegenerate && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          onClick={onRegenerate}
-                          disabled={isRegenerating}
-                          className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50"
-                        >
-                          <RotateCw className="h-4 w-4" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent><p>Regenerate Captions</p></TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-              </div>
+              <CopyButton text={overlays.join("\n")} />
             </div>
             <p className="text-xs text-muted-foreground">Punchy text for video editors</p>
           </CardHeader>
@@ -84,6 +66,21 @@ export function CaptionsSection({ overlays, socialCaption, hashtags, onRegenerat
           </CardContent>
         </Card>
       </div>
+
+      {onRegenerate && (
+        <div className="mt-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onRegenerate}
+            disabled={isRegenerating}
+            className="w-full gap-2 text-muted-foreground hover:text-foreground"
+          >
+            <RotateCw className="h-4 w-4" />
+            🔄 Regenerate Captions
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

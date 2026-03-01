@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { SceneBlueprintFooter } from "./SceneBlueprintFooter";
 import { CopyButton } from "./CopyButton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -33,32 +34,14 @@ export function SceneBreakdown({ scenes, selectedDuration, topic, tone, platform
   const dialogueOnly = scenes.map((s) => s.script).join("\n\n");
 
   const headerActions = (
-    <div className="flex items-center gap-1">
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span><CopyButton text={dialogueOnly} className="text-muted-foreground" /></span>
-          </TooltipTrigger>
-          <TooltipContent><p>Copy All</p></TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-      {onRegenerate && (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={onRegenerate}
-                disabled={isRegenerating}
-                className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50"
-              >
-                <RotateCw className="h-4 w-4" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent><p>Regenerate Scenes</p></TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      )}
-    </div>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span><CopyButton text={dialogueOnly} className="text-muted-foreground" /></span>
+        </TooltipTrigger>
+        <TooltipContent><p>Copy All</p></TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 
   const overlay = isRegenerating && (
@@ -67,6 +50,21 @@ export function SceneBreakdown({ scenes, selectedDuration, topic, tone, platform
         <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
         <p className="text-sm text-muted-foreground">Regenerating scenes…</p>
       </div>
+    </div>
+  );
+
+  const regenerateButton = onRegenerate && (
+    <div className="px-4 pb-3">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onRegenerate}
+        disabled={isRegenerating}
+        className="w-full gap-2 text-muted-foreground hover:text-foreground"
+      >
+        <RotateCw className="h-4 w-4" />
+        🔄 Regenerate Scenes
+      </Button>
     </div>
   );
 
@@ -99,6 +97,7 @@ export function SceneBreakdown({ scenes, selectedDuration, topic, tone, platform
             </div>
           ))}
         </CardContent>
+        {regenerateButton}
         <SceneBlueprintFooter scenes={scenes} selectedDuration={selectedDuration} topic={topic} tone={tone} platform={platform} result={result} />
       </Card>
     );
@@ -133,6 +132,7 @@ export function SceneBreakdown({ scenes, selectedDuration, topic, tone, platform
           </tbody>
         </table>
       </CardContent>
+      {regenerateButton}
       <SceneBlueprintFooter scenes={scenes} selectedDuration={selectedDuration} topic={topic} tone={tone} platform={platform} result={result} />
     </Card>
   );
