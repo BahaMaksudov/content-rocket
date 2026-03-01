@@ -65,3 +65,9 @@ verify_jwt = false
 
 [functions.analyze-voice]
 verify_jwt = false
+
+[functions.generate-viral-script]
+verify_jwt = false
+
+[functions.regenerate-viral-section]
+verify_jwt = false

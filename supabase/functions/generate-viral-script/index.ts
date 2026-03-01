@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 console.log("generate-viral-script function loaded");
 
@@ -6,6 +7,18 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+// Tier definitions matching the frontend
+const TIER_PRIORITY: Record<string, number> = { agency: 3, pro: 2, starter: 1, free: 0 };
+
+async function getUserTier(supabase: any, userId: string): Promise<string> {
+  const { data } = await supabase
+    .from("subscriptions")
+    .select("status")
+    .eq("user_id", userId)
+    .maybeSingle();
+  return data?.status || "free";
+}
 
 function extractAndParseJSON(content: string): any {
   let jsonStr = content.trim();
@@ -33,6 +46,33 @@ serve(async (req) => {
   }
 
   try {
+    // --- Auth check ---
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: userData, error: userError } = await supabase.auth.getUser(token);
+    if (userError || !userData?.user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const userId = userData.user.id;
+    const tier = await getUserTier(supabase, userId);
+    const tierLevel = TIER_PRIORITY[tier] ?? 0;
+
+    console.log(`[generate-viral-script] user=${userId} tier=${tier}`);
+
     const { topic, duration = "30s", tone = "hype", platform = "tiktok", voiceMode = false } = await req.json();
 
     if (!topic || topic.trim().length === 0) {
@@ -41,6 +81,17 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // --- Server-side feature gating ---
+    // Voice Mode requires pro+ (tierLevel >= 2)
+    const allowedVoiceMode = tierLevel >= 2 ? voiceMode : false;
+    if (voiceMode && tierLevel < 2) {
+      console.log(`[generate-viral-script] Voice Mode blocked for tier=${tier}`);
+    }
+
+    // Tone/Platform require starter+ (tierLevel >= 1)
+    const allowedTone = tierLevel >= 1 ? tone : "hype";
+    const allowedPlatform = tierLevel >= 1 ? platform : "tiktok";
 
     const apiKey = Deno.env.get("OPENAI_API_KEY");
     if (!apiKey) {
@@ -65,7 +116,7 @@ serve(async (req) => {
       "mysterious": "TONE: 🤫 MYSTERIOUS — Curiosity-gap and quiet energy. Start with a whisper-style hook. Use pauses (…) to build tension. The script should feel like you're revealing a secret. Keep the energy low but gripping. Suggest visual effects like Slow Zooms, Dark Overlays, Eerie Sound Effects, Vignette Filters, and Cinematic Letterboxing.",
     };
 
-    const toneInstruction = toneGuides[tone] || toneGuides["hype"];
+    const toneInstruction = toneGuides[allowedTone] || toneGuides["hype"];
 
     const platformGuides: Record<string, string> = {
       "tiktok": `PLATFORM: TikTok
@@ -91,9 +142,9 @@ Strategy: Aesthetic and Direct, optimized for Instagram's visual-first audience.
 - Hashtags MUST include Instagram-native tags: #reels, #reelsinstagram, #instareels, #explore, plus 3-4 niche tags.`,
     };
 
-    const platformInstruction = platformGuides[platform] || platformGuides["tiktok"];
+    const platformInstruction = platformGuides[allowedPlatform] || platformGuides["tiktok"];
 
-    const voiceModeInstruction = voiceMode
+    const voiceModeInstruction = allowedVoiceMode
       ? `\n\nVOICE-OPTIMIZED MODE (ACTIVE):
 The user has enabled Voice-Optimized Mode for AI text-to-speech generation (e.g., ElevenLabs). You MUST apply ALL of the following rules to EVERY scene's "script" field:
 
