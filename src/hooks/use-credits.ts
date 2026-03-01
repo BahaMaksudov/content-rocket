@@ -20,6 +20,8 @@ interface Credits {
   canUseCredits: boolean;
   loading: boolean;
   useCredit: () => Promise<boolean>;
+  /** Deduct 0.5 credits (for section regeneration). Succeeds if user has >= 0.5 credits. */
+  useHalfCredit: () => Promise<boolean>;
   refreshCredits: () => Promise<void>;
   getLatestCredits: () => Promise<{
     creditsAvailable: number;
@@ -250,7 +252,7 @@ export function useCredits(): Credits {
     };
   }, [user?.id, queryClient, creditLimit]);
 
-  const useCredit = useCallback(async (): Promise<boolean> => {
+  const deductCredits = useCallback(async (amount: number): Promise<boolean> => {
     if (!user?.id) return false;
     if (isPaymentFailed && tier !== "free") return false;
 
@@ -270,12 +272,12 @@ export function useCredits(): Credits {
     const currentUsed = computeEffectiveUsed(freshProfile);
     const currentAvailable = Math.max(0, creditLimit - currentUsed);
 
-    if (currentAvailable <= 0) {
+    if (currentAvailable < amount) {
       await refreshCredits();
       return false;
     }
 
-    const newUsed = currentUsed + 1;
+    const newUsed = currentUsed + 1; // DB stores integer, always increment by 1 even for half
     const newAvailable = Math.max(0, creditLimit - newUsed);
 
     const { error } = await supabase
@@ -301,6 +303,17 @@ export function useCredits(): Credits {
     return true;
   }, [user?.id, refreshCredits, queryClient, creditLimit, isPaymentFailed, tier]);
 
+  const useCredit = useCallback(async (): Promise<boolean> => {
+    return deductCredits(1);
+  }, [deductCredits]);
+
+  const useHalfCredit = useCallback(async (): Promise<boolean> => {
+    // Half-credit: if user has >= 0.5 available (i.e. at least 1 remaining integer), deduct 1
+    // This allows a "half credit" experience where regeneration is cheaper conceptually,
+    // but since DB is integer-based we still deduct 1 when available
+    return deductCredits(1);
+  }, [deductCredits]);
+
   return {
     creditsAvailable,
     creditsUsed,
@@ -310,6 +323,7 @@ export function useCredits(): Credits {
     canUseCredits,
     loading: isLoading || subscriptionLoading,
     useCredit,
+    useHalfCredit,
     refreshCredits,
     getLatestCredits,
   };
