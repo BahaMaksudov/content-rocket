@@ -1,5 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SceneBlueprintFooter } from "./SceneBlueprintFooter";
+import { CopyButton } from "./CopyButton";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { SceneRow, ViralScriptResult, Duration, Tone, Platform } from "./types";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -26,13 +28,26 @@ function highlightVisualKeywords(text: string) {
 
 export function SceneBreakdown({ scenes, selectedDuration, topic, tone, platform, result }: SceneBreakdownProps) {
   const isMobile = useIsMobile();
+  const dialogueOnly = scenes.map((s) => s.script).join("\n\n");
+
+  const copyAllButton = (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span><CopyButton text={dialogueOnly} className="text-muted-foreground" /></span>
+        </TooltipTrigger>
+        <TooltipContent><p>Copy All</p></TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
 
   if (isMobile) {
     return (
       <Card className="border-border bg-card">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <span>🎬</span> Scene-by-Scene Blueprint
+          <CardTitle className="flex items-center justify-between text-base">
+            <span className="flex items-center gap-2"><span>🎬</span> Scene-by-Scene Blueprint</span>
+            {copyAllButton}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 pt-0">
@@ -69,8 +84,9 @@ export function SceneBreakdown({ scenes, selectedDuration, topic, tone, platform
   return (
     <Card className="border-border bg-card overflow-hidden">
       <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <span>🎬</span> Scene-by-Scene Blueprint
+          <CardTitle className="flex items-center justify-between text-base">
+            <span className="flex items-center gap-2"><span>🎬</span> Scene-by-Scene Blueprint</span>
+            {copyAllButton}
           </CardTitle>
       </CardHeader>
       <CardContent className="p-0">

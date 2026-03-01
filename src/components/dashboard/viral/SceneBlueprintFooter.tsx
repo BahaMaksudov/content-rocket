@@ -34,19 +34,28 @@ export function saveViralHistoryEntry(entry: ViralHistoryEntry) {
   localStorage.setItem(VIRAL_HISTORY_KEY, JSON.stringify(history));
 }
 
+function parseTimeToSeconds(timeStr: string): number {
+  // Handle MM:SS format like "0:07", "1:30"
+  const mmssMatch = timeStr.match(/(\d+):(\d{2})/);
+  if (mmssMatch) {
+    return parseInt(mmssMatch[1], 10) * 60 + parseInt(mmssMatch[2], 10);
+  }
+  // Handle plain seconds like "15s", "15"
+  const secMatch = timeStr.match(/(\d+)\s*s?/);
+  if (secMatch) {
+    return parseInt(secMatch[1], 10);
+  }
+  return 0;
+}
+
 function parseTotalDuration(scenes: SceneRow[]): number {
   let maxEnd = 0;
   for (const scene of scenes) {
-    // Match patterns like "0-5s", "5s-15s", "0:00-0:05", "5-15"
-    const match = scene.time.match(/(\d+)\s*s?\s*$/);
-    const rangeMatch = scene.time.match(/(\d+)\s*s?\s*[-–]\s*(\d+)\s*s?/);
-    if (rangeMatch) {
-      const end = parseInt(rangeMatch[2], 10);
-      if (end > maxEnd) maxEnd = end;
-    } else if (match) {
-      const val = parseInt(match[1], 10);
-      if (val > maxEnd) maxEnd = val;
-    }
+    // Split on dash/en-dash to get end time
+    const parts = scene.time.split(/[-–]/);
+    const endStr = parts.length > 1 ? parts[parts.length - 1].trim() : parts[0].trim();
+    const endSec = parseTimeToSeconds(endStr);
+    if (endSec > maxEnd) maxEnd = endSec;
   }
   return maxEnd;
 }
@@ -104,9 +113,8 @@ export function SceneBlueprintFooter({
         </span>
       </div>
 
-      {/* Right: Buttons */}
+      {/* Right: Save button only (copy moved to header) */}
       <div className="flex items-center gap-2">
-        <CopyButton text={dialogueOnly} className="text-muted-foreground" />
         <Button
           size="sm"
           variant="outline"
