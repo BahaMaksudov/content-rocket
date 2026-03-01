@@ -32,6 +32,8 @@ export function saveViralHistoryEntry(entry: ViralHistoryEntry) {
   history.unshift(entry);
   if (history.length > MAX_HISTORY) history.length = MAX_HISTORY;
   localStorage.setItem(VIRAL_HISTORY_KEY, JSON.stringify(history));
+  // Notify same-tab listeners so History page updates immediately
+  window.dispatchEvent(new Event("viral-history-updated"));
 }
 
 function parseTimeToSeconds(timeStr: string): number {
