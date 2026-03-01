@@ -15,6 +15,8 @@ interface SubscriptionContextType {
   tier: SubscriptionTier;
   status: string;
   subscriptionEnd: string | null;
+  /** True if subscription is past_due, unpaid, or canceled */
+  isPaymentFailed: boolean;
   loading: boolean;
   checkSubscription: () => Promise<void>;
   openCheckout: (tier?: "starter" | "pro" | "agency") => Promise<void>;
@@ -30,6 +32,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const prevTierRef = useRef<SubscriptionTier>("free");
   const [status, setStatus] = useState("free");
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
+  const [isPaymentFailed, setIsPaymentFailed] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const isStarter = tier === "starter";
@@ -46,6 +49,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       setTier("free");
       setStatus("free");
       setSubscriptionEnd(null);
+      setIsPaymentFailed(false);
       setLoading(false);
       return;
     }
@@ -76,12 +80,19 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     };
 
     try {
-      const data = await invokeCheckSubscription(currentSession.access_token);
+      const data = await invokeCheckSubscription(currentSession.access_token) as {
+        status?: string;
+        subscription_end?: string | null;
+        stripe_status?: string;
+      };
       const currentTier = getTierFromStatus(data.status || "free");
-      console.log("[Subscription] Status received:", { status: data.status, tier: currentTier });
+      const stripeStatus = data.stripe_status || "active";
+      const paymentFailed = ["past_due", "unpaid", "canceled"].includes(stripeStatus);
+      console.log("[Subscription] Status received:", { status: data.status, tier: currentTier, stripeStatus, paymentFailed });
       setTier(currentTier);
       setStatus(data.status || "free");
       setSubscriptionEnd(data.subscription_end ?? null);
+      setIsPaymentFailed(paymentFailed);
     } catch (error) {
       const err = error as Error & { status?: number };
 
@@ -171,6 +182,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       setTier("free");
       setStatus("free");
       setSubscriptionEnd(null);
+      setIsPaymentFailed(false);
       setLoading(false);
     }
   }, [user, checkSubscription]);
@@ -213,6 +225,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         tier,
         status,
         subscriptionEnd,
+        isPaymentFailed,
         loading,
         checkSubscription,
         openCheckout,
