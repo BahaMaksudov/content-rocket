@@ -3,6 +3,7 @@ import { useLocation, Link, useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AnimatePresence } from "framer-motion";
 import { AppSidebar } from "./AppSidebar";
+import { PaymentFailedBanner } from "@/components/dashboard/PaymentFailedBanner";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -234,6 +235,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           <AnimatePresence mode="wait">
             <PageTransition>
               <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 pb-20 md:pb-6" style={{ WebkitOverflowScrolling: 'touch' }}>
+                <PaymentFailedBanner />
                 {children}
               </div>
             </PageTransition>

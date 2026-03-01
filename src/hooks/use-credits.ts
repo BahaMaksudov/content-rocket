@@ -20,6 +20,8 @@ interface Credits {
   canUseCredits: boolean;
   loading: boolean;
   useCredit: () => Promise<boolean>;
+  /** Deduct 0.5 credits (for section regeneration). Succeeds if user has >= 0.5 credits. */
+  useHalfCredit: () => Promise<boolean>;
   refreshCredits: () => Promise<void>;
   getLatestCredits: () => Promise<{
     creditsAvailable: number;
@@ -35,14 +37,36 @@ type CreditsQueryData = {
   creditsLastReset: string | null;
 };
 
-function monthKey(dateIso: string) {
-  const d = new Date(dateIso);
-  return `${d.getFullYear()}-${d.getMonth()}`;
+/** Get billing cycle start date by subtracting 1 month from period end */
+function getBillingCycleStart(subscriptionEnd: string): Date {
+  const cycleStart = new Date(subscriptionEnd);
+  cycleStart.setMonth(cycleStart.getMonth() - 1);
+  return cycleStart;
+}
+
+/** Check if the billing cycle has ended based on subscription period end date */
+function shouldResetForBillingCycle(lastReset: string | null, subscriptionEnd: string | null): boolean {
+  if (!subscriptionEnd) {
+    // Free users: fall back to calendar month reset
+    if (!lastReset) return true;
+    const lastResetDate = new Date(lastReset);
+    const now = new Date();
+    return lastResetDate.getFullYear() !== now.getFullYear() || lastResetDate.getMonth() !== now.getMonth();
+  }
+
+  // Paid users: reset when we've crossed the period end boundary
+  const periodEnd = new Date(subscriptionEnd);
+  const now = new Date();
+  
+  if (!lastReset) return true;
+  
+  const lastResetDate = new Date(lastReset);
+  return lastResetDate < periodEnd && now >= periodEnd;
 }
 
 export function useCredits(): Credits {
   const { user } = useAuth();
-  const { tier, loading: subscriptionLoading } = useSubscription();
+  const { tier, loading: subscriptionLoading, subscriptionEnd, isPaymentFailed } = useSubscription();
   const queryClient = useQueryClient();
 
   const creditLimit = getCreditLimitForTier(tier);
@@ -81,9 +105,9 @@ export function useCredits(): Credits {
 
       const lastReset = profile.credits_last_reset;
       const nowIso = new Date().toISOString();
-      const needsMonthlyReset = !lastReset || monthKey(lastReset) !== monthKey(nowIso);
+      const needsReset = shouldResetForBillingCycle(lastReset, subscriptionEnd);
 
-      if (needsMonthlyReset) {
+      if (needsReset && !isPaymentFailed) {
         await supabase
           .from("profiles")
           .update({
@@ -100,6 +124,51 @@ export function useCredits(): Credits {
           creditsUsed: 0,
           creditsLastReset: nowIso,
         };
+      }
+
+      // If payment failed, don't reset — keep account in limited state
+      if (needsReset && isPaymentFailed) {
+        console.log("[Credits] Reset blocked — payment failed, subscription not active");
+      }
+
+      // Auto-heal for users incorrectly reset mid-cycle (e.g., reset on 1st instead of billing anniversary)
+      if (subscriptionEnd && !needsReset) {
+        const cycleStart = getBillingCycleStart(subscriptionEnd);
+        const periodEnd = new Date(subscriptionEnd);
+        const now = new Date();
+        const lastResetDate = lastReset ? new Date(lastReset) : null;
+
+        const resetHappenedInsideCurrentCycle =
+          !!lastResetDate &&
+          lastResetDate > cycleStart &&
+          now < periodEnd;
+
+        if (resetHappenedInsideCurrentCycle) {
+          const { count: cycleGenerationsCount } = await supabase
+            .from("generations")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", user.id)
+            .gte("created_at", cycleStart.toISOString())
+            .lt("created_at", subscriptionEnd);
+
+          const recoveredUsed = Math.max(cycleGenerationsCount ?? 0, computeEffectiveUsed(profile));
+          const recoveredAvailable = Math.max(0, creditLimit - recoveredUsed);
+
+          await supabase
+            .from("profiles")
+            .update({
+              credits_available: recoveredAvailable,
+              credits_used: recoveredUsed,
+              credits_last_reset: cycleStart.toISOString(),
+            })
+            .eq("user_id", user.id);
+
+          return {
+            creditsAvailable: recoveredAvailable,
+            creditsUsed: recoveredUsed,
+            creditsLastReset: cycleStart.toISOString(),
+          };
+        }
       }
 
       const effectiveUsed = computeEffectiveUsed(profile);
@@ -136,7 +205,7 @@ export function useCredits(): Credits {
   const creditsLastReset = data?.creditsLastReset ?? null;
 
   const hasCredits = creditsAvailable > 0;
-  const canUseCredits = hasCredits;
+  const canUseCredits = hasCredits && !(isPaymentFailed && tier !== "free");
 
   const refreshCredits = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ["credits", user?.id] });
@@ -183,8 +252,9 @@ export function useCredits(): Credits {
     };
   }, [user?.id, queryClient, creditLimit]);
 
-  const useCredit = useCallback(async (): Promise<boolean> => {
+  const deductCredits = useCallback(async (amount: number): Promise<boolean> => {
     if (!user?.id) return false;
+    if (isPaymentFailed && tier !== "free") return false;
 
     const { data: freshProfile, error: fetchError } = await supabase
       .from("profiles")
@@ -202,12 +272,12 @@ export function useCredits(): Credits {
     const currentUsed = computeEffectiveUsed(freshProfile);
     const currentAvailable = Math.max(0, creditLimit - currentUsed);
 
-    if (currentAvailable <= 0) {
+    if (currentAvailable < amount) {
       await refreshCredits();
       return false;
     }
 
-    const newUsed = currentUsed + 1;
+    const newUsed = currentUsed + amount;
     const newAvailable = Math.max(0, creditLimit - newUsed);
 
     const { error } = await supabase
@@ -231,7 +301,15 @@ export function useCredits(): Credits {
     void refreshCredits();
 
     return true;
-  }, [user?.id, refreshCredits, queryClient, creditLimit]);
+  }, [user?.id, refreshCredits, queryClient, creditLimit, isPaymentFailed, tier]);
+
+  const useCredit = useCallback(async (): Promise<boolean> => {
+    return deductCredits(1);
+  }, [deductCredits]);
+
+  const useHalfCredit = useCallback(async (): Promise<boolean> => {
+    return deductCredits(0.5);
+  }, [deductCredits]);
 
   return {
     creditsAvailable,
@@ -242,6 +320,7 @@ export function useCredits(): Credits {
     canUseCredits,
     loading: isLoading || subscriptionLoading,
     useCredit,
+    useHalfCredit,
     refreshCredits,
     getLatestCredits,
   };

@@ -20,6 +20,9 @@ export function CreditsRemaining() {
 
   const creditsRemaining = Math.max(0, creditLimit - creditsUsed);
   const progressValue = Math.min(100, (creditsUsed / creditLimit) * 100);
+
+  /** Format credit numbers: show decimal only when not whole */
+  const fmt = (n: number) => Number.isInteger(n) ? String(n) : n.toFixed(1);
   const lowThreshold = tier === "agency" ? 50 : tier === "pro" ? 10 : tier === "starter" ? 3 : 1;
   const isLow = creditsRemaining <= lowThreshold && creditsRemaining > 0;
   const isExhausted = !hasCredits;
@@ -51,7 +54,7 @@ export function CreditsRemaining() {
         <span className={`text-xs ${
           isExhausted ? "text-destructive" : isLow ? "text-warning" : "text-muted-foreground"
         }`}>
-          {creditsUsed} / {creditLimit} used
+          {fmt(creditsUsed)} / {fmt(creditLimit)} used
         </span>
       </div>
       <Progress 
@@ -76,7 +79,7 @@ export function CreditsRemaining() {
         ) : isExhausted ? (
           "0 credits remaining"
         ) : (
-          `${creditsRemaining} credits remaining`
+          `${fmt(creditsRemaining)} credits remaining`
         )}
       </p>
     </div>

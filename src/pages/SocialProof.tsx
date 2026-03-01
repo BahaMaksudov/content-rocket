@@ -88,15 +88,15 @@ export default function SocialProof() {
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid grid-cols-3 w-full max-w-md">
-            <TabsTrigger value="manage" className="flex items-center gap-2">
+            <TabsTrigger value="manage" className="flex items-center gap-2 data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950 data-[state=active]:shadow-[0_0_15px_rgba(6,182,212,0.4)]">
               <List className="h-4 w-4" />
               Manage
             </TabsTrigger>
-            <TabsTrigger value="wall" className="flex items-center gap-2">
+            <TabsTrigger value="wall" className="flex items-center gap-2 data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950 data-[state=active]:shadow-[0_0_15px_rgba(6,182,212,0.4)]">
               <LayoutGrid className="h-4 w-4" />
               Wall Preview
             </TabsTrigger>
-            <TabsTrigger value="embed" className="flex items-center gap-2">
+            <TabsTrigger value="embed" className="flex items-center gap-2 data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950 data-[state=active]:shadow-[0_0_15px_rgba(6,182,212,0.4)]">
               <Code className="h-4 w-4" />
               Embed
             </TabsTrigger>

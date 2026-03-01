@@ -99,16 +99,21 @@ serve(async (req) => {
     const customerId = customers.data[0].id;
     logStep("Found Stripe customer", { customerId });
 
+    // Fetch active AND past_due subscriptions
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
-      status: "active",
       limit: 10,
     });
 
-    logStep("Fetched subscriptions", { count: subscriptions.data.length });
+    // Filter to relevant statuses
+    const relevantSubs = subscriptions.data.filter(s => 
+      ["active", "past_due", "unpaid", "trialing"].includes(s.status)
+    );
 
-    if (subscriptions.data.length === 0) {
-      logStep("No active subscription found");
+    logStep("Fetched subscriptions", { total: subscriptions.data.length, relevant: relevantSubs.length });
+
+    if (relevantSubs.length === 0) {
+      logStep("No relevant subscription found");
       
       await supabase
         .from("subscriptions")
@@ -122,6 +127,7 @@ serve(async (req) => {
         subscribed: false,
         status: "free",
         subscription_end: null,
+        stripe_status: "none",
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -129,17 +135,19 @@ serve(async (req) => {
     }
 
     // Priority: agency > pro > starter
-    let activeSubscription = subscriptions.data[0];
+    let activeSubscription = relevantSubs[0];
     let tier = "free" as string;
+    let stripeStatus = relevantSubs[0].status;
     const tierPriority = { agency: 3, pro: 2, starter: 1, free: 0 };
 
-    for (const sub of subscriptions.data) {
+    for (const sub of relevantSubs) {
       const productId = sub.items.data[0]?.price.product as string;
       const subTier = getTierFromProductId(productId);
       
       if ((tierPriority[subTier] || 0) > (tierPriority[tier as keyof typeof tierPriority] || 0)) {
         activeSubscription = sub;
         tier = subTier;
+        stripeStatus = sub.status;
       }
     }
 
@@ -165,6 +173,7 @@ serve(async (req) => {
     logStep("Active subscription found", { 
       subscriptionId: activeSubscription.id,
       tier,
+      stripeStatus,
       currentPeriodEnd,
       priceId,
     });
@@ -188,9 +197,10 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({
-      subscribed: true,
+      subscribed: stripeStatus === "active" || stripeStatus === "trialing",
       status: tier,
       subscription_end: currentPeriodEnd,
+      stripe_status: stripeStatus,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

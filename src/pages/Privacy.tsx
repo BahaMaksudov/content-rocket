@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, Rocket } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Privacy() {
@@ -9,10 +9,8 @@ export default function Privacy() {
       <header className="border-b border-border bg-card/50 backdrop-blur-lg sticky top-0 z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-rocket flex items-center justify-center">
-              <Rocket className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="font-bold text-lg">Rocket Content</span>
+            <img src="/vidlogic-logo.png" alt="VidLogic AI" className="h-9 w-9 object-contain" />
+            <span className="font-bold text-lg">VidLogic AI</span>
           </Link>
           <Button variant="ghost" asChild>
             <Link to="/" className="flex items-center gap-2">
@@ -32,7 +30,7 @@ export default function Privacy() {
           <section className="mb-10">
             <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">1. Introduction</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Welcome to Rocket Content ("we," "our," or "us"). We are committed to protecting your privacy and ensuring
+              Welcome to VidLogic AI ("we," "our," or "us"). We are committed to protecting your privacy and ensuring
               the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and
               safeguard your information when you use our AI-powered content repurposing platform.
             </p>
@@ -88,7 +86,7 @@ export default function Privacy() {
               4. AI Processing
             </h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              Rocket Content uses artificial intelligence to analyze video content and generate text and images. Your
+              VidLogic AI uses artificial intelligence to analyze video content and generate text and images. Your
               submitted content is processed by our AI systems and may be temporarily stored for processing purposes.
             </p>
             <p className="text-muted-foreground leading-relaxed">
@@ -168,8 +166,8 @@ export default function Privacy() {
             <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">10. Contact Us</h2>
             <p className="text-muted-foreground leading-relaxed">
               If you have questions about this Privacy Policy or our data practices, please contact us at{" "}
-              <a href="mailto:privacy@rocketcontentpro.io" className="text-primary hover:underline">
-                privacy@rocketcontentpro.io
+              <a href="mailto:support@vidlogicai.com" className="text-primary hover:underline">
+                support@vidlogicai.com
               </a>{" "}
               or visit our{" "}
               <Link to="/contact" className="text-primary hover:underline">
@@ -184,7 +182,7 @@ export default function Privacy() {
       {/* Simple Footer */}
       <footer className="border-t border-border py-8">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Rocket Content. All rights reserved.
+          © {new Date().getFullYear()} VidLogic AI. All rights reserved.
         </div>
       </footer>
     </div>
