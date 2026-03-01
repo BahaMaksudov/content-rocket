@@ -172,13 +172,33 @@ export default function Dashboard() {
     enabled: !!user,
   });
 
+  const resetSettingsToDefaults = () => {
+    setTone("professional");
+    setAudience("general");
+    setSelectedBrandVoice("default_friendly_peer");
+    setTargetLanguage("english");
+    setIncludeSocialProof(false);
+    setFairUseConfirmed(false);
+  };
+
   const handleTranscriptFetched = (text: string, method: "auto" | "manual", title?: string) => {
     // Clear previous generated content when fetching a new transcript
     setGeneratedContent(null);
     setContentActiveTab("twitter");
+    resetSettingsToDefaults();
     setTranscript(text);
     setTranscriptMethod(method);
     if (title) setVideoTitle(title);
+  };
+
+  const handleFetchError = () => {
+    // Wipe transcript, content, and reset all settings
+    setTranscript("");
+    setTranscriptMethod(null);
+    setVideoTitle("");
+    setGeneratedContent(null);
+    setContentActiveTab("twitter");
+    resetSettingsToDefaults();
   };
 
   const handleGenerate = () => {
@@ -440,6 +460,7 @@ export default function Dashboard() {
                 <div ref={youtubeInputRef}>
                   <YouTubeInput
                     onTranscriptFetched={handleTranscriptFetched}
+                    onFetchError={handleFetchError}
                     transcript={transcript}
                     transcriptMethod={transcriptMethod}
                     youtubeUrl={youtubeUrl}
