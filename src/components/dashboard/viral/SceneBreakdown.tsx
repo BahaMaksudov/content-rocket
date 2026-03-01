@@ -1,10 +1,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CopyButton } from "./CopyButton";
-import type { SceneRow } from "./types";
+import { SceneBlueprintFooter } from "./SceneBlueprintFooter";
+import type { SceneRow, ViralScriptResult, Duration, Tone, Platform } from "./types";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SceneBreakdownProps {
   scenes: SceneRow[];
+  selectedDuration: Duration;
+  topic: string;
+  tone: Tone;
+  platform: Platform;
+  result: ViralScriptResult;
 }
 
 function highlightVisualKeywords(text: string) {
@@ -19,20 +24,16 @@ function highlightVisualKeywords(text: string) {
   );
 }
 
-export function SceneBreakdown({ scenes }: SceneBreakdownProps) {
+export function SceneBreakdown({ scenes, selectedDuration, topic, tone, platform, result }: SceneBreakdownProps) {
   const isMobile = useIsMobile();
-  const dialogueOnly = scenes.map((s) => s.script).join("\n\n");
 
   if (isMobile) {
     return (
       <Card className="border-border bg-card">
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <span>🎬</span> Scene-by-Scene Blueprint
-            </CardTitle>
-            <CopyButton text={dialogueOnly} />
-          </div>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <span>🎬</span> Scene-by-Scene Blueprint
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 pt-0">
           {scenes.map((scene, i) => (
@@ -53,6 +54,14 @@ export function SceneBreakdown({ scenes }: SceneBreakdownProps) {
             </div>
           ))}
         </CardContent>
+        <SceneBlueprintFooter
+          scenes={scenes}
+          selectedDuration={selectedDuration}
+          topic={topic}
+          tone={tone}
+          platform={platform}
+          result={result}
+        />
       </Card>
     );
   }
@@ -60,12 +69,9 @@ export function SceneBreakdown({ scenes }: SceneBreakdownProps) {
   return (
     <Card className="border-border bg-card overflow-hidden">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-base">
             <span>🎬</span> Scene-by-Scene Blueprint
           </CardTitle>
-          <CopyButton text={dialogueOnly} />
-        </div>
       </CardHeader>
       <CardContent className="p-0">
         <table className="w-full text-sm">
@@ -93,6 +99,14 @@ export function SceneBreakdown({ scenes }: SceneBreakdownProps) {
           </tbody>
         </table>
       </CardContent>
+      <SceneBlueprintFooter
+        scenes={scenes}
+        selectedDuration={selectedDuration}
+        topic={topic}
+        tone={tone}
+        platform={platform}
+        result={result}
+      />
     </Card>
   );
 }

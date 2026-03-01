@@ -231,7 +231,14 @@ export function ViralScriptGenerator() {
 
             <div className="space-y-4">
               <HookLab hooks={result.hooks} />
-              <SceneBreakdown scenes={result.scenes} />
+              <SceneBreakdown
+                scenes={result.scenes}
+                selectedDuration={duration}
+                topic={topic}
+                tone={tone}
+                platform={platform}
+                result={result}
+              />
               <CaptionsSection
                 overlays={result.overlays}
                 socialCaption={result.socialCaption}
