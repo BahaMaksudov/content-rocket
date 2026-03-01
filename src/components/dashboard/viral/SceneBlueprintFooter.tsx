@@ -69,6 +69,7 @@ interface SceneBlueprintFooterProps {
   tone: Tone;
   platform: Platform;
   result: ViralScriptResult;
+  hideSave?: boolean;
 }
 
 export function SceneBlueprintFooter({
@@ -78,6 +79,7 @@ export function SceneBlueprintFooter({
   tone,
   platform,
   result,
+  hideSave,
 }: SceneBlueprintFooterProps) {
   const { toast } = useToast();
   const [saved, setSaved] = useState(false);
@@ -116,27 +118,29 @@ export function SceneBlueprintFooter({
       </div>
 
       {/* Right: Save button only (copy moved to header) */}
-      <div className="flex items-center gap-2">
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={handleSave}
-          disabled={saved}
-          className="gap-2"
-        >
-          {saved ? (
-            <>
-              <Check className="h-4 w-4" />
-              Saved
-            </>
-          ) : (
-            <>
-              <Save className="h-4 w-4" />
-              Save to History
-            </>
-          )}
-        </Button>
-      </div>
+      {!hideSave && (
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleSave}
+            disabled={saved}
+            className="gap-2"
+          >
+            {saved ? (
+              <>
+                <Check className="h-4 w-4" />
+                Saved
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4" />
+                Save to History
+              </>
+            )}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
