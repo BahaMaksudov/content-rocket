@@ -146,19 +146,44 @@ export function ViralScriptGenerator() {
     outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 
     try {
-      const { data, error } = await supabase.functions.invoke("generate-viral-script", {
-        body: { topic: topic.trim(), duration, tone: canUseToneSelector ? tone : "hype", platform: canUsePlatformSelector ? platform : "tiktok", voiceMode: canUseVoiceMode ? voiceMode : false },
+      // Get a fresh session so we send a valid JWT
+      const { data: sessionData } = await supabase.auth.getSession();
+      const session = sessionData?.session;
+      if (!session) {
+        toast({ variant: "destructive", title: "Please sign in", description: "You must be signed in to generate scripts." });
+        setIsGenerating(false);
+        return;
+      }
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/generate-viral-script`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + session.access_token,
+          "apikey": anonKey,
+        },
+        body: JSON.stringify({
+          topic: topic.trim(),
+          duration,
+          tone: canUseToneSelector ? tone : "hype",
+          platform: canUsePlatformSelector ? platform : "tiktok",
+          voiceMode: canUseVoiceMode ? voiceMode : false,
+        }),
       });
 
-      if (error) {
-        const status = error?.context?.status;
-        const message = typeof error?.message === "string" ? error.message : "";
-        if (status === 402 || message.includes("AI_CREDITS_EXHAUSTED")) {
+      if (!response.ok) {
+        if (response.status === 402) {
           toast({ variant: "destructive", title: "AI credits exhausted", description: "Please add more credits to continue." });
           return;
         }
-        throw error;
+        const errBody = await response.json().catch(() => ({}));
+        throw new Error(errBody?.error || `Request failed (${response.status})`);
       }
+
+      const data = await response.json();
 
       if (data?.error) throw new Error(data.error);
       setResult(data as ViralScriptResult);
