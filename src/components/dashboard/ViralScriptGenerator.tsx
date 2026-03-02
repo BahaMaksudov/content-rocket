@@ -108,9 +108,9 @@ export function ViralScriptGenerator() {
   const isFree = tier === "free";
   const isStarter = tier === "starter";
   const isPro = tier === "pro" || tier === "agency";
-  const canUseToneSelector = !isFree; // starter+ 
-  const canUsePlatformSelector = !isFree; // starter+
-  const canUseVoiceMode = isPro; // pro+ only
+  const canUseToneSelector = true; // available to all tiers
+  const canUsePlatformSelector = true; // available to all tiers
+  const canUseVoiceMode = true; // available to all tiers
   const canUseSceneBlueprint = !isFree; // starter+ (basic), pro+ (full)
   const canUseRegeneration = isPro; // pro+ only for unlimited regen
   const maxHooks = isFree ? 3 : isStarter ? 5 : 999;
