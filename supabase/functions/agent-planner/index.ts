@@ -64,7 +64,20 @@ serve(async (req) => {
       });
     }
 
-    // --- 2. Call AI to generate content plan ---
+    // --- 2. Fetch previous topics for memory ---
+    const { data: previousPlans } = await supabase
+      .from("content_plans")
+      .select("topic")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    const previousTopics = (previousPlans || []).map((p: { topic: string }) => p.topic);
+    const memoryClause = previousTopics.length > 0
+      ? `\n\nIMPORTANT — TOPIC MEMORY: The user has already covered these topics. Do NOT repeat or closely duplicate any of them. Provide fresh angles and entirely new ideas:\n${previousTopics.map((t, i) => `${i + 1}. ${t}`).join("\n")}`
+      : "";
+
+    // --- 3. Call AI to generate content plan ---
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       return new Response(JSON.stringify({ error: "AI service not configured" }), {
@@ -73,9 +86,9 @@ serve(async (req) => {
       });
     }
 
-    const systemPrompt = `You are a Viral Content Strategist. Create a ${videos_per_week}-day content calendar for a ${niche} creator on ${platform}. Focus on high-retention topics. The tone should be ${tone}.`;
+    const systemPrompt = `You are a Viral Content Strategist. Create a ${videos_per_week}-day content calendar for a ${niche} creator on ${platform}. Focus on high-retention topics. The tone should be ${tone}.${memoryClause}`;
 
-    const userPrompt = `Generate exactly ${videos_per_week} viral video topics. Each topic must be specific, actionable, and optimized for ${platform}'s algorithm.`;
+    const userPrompt = `Generate exactly ${videos_per_week} viral video topics. Each topic must be specific, actionable, and optimized for ${platform}'s algorithm.${previousTopics.length > 0 ? " Confirm you have reviewed the previous topic history and ensure zero overlap." : ""}`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -161,7 +174,7 @@ serve(async (req) => {
 
     const { topics } = JSON.parse(toolCall.function.arguments);
 
-    // --- 3. Save topics into content_plans ---
+    // --- 4. Save topics into content_plans ---
     const planRows = topics.map((t: { day_number: number; topic: string; hook_type: string }) => ({
       goal_id: goal.id,
       user_id: userId,
