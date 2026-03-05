@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -50,6 +51,7 @@ const DAY_LABELS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Sat
 
 export default function AgentDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [goal, setGoal] = useState<AgentGoal | null>(null);
   const [plans, setPlans] = useState<ContentPlan[]>([]);
   const [scripts, setScripts] = useState<Record<string, AgentScript>>({});
@@ -75,6 +77,13 @@ export default function AgentDashboard() {
   const [viewingPlanId, setViewingPlanId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Sync breadcrumb view param
+  useEffect(() => {
+    if (loading) return;
+    const view = (!goal || showOnboarding) ? "setup" : "weekly";
+    navigate(`/agent?view=${view}`, { replace: true });
+  }, [goal, showOnboarding, loading, navigate]);
 
   const fetchData = useCallback(async (skipLoadingState = false) => {
     if (!user) return null;
