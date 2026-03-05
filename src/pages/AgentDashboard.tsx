@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { AgentScriptDrawer } from "@/components/dashboard/AgentScriptDrawer";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Sparkles, Rocket, Check, Eye, Loader2, Target, CalendarDays, Zap, 
@@ -473,6 +474,30 @@ export default function AgentDashboard() {
     return `Week of ${startStr} – ${endStr}`;
   };
 
+  const getMonthLabel = (g: AgentGoal) => {
+    const d = g.start_date ? new Date(g.start_date) : new Date(g.created_at);
+    return format(d, "MMMM yyyy");
+  };
+
+  const groupedArchived = archivedGoals.reduce<Record<string, AgentGoal[]>>((acc, g) => {
+    const month = getMonthLabel(g);
+    if (!acc[month]) acc[month] = [];
+    acc[month].push(g);
+    return acc;
+  }, {});
+
+  // Determine which data to render in the grid
+  const isViewingArchive = !!viewingArchivedGoal;
+  const displayPlans = isViewingArchive ? archivedPlans : plans;
+  const displayScripts = isViewingArchive ? archivedScripts : scripts;
+  const displayGoal = isViewingArchive ? viewingArchivedGoal : goal;
+
+  const exitArchiveView = () => {
+    setViewingArchivedGoal(null);
+    setArchivedPlans([]);
+    setArchivedScripts({});
+  };
+
   if (loading) {
     return (
       <AppLayout>
@@ -510,118 +535,6 @@ export default function AgentDashboard() {
     );
   }
 
-  // === ARCHIVED GOAL READ-ONLY VIEW ===
-  if (viewingArchivedGoal) {
-    return (
-      <AppLayout>
-        <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
-          <button
-            onClick={() => { setViewingArchivedGoal(null); setArchivedPlans([]); setArchivedScripts({}); }}
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" /> Back to Current Plan
-          </button>
-
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-          >
-            <div>
-              <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-                <Archive className="h-6 w-6 text-muted-foreground" />
-                {getWeekLabel(viewingArchivedGoal)}
-              </h1>
-              <div className="flex items-center gap-2 mt-1">
-                <p className="text-sm text-muted-foreground">
-                  {viewingArchivedGoal.niche} · {viewingArchivedGoal.platform} · {viewingArchivedGoal.tone}
-                </p>
-                <Badge variant="outline" className="text-[10px] gap-1">
-                  <Lock className="h-2.5 w-2.5" /> Read-only
-                </Badge>
-              </div>
-            </div>
-          </motion.div>
-
-          {loadingArchive ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              <AnimatePresence mode="popLayout">
-                {archivedPlans.map((plan, i) => {
-                  const isCompleted = plan.status === "completed";
-                  const dayLabel = DAY_LABELS[plan.day_number - 1] || `Day ${plan.day_number}`;
-
-                  return (
-                    <motion.div
-                      key={plan.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.05 }}
-                    >
-                      <Card className={`relative overflow-hidden ${
-                        isCompleted
-                          ? "border-muted-foreground/20 bg-muted/30"
-                          : "border-border bg-card opacity-60"
-                      }`}>
-                        <CardHeader className="pb-2">
-                          <div className="flex items-center justify-between">
-                            <Badge variant="secondary" className="text-xs bg-muted text-muted-foreground">
-                              {dayLabel}
-                            </Badge>
-                            {isCompleted && (
-                              <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center">
-                                <Check className="h-3.5 w-3.5 text-muted-foreground" />
-                              </div>
-                            )}
-                          </div>
-                          <CardTitle className="text-sm font-semibold text-foreground leading-snug mt-2">
-                            {plan.topic}
-                          </CardTitle>
-                          {plan.hook_type && (
-                            <CardDescription className="text-xs">
-                              Hook: {plan.hook_type}
-                            </CardDescription>
-                          )}
-                        </CardHeader>
-                        <CardContent className="pt-2">
-                          {isCompleted && archivedScripts[plan.id] ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full"
-                              onClick={() => openArchivedScript(plan)}
-                            >
-                              <Eye className="h-3.5 w-3.5 mr-1.5" /> View Script
-                            </Button>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">Not generated</span>
-                          )}
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
-            </div>
-          )}
-        </div>
-
-        <AgentScriptDrawer
-          open={sheetOpen}
-          onOpenChange={setSheetOpen}
-          script={viewingScript}
-          plan={viewingPlan}
-          goal={viewingArchivedGoal}
-          onNavigate={handleDrawerNavigate}
-          canNavigatePrev={viewingIndex > 0}
-          canNavigateNext={viewingIndex < activePlansForNav.length - 1}
-        />
-      </AppLayout>
-    );
-  }
 
   // === ONBOARDING VIEW ===
   if (!goal || showOnboarding) {
@@ -731,241 +644,259 @@ export default function AgentDashboard() {
   return (
     <AppLayout>
       <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-        >
-          <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <CalendarDays className="h-6 w-6 text-primary" />
-              Your Content Week
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {goal.niche} · {goal.platform} · {goal.tone}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {(pendingCount > 0 || batchGenerating) && (
-              <Button
-                onClick={handleBatchGenerate}
-                disabled={batchGenerating}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-[0_0_20px_rgba(6,182,212,0.3)]"
-              >
-                {batchGenerating ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating {batchProgress}/{batchTotal}...</>
-                ) : (
-                  <><Rocket className="h-4 w-4 mr-2" /> Generate Entire Week ({pendingCount})</>
-                )}
-              </Button>
-            )}
-
-            {archivedGoals.length > 0 && (
+        {/* Viewing Archive Banner */}
+        <AnimatePresence>
+          {isViewingArchive && viewingArchivedGoal && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="flex items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3"
+            >
+              <div className="flex items-center gap-2.5">
+                <Archive className="h-4 w-4 text-primary flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    Viewing Archive: {getWeekLabel(viewingArchivedGoal)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {viewingArchivedGoal.niche} · {viewingArchivedGoal.platform} · Read-only
+                  </p>
+                </div>
+              </div>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setShowHistory(!showHistory)}
-                className="border-border text-muted-foreground hover:text-foreground"
+                onClick={exitArchiveView}
+                className="border-primary/30 text-primary hover:bg-primary/10 flex-shrink-0"
               >
-                <History className="h-4 w-4 mr-1" /> History
+                <ArrowLeft className="h-3.5 w-3.5 mr-1.5" /> Return to Current Week
               </Button>
-            )}
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setShowOnboarding(true);
-                setNiche("");
-              }}
-              className="border-border text-muted-foreground hover:text-foreground"
-            >
-              <Zap className="h-4 w-4 mr-1" /> New Plan
-            </Button>
-          </div>
-        </motion.div>
-
-        {/* History Panel */}
-        <AnimatePresence>
-          {showHistory && archivedGoals.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Card className="border-border bg-card">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Archive className="h-4 w-4 text-primary" />
-                    Plan History
-                  </CardTitle>
-                  <CardDescription className="text-xs">View previous content weeks in read-only mode.</CardDescription>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <ScrollArea className="max-h-[240px]">
-                    <div className="space-y-1 p-2">
-                      {archivedGoals.map((ag) => (
-                        <button
-                          key={ag.id}
-                          onClick={() => loadArchivedGoalData(ag)}
-                          className="w-full p-3 rounded-lg text-left transition-colors bg-muted/30 hover:bg-muted/50 border border-transparent hover:border-primary/20"
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="min-w-0 flex-1">
-                              <p className="font-medium text-sm text-foreground">{getWeekLabel(ag)}</p>
-                              <p className="text-xs text-muted-foreground mt-0.5">
-                                {ag.niche} · {ag.platform} · {ag.videos_per_week} videos
-                              </p>
-                            </div>
-                            <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </CardContent>
-              </Card>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Weekly Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          <AnimatePresence mode="popLayout">
-            {plans.map((plan, i) => {
-              const isCompleted = plan.status === "completed";
-              const isGenerating = generatingScript === plan.id;
-              const dayLabel = DAY_LABELS[plan.day_number - 1] || `Day ${plan.day_number}`;
+        {/* Header */}
+        {!isViewingArchive && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+          >
+            <div>
+              <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+                <CalendarDays className="h-6 w-6 text-primary" />
+                Your Content Week
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                {goal.niche} · {goal.platform} · {goal.tone}
+              </p>
+            </div>
 
-              return (
-                <motion.div
-                  key={plan.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
+            <div className="flex items-center gap-3">
+              {(pendingCount > 0 || batchGenerating) && (
+                <Button
+                  onClick={handleBatchGenerate}
+                  disabled={batchGenerating}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-[0_0_20px_rgba(6,182,212,0.3)]"
                 >
-                  <Card
-                    className={`relative overflow-hidden transition-all duration-300 ${
-                      isCompleted
-                        ? "border-primary/30 bg-primary/5"
-                        : "border-border hover:border-primary/20 bg-card"
-                    }`}
+                  {batchGenerating ? (
+                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating {batchProgress}/{batchTotal}...</>
+                  ) : (
+                    <><Rocket className="h-4 w-4 mr-2" /> Generate Entire Week ({pendingCount})</>
+                  )}
+                </Button>
+              )}
+
+              {archivedGoals.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setShowHistory(true)}
+                  className="border-border text-muted-foreground hover:text-foreground"
+                  title="Plan History"
+                >
+                  <History className="h-4 w-4" />
+                </Button>
+              )}
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setShowOnboarding(true);
+                  setNiche("");
+                }}
+                className="border-border text-muted-foreground hover:text-foreground"
+              >
+                <Zap className="h-4 w-4 mr-1" /> New Plan
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Weekly Grid */}
+        {loadingArchive ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <AnimatePresence mode="popLayout">
+              {displayPlans.map((plan, i) => {
+                const isCompleted = plan.status === "completed";
+                const isGenerating = generatingScript === plan.id;
+                const dayLabel = DAY_LABELS[plan.day_number - 1] || `Day ${plan.day_number}`;
+                const hasScript = !!displayScripts[plan.id];
+
+                return (
+                  <motion.div
+                    key={plan.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
                   >
-                    {isCompleted && (
-                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary via-primary/80 to-primary/40" />
-                    )}
-
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center justify-between">
-                        <Badge
-                          variant="secondary"
-                          className={`text-xs ${
-                            isCompleted
-                              ? "bg-primary/20 text-primary"
-                              : "bg-muted text-muted-foreground"
-                          }`}
-                        >
-                          {dayLabel}
-                        </Badge>
-                        {isCompleted && (
-                          <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center">
-                            <Check className="h-3.5 w-3.5 text-primary" />
-                          </div>
-                        )}
-                      </div>
-                      <CardTitle className="text-sm font-semibold text-foreground leading-snug mt-2">
-                        {plan.topic}
-                      </CardTitle>
-                      {plan.hook_type && (
-                        <CardDescription className="text-xs">
-                          Hook: {plan.hook_type}
-                        </CardDescription>
+                    <Card
+                      className={`relative overflow-hidden transition-all duration-300 ${
+                        isViewingArchive
+                          ? isCompleted
+                            ? "border-muted-foreground/20 bg-muted/30"
+                            : "border-border bg-card opacity-60"
+                          : isCompleted
+                            ? "border-primary/30 bg-primary/5"
+                            : "border-border hover:border-primary/20 bg-card"
+                      }`}
+                    >
+                      {isCompleted && !isViewingArchive && (
+                        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary via-primary/80 to-primary/40" />
                       )}
-                    </CardHeader>
 
-                    <CardContent className="pt-2 space-y-2">
-                      {isCompleted ? (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full border-primary/30 text-primary hover:bg-primary/10"
-                            onClick={() => openScript(plan)}
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <Badge
+                            variant="secondary"
+                            className={`text-xs ${
+                              isCompleted && !isViewingArchive
+                                ? "bg-primary/20 text-primary"
+                                : "bg-muted text-muted-foreground"
+                            }`}
                           >
-                            <Eye className="h-3.5 w-3.5 mr-1.5" /> View Script
-                          </Button>
-
-                          {/* Feedback row */}
-                          <div className="flex items-center justify-center gap-2 pt-1">
-                            {feedback[plan.id] ? (
-                              <span className="text-xs text-muted-foreground">
-                                {feedback[plan.id].rating === "up" ? "👍" : "👎"} Feedback saved
-                              </span>
-                            ) : (
-                              <>
-                                <button
-                                  onClick={() => submitFeedback(plan.id, "up")}
-                                  className="p-1.5 rounded-md hover:bg-primary/10 transition-colors"
-                                  title="Good script"
-                                >
-                                  <ThumbsUp className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
-                                </button>
-
-                                <Popover
-                                  open={downvoteOpen === plan.id}
-                                  onOpenChange={(open) => setDownvoteOpen(open ? plan.id : null)}
-                                >
-                                  <PopoverTrigger asChild>
-                                    <button
-                                      className="p-1.5 rounded-md hover:bg-destructive/10 transition-colors"
-                                      title="Bad script"
-                                    >
-                                      <ThumbsDown className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
-                                    </button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-48 p-2" side="top">
-                                    <p className="text-xs font-medium text-foreground mb-2">What was wrong?</p>
-                                    <div className="flex flex-col gap-1">
-                                      {["Too long", "Wrong tone", "Boring"].map((reason) => (
-                                        <button
-                                          key={reason}
-                                          onClick={() => submitFeedback(plan.id, "down", reason)}
-                                          className="text-xs text-left px-2 py-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                                        >
-                                          {reason}
-                                        </button>
-                                      ))}
-                                    </div>
-                                  </PopoverContent>
-                                </Popover>
-                              </>
-                            )}
-                          </div>
-                        </>
-                      ) : (
-                        <Button
-                          size="sm"
-                          className="w-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20"
-                          onClick={() => generateScriptForPlan(plan)}
-                          disabled={isGenerating || batchGenerating}
-                        >
-                          {isGenerating ? (
-                            <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Generating...</>
-                          ) : (
-                            <><Sparkles className="h-3.5 w-3.5 mr-1.5" /> Generate Script</>
+                            {dayLabel}
+                          </Badge>
+                          {isCompleted && (
+                            <div className={`h-6 w-6 rounded-full flex items-center justify-center ${
+                              isViewingArchive ? "bg-muted" : "bg-primary/20"
+                            }`}>
+                              <Check className={`h-3.5 w-3.5 ${
+                                isViewingArchive ? "text-muted-foreground" : "text-primary"
+                              }`} />
+                            </div>
                           )}
-                        </Button>
-                      )}
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
-        </div>
+                        </div>
+                        <CardTitle className="text-sm font-semibold text-foreground leading-snug mt-2">
+                          {plan.topic}
+                        </CardTitle>
+                        {plan.hook_type && (
+                          <CardDescription className="text-xs">
+                            Hook: {plan.hook_type}
+                          </CardDescription>
+                        )}
+                      </CardHeader>
+
+                      <CardContent className="pt-2 space-y-2">
+                        {isViewingArchive ? (
+                          isCompleted && hasScript ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full"
+                              onClick={() => openArchivedScript(plan)}
+                            >
+                              <Eye className="h-3.5 w-3.5 mr-1.5" /> View Script
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Not generated</span>
+                          )
+                        ) : isCompleted ? (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full border-primary/30 text-primary hover:bg-primary/10"
+                              onClick={() => openScript(plan)}
+                            >
+                              <Eye className="h-3.5 w-3.5 mr-1.5" /> View Script
+                            </Button>
+
+                            {/* Feedback row */}
+                            <div className="flex items-center justify-center gap-2 pt-1">
+                              {feedback[plan.id] ? (
+                                <span className="text-xs text-muted-foreground">
+                                  {feedback[plan.id].rating === "up" ? "👍" : "👎"} Feedback saved
+                                </span>
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={() => submitFeedback(plan.id, "up")}
+                                    className="p-1.5 rounded-md hover:bg-primary/10 transition-colors"
+                                    title="Good script"
+                                  >
+                                    <ThumbsUp className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
+                                  </button>
+
+                                  <Popover
+                                    open={downvoteOpen === plan.id}
+                                    onOpenChange={(open) => setDownvoteOpen(open ? plan.id : null)}
+                                  >
+                                    <PopoverTrigger asChild>
+                                      <button
+                                        className="p-1.5 rounded-md hover:bg-destructive/10 transition-colors"
+                                        title="Bad script"
+                                      >
+                                        <ThumbsDown className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                                      </button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-48 p-2" side="top">
+                                      <p className="text-xs font-medium text-foreground mb-2">What was wrong?</p>
+                                      <div className="flex flex-col gap-1">
+                                        {["Too long", "Wrong tone", "Boring"].map((reason) => (
+                                          <button
+                                            key={reason}
+                                            onClick={() => submitFeedback(plan.id, "down", reason)}
+                                            className="text-xs text-left px-2 py-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                                          >
+                                            {reason}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </PopoverContent>
+                                  </Popover>
+                                </>
+                              )}
+                            </div>
+                          </>
+                        ) : (
+                          <Button
+                            size="sm"
+                            className="w-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20"
+                            onClick={() => generateScriptForPlan(plan)}
+                            disabled={isGenerating || batchGenerating}
+                          >
+                            {isGenerating ? (
+                              <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Generating...</>
+                            ) : (
+                              <><Sparkles className="h-3.5 w-3.5 mr-1.5" /> Generate Script</>
+                            )}
+                          </Button>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
+        )}
       </div>
 
       {/* Script Drawer */}
@@ -974,11 +905,79 @@ export default function AgentDashboard() {
         onOpenChange={setSheetOpen}
         script={viewingScript}
         plan={viewingPlan}
-        goal={goal}
+        goal={displayGoal}
         onNavigate={handleDrawerNavigate}
         canNavigatePrev={viewingIndex > 0}
         canNavigateNext={viewingIndex < activePlansForNav.length - 1}
       />
+
+      {/* History Drawer */}
+      <Sheet open={showHistory} onOpenChange={setShowHistory}>
+        <SheetContent side="right" className="w-[340px] sm:w-[400px] p-0">
+          <SheetHeader className="px-6 pt-6 pb-4 border-b border-border">
+            <SheetTitle className="flex items-center gap-2 text-foreground">
+              <History className="h-5 w-5 text-primary" />
+              Plan History
+            </SheetTitle>
+          </SheetHeader>
+          <ScrollArea className="h-[calc(100vh-100px)]">
+            <div className="px-4 py-4 space-y-6">
+              {archivedGoals.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+                    <Archive className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">No archived plans yet.</p>
+                  <p className="text-xs text-muted-foreground mt-1">Previous weeks will appear here.</p>
+                </div>
+              ) : (
+                Object.entries(groupedArchived).map(([month, goals]) => (
+                  <div key={month}>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-2">
+                      {month}
+                    </p>
+                    <div className="space-y-1.5">
+                      {goals.map((ag) => {
+                        const isSelected = viewingArchivedGoal?.id === ag.id;
+                        return (
+                          <button
+                            key={ag.id}
+                            onClick={() => {
+                              loadArchivedGoalData(ag);
+                            }}
+                            className={`w-full p-3 rounded-lg text-left transition-all ${
+                              isSelected
+                                ? "bg-primary/10 border border-primary/30 ring-1 ring-primary/20"
+                                : "bg-muted/30 hover:bg-muted/50 border border-transparent"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="min-w-0 flex-1">
+                                <p className={`font-medium text-sm ${isSelected ? "text-primary" : "text-foreground"}`}>
+                                  {ag.niche}
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                  {getWeekLabel(ag)}
+                                </p>
+                                <p className="text-[10px] text-muted-foreground mt-0.5">
+                                  {ag.platform} · {ag.videos_per_week} videos
+                                </p>
+                              </div>
+                              <ChevronRight className={`h-4 w-4 flex-shrink-0 ${
+                                isSelected ? "text-primary" : "text-muted-foreground"
+                              }`} />
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
     </AppLayout>
   );
 }
