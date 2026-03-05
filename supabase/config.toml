@@ -71,3 +71,6 @@ verify_jwt = false
 
 [functions.regenerate-viral-section]
 verify_jwt = false
+
+[functions.agent-planner]
+verify_jwt = false
