@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,6 +21,8 @@ type AgentGoal = {
   videos_per_week: number;
   tone: string;
   created_at: string;
+  batch_status: string;
+  batch_progress: number;
 };
 
 type ContentPlan = {
@@ -54,6 +56,9 @@ export default function AgentDashboard() {
   const [generating, setGenerating] = useState(false);
   const [generatingScript, setGeneratingScript] = useState<string | null>(null);
   const [batchGenerating, setBatchGenerating] = useState(false);
+  const [batchProgress, setBatchProgress] = useState(0);
+  const [batchTotal, setBatchTotal] = useState(0);
+  const batchRunningRef = useRef(false);
 
   // Onboarding form
   const [niche, setNiche] = useState("");
@@ -69,9 +74,9 @@ export default function AgentDashboard() {
   const [viewingScript, setViewingScript] = useState<AgentScript | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const fetchData = useCallback(async () => {
-    if (!user) return;
-    setLoading(true);
+  const fetchData = useCallback(async (skipLoadingState = false) => {
+    if (!user) return null;
+    if (!skipLoadingState) setLoading(true);
 
     // Fetch latest goal
     const { data: goals } = await supabase
@@ -81,8 +86,12 @@ export default function AgentDashboard() {
       .order("created_at", { ascending: false })
       .limit(1);
 
+    let currentGoal: AgentGoal | null = null;
+    let currentPlans: ContentPlan[] = [];
+
     if (goals && goals.length > 0) {
       const g = goals[0] as AgentGoal;
+      currentGoal = g;
       setGoal(g);
 
       // Fetch plans for this goal
@@ -93,10 +102,11 @@ export default function AgentDashboard() {
         .order("day_number", { ascending: true });
 
       if (planData) {
-        setPlans(planData as ContentPlan[]);
+        currentPlans = planData as ContentPlan[];
+        setPlans(currentPlans);
 
         // Fetch scripts for completed plans
-        const completedIds = (planData as ContentPlan[])
+        const completedIds = currentPlans
           .filter((p) => p.status === "completed")
           .map((p) => p.id);
 
@@ -116,7 +126,7 @@ export default function AgentDashboard() {
         }
 
         // Fetch feedback for all plans
-        const allPlanIds = (planData as ContentPlan[]).map((p) => p.id);
+        const allPlanIds = currentPlans.map((p) => p.id);
         if (allPlanIds.length > 0) {
           const { data: fbData } = await supabase
             .from("content_feedback")
@@ -134,11 +144,30 @@ export default function AgentDashboard() {
       }
     }
 
-    setLoading(false);
+    if (!skipLoadingState) setLoading(false);
+    return { goal: currentGoal, plans: currentPlans };
   }, [user]);
 
+  // Initial load + auto-resume batch if interrupted
   useEffect(() => {
-    fetchData();
+    const init = async () => {
+      const result = await fetchData();
+      if (result?.goal?.batch_status === "generating" && !batchRunningRef.current) {
+        // Auto-resume: there are still pending plans from a previous batch
+        const pending = result.plans.filter((p) => p.status === "pending");
+        if (pending.length > 0) {
+          toast.info("Resuming batch generation...");
+          runBatch(result.goal, pending);
+        } else {
+          // All done but status wasn't updated (e.g. crash)
+          await supabase
+            .from("agent_goals")
+            .update({ batch_status: "idle", batch_progress: 0 })
+            .eq("id", result.goal.id);
+        }
+      }
+    };
+    init();
   }, [fetchData]);
 
   const handleOnboard = async () => {
@@ -243,29 +272,52 @@ export default function AgentDashboard() {
     }
   };
 
-  const handleBatchGenerate = async () => {
-    const pending = plans.filter((p) => p.status === "pending");
-    if (pending.length === 0) {
-      toast.info("All scripts are already generated!");
-      return;
-    }
+  const updateBatchStatus = async (goalId: string, status: string, progress: number) => {
+    await supabase
+      .from("agent_goals")
+      .update({ batch_status: status, batch_progress: progress })
+      .eq("id", goalId);
+  };
 
+  const runBatch = async (currentGoal: AgentGoal, pending: ContentPlan[]) => {
+    if (batchRunningRef.current) return;
+    batchRunningRef.current = true;
     setBatchGenerating(true);
+    setBatchTotal(pending.length);
+    setBatchProgress(0);
+
+    await updateBatchStatus(currentGoal.id, "generating", 0);
     let successCount = 0;
 
     for (const plan of pending) {
       try {
         await generateScriptForPlan(plan);
         successCount++;
+        setBatchProgress(successCount);
+        await updateBatchStatus(currentGoal.id, "generating", successCount);
       } catch {
         // individual error already toasted
       }
     }
 
+    await updateBatchStatus(currentGoal.id, "idle", 0);
     setBatchGenerating(false);
+    batchRunningRef.current = false;
+
     if (successCount > 0) {
       toast.success(`Generated ${successCount} script${successCount > 1 ? "s" : ""}!`);
     }
+    await fetchData(true);
+  };
+
+  const handleBatchGenerate = async () => {
+    const pending = plans.filter((p) => p.status === "pending");
+    if (pending.length === 0) {
+      toast.info("All scripts are already generated!");
+      return;
+    }
+    if (!goal) return;
+    await runBatch(goal, pending);
   };
 
   const submitFeedback = async (planId: string, rating: "up" | "down", comment?: string) => {
@@ -419,14 +471,14 @@ export default function AgentDashboard() {
           </div>
 
           <div className="flex items-center gap-3">
-            {pendingCount > 0 && (
+            {(pendingCount > 0 || batchGenerating) && (
               <Button
                 onClick={handleBatchGenerate}
                 disabled={batchGenerating}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-[0_0_20px_rgba(6,182,212,0.3)]"
               >
                 {batchGenerating ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating...</>
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating {batchProgress}/{batchTotal}...</>
                 ) : (
                   <><Rocket className="h-4 w-4 mr-2" /> Generate Entire Week ({pendingCount})</>
                 )}
