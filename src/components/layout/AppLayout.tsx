@@ -51,6 +51,7 @@ const routeTitles: Record<string, string> = {
 const agentSubTitles: Record<string, string> = {
   "setup": "Setup",
   "weekly": "Weekly Plan",
+  "history": "History",
 };
 
 export function AppLayout({ children }: AppLayoutProps) {

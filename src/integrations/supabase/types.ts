@@ -19,9 +19,12 @@ export type Database = {
           batch_progress: number
           batch_status: string
           created_at: string | null
+          end_date: string | null
+          goal_status: string
           id: string
           niche: string
           platform: string
+          start_date: string | null
           tone: string | null
           user_id: string
           videos_per_week: number | null
@@ -30,9 +33,12 @@ export type Database = {
           batch_progress?: number
           batch_status?: string
           created_at?: string | null
+          end_date?: string | null
+          goal_status?: string
           id?: string
           niche: string
           platform: string
+          start_date?: string | null
           tone?: string | null
           user_id: string
           videos_per_week?: number | null
@@ -41,9 +47,12 @@ export type Database = {
           batch_progress?: number
           batch_status?: string
           created_at?: string | null
+          end_date?: string | null
+          goal_status?: string
           id?: string
           niche?: string
           platform?: string
+          start_date?: string | null
           tone?: string | null
           user_id?: string
           videos_per_week?: number | null

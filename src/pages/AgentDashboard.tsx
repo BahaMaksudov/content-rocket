@@ -13,8 +13,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { AgentScriptDrawer } from "@/components/dashboard/AgentScriptDrawer";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Sparkles, Rocket, Check, Eye, Loader2, Target, CalendarDays, Zap, ThumbsUp, ThumbsDown, ArrowLeft } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { 
+  Sparkles, Rocket, Check, Eye, Loader2, Target, CalendarDays, Zap, 
+  ThumbsUp, ThumbsDown, ArrowLeft, History, Archive, ChevronRight, Lock
+} from "lucide-react";
 import { toast } from "sonner";
+import { format } from "date-fns";
 
 type AgentGoal = {
   id: string;
@@ -25,6 +30,9 @@ type AgentGoal = {
   created_at: string;
   batch_status: string;
   batch_progress: number;
+  goal_status?: string;
+  start_date?: string | null;
+  end_date?: string | null;
 };
 
 type ContentPlan = {
@@ -78,24 +86,50 @@ export default function AgentDashboard() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
+  // History
+  const [archivedGoals, setArchivedGoals] = useState<AgentGoal[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [viewingArchivedGoal, setViewingArchivedGoal] = useState<AgentGoal | null>(null);
+  const [archivedPlans, setArchivedPlans] = useState<ContentPlan[]>([]);
+  const [archivedScripts, setArchivedScripts] = useState<Record<string, AgentScript>>({});
+  const [loadingArchive, setLoadingArchive] = useState(false);
+
   // Sync breadcrumb view param
   useEffect(() => {
     if (loading) return;
-    const view = (!goal || showOnboarding) ? "setup" : "weekly";
+    let view = "setup";
+    if (viewingArchivedGoal) {
+      view = "history";
+    } else if (goal && !showOnboarding) {
+      view = "weekly";
+    }
     navigate(`/agent?view=${view}`, { replace: true });
-  }, [goal, showOnboarding, loading, navigate]);
+  }, [goal, showOnboarding, loading, navigate, viewingArchivedGoal]);
 
   const fetchData = useCallback(async (skipLoadingState = false) => {
     if (!user) return null;
     if (!skipLoadingState) setLoading(true);
 
-    // Fetch latest goal
+    // Fetch latest ACTIVE goal
     const { data: goals } = await supabase
       .from("agent_goals")
       .select("*")
       .eq("user_id", user.id)
+      .filter("goal_status", "eq", "active")
       .order("created_at", { ascending: false })
       .limit(1);
+
+    // Fetch archived goals
+    const { data: archived } = await supabase
+      .from("agent_goals")
+      .select("*")
+      .eq("user_id", user.id)
+      .filter("goal_status", "eq", "archived")
+      .order("created_at", { ascending: false });
+
+    if (archived) {
+      setArchivedGoals(archived as AgentGoal[]);
+    }
 
     let currentGoal: AgentGoal | null = null;
     let currentPlans: ContentPlan[] = [];
@@ -153,6 +187,10 @@ export default function AgentDashboard() {
           }
         }
       }
+    } else {
+      setGoal(null);
+      setPlans([]);
+      setScripts({});
     }
 
     if (!skipLoadingState) setLoading(false);
@@ -164,13 +202,11 @@ export default function AgentDashboard() {
     const init = async () => {
       const result = await fetchData();
       if (result?.goal?.batch_status === "generating" && !batchRunningRef.current) {
-        // Auto-resume: there are still pending plans from a previous batch
         const pending = result.plans.filter((p) => p.status === "pending");
         if (pending.length > 0) {
           toast.info("Resuming batch generation...");
           runBatch(result.goal, pending);
         } else {
-          // All done but status wasn't updated (e.g. crash)
           await supabase
             .from("agent_goals")
             .update({ batch_status: "idle", batch_progress: 0 })
@@ -181,6 +217,17 @@ export default function AgentDashboard() {
     init();
   }, [fetchData]);
 
+  const archiveCurrentGoal = async () => {
+    if (!goal) return;
+    await supabase
+      .from("agent_goals")
+      .update({ 
+        goal_status: "archived", 
+        end_date: new Date().toISOString() 
+      } as any)
+      .eq("id", goal.id);
+  };
+
   const handleOnboard = async () => {
     if (!niche.trim()) {
       toast.error("Please enter your niche");
@@ -189,6 +236,11 @@ export default function AgentDashboard() {
     setGenerating(true);
 
     try {
+      // Archive existing active goal first
+      if (goal) {
+        await archiveCurrentGoal();
+      }
+
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData?.session?.access_token;
       if (!accessToken) throw new Error("Not authenticated");
@@ -219,11 +271,47 @@ export default function AgentDashboard() {
       toast.success("Content plan generated!");
       await fetchData();
       setShowOnboarding(false);
+      setViewingArchivedGoal(null);
     } catch (e: any) {
       toast.error(e.message || "Something went wrong");
     } finally {
       setGenerating(false);
     }
+  };
+
+  const loadArchivedGoalData = async (archivedGoal: AgentGoal) => {
+    setLoadingArchive(true);
+    setViewingArchivedGoal(archivedGoal);
+    setShowHistory(false);
+
+    const { data: planData } = await supabase
+      .from("content_plans")
+      .select("*")
+      .eq("goal_id", archivedGoal.id)
+      .order("day_number", { ascending: true });
+
+    const loadedPlans = (planData || []) as ContentPlan[];
+    setArchivedPlans(loadedPlans);
+
+    const completedIds = loadedPlans.filter((p) => p.status === "completed").map((p) => p.id);
+    if (completedIds.length > 0) {
+      const { data: scriptData } = await supabase
+        .from("agent_scripts")
+        .select("*")
+        .in("plan_id", completedIds);
+
+      if (scriptData) {
+        const map: Record<string, AgentScript> = {};
+        (scriptData as AgentScript[]).forEach((s) => {
+          map[s.plan_id] = s;
+        });
+        setArchivedScripts(map);
+      }
+    } else {
+      setArchivedScripts({});
+    }
+
+    setLoadingArchive(false);
   };
 
   const generateScriptForPlan = async (plan: ContentPlan) => {
@@ -233,7 +321,6 @@ export default function AgentDashboard() {
       const accessToken = sessionData?.session?.access_token;
       if (!accessToken) throw new Error("Not authenticated");
 
-      // Call the viral script generator with the plan topic as context
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-viral-script`,
         {
@@ -259,7 +346,6 @@ export default function AgentDashboard() {
 
       const scriptResult = await res.json();
 
-      // Save to agent_scripts
       await supabase.from("agent_scripts").insert({
         plan_id: plan.id,
         user_id: user!.id,
@@ -269,7 +355,6 @@ export default function AgentDashboard() {
         hashtags: scriptResult.hashtags || null,
       });
 
-      // Mark plan as completed
       await supabase
         .from("content_plans")
         .update({ status: "completed" })
@@ -355,23 +440,43 @@ export default function AgentDashboard() {
     }
   };
 
+  const openArchivedScript = (plan: ContentPlan) => {
+    if (archivedScripts[plan.id]) {
+      setViewingPlanId(plan.id);
+      setSheetOpen(true);
+    }
+  };
+
   const completedPlans = plans.filter((p) => p.status === "completed");
-  const viewingPlan = plans.find((p) => p.id === viewingPlanId) || null;
-  const viewingScript = viewingPlanId ? scripts[viewingPlanId] || null : null;
-  const viewingIndex = completedPlans.findIndex((p) => p.id === viewingPlanId);
+  const viewingPlan = viewingArchivedGoal 
+    ? archivedPlans.find((p) => p.id === viewingPlanId) || null
+    : plans.find((p) => p.id === viewingPlanId) || null;
+  const activeScripts = viewingArchivedGoal ? archivedScripts : scripts;
+  const viewingScript = viewingPlanId ? activeScripts[viewingPlanId] || null : null;
+  const activePlansForNav = viewingArchivedGoal 
+    ? archivedPlans.filter((p) => p.status === "completed")
+    : completedPlans;
+  const viewingIndex = activePlansForNav.findIndex((p) => p.id === viewingPlanId);
 
   const handleDrawerNavigate = (direction: "prev" | "next") => {
     const newIndex = direction === "prev" ? viewingIndex - 1 : viewingIndex + 1;
-    if (newIndex >= 0 && newIndex < completedPlans.length) {
-      setViewingPlanId(completedPlans[newIndex].id);
+    if (newIndex >= 0 && newIndex < activePlansForNav.length) {
+      setViewingPlanId(activePlansForNav[newIndex].id);
     }
+  };
+
+  const getWeekLabel = (g: AgentGoal) => {
+    const start = g.start_date ? new Date(g.start_date) : new Date(g.created_at);
+    const end = g.end_date ? new Date(g.end_date) : null;
+    const startStr = format(start, "MMM d");
+    const endStr = end ? format(end, "MMM d") : "present";
+    return `Week of ${startStr} – ${endStr}`;
   };
 
   if (loading) {
     return (
       <AppLayout>
         <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
-          {/* Skeleton header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-2">
               <Skeleton className="h-8 w-56" />
@@ -382,8 +487,6 @@ export default function AgentDashboard() {
               <Skeleton className="h-9 w-28 rounded-md" />
             </div>
           </div>
-
-          {/* Skeleton grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {Array.from({ length: 7 }).map((_, i) => (
               <Card key={i} className="border-border bg-card">
@@ -403,6 +506,119 @@ export default function AgentDashboard() {
             ))}
           </div>
         </div>
+      </AppLayout>
+    );
+  }
+
+  // === ARCHIVED GOAL READ-ONLY VIEW ===
+  if (viewingArchivedGoal) {
+    return (
+      <AppLayout>
+        <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
+          <button
+            onClick={() => { setViewingArchivedGoal(null); setArchivedPlans([]); setArchivedScripts({}); }}
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" /> Back to Current Plan
+          </button>
+
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+          >
+            <div>
+              <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+                <Archive className="h-6 w-6 text-muted-foreground" />
+                {getWeekLabel(viewingArchivedGoal)}
+              </h1>
+              <div className="flex items-center gap-2 mt-1">
+                <p className="text-sm text-muted-foreground">
+                  {viewingArchivedGoal.niche} · {viewingArchivedGoal.platform} · {viewingArchivedGoal.tone}
+                </p>
+                <Badge variant="outline" className="text-[10px] gap-1">
+                  <Lock className="h-2.5 w-2.5" /> Read-only
+                </Badge>
+              </div>
+            </div>
+          </motion.div>
+
+          {loadingArchive ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <AnimatePresence mode="popLayout">
+                {archivedPlans.map((plan, i) => {
+                  const isCompleted = plan.status === "completed";
+                  const dayLabel = DAY_LABELS[plan.day_number - 1] || `Day ${plan.day_number}`;
+
+                  return (
+                    <motion.div
+                      key={plan.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                    >
+                      <Card className={`relative overflow-hidden ${
+                        isCompleted
+                          ? "border-muted-foreground/20 bg-muted/30"
+                          : "border-border bg-card opacity-60"
+                      }`}>
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center justify-between">
+                            <Badge variant="secondary" className="text-xs bg-muted text-muted-foreground">
+                              {dayLabel}
+                            </Badge>
+                            {isCompleted && (
+                              <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center">
+                                <Check className="h-3.5 w-3.5 text-muted-foreground" />
+                              </div>
+                            )}
+                          </div>
+                          <CardTitle className="text-sm font-semibold text-foreground leading-snug mt-2">
+                            {plan.topic}
+                          </CardTitle>
+                          {plan.hook_type && (
+                            <CardDescription className="text-xs">
+                              Hook: {plan.hook_type}
+                            </CardDescription>
+                          )}
+                        </CardHeader>
+                        <CardContent className="pt-2">
+                          {isCompleted && archivedScripts[plan.id] ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full"
+                              onClick={() => openArchivedScript(plan)}
+                            >
+                              <Eye className="h-3.5 w-3.5 mr-1.5" /> View Script
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Not generated</span>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+            </div>
+          )}
+        </div>
+
+        <AgentScriptDrawer
+          open={sheetOpen}
+          onOpenChange={setSheetOpen}
+          script={viewingScript}
+          plan={viewingPlan}
+          goal={viewingArchivedGoal}
+          onNavigate={handleDrawerNavigate}
+          canNavigatePrev={viewingIndex > 0}
+          canNavigateNext={viewingIndex < activePlansForNav.length - 1}
+        />
       </AppLayout>
     );
   }
@@ -546,6 +762,17 @@ export default function AgentDashboard() {
               </Button>
             )}
 
+            {archivedGoals.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowHistory(!showHistory)}
+                className="border-border text-muted-foreground hover:text-foreground"
+              >
+                <History className="h-4 w-4 mr-1" /> History
+              </Button>
+            )}
+
             <Button
               variant="outline"
               size="sm"
@@ -559,6 +786,51 @@ export default function AgentDashboard() {
             </Button>
           </div>
         </motion.div>
+
+        {/* History Panel */}
+        <AnimatePresence>
+          {showHistory && archivedGoals.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Card className="border-border bg-card">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Archive className="h-4 w-4 text-primary" />
+                    Plan History
+                  </CardTitle>
+                  <CardDescription className="text-xs">View previous content weeks in read-only mode.</CardDescription>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <ScrollArea className="max-h-[240px]">
+                    <div className="space-y-1 p-2">
+                      {archivedGoals.map((ag) => (
+                        <button
+                          key={ag.id}
+                          onClick={() => loadArchivedGoalData(ag)}
+                          className="w-full p-3 rounded-lg text-left transition-colors bg-muted/30 hover:bg-muted/50 border border-transparent hover:border-primary/20"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium text-sm text-foreground">{getWeekLabel(ag)}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {ag.niche} · {ag.platform} · {ag.videos_per_week} videos
+                              </p>
+                            </div>
+                            <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Weekly Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -705,7 +977,7 @@ export default function AgentDashboard() {
         goal={goal}
         onNavigate={handleDrawerNavigate}
         canNavigatePrev={viewingIndex > 0}
-        canNavigateNext={viewingIndex < completedPlans.length - 1}
+        canNavigateNext={viewingIndex < activePlansForNav.length - 1}
       />
     </AppLayout>
   );
