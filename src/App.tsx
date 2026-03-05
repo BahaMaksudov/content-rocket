@@ -32,6 +32,7 @@ import SocialProof from "./pages/SocialProof";
 import EmbedWall from "./pages/EmbedWall";
 import NotFound from "./pages/NotFound";
 import YouTubeToLinkedIn from "./pages/tools/YouTubeToLinkedIn";
+import AgentDashboard from "./pages/AgentDashboard";
 import Blog from "./pages/Blog";
 import HowToRepurposeYouTubeVideos from "./pages/blog/HowToRepurposeYouTubeVideos";
 
@@ -128,6 +129,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <SocialProof />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/agent"
+              element={
+                <ProtectedRoute>
+                  <AgentDashboard />
                 </ProtectedRoute>
               }
             />
