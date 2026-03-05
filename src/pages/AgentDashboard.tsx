@@ -8,9 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { AgentScriptDrawer } from "@/components/dashboard/AgentScriptDrawer";
 import { Sparkles, Rocket, Check, Eye, Loader2, Target, CalendarDays, Zap, ThumbsUp, ThumbsDown } from "lucide-react";
 import { toast } from "sonner";
 
@@ -71,7 +71,7 @@ export default function AgentDashboard() {
   const [downvoteOpen, setDownvoteOpen] = useState<string | null>(null);
 
   // Slide-over
-  const [viewingScript, setViewingScript] = useState<AgentScript | null>(null);
+  const [viewingPlanId, setViewingPlanId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const fetchData = useCallback(async (skipLoadingState = false) => {
@@ -337,10 +337,21 @@ export default function AgentDashboard() {
   };
 
   const openScript = (plan: ContentPlan) => {
-    const script = scripts[plan.id];
-    if (script) {
-      setViewingScript(script);
+    if (scripts[plan.id]) {
+      setViewingPlanId(plan.id);
       setSheetOpen(true);
+    }
+  };
+
+  const completedPlans = plans.filter((p) => p.status === "completed");
+  const viewingPlan = plans.find((p) => p.id === viewingPlanId) || null;
+  const viewingScript = viewingPlanId ? scripts[viewingPlanId] || null : null;
+  const viewingIndex = completedPlans.findIndex((p) => p.id === viewingPlanId);
+
+  const handleDrawerNavigate = (direction: "prev" | "next") => {
+    const newIndex = direction === "prev" ? viewingIndex - 1 : viewingIndex + 1;
+    if (newIndex >= 0 && newIndex < completedPlans.length) {
+      setViewingPlanId(completedPlans[newIndex].id);
     }
   };
 
@@ -636,56 +647,17 @@ export default function AgentDashboard() {
         </div>
       </div>
 
-      {/* Script Slide-Over */}
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent className="sm:max-w-lg overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle className="text-foreground">Generated Script</SheetTitle>
-          </SheetHeader>
-
-          {viewingScript && (
-            <div className="mt-6 space-y-5">
-              {viewingScript.hook && (
-                <div>
-                  <h3 className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">Hook</h3>
-                  <p className="text-sm text-foreground">{viewingScript.hook}</p>
-                </div>
-              )}
-
-              {viewingScript.script_body && (
-                <div>
-                  <h3 className="text-xs font-semibold text-primary uppercase tracking-wider mb-2">Script</h3>
-                  <pre className="text-sm text-foreground whitespace-pre-wrap bg-muted/50 rounded-lg p-4 border border-border">
-                    {typeof viewingScript.script_body === "string"
-                      ? viewingScript.script_body
-                      : JSON.stringify(viewingScript.script_body, null, 2)}
-                  </pre>
-                </div>
-              )}
-
-              {viewingScript.caption && (
-                <div>
-                  <h3 className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">Caption</h3>
-                  <p className="text-sm text-foreground">{viewingScript.caption}</p>
-                </div>
-              )}
-
-              {viewingScript.hashtags && viewingScript.hashtags.length > 0 && (
-                <div>
-                  <h3 className="text-xs font-semibold text-primary uppercase tracking-wider mb-2">Hashtags</h3>
-                  <div className="flex flex-wrap gap-1.5">
-                    {viewingScript.hashtags.map((tag, i) => (
-                      <Badge key={i} variant="secondary" className="bg-primary/10 text-primary border-0 text-xs">
-                        #{tag}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
+      {/* Script Drawer */}
+      <AgentScriptDrawer
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        script={viewingScript}
+        plan={viewingPlan}
+        goal={goal}
+        onNavigate={handleDrawerNavigate}
+        canNavigatePrev={viewingIndex > 0}
+        canNavigateNext={viewingIndex < completedPlans.length - 1}
+      />
     </AppLayout>
   );
 }
