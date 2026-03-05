@@ -542,22 +542,24 @@ export default function AgentDashboard() {
   if (!goal || showOnboarding) {
     return (
       <AppLayout>
-        <div className="max-w-xl mx-auto px-4 py-6">
+        <div className="max-w-xl mx-auto px-4 pt-2 pb-5">
           {goal && (
-            <button
-              onClick={() => setShowOnboarding(false)}
-              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-3"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" /> Back to Weekly Plan
-            </button>
+            <div className="w-full text-left mb-2">
+              <button
+                onClick={() => setShowOnboarding(false)}
+                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" /> Back to Weekly Plan
+              </button>
+            </div>
           )}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="text-center mb-4">
-              <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-primary/10 mb-3">
+            <div className="text-center mb-3">
+              <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-primary/10 mb-2">
                 <Target className="h-7 w-7 text-primary" />
               </div>
               <h1 className="text-2xl font-bold text-foreground mb-1">Launch Your Content Agent</h1>
