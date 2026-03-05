@@ -542,9 +542,9 @@ export default function AgentDashboard() {
   if (!goal || showOnboarding) {
     return (
       <AppLayout>
-        <div className="max-w-5xl mx-auto px-4 pt-1 pb-3">
+        <div className="max-w-5xl mx-auto px-4 pt-1 pb-6">
           {goal && (
-            <div className="w-full text-left mb-1">
+            <div className="max-w-xl mx-auto w-full text-left mb-1">
               <button
                 onClick={() => setShowOnboarding(false)}
                 className="inline-flex items-center gap-1.5 text-sm text-muted-foreground/70 hover:text-primary transition-colors"
@@ -569,7 +569,7 @@ export default function AgentDashboard() {
               </div>
 
               <Card className="border-primary/20 bg-card/80 backdrop-blur">
-                <CardContent className="pt-4 space-y-4">
+                <CardContent className="pt-6 space-y-5">
                   <div className="space-y-2">
                     <Label htmlFor="niche" className="text-foreground">Your Niche</Label>
                     <Input
@@ -628,7 +628,7 @@ export default function AgentDashboard() {
                   <Button
                     onClick={handleOnboard}
                     disabled={generating || !niche.trim()}
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-11"
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-12"
                   >
                     {generating ? (
                       <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating Plan...</>
