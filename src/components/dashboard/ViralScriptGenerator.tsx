@@ -5,8 +5,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Sparkles, Mic, Lock, Crown } from "lucide-react";
+import { Loader2, Sparkles, Mic, Lock, Crown, HelpCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { ProductionGuideModal } from "./ProductionGuideModal";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useCredits } from "@/hooks/use-credits";
@@ -100,6 +101,8 @@ export function ViralScriptGenerator() {
   const [result, setResult] = useState<ViralScriptResult | null>(persistedRef.current.result);
   const outputRef = useRef<HTMLDivElement>(null);
 
+  // Guide modal
+  const [showGuide, setShowGuide] = useState(false);
   // Upsell modal state
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [upgradeFeature, setUpgradeFeature] = useState<"viral-voice-mode" | "viral-scene-blueprint" | "viral-platform-tone" | "viral-regeneration">("viral-voice-mode");
@@ -424,6 +427,17 @@ export function ViralScriptGenerator() {
 
         {result && (
           <div className="relative">
+            {/* Results header with guide button */}
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium text-muted-foreground">Your Script</h3>
+              <button
+                onClick={() => setShowGuide(true)}
+                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+              >
+                <HelpCircle className="h-4 w-4" />
+                Quick Start Guide
+              </button>
+            </div>
             {isGenerating && (
               <div className="absolute inset-0 z-50 flex items-start justify-center pt-24 bg-background/80 backdrop-blur-sm rounded-xl">
                 <div className="text-center space-y-4">
@@ -565,6 +579,7 @@ export function ViralScriptGenerator() {
         }
         tier="pro"
       />
+      <ProductionGuideModal open={showGuide} onOpenChange={setShowGuide} />
     </div>
   );
 }

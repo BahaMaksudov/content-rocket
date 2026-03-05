@@ -392,6 +392,93 @@ function HeroSection() {
   );
 }
 
+// How It Works Section
+function HowItWorksSection() {
+  const steps = [
+    {
+      step: "01",
+      icon: Sparkles,
+      title: "Generate",
+      desc: "Paste a topic or idea and our AI creates hooks, scene blueprints, overlays, and captions — in seconds.",
+    },
+    {
+      step: "02",
+      icon: Video,
+      title: "Produce",
+      desc: "Use ElevenLabs for AI voiceover and CapCut to assemble your scenes. Our blueprint is your shot-list.",
+    },
+    {
+      step: "03",
+      icon: Globe,
+      title: "Publish",
+      desc: "Export and post to TikTok, Instagram Reels, or YouTube Shorts. Optimized for each platform.",
+    },
+  ];
+
+  return (
+    <section className="py-20 lg:py-28 relative">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_50%,hsl(187_94%_43%_/_0.06),transparent)]" />
+      <div className="relative container mx-auto px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-16"
+        >
+          <Badge variant="outline" className="mb-4 text-primary border-primary/30">
+            How It Works
+          </Badge>
+          <h2 className="text-3xl lg:text-5xl font-bold mb-4">
+            Master the <span className="text-gradient">Viral Workflow</span>
+          </h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Three steps from idea to published viral content.
+          </p>
+        </motion.div>
+
+        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          {steps.map((step, index) => (
+            <motion.div
+              key={step.title}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: index * 0.15 }}
+            >
+              <Card className="premium-card h-full text-center relative overflow-hidden group hover:border-primary/30 transition-colors">
+                <div className="absolute top-4 right-4 text-5xl font-bold text-primary/10 select-none">{step.step}</div>
+                <CardContent className="pt-8 pb-6 px-6 flex flex-col items-center gap-4">
+                  <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                    <step.icon className="h-7 w-7 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-bold text-foreground">{step.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Connecting arrows (desktop) */}
+        <div className="hidden md:flex justify-center items-center gap-0 max-w-5xl mx-auto mt-8">
+          <div className="flex-1 flex justify-center">
+            <div className="h-[2px] w-16 bg-gradient-to-r from-transparent to-primary/40" />
+          </div>
+          <ChevronRight className="h-5 w-5 text-primary/40 -mx-2" />
+          <div className="flex-1 flex justify-center">
+            <div className="h-[2px] w-full bg-primary/20" />
+          </div>
+          <ChevronRight className="h-5 w-5 text-primary/40 -mx-2" />
+          <div className="flex-1 flex justify-center">
+            <div className="h-[2px] w-16 bg-gradient-to-l from-transparent to-primary/40" />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // Problem Section
 function ProblemSection() {
   const problems = [
@@ -1243,6 +1330,7 @@ export default function Landing() {
     <div className="min-h-screen bg-background">
       <StickyNav />
       <HeroSection />
+      <HowItWorksSection />
       <TrustedByCreatorsSection />
       <TrustSection />
       <ProblemSection />
