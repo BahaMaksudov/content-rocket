@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { AgentScriptDrawer } from "@/components/dashboard/AgentScriptDrawer";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Sparkles, Rocket, Check, Eye, Loader2, Target, CalendarDays, Zap, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Sparkles, Rocket, Check, Eye, Loader2, Target, CalendarDays, Zap, ThumbsUp, ThumbsDown, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 type AgentGoal = {
@@ -74,6 +74,7 @@ export default function AgentDashboard() {
   // Slide-over
   const [viewingPlanId, setViewingPlanId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const fetchData = useCallback(async (skipLoadingState = false) => {
     if (!user) return null;
@@ -208,6 +209,7 @@ export default function AgentDashboard() {
 
       toast.success("Content plan generated!");
       await fetchData();
+      setShowOnboarding(false);
     } catch (e: any) {
       toast.error(e.message || "Something went wrong");
     } finally {
@@ -397,10 +399,20 @@ export default function AgentDashboard() {
   }
 
   // === ONBOARDING VIEW ===
-  if (!goal) {
+  if (!goal || showOnboarding) {
     return (
       <AppLayout>
         <div className="max-w-xl mx-auto px-4 py-12">
+          {goal && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowOnboarding(false)}
+              className="mb-4 text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4 mr-1.5" /> Back to Weekly Plan
+            </Button>
+          )}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -531,9 +543,8 @@ export default function AgentDashboard() {
               variant="outline"
               size="sm"
               onClick={() => {
-                setGoal(null);
-                setPlans([]);
-                setScripts({});
+                setShowOnboarding(true);
+                setNiche("");
               }}
               className="border-border text-muted-foreground hover:text-foreground"
             >

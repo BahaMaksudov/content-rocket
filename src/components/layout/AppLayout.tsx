@@ -45,6 +45,7 @@ const routeTitles: Record<string, string> = {
   "/developer": "Developer API",
   "/social-proof": "Wall of Love",
   "/team": "Team Workspace",
+  "/agent": "Content Agent",
 };
 
 export function AppLayout({ children }: AppLayoutProps) {
