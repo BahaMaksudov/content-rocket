@@ -411,16 +411,14 @@ export default function AgentDashboard() {
   if (!goal || showOnboarding) {
     return (
       <AppLayout>
-        <div className="max-w-xl mx-auto px-4 py-12">
+        <div className="max-w-xl mx-auto px-4 py-6">
           {goal && (
-            <Button
-              variant="ghost"
-              size="sm"
+            <button
               onClick={() => setShowOnboarding(false)}
-              className="mb-4 text-muted-foreground hover:text-foreground"
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
             >
-              <ArrowLeft className="h-4 w-4 mr-1.5" /> Back to Weekly Plan
-            </Button>
+              <ArrowLeft className="h-3.5 w-3.5" /> Back to Weekly Plan
+            </button>
           )}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
