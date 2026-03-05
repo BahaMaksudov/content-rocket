@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,6 +61,7 @@ const DAY_LABELS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Sat
 
 export default function AgentDashboard() {
   const { user } = useAuth();
+  const { isPaid, openCheckout } = useSubscription();
   const navigate = useNavigate();
   const [goal, setGoal] = useState<AgentGoal | null>(null);
   const [plans, setPlans] = useState<ContentPlan[]>([]);
@@ -708,17 +710,15 @@ export default function AgentDashboard() {
                 </Button>
               )}
 
-              {archivedGoals.length > 0 && (
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setShowHistory(true)}
-                  className="border-border text-muted-foreground hover:text-foreground"
-                  title="Plan History"
-                >
-                  <History className="h-4 w-4" />
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setShowHistory(true)}
+                className="border-border text-muted-foreground hover:text-foreground"
+                title="Plan History"
+              >
+                <History className="h-4 w-4" />
+              </Button>
 
               <Button
                 variant="outline"
@@ -922,7 +922,41 @@ export default function AgentDashboard() {
           </SheetHeader>
           <ScrollArea className="h-[calc(100vh-100px)]">
             <div className="px-4 py-4 space-y-6">
-              {archivedGoals.length === 0 ? (
+              {!isPaid ? (
+                /* Free user: blurred preview with upgrade CTA */
+                <div className="relative">
+                  <div className="blur-[6px] pointer-events-none select-none opacity-60 space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="p-3 rounded-lg bg-muted/30 border border-transparent">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-sm text-foreground">Sample Niche #{i}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">Week of Jan {i} – Jan {i + 6}</p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">TikTok · 7 videos</p>
+                          </div>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                      <Lock className="h-6 w-6 text-primary" />
+                    </div>
+                    <p className="text-sm font-semibold text-foreground mb-1">Plan History is a paid feature</p>
+                    <p className="text-xs text-muted-foreground mb-4 text-center px-4">
+                      Upgrade to access your full archive of previous content weeks.
+                    </p>
+                    <Button
+                      size="sm"
+                      onClick={() => { setShowHistory(false); openCheckout("starter"); }}
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+                    >
+                      <Zap className="h-3.5 w-3.5 mr-1.5" /> Upgrade to Unlock History
+                    </Button>
+                  </div>
+                </div>
+              ) : archivedGoals.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
                     <Archive className="h-6 w-6 text-muted-foreground" />
