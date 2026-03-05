@@ -10,7 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sparkles, Rocket, Check, Eye, Loader2, Target, CalendarDays, Zap } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Sparkles, Rocket, Check, Eye, Loader2, Target, CalendarDays, Zap, ThumbsUp, ThumbsDown } from "lucide-react";
 import { toast } from "sonner";
 
 type AgentGoal = {
@@ -60,6 +61,10 @@ export default function AgentDashboard() {
   const [tone, setTone] = useState("educational");
   const [videosPerWeek, setVideosPerWeek] = useState(7);
 
+  // Feedback
+  const [feedback, setFeedback] = useState<Record<string, { rating: string; comment?: string }>>({});
+  const [downvoteOpen, setDownvoteOpen] = useState<string | null>(null);
+
   // Slide-over
   const [viewingScript, setViewingScript] = useState<AgentScript | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -107,6 +112,23 @@ export default function AgentDashboard() {
               map[s.plan_id] = s;
             });
             setScripts(map);
+          }
+        }
+
+        // Fetch feedback for all plans
+        const allPlanIds = (planData as ContentPlan[]).map((p) => p.id);
+        if (allPlanIds.length > 0) {
+          const { data: fbData } = await supabase
+            .from("content_feedback")
+            .select("plan_id, rating, comment")
+            .in("plan_id", allPlanIds);
+
+          if (fbData) {
+            const fbMap: Record<string, { rating: string; comment?: string }> = {};
+            (fbData as any[]).forEach((f) => {
+              fbMap[f.plan_id] = { rating: f.rating, comment: f.comment };
+            });
+            setFeedback(fbMap);
           }
         }
       }
@@ -243,6 +265,22 @@ export default function AgentDashboard() {
     setBatchGenerating(false);
     if (successCount > 0) {
       toast.success(`Generated ${successCount} script${successCount > 1 ? "s" : ""}!`);
+    }
+  };
+
+  const submitFeedback = async (planId: string, rating: "up" | "down", comment?: string) => {
+    if (!user) return;
+    try {
+      const { error } = await supabase.from("content_feedback").upsert(
+        { user_id: user.id, plan_id: planId, rating, comment: comment || null },
+        { onConflict: "user_id,plan_id" }
+      );
+      if (error) throw error;
+      setFeedback((prev) => ({ ...prev, [planId]: { rating, comment } }));
+      setDownvoteOpen(null);
+      toast.success(rating === "up" ? "Thanks for the feedback!" : "Feedback saved");
+    } catch {
+      toast.error("Failed to save feedback");
     }
   };
 
@@ -464,16 +502,65 @@ export default function AgentDashboard() {
                       )}
                     </CardHeader>
 
-                    <CardContent className="pt-2">
+                    <CardContent className="pt-2 space-y-2">
                       {isCompleted ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full border-primary/30 text-primary hover:bg-primary/10"
-                          onClick={() => openScript(plan)}
-                        >
-                          <Eye className="h-3.5 w-3.5 mr-1.5" /> View Script
-                        </Button>
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full border-primary/30 text-primary hover:bg-primary/10"
+                            onClick={() => openScript(plan)}
+                          >
+                            <Eye className="h-3.5 w-3.5 mr-1.5" /> View Script
+                          </Button>
+
+                          {/* Feedback row */}
+                          <div className="flex items-center justify-center gap-2 pt-1">
+                            {feedback[plan.id] ? (
+                              <span className="text-xs text-muted-foreground">
+                                {feedback[plan.id].rating === "up" ? "👍" : "👎"} Feedback saved
+                              </span>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() => submitFeedback(plan.id, "up")}
+                                  className="p-1.5 rounded-md hover:bg-primary/10 transition-colors"
+                                  title="Good script"
+                                >
+                                  <ThumbsUp className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
+                                </button>
+
+                                <Popover
+                                  open={downvoteOpen === plan.id}
+                                  onOpenChange={(open) => setDownvoteOpen(open ? plan.id : null)}
+                                >
+                                  <PopoverTrigger asChild>
+                                    <button
+                                      className="p-1.5 rounded-md hover:bg-destructive/10 transition-colors"
+                                      title="Bad script"
+                                    >
+                                      <ThumbsDown className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                                    </button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-48 p-2" side="top">
+                                    <p className="text-xs font-medium text-foreground mb-2">What was wrong?</p>
+                                    <div className="flex flex-col gap-1">
+                                      {["Too long", "Wrong tone", "Boring"].map((reason) => (
+                                        <button
+                                          key={reason}
+                                          onClick={() => submitFeedback(plan.id, "down", reason)}
+                                          className="text-xs text-left px-2 py-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                                        >
+                                          {reason}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </PopoverContent>
+                                </Popover>
+                              </>
+                            )}
+                          </div>
+                        </>
                       ) : (
                         <Button
                           size="sm"
