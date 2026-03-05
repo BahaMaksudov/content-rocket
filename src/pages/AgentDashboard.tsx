@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { AgentScriptDrawer } from "@/components/dashboard/AgentScriptDrawer";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Sparkles, Rocket, Check, Eye, Loader2, Target, CalendarDays, Zap, ThumbsUp, ThumbsDown } from "lucide-react";
 import { toast } from "sonner";
 
@@ -358,8 +359,38 @@ export default function AgentDashboard() {
   if (loading) {
     return (
       <AppLayout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
+          {/* Skeleton header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-56" />
+              <Skeleton className="h-4 w-36" />
+            </div>
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-10 w-48 rounded-md" />
+              <Skeleton className="h-9 w-28 rounded-md" />
+            </div>
+          </div>
+
+          {/* Skeleton grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <Card key={i} className="border-border bg-card">
+                <CardHeader className="pb-2 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-5 w-20 rounded-full" />
+                    <Skeleton className="h-6 w-6 rounded-full" />
+                  </div>
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-24" />
+                </CardHeader>
+                <CardContent className="pt-2">
+                  <Skeleton className="h-9 w-full rounded-md" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </AppLayout>
     );
