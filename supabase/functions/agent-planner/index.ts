@@ -77,6 +77,37 @@ serve(async (req) => {
       ? `\n\nIMPORTANT — TOPIC MEMORY: The user has already covered these topics. Do NOT repeat or closely duplicate any of them. Provide fresh angles and entirely new ideas:\n${previousTopics.map((t, i) => `${i + 1}. ${t}`).join("\n")}`
       : "";
 
+    // --- 2b. Fetch positive feedback for preference learning ---
+    const { data: positiveFeedback } = await supabase
+      .from("content_feedback")
+      .select("comment, plan_id")
+      .eq("user_id", userId)
+      .eq("rating", "👍")
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    // Enrich feedback with the plan topics they liked
+    let feedbackClause = "";
+    if (positiveFeedback && positiveFeedback.length > 0) {
+      const planIds = positiveFeedback.map((f: any) => f.plan_id);
+      const { data: likedPlans } = await supabase
+        .from("content_plans")
+        .select("id, topic, hook_type")
+        .in("id", planIds);
+
+      const likedPlanMap: Record<string, { topic: string; hook_type: string | null }> = {};
+      (likedPlans || []).forEach((p: any) => { likedPlanMap[p.id] = { topic: p.topic, hook_type: p.hook_type }; });
+
+      const feedbackSummaries = positiveFeedback.map((f: any) => {
+        const plan = likedPlanMap[f.plan_id];
+        const topicInfo = plan ? `Topic: "${plan.topic}" (hook: ${plan.hook_type || "unknown"})` : "Unknown topic";
+        const reason = f.comment ? ` — Reason: ${f.comment}` : "";
+        return `- ${topicInfo}${reason}`;
+      }).join("\n");
+
+      feedbackClause = `\n\nUSER PREFERENCE SIGNAL — The user gave positive feedback (👍) to these previous content pieces. Analyze the patterns (hook styles, topic angles, formats) and strongly prioritize similar approaches in the new plan:\n${feedbackSummaries}`;
+    }
+
     // --- 3. Call AI to generate content plan ---
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -86,7 +117,7 @@ serve(async (req) => {
       });
     }
 
-    const systemPrompt = `You are a Viral Content Strategist. Create a ${videos_per_week}-day content calendar for a ${niche} creator on ${platform}. Focus on high-retention topics. The tone should be ${tone}.${memoryClause}`;
+    const systemPrompt = `You are a Viral Content Strategist. Create a ${videos_per_week}-day content calendar for a ${niche} creator on ${platform}. Focus on high-retention topics. The tone should be ${tone}.${memoryClause}${feedbackClause}`;
 
     const userPrompt = `Generate exactly ${videos_per_week} viral video topics. Each topic must be specific, actionable, and optimized for ${platform}'s algorithm.${previousTopics.length > 0 ? " Confirm you have reviewed the previous topic history and ensure zero overlap." : ""}`;
 
