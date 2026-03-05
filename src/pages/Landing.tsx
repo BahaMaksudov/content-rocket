@@ -48,7 +48,10 @@ import {
   ShieldCheck,
   MapPin,
   CreditCard,
+  Info,
+  LockKeyhole,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Animation variants
 const fadeInUp = {
@@ -773,8 +776,10 @@ function PricingSection({
       features: [
         "3 generations per month",
         "X threads & LinkedIn posts",
+        "Viral Script Generator (Manual)",
         "Standard AI",
         "Manage up to 3 testimonials (Internal only)",
+        { text: "Content Agent Access", locked: true, tooltip: "Automated weekly content planning and batch script generation." },
         "Community support",
       ],
       cta: "Start Free",
@@ -791,6 +796,8 @@ function PricingSection({
       features: [
         "25 generations per month",
         "All social formats + blog posts",
+        "Viral Script Generator",
+        { text: "Full Agentic AI Content Agent", isNew: true, tooltip: "Automated weekly content planning and batch script generation." },
         "1 brand voice",
         "Social Proof Tools — Unlimited Testimonials",
         "Embeddable Wall of Love Widget",
@@ -809,6 +816,8 @@ function PricingSection({
       highlight: null,
       features: [
         "60 generations per month",
+        "Viral Script Generator",
+        { text: "Priority Agentic AI Planning", isNew: true, tooltip: "Automated weekly content planning and batch script generation." },
         "Style Mimicking (AI voice training)",
         "Priority processing",
         "No watermarks",
@@ -830,6 +839,8 @@ function PricingSection({
       highlight: "Team",
       features: [
         "250 generations per month",
+        "Viral Script Generator",
+        { text: "Priority Agentic AI Planning", isNew: true, tooltip: "Automated weekly content planning and batch script generation." },
         "10 brand voices",
         "Team workspace (5 members)",
         "Bulk export",
@@ -910,27 +921,53 @@ function PricingSection({
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    <ul className="space-y-3">
-                      {plan.features.map((feature) => {
-                        const isSocialProof =
-                          feature.includes("Social Proof") ||
-                          feature.includes("Wall of Love") ||
-                          feature.includes("testimonials");
-                        return (
-                          <li key={feature} className="flex items-start gap-3">
-                            <Check className="h-5 w-5 text-success shrink-0 mt-0.5" />
-                            <span className="text-sm text-muted-foreground">
-                              {feature}
-                              {isSocialProof && (
-                                <Badge className="ml-1.5 text-[9px] px-1.5 py-0 bg-rocket/20 text-rocket border-0 align-middle">
-                                  New
-                                </Badge>
+                    <TooltipProvider delayDuration={300}>
+                      <ul className="space-y-3">
+                        {plan.features.map((feature, fi) => {
+                          const isObj = typeof feature === "object";
+                          const text = isObj ? feature.text : feature;
+                          const isLocked = isObj && feature.locked;
+                          const isNew = isObj && feature.isNew;
+                          const tooltipText = isObj ? feature.tooltip : null;
+                          const isSocialProof =
+                            text.includes("Social Proof") ||
+                            text.includes("Wall of Love") ||
+                            text.includes("testimonials");
+                          return (
+                            <li key={fi} className="flex items-start gap-3">
+                              {isLocked ? (
+                                <LockKeyhole className="h-5 w-5 text-muted-foreground/40 shrink-0 mt-0.5" />
+                              ) : (
+                                <Check className="h-5 w-5 text-success shrink-0 mt-0.5" />
                               )}
-                            </span>
-                          </li>
-                        );
-                      })}
-                    </ul>
+                              <span className={`text-sm ${isLocked ? "text-muted-foreground/40" : "text-muted-foreground"}`}>
+                                {text}
+                                {isNew && (
+                                  <Badge className="ml-1.5 text-[9px] px-1.5 py-0 bg-primary/20 text-primary border-0 align-middle">
+                                    New
+                                  </Badge>
+                                )}
+                                {isSocialProof && (
+                                  <Badge className="ml-1.5 text-[9px] px-1.5 py-0 bg-rocket/20 text-rocket border-0 align-middle">
+                                    New
+                                  </Badge>
+                                )}
+                                {tooltipText && (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Info className="inline-block h-3.5 w-3.5 ml-1 text-muted-foreground/50 hover:text-muted-foreground cursor-help align-middle" />
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="max-w-[200px] text-xs">
+                                      {tooltipText}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                )}
+                              </span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </TooltipProvider>
                     {plan.ctaAction === "upgrade" && plan.tier ? (
                       <Button
                         onClick={() => onUpgradeClick(plan.tier!)}
