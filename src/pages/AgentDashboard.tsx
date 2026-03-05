@@ -542,104 +542,101 @@ export default function AgentDashboard() {
   if (!goal || showOnboarding) {
     return (
       <AppLayout>
-        <div className="max-w-5xl mx-auto px-4 pt-1 pb-6">
+        <div className="max-w-xl mx-auto px-4 pt-2 pb-5">
           {goal && (
-            <div className="max-w-xl mx-auto w-full text-left mb-1">
+            <div className="w-full text-left mb-2">
               <button
                 onClick={() => setShowOnboarding(false)}
-                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground/70 hover:text-primary transition-colors"
+                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
               >
                 <ArrowLeft className="h-3.5 w-3.5" /> Back to Weekly Plan
               </button>
             </div>
           )}
-
-          <div className="max-w-xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <div className="text-center mb-2">
-                <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-primary/10 mb-1.5">
-                  <Target className="h-6 w-6 text-primary" />
-                </div>
-                <h1 className="text-2xl font-bold text-foreground mb-1">Launch Your Content Agent</h1>
-                <p className="text-sm text-muted-foreground">Tell us about your content goals and we'll plan your entire week.</p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="text-center mb-3">
+              <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-primary/10 mb-2">
+                <Target className="h-7 w-7 text-primary" />
               </div>
+              <h1 className="text-2xl font-bold text-foreground mb-1">Launch Your Content Agent</h1>
+              <p className="text-sm text-muted-foreground">Tell us about your content goals and we'll plan your entire week.</p>
+            </div>
 
-              <Card className="border-primary/20 bg-card/80 backdrop-blur">
-                <CardContent className="pt-6 space-y-5">
-                  <div className="space-y-2">
-                    <Label htmlFor="niche" className="text-foreground">Your Niche</Label>
-                    <Input
-                      id="niche"
-                      placeholder="e.g. AI Tools, Fitness, Finance..."
-                      value={niche}
-                      onChange={(e) => setNiche(e.target.value)}
-                      className="bg-background/50 border-border"
-                    />
-                  </div>
+            <Card className="border-primary/20 bg-card/80 backdrop-blur">
+              <CardContent className="pt-6 space-y-5">
+                <div className="space-y-2">
+                  <Label htmlFor="niche" className="text-foreground">Your Niche</Label>
+                  <Input
+                    id="niche"
+                    placeholder="e.g. AI Tools, Fitness, Finance..."
+                    value={niche}
+                    onChange={(e) => setNiche(e.target.value)}
+                    className="bg-background/50 border-border"
+                  />
+                </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-foreground">Platform</Label>
-                    <Select value={platform} onValueChange={setPlatform}>
-                      <SelectTrigger className="bg-background/50 border-border">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="TikTok">TikTok</SelectItem>
-                        <SelectItem value="YouTube Shorts">YouTube Shorts</SelectItem>
-                        <SelectItem value="Instagram Reels">Instagram Reels</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="space-y-2">
+                  <Label className="text-foreground">Platform</Label>
+                  <Select value={platform} onValueChange={setPlatform}>
+                    <SelectTrigger className="bg-background/50 border-border">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="TikTok">TikTok</SelectItem>
+                      <SelectItem value="YouTube Shorts">YouTube Shorts</SelectItem>
+                      <SelectItem value="Instagram Reels">Instagram Reels</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-foreground">Tone</Label>
-                    <Select value={tone} onValueChange={setTone}>
-                      <SelectTrigger className="bg-background/50 border-border">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="educational">Educational</SelectItem>
-                        <SelectItem value="entertaining">Entertaining</SelectItem>
-                        <SelectItem value="motivational">Motivational</SelectItem>
-                        <SelectItem value="controversial">Controversial</SelectItem>
-                        <SelectItem value="storytelling">Storytelling</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="space-y-2">
+                  <Label className="text-foreground">Tone</Label>
+                  <Select value={tone} onValueChange={setTone}>
+                    <SelectTrigger className="bg-background/50 border-border">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="educational">Educational</SelectItem>
+                      <SelectItem value="entertaining">Entertaining</SelectItem>
+                      <SelectItem value="motivational">Motivational</SelectItem>
+                      <SelectItem value="controversial">Controversial</SelectItem>
+                      <SelectItem value="storytelling">Storytelling</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-foreground">Videos Per Week</Label>
-                    <Select value={String(videosPerWeek)} onValueChange={(v) => setVideosPerWeek(Number(v))}>
-                      <SelectTrigger className="bg-background/50 border-border">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {[3, 5, 7].map((n) => (
-                          <SelectItem key={n} value={String(n)}>{n} videos</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="space-y-2">
+                  <Label className="text-foreground">Videos Per Week</Label>
+                  <Select value={String(videosPerWeek)} onValueChange={(v) => setVideosPerWeek(Number(v))}>
+                    <SelectTrigger className="bg-background/50 border-border">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[3, 5, 7].map((n) => (
+                        <SelectItem key={n} value={String(n)}>{n} videos</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                  <Button
-                    onClick={handleOnboard}
-                    disabled={generating || !niche.trim()}
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-12"
-                  >
-                    {generating ? (
-                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating Plan...</>
-                    ) : (
-                      <><Sparkles className="h-4 w-4 mr-2" /> Generate My Content Plan</>
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </div>
+                <Button
+                  onClick={handleOnboard}
+                  disabled={generating || !niche.trim()}
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-12"
+                >
+                  {generating ? (
+                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating Plan...</>
+                  ) : (
+                    <><Sparkles className="h-4 w-4 mr-2" /> Generate My Content Plan</>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
       </AppLayout>
     );
