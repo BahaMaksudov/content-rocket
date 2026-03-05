@@ -16,6 +16,8 @@ export type Database = {
     Tables: {
       agent_goals: {
         Row: {
+          batch_progress: number
+          batch_status: string
           created_at: string | null
           id: string
           niche: string
@@ -25,6 +27,8 @@ export type Database = {
           videos_per_week: number | null
         }
         Insert: {
+          batch_progress?: number
+          batch_status?: string
           created_at?: string | null
           id?: string
           niche: string
@@ -34,6 +38,8 @@ export type Database = {
           videos_per_week?: number | null
         }
         Update: {
+          batch_progress?: number
+          batch_status?: string
           created_at?: string | null
           id?: string
           niche?: string
