@@ -293,7 +293,7 @@ function HeroSection() {
                 variant="secondary"
                 className="px-4 py-2 text-sm font-semibold bg-[hsl(187_94%_43%_/_0.2)] text-[hsl(187_94%_60%)] border border-[hsl(187_94%_43%_/_0.3)] shadow-[0_0_20px_hsl(187_94%_43%_/_0.15)]"
               >
-                🔥 NEW: Viral Script Generator
+                🤖 BETA: Agentic Content Engine
               </Badge>
             </motion.div>
           </motion.div>
@@ -325,7 +325,7 @@ function HeroSection() {
               className="gradient-primary text-primary-foreground text-base sm:text-lg px-8 h-14 shadow-xl btn-glow hover:shadow-primary/40 transition-shadow"
             >
               <Link to="/auth" className="flex items-center gap-2">
-                Generate Your First Script Free ✨
+                Launch Your Content Agent ✨
               </Link>
             </Button>
             <Button
