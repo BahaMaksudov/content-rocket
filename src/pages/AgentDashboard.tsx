@@ -319,7 +319,19 @@ export default function AgentDashboard() {
     setLoadingArchive(false);
   };
 
-  const generateScriptForPlan = async (plan: ContentPlan) => {
+  const generateScriptForPlan = async (plan: ContentPlan, skipCreditCheck = false) => {
+    // Deduct 1 credit before generating (unless already handled by batch caller)
+    if (!skipCreditCheck) {
+      const success = await useCredit();
+      if (!success) {
+        toast.error("No credits remaining — upgrade to continue.", {
+          action: { label: "Upgrade", onClick: () => navigate("/billing") },
+          duration: 6000,
+        });
+        throw new Error("INSUFFICIENT_CREDITS");
+      }
+    }
+
     setGeneratingScript(plan.id);
     try {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -368,7 +380,10 @@ export default function AgentDashboard() {
       toast.success(`Script generated for Day ${plan.day_number}!`);
       await fetchData();
     } catch (e: any) {
-      toast.error(e.message || "Failed to generate script");
+      if (e.message !== "INSUFFICIENT_CREDITS") {
+        toast.error(e.message || "Failed to generate script");
+      }
+      throw e;
     } finally {
       setGeneratingScript(null);
     }
