@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ArrowRight, Youtube, Brain, Linkedin, Zap, CheckCircle2 } from "lucide-react";
+import { CanonicalHead } from "@/components/seo/CanonicalHead";
+import { RelatedArticles } from "@/components/seo/RelatedArticles";
 
 const STEPS = [
   {
@@ -60,8 +62,10 @@ const BENEFITS = [
 export default function YouTubeToLinkedIn() {
   return (
     <>
-      {/* SEO Meta — injected at build via index.html, but title update handled here */}
-      <title>Free YouTube to LinkedIn Post Generator | VidLogic AI</title>
+      <CanonicalHead
+        title="Free YouTube to LinkedIn Post Generator | VidLogic AI"
+        description="Turn any YouTube video into a scroll-stopping LinkedIn post in under 30 seconds. Free AI-powered YouTube to LinkedIn repurposing tool by VidLogic AI."
+      />
 
       <div className="min-h-screen bg-background text-foreground">
         {/* ── Minimal top nav ───────────────────────────────────────────── */}

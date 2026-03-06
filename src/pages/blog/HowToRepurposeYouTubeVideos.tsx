@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Calendar, Clock, Tag, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CanonicalHead } from "@/components/seo/CanonicalHead";
+import { RelatedArticles } from "@/components/seo/RelatedArticles";
 import socialMediaToolImg from "@/assets/blog/youtube-to-social-media-ai-tool.png";
 import linkedinToolImg from "@/assets/blog/youtube-to-linkedin-ai-tool.png";
 import twitterToolImg from "@/assets/blog/youtube-to-x-twitter-ai-tool.png";
@@ -58,8 +60,10 @@ export default function HowToRepurposeYouTubeVideos() {
 
   return (
     <>
-      <title>How to Repurpose YouTube Videos into a Month of Content | VidLogic AI Blog</title>
-      <link rel="canonical" href="https://vidlogicai.com/blog/how-to-repurpose-youtube-videos" />
+      <CanonicalHead
+        title="How to Repurpose YouTube Videos into a Month of Content | VidLogic AI Blog"
+        description="Learn the exact system for turning a single YouTube video into LinkedIn posts, blog articles, and Twitter threads using VidLogic AI's Viral Script Generator and AI Content Agent."
+      />
 
       <div className="min-h-screen bg-background text-foreground">
         {/* Nav */}
@@ -431,6 +435,8 @@ export default function HowToRepurposeYouTubeVideos() {
             </div>
           </div>
         </footer>
+
+        <RelatedArticles currentSlug="/blog/how-to-repurpose-youtube-videos" />
 
         {/* JSON-LD */}
         <script

@@ -1,10 +1,15 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CanonicalHead } from "@/components/seo/CanonicalHead";
 
 export default function Terms() {
   return (
     <div className="min-h-screen bg-background">
+      <CanonicalHead
+        title="Terms of Service | VidLogic AI"
+        description="Read the Terms of Service for VidLogic AI's YouTube to viral content platform, AI Content Agent, and Viral Script Generator."
+      />
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-lg sticky top-0 z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">

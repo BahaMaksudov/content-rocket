@@ -1,10 +1,15 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CanonicalHead } from "@/components/seo/CanonicalHead";
 
 export default function Privacy() {
   return (
     <div className="min-h-screen bg-background">
+      <CanonicalHead
+        title="Privacy Policy | VidLogic AI"
+        description="Learn how VidLogic AI collects, uses, and protects your personal information. Our AI Content Agent and Viral Script Generator are built with privacy in mind."
+      />
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-lg sticky top-0 z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
