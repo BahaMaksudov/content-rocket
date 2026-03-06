@@ -237,6 +237,8 @@ export default function YouTubeToLinkedIn() {
           </div>
         </section>
 
+        <RelatedArticles currentSlug="/tools/youtube-to-linkedin" title="More from VidLogic AI" />
+
         {/* ── Footer ───────────────────────────────────────────────────── */}
         <footer className="border-t border-border/50 px-4 py-6 text-center text-xs text-muted-foreground">
           <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 sm:flex-row">
