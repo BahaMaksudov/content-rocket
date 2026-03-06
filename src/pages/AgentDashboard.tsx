@@ -407,8 +407,18 @@ export default function AgentDashboard() {
     let successCount = 0;
 
     for (const plan of pending) {
+      // Check credits before each script in the batch
+      const creditOk = await useCredit();
+      if (!creditOk) {
+        toast.error(
+          `Ran out of credits after ${successCount} script${successCount !== 1 ? "s" : ""}. Upgrade to finish the remaining ${pending.length - successCount - (successCount === 0 ? 0 : 0)} days.`,
+          { action: { label: "Upgrade", onClick: () => navigate("/billing") }, duration: 8000 }
+        );
+        break;
+      }
+
       try {
-        await generateScriptForPlan(plan);
+        await generateScriptForPlan(plan, true); // skip inner credit check — already deducted
         successCount++;
         setBatchProgress(successCount);
         await updateBatchStatus(currentGoal.id, "generating", successCount);
@@ -425,6 +435,8 @@ export default function AgentDashboard() {
       toast.success(`Generated ${successCount} script${successCount > 1 ? "s" : ""}!`);
     }
     await fetchData(true);
+    // Refresh credits sidebar display
+    await refreshCredits();
   };
 
   const handleBatchGenerate = async () => {
@@ -434,6 +446,24 @@ export default function AgentDashboard() {
       return;
     }
     if (!goal) return;
+
+    // Pre-flight credit check
+    const latest = await getLatestCredits();
+    const available = latest?.creditsAvailable ?? creditsAvailable;
+    if (available < pending.length) {
+      if (available <= 0) {
+        toast.error("No credits remaining — upgrade to generate scripts.", {
+          action: { label: "Upgrade", onClick: () => navigate("/billing") },
+          duration: 6000,
+        });
+        return;
+      }
+      toast.warning(
+        `You have ${Number.isInteger(available) ? available : available.toFixed(1)} credit${available !== 1 ? "s" : ""} but need ${pending.length}. The batch will stop when credits run out.`,
+        { duration: 6000 }
+      );
+    }
+
     await runBatch(goal, pending);
   };
 
