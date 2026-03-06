@@ -1203,7 +1203,7 @@ const CTASection = forwardRef<HTMLElement>((_, ref) => {
               className="gradient-primary text-primary-foreground text-lg px-10 h-14 shadow-xl btn-glow"
             >
               <Link to="/auth" className="flex items-center gap-2">
-                Generate Your First Content Free
+                Launch Your Content Agent
                 <Sparkles className="h-5 w-5" />
               </Link>
             </Button>
