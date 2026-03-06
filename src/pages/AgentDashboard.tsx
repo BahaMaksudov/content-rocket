@@ -63,6 +63,7 @@ const DAY_LABELS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Sat
 export default function AgentDashboard() {
   const { user } = useAuth();
   const { isPaid, openCheckout } = useSubscription();
+  const { useCredit, getLatestCredits, refreshCredits, canUseCredits, creditsAvailable } = useCredits();
   const navigate = useNavigate();
   const [goal, setGoal] = useState<AgentGoal | null>(null);
   const [plans, setPlans] = useState<ContentPlan[]>([]);
