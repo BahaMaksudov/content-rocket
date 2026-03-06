@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ArrowRight, Calendar, Clock, Tag, ArrowLeft, Sparkles } from "lucide-react";
+import { CanonicalHead } from "@/components/seo/CanonicalHead";
 
 const POSTS = [
   {
@@ -42,7 +43,10 @@ export default function Blog() {
 
   return (
     <>
-      <title>Blog — YouTube Content Repurposing Tips | VidLogic AI</title>
+      <CanonicalHead
+        title="Blog — AI Content Agent & YouTube Repurposing Tips | VidLogic AI"
+        description="Expert guides on repurposing YouTube videos with AI. Learn how to use the Viral Script Generator and AI Content Agent to create LinkedIn posts, Twitter threads, and blogs."
+      />
 
       <div className="min-h-screen bg-background text-foreground">
         {/* Nav */}

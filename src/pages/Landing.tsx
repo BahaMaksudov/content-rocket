@@ -52,6 +52,7 @@ import {
   LockKeyhole,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { CanonicalHead } from "@/components/seo/CanonicalHead";
 
 // Animation variants
 const fadeInUp = {
@@ -1401,6 +1402,10 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-background">
+      <CanonicalHead
+        title="VidLogic AI | AI Content Agent & Viral Script Generator for YouTube Creators"
+        description="Turn any YouTube video into viral scripts, LinkedIn posts, blog articles, and threads with VidLogic AI's Content Agent. Free AI-powered YouTube to viral content engine."
+      />
       <StickyNav />
       <HeroSection />
       <HowItWorksSection />
@@ -1414,6 +1419,37 @@ export default function Landing() {
       <CTASection />
       <Footer />
       <ContactSalesModal open={contactSalesOpen} onOpenChange={setContactSalesOpen} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify([
+            {
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "VidLogic AI",
+              url: "https://vidlogicai.com",
+              logo: "https://vidlogicai.com/vidlogic-logo.png",
+              sameAs: ["https://twitter.com/VidLogicAI"],
+              description: "AI-powered content repurposing platform that turns YouTube videos into viral scripts, social posts, and blog articles.",
+            },
+            {
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              name: "VidLogic AI",
+              applicationCategory: "BusinessApplication",
+              operatingSystem: "Web",
+              url: "https://vidlogicai.com",
+              description: "AI Content Agent and Viral Script Generator for YouTube creators. Repurpose videos into LinkedIn posts, Twitter threads, and blog articles.",
+              offers: {
+                "@type": "Offer",
+                price: "0",
+                priceCurrency: "USD",
+                description: "Free plan available with monthly generation credits",
+              },
+            },
+          ]),
+        }}
+      />
     </div>
   );
 }

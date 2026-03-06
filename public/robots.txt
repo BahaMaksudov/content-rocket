@@ -1,17 +1,31 @@
-# Allow all search engines to crawl the site
+# Allow all search engines to crawl public pages
 User-agent: *
 
-# Don't crawl private user areas (prevents broken/empty dashboard previews in search)
+# Block private application areas
 Disallow: /dashboard
+Disallow: /agent
 Disallow: /settings
+Disallow: /billing
+Disallow: /history
+Disallow: /brand-voices
+Disallow: /team
+Disallow: /developer
+Disallow: /social-proof
+Disallow: /payment-success
+Disallow: /payment-canceled
 Disallow: /api/
-Disallow: /login
-Disallow: /signup
+Disallow: /auth
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /embed/
 
-# Allow everything else (Blog, Tools, Landing Page)
+# Allow public content
 Allow: /
 Allow: /blog/
 Allow: /tools/
+Allow: /contact
+Allow: /privacy
+Allow: /terms
 
-# Tell Google where your sitemap is
+# Sitemap location
 Sitemap: https://vidlogicai.com/sitemap.xml
