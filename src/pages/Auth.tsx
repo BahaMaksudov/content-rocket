@@ -494,9 +494,25 @@ export default function Auth() {
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="login">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 mb-6 bg-slate-800/50 p-1">
+                <TabsTrigger 
+                  value="login"
+                  className={activeTab === "login" 
+                    ? "bg-cyan-500 text-slate-950 font-semibold shadow-[0_0_15px_rgba(6,182,212,0.4)] data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950" 
+                    : "text-slate-400 hover:text-slate-200"}
+                >
+                  <LogIn className="h-4 w-4 mr-1.5" />
+                  Sign In
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="signup"
+                  className={activeTab === "signup" 
+                    ? "bg-cyan-500 text-slate-950 font-semibold shadow-[0_0_15px_rgba(6,182,212,0.4)] data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950" 
+                    : "text-slate-400 hover:text-slate-200"}
+                >
+                  <UserPlus className="h-4 w-4 mr-1.5" />
+                  Sign Up
+                </TabsTrigger>
               </TabsList>
 
               {/* Inline Alert for errors */}

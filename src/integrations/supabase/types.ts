@@ -14,6 +14,92 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_goals: {
+        Row: {
+          batch_progress: number
+          batch_status: string
+          created_at: string | null
+          end_date: string | null
+          goal_status: string
+          id: string
+          niche: string
+          platform: string
+          start_date: string | null
+          tone: string | null
+          user_id: string
+          videos_per_week: number | null
+        }
+        Insert: {
+          batch_progress?: number
+          batch_status?: string
+          created_at?: string | null
+          end_date?: string | null
+          goal_status?: string
+          id?: string
+          niche: string
+          platform: string
+          start_date?: string | null
+          tone?: string | null
+          user_id: string
+          videos_per_week?: number | null
+        }
+        Update: {
+          batch_progress?: number
+          batch_status?: string
+          created_at?: string | null
+          end_date?: string | null
+          goal_status?: string
+          id?: string
+          niche?: string
+          platform?: string
+          start_date?: string | null
+          tone?: string | null
+          user_id?: string
+          videos_per_week?: number | null
+        }
+        Relationships: []
+      }
+      agent_scripts: {
+        Row: {
+          caption: string | null
+          created_at: string | null
+          hashtags: string[] | null
+          hook: string | null
+          id: string
+          plan_id: string
+          script_body: Json | null
+          user_id: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string | null
+          hashtags?: string[] | null
+          hook?: string | null
+          id?: string
+          plan_id: string
+          script_body?: Json | null
+          user_id: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string | null
+          hashtags?: string[] | null
+          hook?: string | null
+          id?: string
+          plan_id?: string
+          script_body?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_scripts_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "content_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       batch_jobs: {
         Row: {
           completed_at: string | null
@@ -111,6 +197,82 @@ export type Database = {
           writing_style?: string | null
         }
         Relationships: []
+      }
+      content_feedback: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          plan_id: string
+          rating: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          plan_id: string
+          rating: string
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          plan_id?: string
+          rating?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_feedback_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "content_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_plans: {
+        Row: {
+          created_at: string | null
+          day_number: number
+          goal_id: string
+          hook_type: string | null
+          id: string
+          status: string | null
+          topic: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          day_number: number
+          goal_id: string
+          hook_type?: string | null
+          id?: string
+          status?: string | null
+          topic: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          day_number?: number
+          goal_id?: string
+          hook_type?: string | null
+          id?: string
+          status?: string | null
+          topic?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_plans_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "agent_goals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       generations: {
         Row: {

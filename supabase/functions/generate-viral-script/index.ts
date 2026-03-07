@@ -82,16 +82,10 @@ serve(async (req) => {
       );
     }
 
-    // --- Server-side feature gating ---
-    // Voice Mode requires pro+ (tierLevel >= 2)
-    const allowedVoiceMode = tierLevel >= 2 ? voiceMode : false;
-    if (voiceMode && tierLevel < 2) {
-      console.log(`[generate-viral-script] Voice Mode blocked for tier=${tier}`);
-    }
-
-    // Tone/Platform require starter+ (tierLevel >= 1)
-    const allowedTone = tierLevel >= 1 ? tone : "hype";
-    const allowedPlatform = tierLevel >= 1 ? platform : "tiktok";
+    // All features (tone, platform, voice mode) are now available to all tiers
+    const allowedVoiceMode = voiceMode;
+    const allowedTone = tone;
+    const allowedPlatform = platform;
 
     const apiKey = Deno.env.get("OPENAI_API_KEY");
     if (!apiKey) {

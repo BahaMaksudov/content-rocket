@@ -45,6 +45,13 @@ const routeTitles: Record<string, string> = {
   "/developer": "Developer API",
   "/social-proof": "Wall of Love",
   "/team": "Team Workspace",
+  "/agent": "Content Agent",
+};
+
+const agentSubTitles: Record<string, string> = {
+  "setup": "Setup",
+  "weekly": "Weekly Plan",
+  "history": "History",
 };
 
 export function AppLayout({ children }: AppLayoutProps) {
@@ -56,6 +63,10 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
 
   const currentTitle = routeTitles[location.pathname] || "Dashboard";
+  const agentView = location.pathname === "/agent"
+    ? new URLSearchParams(location.search).get("view") || ""
+    : "";
+  const agentSubTitle = agentSubTitles[agentView] || null;
   const tierConfig = SUBSCRIPTION_TIERS[tier];
 
   // Fetch user profile in real-time
@@ -159,8 +170,24 @@ export function AppLayout({ children }: AppLayoutProps) {
                     <>
                       <BreadcrumbSeparator />
                       <BreadcrumbItem>
-                        <BreadcrumbPage className="font-medium">{currentTitle}</BreadcrumbPage>
+                        {agentSubTitle ? (
+                          <BreadcrumbLink asChild>
+                            <Link to="/agent" className="text-muted-foreground hover:text-foreground transition-colors">
+                              {currentTitle}
+                            </Link>
+                          </BreadcrumbLink>
+                        ) : (
+                          <BreadcrumbPage className="font-medium">{currentTitle}</BreadcrumbPage>
+                        )}
                       </BreadcrumbItem>
+                      {agentSubTitle && (
+                        <>
+                          <BreadcrumbSeparator />
+                          <BreadcrumbItem>
+                            <BreadcrumbPage className="font-medium">{agentSubTitle}</BreadcrumbPage>
+                          </BreadcrumbItem>
+                        </>
+                      )}
                     </>
                   )}
                 </BreadcrumbList>
