@@ -5,6 +5,79 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+interface CampaignResult {
+  user_id: string;
+  status: string;
+  campaign_id?: string;
+  video_title?: string;
+  first_tweet?: string;
+  linkedin_intro?: string;
+}
+
+async function sendDigestEmail(
+  resendKey: string,
+  email: string,
+  userName: string,
+  topic: string,
+  campaigns: CampaignResult[],
+  siteUrl: string
+) {
+  const successCampaigns = campaigns.filter((c) => c.status === "success");
+  if (successCampaigns.length === 0) return;
+
+  const isMultiple = successCampaigns.length > 1;
+  const firstTitle = successCampaigns[0].video_title || "a trending video";
+
+  const subject = isMultiple
+    ? `🤖 Your AI Agent found ${successCampaigns.length} trending videos`
+    : `🤖 Your AI Agent found a trending video: ${firstTitle}`;
+
+  const campaignCards = successCampaigns
+    .map(
+      (c) => `
+      <div style="background:#f8f9fa;border-radius:12px;padding:20px;margin-bottom:16px;border-left:4px solid #6366f1;">
+        <h3 style="margin:0 0 8px;color:#111;font-size:16px;">${c.video_title || "Untitled"}</h3>
+        ${c.first_tweet ? `<p style="margin:0 0 8px;color:#555;font-size:14px;"><strong>Tweet preview:</strong> "${c.first_tweet}"</p>` : ""}
+        ${c.linkedin_intro ? `<p style="margin:0;color:#555;font-size:14px;"><strong>LinkedIn intro:</strong> "${c.linkedin_intro}"</p>` : ""}
+      </div>`
+    )
+    .join("");
+
+  const html = `
+  <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;padding:40px 24px;">
+    <div style="text-align:center;margin-bottom:32px;">
+      <img src="${siteUrl}/vidlogic-logo.png" alt="VidLogic AI" style="height:40px;" />
+    </div>
+    <h1 style="color:#111;font-size:22px;margin:0 0 8px;">Hey ${userName || "there"},</h1>
+    <p style="color:#555;font-size:16px;line-height:1.6;margin:0 0 24px;">
+      Your Content Agent just discovered ${isMultiple ? `${successCampaigns.length} trending videos` : "a trending video"} in your <strong>${topic}</strong> topic.
+    </p>
+    ${campaignCards}
+    <div style="text-align:center;margin:32px 0;">
+      <a href="${siteUrl}/agent/queue" style="display:inline-block;background:#6366f1;color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;padding:14px 40px;border-radius:10px;">
+        Review & Approve on VidLogic
+      </a>
+    </div>
+    <p style="color:#999;font-size:12px;text-align:center;margin-top:32px;">
+      You can turn off these notifications in your Agent Settings.
+    </p>
+  </div>`;
+
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${resendKey}`,
+    },
+    body: JSON.stringify({
+      from: "notifications@vidlogicai.com",
+      to: email,
+      subject,
+      html,
+    }),
+  });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -15,22 +88,22 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const youtubeApiKey = Deno.env.get("YOUTUBE_API_KEY")!;
     const openaiKey = Deno.env.get("OPENAI_API_KEY")!;
+    const resendKey = Deno.env.get("RESEND_API_KEY") || "";
+    const siteUrl = Deno.env.get("VITE_SITE_URL") || "https://vidlogicai.com";
 
     if (!youtubeApiKey) throw new Error("YOUTUBE_API_KEY not configured");
     if (!openaiKey) throw new Error("OPENAI_API_KEY not configured");
 
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // Check if called for a specific user (manual trigger) or all active users (cron)
     let targetUserId: string | null = null;
     try {
       const body = await req.json();
       targetUserId = body.user_id || null;
     } catch {
-      // No body = cron trigger, process all active users
+      // No body = cron trigger
     }
 
-    // Fetch active agent settings
     let settingsQuery = supabase
       .from("agent_settings")
       .select("*")
@@ -49,23 +122,27 @@ Deno.serve(async (req) => {
       });
     }
 
-    const results: Array<{ user_id: string; status: string; campaign_id?: string }> = [];
+    // Group results by user for digest emails
+    const userResults = new Map<string, { settings: typeof activeSettings[0]; campaigns: CampaignResult[] }>();
 
     for (const settings of activeSettings) {
+      if (!userResults.has(settings.user_id)) {
+        userResults.set(settings.user_id, { settings, campaigns: [] });
+      }
+      const userEntry = userResults.get(settings.user_id)!;
+
       try {
-        // Check credits
         const { data: profile } = await supabase
           .from("profiles")
-          .select("credits_available, credits_used")
+          .select("credits_available, credits_used, email, full_name")
           .eq("user_id", settings.user_id)
           .maybeSingle();
 
         if (!profile || (profile.credits_available ?? 0) < 1) {
-          results.push({ user_id: settings.user_id, status: "insufficient_credits" });
+          userEntry.campaigns.push({ user_id: settings.user_id, status: "insufficient_credits" });
           continue;
         }
 
-        // Step 1: Discovery — search YouTube for top videos in user's topic
         const publishedAfter = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
         const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(settings.topic)}&type=video&order=viewCount&maxResults=3&publishedAfter=${publishedAfter}&key=${youtubeApiKey}`;
 
@@ -73,7 +150,7 @@ Deno.serve(async (req) => {
         const ytData = await ytRes.json();
 
         if (!ytData.items || ytData.items.length === 0) {
-          results.push({ user_id: settings.user_id, status: "no_videos_found" });
+          userEntry.campaigns.push({ user_id: settings.user_id, status: "no_videos_found" });
           continue;
         }
 
@@ -82,7 +159,6 @@ Deno.serve(async (req) => {
         const videoTitle = bestVideo.snippet.title;
         const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
 
-        // Check if we already have a campaign for this video
         const { data: existing } = await supabase
           .from("agent_campaigns")
           .select("id")
@@ -91,11 +167,10 @@ Deno.serve(async (req) => {
           .maybeSingle();
 
         if (existing) {
-          results.push({ user_id: settings.user_id, status: "already_processed" });
+          userEntry.campaigns.push({ user_id: settings.user_id, status: "already_processed" });
           continue;
         }
 
-        // Step 2: Extraction — fetch transcript via existing edge function
         let transcript = "";
         try {
           const transcriptRes = await fetch(`${supabaseUrl}/functions/v1/fetch-transcript`, {
@@ -110,22 +185,11 @@ Deno.serve(async (req) => {
         }
 
         if (!transcript || transcript.length < 100) {
-          // Use video description as fallback
           transcript = bestVideo.snippet.description || videoTitle;
         }
 
-        // Truncate for AI
         const truncatedTranscript = transcript.slice(0, 8000);
-
-        // Step 3: Generation — use OpenAI to create insights + content
         const platforms = settings.platforms || ["x", "linkedin"];
-        const platformInstructions = platforms.includes("x")
-          ? `\n\n**X THREAD**: Write a 5-tweet thread. Return as a JSON array of strings. Each tweet must be under 280 characters. The first tweet should be a hook.`
-          : "";
-
-        const linkedinInstructions = platforms.includes("linkedin")
-          ? `\n\n**LINKEDIN POST**: Write a professional LinkedIn post (800-1200 characters). Include relevant hashtags at the end.`
-          : "";
 
         const aiPrompt = `You are a content strategist. Analyze this video transcript and create repurposed content.
 
@@ -160,12 +224,10 @@ Respond ONLY with valid JSON, no markdown.`;
         try {
           parsed = JSON.parse(content);
         } catch {
-          // Try to extract JSON from markdown code blocks
           const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
           parsed = jsonMatch ? JSON.parse(jsonMatch[1]) : { insights: [], x_thread: [], linkedin_post: "" };
         }
 
-        // Save campaign with status 'pending'
         const { data: campaign, error: insertError } = await supabase
           .from("agent_campaigns")
           .insert({
@@ -182,7 +244,6 @@ Respond ONLY with valid JSON, no markdown.`;
 
         if (insertError) throw insertError;
 
-        // Deduct 1 credit
         await supabase
           .from("profiles")
           .update({
@@ -191,14 +252,54 @@ Respond ONLY with valid JSON, no markdown.`;
           })
           .eq("user_id", settings.user_id);
 
-        results.push({ user_id: settings.user_id, status: "success", campaign_id: campaign.id });
+        userEntry.campaigns.push({
+          user_id: settings.user_id,
+          status: "success",
+          campaign_id: campaign.id,
+          video_title: videoTitle,
+          first_tweet: parsed.x_thread?.[0] || "",
+          linkedin_intro: (parsed.linkedin_post || "").slice(0, 150),
+        });
       } catch (userError: unknown) {
         console.error(`Error processing user ${settings.user_id}:`, userError);
-        results.push({ user_id: settings.user_id, status: "error" });
+        userEntry.campaigns.push({ user_id: settings.user_id, status: "error" });
       }
     }
 
-    return new Response(JSON.stringify({ results }), {
+    // Send digest emails (one per user, batched)
+    const allResults: CampaignResult[] = [];
+
+    for (const [userId, entry] of userResults) {
+      allResults.push(...entry.campaigns);
+
+      const hasSuccess = entry.campaigns.some((c) => c.status === "success");
+      const emailEnabled = entry.settings.email_notifications !== false;
+
+      if (hasSuccess && emailEnabled && resendKey) {
+        try {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("email, full_name")
+            .eq("user_id", userId)
+            .maybeSingle();
+
+          if (profile?.email) {
+            await sendDigestEmail(
+              resendKey,
+              profile.email,
+              profile.full_name || "",
+              entry.settings.topic || "your niche",
+              entry.campaigns,
+              siteUrl
+            );
+          }
+        } catch (emailErr) {
+          console.error(`Failed to send digest email for user ${userId}:`, emailErr);
+        }
+      }
+    }
+
+    return new Response(JSON.stringify({ results: allResults }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error: unknown) {

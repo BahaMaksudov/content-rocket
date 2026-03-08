@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, Bot, Zap, Globe, Loader2, Play } from "lucide-react";
+import { Settings, Bot, Zap, Globe, Loader2, Play, Mail } from "lucide-react";
 
 const PLATFORM_OPTIONS = [
   { id: "x", label: "X (Twitter)", icon: "𝕏" },
@@ -26,6 +26,7 @@ export default function AgentSettings() {
   const [topic, setTopic] = useState("");
   const [platforms, setPlatforms] = useState<string[]>(["x", "linkedin"]);
   const [isActive, setIsActive] = useState(false);
+  const [emailNotifications, setEmailNotifications] = useState(true);
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ["agent-settings", user?.id],
@@ -46,6 +47,7 @@ export default function AgentSettings() {
       setTopic(settings.topic || "");
       setPlatforms((settings.platforms as string[]) || ["x", "linkedin"]);
       setIsActive(settings.is_active || false);
+      setEmailNotifications((settings as any).email_notifications !== false);
     }
   }, [settings]);
 
@@ -56,7 +58,8 @@ export default function AgentSettings() {
         topic: topic.trim(),
         platforms,
         is_active: isActive,
-      };
+        email_notifications: emailNotifications,
+      } as any;
 
       if (settings) {
         const { error } = await supabase
@@ -209,6 +212,24 @@ export default function AgentSettings() {
                 <span className="font-medium">{platform.label}</span>
               </div>
             ))}
+          </CardContent>
+        </Card>
+
+        {/* Email Notifications */}
+        <Card>
+          <CardContent className="flex items-center justify-between p-6">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                <Mail className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">Email Notifications</h3>
+                <p className="text-sm text-muted-foreground">
+                  Get a digest email when your agent discovers new trending videos.
+                </p>
+              </div>
+            </div>
+            <Switch checked={emailNotifications} onCheckedChange={setEmailNotifications} />
           </CardContent>
         </Card>
 
