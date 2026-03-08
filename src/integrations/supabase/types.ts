@@ -142,6 +142,7 @@ export type Database = {
       agent_settings: {
         Row: {
           created_at: string
+          email_notifications: boolean
           frequency: string
           id: string
           is_active: boolean
@@ -152,6 +153,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          email_notifications?: boolean
           frequency?: string
           id?: string
           is_active?: boolean
@@ -162,6 +164,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          email_notifications?: boolean
           frequency?: string
           id?: string
           is_active?: boolean
