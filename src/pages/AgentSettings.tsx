@@ -47,6 +47,7 @@ export default function AgentSettings() {
       setTopic(settings.topic || "");
       setPlatforms((settings.platforms as string[]) || ["x", "linkedin"]);
       setIsActive(settings.is_active || false);
+      setEmailNotifications((settings as any).email_notifications !== false);
     }
   }, [settings]);
 
