@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_campaigns: {
+        Row: {
+          created_at: string
+          id: string
+          insights: Json | null
+          linkedin_post: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          video_title: string | null
+          x_thread: Json | null
+          youtube_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          insights?: Json | null
+          linkedin_post?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          video_title?: string | null
+          x_thread?: Json | null
+          youtube_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          insights?: Json | null
+          linkedin_post?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          video_title?: string | null
+          x_thread?: Json | null
+          youtube_url?: string | null
+        }
+        Relationships: []
+      }
       agent_goals: {
         Row: {
           batch_progress: number
@@ -99,6 +138,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      agent_settings: {
+        Row: {
+          created_at: string
+          frequency: string
+          id: string
+          is_active: boolean
+          platforms: string[]
+          topic: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          platforms?: string[]
+          topic?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          platforms?: string[]
+          topic?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       batch_jobs: {
         Row: {
