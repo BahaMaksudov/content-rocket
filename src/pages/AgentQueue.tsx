@@ -131,7 +131,7 @@ export default function AgentQueue() {
         {/* Pending count */}
         {pendingCampaigns.length > 0 && (
           <div className="flex items-center gap-2">
-            <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">
+          <Badge className="bg-accent/20 text-accent-foreground border-accent/30">
               {pendingCampaigns.length} pending
             </Badge>
             <span className="text-sm text-muted-foreground">campaigns awaiting your review</span>
@@ -245,7 +245,7 @@ function CampaignCard({
               </a>
             )}
           </div>
-          <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">Pending Review</Badge>
+          <Badge className="bg-accent/20 text-accent-foreground border-accent/30">Pending Review</Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -331,7 +331,7 @@ function CampaignCard({
             </>
           ) : (
             <>
-              <Button size="sm" onClick={onApprove} disabled={isPending} className="bg-green-600 hover:bg-green-700 text-white">
+              <Button size="sm" onClick={onApprove} disabled={isPending} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                 <CheckCircle className="h-4 w-4 mr-1" />
                 Approve & Publish
               </Button>
