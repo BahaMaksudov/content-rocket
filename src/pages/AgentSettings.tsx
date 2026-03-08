@@ -58,7 +58,8 @@ export default function AgentSettings() {
         topic: topic.trim(),
         platforms,
         is_active: isActive,
-      };
+        email_notifications: emailNotifications,
+      } as any;
 
       if (settings) {
         const { error } = await supabase
