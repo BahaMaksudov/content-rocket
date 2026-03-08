@@ -26,6 +26,7 @@ export default function AgentSettings() {
   const [topic, setTopic] = useState("");
   const [platforms, setPlatforms] = useState<string[]>(["x", "linkedin"]);
   const [isActive, setIsActive] = useState(false);
+  const [emailNotifications, setEmailNotifications] = useState(true);
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ["agent-settings", user?.id],
