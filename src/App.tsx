@@ -33,6 +33,8 @@ import EmbedWall from "./pages/EmbedWall";
 import NotFound from "./pages/NotFound";
 import YouTubeToLinkedIn from "./pages/tools/YouTubeToLinkedIn";
 import AgentDashboard from "./pages/AgentDashboard";
+import AgentSettings from "./pages/AgentSettings";
+import AgentQueue from "./pages/AgentQueue";
 import Blog from "./pages/Blog";
 import HowToRepurposeYouTubeVideos from "./pages/blog/HowToRepurposeYouTubeVideos";
 
@@ -137,6 +139,22 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <AgentDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/agent/settings"
+              element={
+                <ProtectedRoute>
+                  <AgentSettings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/agent/queue"
+              element={
+                <ProtectedRoute>
+                  <AgentQueue />
                 </ProtectedRoute>
               }
             />

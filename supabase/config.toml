@@ -74,3 +74,6 @@ verify_jwt = false
 
 [functions.agent-planner]
 verify_jwt = false
+
+[functions.run-content-loop]
+verify_jwt = false

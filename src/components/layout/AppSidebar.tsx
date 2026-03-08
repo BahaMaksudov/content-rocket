@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Home, History, Mic, Sparkles, Clock, Code, Users, Rocket, Crown, ArrowUpRight, Zap, Heart, Bot } from "lucide-react";
+import { Home, History, Mic, Sparkles, Clock, Code, Users, Rocket, Crown, ArrowUpRight, Zap, Heart, Bot, Inbox, Settings } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -27,6 +27,8 @@ import vidlogicLogo from "@/assets/vidlogic-logo.png";
 const mainNavItems = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
   { title: "Content Agent", url: "/agent", icon: Bot },
+  { title: "Agent Queue", url: "/agent/queue", icon: Inbox },
+  { title: "Agent Settings", url: "/agent/settings", icon: Settings },
   { title: "Brand Voices", url: "/brand-voices", icon: Mic },
   { title: "Social Proof", url: "/social-proof", icon: Heart },
 ];
