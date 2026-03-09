@@ -12,6 +12,7 @@ interface CampaignResult {
   video_title?: string;
   first_tweet?: string;
   linkedin_intro?: string;
+  error?: string;
 }
 
 async function sendDigestEmail(
