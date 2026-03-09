@@ -147,8 +147,21 @@ Deno.serve(async (req) => {
         const publishedAfter = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
         const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(settings.topic)}&type=video&order=viewCount&maxResults=3&publishedAfter=${publishedAfter}&key=${youtubeApiKey}`;
 
-        const ytRes = await fetch(ytUrl);
-        const ytData = await ytRes.json();
+        let ytData: any;
+        try {
+          const ytRes = await fetch(ytUrl);
+          ytData = await ytRes.json();
+          if (ytData.error) {
+            const ytErrMsg = ytData.error.message || "YouTube API error";
+            console.error("YouTube API error:", ytErrMsg);
+            userEntry.campaigns.push({ user_id: settings.user_id, status: "youtube_api_error", error: ytErrMsg });
+            continue;
+          }
+        } catch (ytFetchErr) {
+          console.error("YouTube fetch failed:", ytFetchErr);
+          userEntry.campaigns.push({ user_id: settings.user_id, status: "youtube_api_error", error: String(ytFetchErr) });
+          continue;
+        }
 
         if (!ytData.items || ytData.items.length === 0) {
           userEntry.campaigns.push({ user_id: settings.user_id, status: "no_videos_found" });
