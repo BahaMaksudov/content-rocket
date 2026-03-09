@@ -2,7 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 interface CampaignResult {
@@ -12,6 +12,7 @@ interface CampaignResult {
   video_title?: string;
   first_tweet?: string;
   linkedin_intro?: string;
+  error?: string;
 }
 
 async function sendDigestEmail(
@@ -84,15 +85,16 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const youtubeApiKey = Deno.env.get("YOUTUBE_API_KEY")!;
-    const openaiKey = Deno.env.get("OPENAI_API_KEY")!;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const youtubeApiKey = Deno.env.get("YOUTUBE_API_KEY");
+    const openaiKey = Deno.env.get("OPENAI_API_KEY");
     const resendKey = Deno.env.get("RESEND_API_KEY") || "";
     const siteUrl = Deno.env.get("VITE_SITE_URL") || "https://vidlogicai.com";
 
-    if (!youtubeApiKey) throw new Error("YOUTUBE_API_KEY not configured");
-    if (!openaiKey) throw new Error("OPENAI_API_KEY not configured");
+    if (!supabaseUrl || !serviceKey) throw new Error("Supabase configuration missing");
+    if (!youtubeApiKey) throw new Error("YOUTUBE_API_KEY not configured – add it in your backend secrets");
+    if (!openaiKey) throw new Error("OPENAI_API_KEY not configured – add it in your backend secrets");
 
     const supabase = createClient(supabaseUrl, serviceKey);
 
@@ -146,8 +148,21 @@ Deno.serve(async (req) => {
         const publishedAfter = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
         const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(settings.topic)}&type=video&order=viewCount&maxResults=3&publishedAfter=${publishedAfter}&key=${youtubeApiKey}`;
 
-        const ytRes = await fetch(ytUrl);
-        const ytData = await ytRes.json();
+        let ytData: any;
+        try {
+          const ytRes = await fetch(ytUrl);
+          ytData = await ytRes.json();
+          if (ytData.error) {
+            const ytErrMsg = ytData.error.message || "YouTube API error";
+            console.error("YouTube API error:", ytErrMsg);
+            userEntry.campaigns.push({ user_id: settings.user_id, status: "youtube_api_error", error: ytErrMsg });
+            continue;
+          }
+        } catch (ytFetchErr) {
+          console.error("YouTube fetch failed:", ytFetchErr);
+          userEntry.campaigns.push({ user_id: settings.user_id, status: "youtube_api_error", error: String(ytFetchErr) });
+          continue;
+        }
 
         if (!ytData.items || ytData.items.length === 0) {
           userEntry.campaigns.push({ user_id: settings.user_id, status: "no_videos_found" });

@@ -85,13 +85,18 @@ export default function AgentSettings() {
 
   const runNowMutation = useMutation({
     mutationFn: async () => {
-      // Save first
       await saveMutation.mutateAsync();
-      // Trigger the loop for this user
       const { data, error } = await supabase.functions.invoke("run-content-loop", {
         body: { user_id: user!.id },
       });
-      if (error) throw error;
+      if (error) {
+        // Try to extract a meaningful message from the error
+        const msg = typeof error === "object" && "message" in error ? error.message : String(error);
+        throw new Error(msg || "Failed to invoke the content loop");
+      }
+      if (data?.error) {
+        throw new Error(data.error);
+      }
       return data;
     },
     onSuccess: (data) => {
@@ -102,12 +107,16 @@ export default function AgentSettings() {
         toast({ variant: "destructive", title: "Insufficient credits", description: "You need at least 1 credit to run the agent." });
       } else if (result?.status === "no_videos_found") {
         toast({ variant: "destructive", title: "No videos found", description: "No new videos found for your topic in the last 24 hours." });
+      } else if (result?.status === "youtube_api_error") {
+        toast({ variant: "destructive", title: "YouTube API Error", description: result?.error || "Could not reach YouTube. Check your API key." });
+      } else if (result?.status === "already_processed") {
+        toast({ title: "Already processed", description: "This video was already discovered. Try again later." });
       } else {
         toast({ title: "Agent completed", description: `Status: ${result?.status || "unknown"}` });
       }
     },
     onError: (err: Error) => {
-      toast({ variant: "destructive", title: "Error", description: err.message });
+      toast({ variant: "destructive", title: "Agent Error", description: err.message });
     },
   });
 
