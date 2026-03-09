@@ -84,15 +84,16 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const youtubeApiKey = Deno.env.get("YOUTUBE_API_KEY")!;
-    const openaiKey = Deno.env.get("OPENAI_API_KEY")!;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const youtubeApiKey = Deno.env.get("YOUTUBE_API_KEY");
+    const openaiKey = Deno.env.get("OPENAI_API_KEY");
     const resendKey = Deno.env.get("RESEND_API_KEY") || "";
     const siteUrl = Deno.env.get("VITE_SITE_URL") || "https://vidlogicai.com";
 
-    if (!youtubeApiKey) throw new Error("YOUTUBE_API_KEY not configured");
-    if (!openaiKey) throw new Error("OPENAI_API_KEY not configured");
+    if (!supabaseUrl || !serviceKey) throw new Error("Supabase configuration missing");
+    if (!youtubeApiKey) throw new Error("YOUTUBE_API_KEY not configured – add it in your backend secrets");
+    if (!openaiKey) throw new Error("OPENAI_API_KEY not configured – add it in your backend secrets");
 
     const supabase = createClient(supabaseUrl, serviceKey);
 
