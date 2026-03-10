@@ -11,7 +11,8 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, Bot, Zap, Globe, Loader2, Play, Mail } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Settings, Bot, Zap, Globe, Loader2, Play, Mail, Clock } from "lucide-react";
 
 const PLATFORM_OPTIONS = [
   { id: "x", label: "X (Twitter)", icon: "𝕏" },
