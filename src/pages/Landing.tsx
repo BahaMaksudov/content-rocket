@@ -478,7 +478,7 @@ function HowItWorksSection() {
               key={step.title}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={earlyViewport}
               transition={{ duration: 0.4, delay: index * 0.15 }}
             >
               <Card className="premium-card h-full text-center relative overflow-hidden group hover:border-primary/30 transition-colors">
