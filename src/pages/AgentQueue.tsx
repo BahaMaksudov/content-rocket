@@ -264,8 +264,8 @@ function CampaignCard({
           </div>
         )}
 
-        {/* Side-by-side preview */}
-        <div className="grid md:grid-cols-2 gap-4">
+        {/* Side-by-side on desktop, stacked on mobile */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* X Thread */}
           <div className="space-y-2">
             <h4 className="text-sm font-semibold flex items-center gap-2">
