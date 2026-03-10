@@ -1,6 +1,7 @@
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useState, useEffect, forwardRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { useState, useEffect, forwardRef, lazy } from "react";
+import { motion } from "framer-motion";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -54,20 +55,23 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { CanonicalHead } from "@/components/seo/CanonicalHead";
 
-// Animation variants
+// Animation variants — lightweight for mobile
 const fadeInUp = {
-  initial: { opacity: 0, y: 30 },
+  initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.5 },
+  transition: { duration: 0.35 },
 };
 
 const staggerContainer = {
   animate: {
     transition: {
-      staggerChildren: 0.1,
+      staggerChildren: 0.08,
     },
   },
 };
+
+// Shared viewport config — trigger early at 10%
+const earlyViewport = { once: true, amount: 0.1 } as const;
 
 // Sticky Navigation
 function StickyNav() {
@@ -142,6 +146,7 @@ function StickyNav() {
           <img
             src="/vidlogic-logo.png"
             alt="VidLogic AI"
+            fetchPriority="high"
             className="h-[44px] w-[44px] object-contain transition-all duration-300 hover:scale-[1.4] hover:drop-shadow-[0_0_10px_rgba(6,182,212,0.5)]"
           />
           <span className="font-bold text-xl md:text-2xl leading-none">
@@ -247,31 +252,43 @@ function StickyNav() {
   );
 }
 
+// Hero background — disable animated blobs on mobile for perf
+function HeroBackground() {
+  const isMobile = useIsMobile();
+  return (
+    <div className="absolute inset-0">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,hsl(187_94%_43%_/_0.2),transparent)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_30%_80%,hsl(217_91%_30%_/_0.25),transparent)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_50%_at_80%_20%,hsl(199_89%_48%_/_0.15),transparent)]" />
+      {!isMobile && (
+        <>
+          <motion.div
+            className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-primary/15 rounded-full blur-[150px] will-change-transform"
+            animate={{ x: [0, 30, -20, 0], y: [0, -20, 15, 0], scale: [1, 1.1, 0.95, 1] }}
+            transition={{ repeat: Infinity, duration: 12, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-[hsl(199_89%_48%_/_0.12)] rounded-full blur-[130px] will-change-transform"
+            animate={{ x: [0, -25, 20, 0], y: [0, 25, -15, 0], scale: [1, 0.95, 1.08, 1] }}
+            transition={{ repeat: Infinity, duration: 15, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-[hsl(222_47%_20%_/_0.3)] rounded-full blur-[100px] will-change-transform"
+            animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.5, 0.3] }}
+            transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }}
+          />
+        </>
+      )}
+    </div>
+  );
+}
+
 // Hero Section
 function HeroSection() {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
-      {/* Animated mesh gradient background */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,hsl(187_94%_43%_/_0.2),transparent)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_30%_80%,hsl(217_91%_30%_/_0.25),transparent)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_50%_at_80%_20%,hsl(199_89%_48%_/_0.15),transparent)]" />
-        <motion.div
-          className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-primary/15 rounded-full blur-[150px]"
-          animate={{ x: [0, 30, -20, 0], y: [0, -20, 15, 0], scale: [1, 1.1, 0.95, 1] }}
-          transition={{ repeat: Infinity, duration: 12, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-[hsl(199_89%_48%_/_0.12)] rounded-full blur-[130px]"
-          animate={{ x: [0, -25, 20, 0], y: [0, 25, -15, 0], scale: [1, 0.95, 1.08, 1] }}
-          transition={{ repeat: Infinity, duration: 15, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-[hsl(222_47%_20%_/_0.3)] rounded-full blur-[100px]"
-          animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.5, 0.3] }}
-          transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }}
-        />
-      </div>
+      {/* Mesh gradient background — static on mobile, animated on desktop */}
+      <HeroBackground />
 
       {/* Grid pattern */}
       <div className="absolute inset-0 bg-[linear-gradient(hsl(var(--border))_1px,transparent_1px),linear-gradient(90deg,hsl(var(--border))_1px,transparent_1px)] bg-[size:60px_60px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,black_40%,transparent_100%)] opacity-20" />
@@ -435,13 +452,13 @@ function HowItWorksSection() {
   ];
 
   return (
-    <section className="py-20 lg:py-28 relative">
+    <section className="py-20 lg:py-28 relative" style={{ contentVisibility: 'auto', containIntrinsicSize: '0 800px' }}>
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_50%,hsl(187_94%_43%_/_0.06),transparent)]" />
       <div className="relative container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={earlyViewport}
           transition={{ duration: 0.5 }}
           className="text-center mb-16"
         >
@@ -462,7 +479,7 @@ function HowItWorksSection() {
               key={step.title}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={earlyViewport}
               transition={{ duration: 0.4, delay: index * 0.15 }}
             >
               <Card className="premium-card h-full text-center relative overflow-hidden group hover:border-primary/30 transition-colors">
@@ -511,12 +528,12 @@ function ProblemSection() {
   ];
 
   return (
-    <section className="py-20 lg:py-32 relative">
+    <section className="py-20 lg:py-32 relative" style={{ contentVisibility: 'auto', containIntrinsicSize: '0 600px' }}>
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={earlyViewport}
           transition={{ duration: 0.5 }}
           className="text-center mb-16"
         >
@@ -538,7 +555,7 @@ function ProblemSection() {
               key={problem.title}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={earlyViewport}
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
               <Card className="h-full border-destructive/20 bg-destructive/5 hover:border-destructive/40 transition-colors">
@@ -593,7 +610,7 @@ function SolutionSection() {
   ];
 
   return (
-    <section id="features" className="py-20 lg:py-32 bg-card/30 relative">
+    <section id="features" className="py-20 lg:py-32 bg-card/30 relative" style={{ contentVisibility: 'auto', containIntrinsicSize: '0 800px' }}>
       {/* Background accent */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/5 rounded-full blur-[100px]" />
 
@@ -601,7 +618,7 @@ function SolutionSection() {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={earlyViewport}
           transition={{ duration: 0.5 }}
           className="text-center mb-16"
         >
@@ -624,7 +641,7 @@ function SolutionSection() {
               key={feature.title}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={earlyViewport}
               transition={{ duration: 0.5, delay: index * 0.1 }}
               whileHover={{ y: -5, transition: { duration: 0.2 } }}
             >
@@ -650,12 +667,12 @@ function SolutionSection() {
 // Interactive Demo Section
 function DemoSection() {
   return (
-    <section id="demo" className="py-20 lg:py-32 relative overflow-hidden">
+    <section id="demo" className="py-20 lg:py-32 relative overflow-hidden" style={{ contentVisibility: 'auto', containIntrinsicSize: '0 700px' }}>
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={earlyViewport}
           transition={{ duration: 0.5 }}
           className="text-center mb-16"
         >
@@ -675,7 +692,7 @@ function DemoSection() {
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={earlyViewport}
           transition={{ duration: 0.6 }}
           className="max-w-5xl mx-auto relative"
         >
@@ -735,7 +752,7 @@ function TrustedByCreatorsSection() {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={earlyViewport}
           transition={{ duration: 0.5 }}
           className="text-center mb-14"
         >
@@ -757,7 +774,7 @@ function TrustedByCreatorsSection() {
               key={card.id}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={earlyViewport}
               transition={{ duration: 0.4, delay: index * 0.1 }}
             >
               <Card className="border-border/50 bg-card/60 backdrop-blur-sm hover:border-primary/40 transition-all duration-300 h-full">
@@ -893,14 +910,14 @@ function PricingSection({
   ];
 
   return (
-    <section id="pricing" className="py-20 lg:py-32 bg-card/30 relative">
+    <section id="pricing" className="py-20 lg:py-32 bg-card/30 relative" style={{ contentVisibility: 'auto', containIntrinsicSize: '0 1200px' }}>
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px]" />
 
       <div className="container mx-auto px-4 relative">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={earlyViewport}
           transition={{ duration: 0.5 }}
           className="text-center mb-16"
         >
@@ -924,7 +941,7 @@ function PricingSection({
                 key={plan.name}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                viewport={earlyViewport}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 className={`relative ${isHighlighted ? "animate-pulse-slow ring-2 ring-primary ring-offset-2 ring-offset-background rounded-xl" : ""}`}
               >
@@ -1040,7 +1057,7 @@ function PricingSection({
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={earlyViewport}
           transition={{ duration: 0.5, delay: 0.3 }}
           className="mt-10 text-center"
         >
@@ -1099,12 +1116,12 @@ function FAQSection() {
   ];
 
   return (
-    <section id="faq" className="py-20 lg:py-32 relative">
+    <section id="faq" className="py-20 lg:py-32 relative" style={{ contentVisibility: 'auto', containIntrinsicSize: '0 800px' }}>
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={earlyViewport}
           transition={{ duration: 0.5 }}
           className="text-center mb-16"
         >
@@ -1120,7 +1137,7 @@ function FAQSection() {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={earlyViewport}
           transition={{ duration: 0.5 }}
           className="max-w-3xl mx-auto"
         >
@@ -1154,7 +1171,7 @@ function TrustSection() {
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
+          viewport={earlyViewport}
           transition={{ duration: 0.5 }}
           className="text-center"
         >
@@ -1186,7 +1203,7 @@ const CTASection = forwardRef<HTMLElement>((_, ref) => {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={earlyViewport}
           transition={{ duration: 0.5 }}
           className="max-w-3xl mx-auto text-center"
         >
@@ -1229,7 +1246,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
           {/* Brand & Company Info */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <img src="/vidlogic-logo.png" alt="VidLogic AI" className="h-8 w-8 object-contain" />
+              <img src="/vidlogic-logo.png" alt="VidLogic AI" loading="lazy" className="h-8 w-8 object-contain" />
               <span className="font-semibold">
                 VidLogic <span className="text-primary">AI</span>
               </span>
