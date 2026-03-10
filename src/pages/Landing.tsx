@@ -1246,7 +1246,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
           {/* Brand & Company Info */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <img src="/vidlogic-logo.png" alt="VidLogic AI" className="h-8 w-8 object-contain" />
+              <img src="/vidlogic-logo.png" alt="VidLogic AI" loading="lazy" className="h-8 w-8 object-contain" />
               <span className="font-semibold">
                 VidLogic <span className="text-primary">AI</span>
               </span>
