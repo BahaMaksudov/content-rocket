@@ -157,10 +157,10 @@ export function AppLayout({ children }: AppLayoutProps) {
         <main className="flex-1 flex flex-col min-h-0 overflow-hidden" style={{ height: '100%' }}>
           <header className="h-14 flex items-center justify-between border-b border-border px-4 bg-background/95 backdrop-blur-lg sticky top-0 z-50 shrink-0">
             {/* Left side: Sidebar trigger + Breadcrumbs */}
-            <div className="flex items-center min-h-[44px]">
+            <div className="flex items-center min-h-[44px] min-w-0 overflow-hidden">
               {!isMobile && <SidebarTrigger className="mr-4" />}
               <Breadcrumb>
-                <BreadcrumbList className="flex-nowrap text-xs sm:text-sm">
+                <BreadcrumbList className="flex-nowrap whitespace-nowrap text-sm">
                   <BreadcrumbItem>
                     <BreadcrumbLink asChild>
                       <Link to="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
