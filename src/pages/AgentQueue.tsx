@@ -117,7 +117,7 @@ export default function AgentQueue() {
 
   return (
     <AppLayout>
-      <div className="max-w-5xl mx-auto space-y-6">
+      <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold mb-2 flex items-center gap-3">
             <Inbox className="h-7 w-7 md:h-8 md:w-8 text-primary" />
