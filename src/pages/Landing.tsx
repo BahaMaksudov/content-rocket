@@ -452,7 +452,7 @@ function HowItWorksSection() {
   ];
 
   return (
-    <section className="py-20 lg:py-28 relative">
+    <section className="py-20 lg:py-28 relative" style={{ contentVisibility: 'auto', containIntrinsicSize: '0 800px' }}>
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_50%,hsl(187_94%_43%_/_0.06),transparent)]" />
       <div className="relative container mx-auto px-4">
         <motion.div
