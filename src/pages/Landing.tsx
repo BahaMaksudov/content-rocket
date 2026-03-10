@@ -1116,7 +1116,7 @@ function FAQSection() {
   ];
 
   return (
-    <section id="faq" className="py-20 lg:py-32 relative">
+    <section id="faq" className="py-20 lg:py-32 relative" style={{ contentVisibility: 'auto', containIntrinsicSize: '0 800px' }}>
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
