@@ -50,6 +50,7 @@ export default function AgentSettings() {
       setPlatforms((settings.platforms as string[]) || ["x", "linkedin"]);
       setIsActive(settings.is_active || false);
       setEmailNotifications((settings as any).email_notifications !== false);
+      setFrequencyHours((settings as any).frequency_hours ?? 12);
     }
   }, [settings]);
 
