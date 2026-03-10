@@ -166,26 +166,38 @@ Deno.serve(async (req) => {
         }
 
         if (!ytData.items || ytData.items.length === 0) {
+          console.log(`Skipping run: No videos found for user ${settings.user_id}`);
           userEntry.campaigns.push({ user_id: settings.user_id, status: "no_videos_found" });
           continue;
         }
 
-        const bestVideo = ytData.items[0];
-        const videoId = bestVideo.id.videoId;
-        const videoTitle = bestVideo.snippet.title;
-        const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+        // Smart Discovery: iterate through results to find the first non-duplicate video (limit: 1 per run)
+        let bestVideo: any = null;
+        for (const item of ytData.items) {
+          const candidateUrl = `https://www.youtube.com/watch?v=${item.id.videoId}`;
+          const { data: existing } = await supabase
+            .from("agent_campaigns")
+            .select("id")
+            .eq("user_id", settings.user_id)
+            .eq("youtube_url", candidateUrl)
+            .maybeSingle();
 
-        const { data: existing } = await supabase
-          .from("agent_campaigns")
-          .select("id")
-          .eq("user_id", settings.user_id)
-          .eq("youtube_url", youtubeUrl)
-          .maybeSingle();
+          if (!existing) {
+            bestVideo = item;
+            break;
+          }
+          console.log(`Skipping duplicate video ${candidateUrl} for user ${settings.user_id}`);
+        }
 
-        if (existing) {
+        if (!bestVideo) {
+          console.log(`Skipping run: All discovered videos already processed for user ${settings.user_id}`);
           userEntry.campaigns.push({ user_id: settings.user_id, status: "already_processed" });
           continue;
         }
+
+        const videoId = bestVideo.id.videoId;
+        const videoTitle = bestVideo.snippet.title;
+        const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
 
         let transcript = "";
         try {

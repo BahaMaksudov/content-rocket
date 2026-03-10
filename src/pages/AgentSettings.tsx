@@ -149,25 +149,25 @@ export default function AgentSettings() {
           </p>
         </div>
 
-        {/* Master Toggle */}
-        <Card className="border-primary/20">
+        {/* Master Toggle – Global Stop Switch */}
+        <Card className={`border-2 transition-colors ${isActive ? "border-green-500/50 bg-green-500/5" : "border-destructive/50 bg-destructive/5"}`}>
           <CardContent className="flex items-center justify-between p-6">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-                <Bot className="h-6 w-6 text-primary" />
+              <div className={`flex h-14 w-14 items-center justify-center rounded-xl ${isActive ? "bg-green-500/20" : "bg-destructive/20"}`}>
+                <Bot className={`h-7 w-7 ${isActive ? "text-green-500" : "text-destructive"}`} />
               </div>
               <div>
                 <h3 className="font-semibold text-lg">Content Agent</h3>
                 <p className="text-sm text-muted-foreground">
-                  {isActive ? "Agent is actively scanning for content" : "Agent is paused"}
+                  {isActive ? "Agent is actively scanning for content" : "Agent is OFF — no runs will be processed"}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Badge variant={isActive ? "default" : "secondary"} className={isActive ? "bg-green-500/20 text-green-400 border-green-500/30" : ""}>
-                {isActive ? "Active" : "Paused"}
+              <Badge variant={isActive ? "default" : "destructive"} className={`text-sm px-3 py-1 ${isActive ? "bg-green-500/20 text-green-400 border-green-500/30" : ""}`}>
+                {isActive ? "Active" : "OFF"}
               </Badge>
-              <Switch checked={isActive} onCheckedChange={setIsActive} />
+              <Switch checked={isActive} onCheckedChange={setIsActive} className="scale-125" />
             </div>
           </CardContent>
         </Card>
