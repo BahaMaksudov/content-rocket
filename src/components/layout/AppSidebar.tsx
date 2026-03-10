@@ -25,12 +25,12 @@ import { trackUpgradeClicked } from "@/lib/posthog";
 import vidlogicLogo from "@/assets/vidlogic-logo.png";
 
 const mainNavItems = [
-  { title: "Dashboard", url: "/dashboard", icon: Home },
-  { title: "Content Agent", url: "/agent", icon: Bot },
-  { title: "Agent Queue", url: "/agent/queue", icon: Inbox },
-  { title: "Agent Settings", url: "/agent/settings", icon: Settings },
-  { title: "Brand Voices", url: "/brand-voices", icon: Mic },
-  { title: "Social Proof", url: "/social-proof", icon: Heart },
+  { title: "Dashboard", url: "/dashboard", icon: Home, end: true },
+  { title: "Content Agent", url: "/agent", icon: Bot, end: true },
+  { title: "Agent Queue", url: "/agent/queue", icon: Inbox, end: true },
+  { title: "Agent Settings", url: "/agent/settings", icon: Settings, end: true },
+  { title: "Brand Voices", url: "/brand-voices", icon: Mic, end: false },
+  { title: "Social Proof", url: "/social-proof", icon: Heart, end: false },
 ];
 
 const proNavItems = [
