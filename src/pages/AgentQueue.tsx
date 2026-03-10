@@ -119,11 +119,11 @@ export default function AgentQueue() {
     <AppLayout>
       <div className="max-w-5xl mx-auto space-y-6">
         <div>
-          <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
-            <Inbox className="h-8 w-8 text-primary" />
+          <h1 className="text-2xl md:text-3xl font-bold mb-2 flex items-center gap-3">
+            <Inbox className="h-7 w-7 md:h-8 md:w-8 text-primary" />
             Agent Queue
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm md:text-base">
             Review, edit, and approve AI-generated campaigns before publishing.
           </p>
         </div>
