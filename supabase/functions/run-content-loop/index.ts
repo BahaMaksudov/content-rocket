@@ -141,6 +141,7 @@ Deno.serve(async (req) => {
           .maybeSingle();
 
         if (!profile || (profile.credits_available ?? 0) < 1) {
+          console.log(`Skipping run: Insufficient credits for user ${settings.user_id}`);
           userEntry.campaigns.push({ user_id: settings.user_id, status: "insufficient_credits" });
           continue;
         }
