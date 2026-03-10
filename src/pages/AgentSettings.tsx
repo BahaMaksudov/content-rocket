@@ -11,7 +11,8 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, Bot, Zap, Globe, Loader2, Play, Mail } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Settings, Bot, Zap, Globe, Loader2, Play, Mail, Clock } from "lucide-react";
 
 const PLATFORM_OPTIONS = [
   { id: "x", label: "X (Twitter)", icon: "𝕏" },
@@ -27,6 +28,7 @@ export default function AgentSettings() {
   const [platforms, setPlatforms] = useState<string[]>(["x", "linkedin"]);
   const [isActive, setIsActive] = useState(false);
   const [emailNotifications, setEmailNotifications] = useState(true);
+  const [frequencyHours, setFrequencyHours] = useState(12);
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ["agent-settings", user?.id],
@@ -48,6 +50,7 @@ export default function AgentSettings() {
       setPlatforms((settings.platforms as string[]) || ["x", "linkedin"]);
       setIsActive(settings.is_active || false);
       setEmailNotifications((settings as any).email_notifications !== false);
+      setFrequencyHours((settings as any).frequency_hours ?? 12);
     }
   }, [settings]);
 
@@ -59,6 +62,7 @@ export default function AgentSettings() {
         platforms,
         is_active: isActive,
         email_notifications: emailNotifications,
+        frequency_hours: frequencyHours,
       } as any;
 
       if (settings) {
@@ -191,6 +195,40 @@ export default function AgentSettings() {
             />
             <p className="text-xs text-muted-foreground mt-2">
               Be specific for better results. The agent searches YouTube for trending videos in this niche every 6 hours.
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Discovery Frequency */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Clock className="h-5 w-5 text-primary" />
+              Discovery Frequency
+            </CardTitle>
+            <CardDescription>
+              How often should the agent scan for new trending videos?
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Select value={String(frequencyHours)} onValueChange={(v) => setFrequencyHours(Number(v))}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="6">
+                  ⚡ High Intensity (6 Hours) — Fast-moving niches
+                </SelectItem>
+                <SelectItem value="12">
+                  ⚖️ Balanced (12 Hours) — Recommended
+                </SelectItem>
+                <SelectItem value="24">
+                  🌿 Daily (24 Hours) — Evergreen & credit-saving
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground mt-2">
+              Higher frequency uses more credits. Choose based on how fast your niche moves.
             </p>
           </CardContent>
         </Card>

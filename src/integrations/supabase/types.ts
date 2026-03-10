@@ -144,8 +144,10 @@ export type Database = {
           created_at: string
           email_notifications: boolean
           frequency: string
+          frequency_hours: number
           id: string
           is_active: boolean
+          last_run_at: string | null
           platforms: string[]
           topic: string
           updated_at: string
@@ -155,8 +157,10 @@ export type Database = {
           created_at?: string
           email_notifications?: boolean
           frequency?: string
+          frequency_hours?: number
           id?: string
           is_active?: boolean
+          last_run_at?: string | null
           platforms?: string[]
           topic?: string
           updated_at?: string
@@ -166,8 +170,10 @@ export type Database = {
           created_at?: string
           email_notifications?: boolean
           frequency?: string
+          frequency_hours?: number
           id?: string
           is_active?: boolean
+          last_run_at?: string | null
           platforms?: string[]
           topic?: string
           updated_at?: string
