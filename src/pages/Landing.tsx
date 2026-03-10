@@ -773,7 +773,7 @@ function TrustedByCreatorsSection() {
               key={card.id}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={earlyViewport}
               transition={{ duration: 0.4, delay: index * 0.1 }}
             >
               <Card className="border-border/50 bg-card/60 backdrop-blur-sm hover:border-primary/40 transition-all duration-300 h-full">
