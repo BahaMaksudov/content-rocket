@@ -281,11 +281,11 @@ export default function AgentSettings() {
         </Card>
 
         {/* Actions */}
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <Button
             onClick={() => saveMutation.mutate()}
             disabled={saveMutation.isPending || !topic.trim()}
-            className="flex-1"
+            className="flex-1 w-full sm:w-auto"
           >
             {saveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
             Save Settings
@@ -294,7 +294,7 @@ export default function AgentSettings() {
             variant="outline"
             onClick={() => runNowMutation.mutate()}
             disabled={runNowMutation.isPending || !topic.trim() || !isActive}
-            className="border-primary/30 text-primary hover:bg-primary/10"
+            className="w-full sm:w-auto border-primary/30 text-primary hover:bg-primary/10"
           >
             {runNowMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Play className="h-4 w-4 mr-2" />}
             Run Now
