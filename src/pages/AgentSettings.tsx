@@ -199,6 +199,40 @@ export default function AgentSettings() {
           </CardContent>
         </Card>
 
+        {/* Discovery Frequency */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Clock className="h-5 w-5 text-primary" />
+              Discovery Frequency
+            </CardTitle>
+            <CardDescription>
+              How often should the agent scan for new trending videos?
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Select value={String(frequencyHours)} onValueChange={(v) => setFrequencyHours(Number(v))}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="6">
+                  ⚡ High Intensity (6 Hours) — Fast-moving niches
+                </SelectItem>
+                <SelectItem value="12">
+                  ⚖️ Balanced (12 Hours) — Recommended
+                </SelectItem>
+                <SelectItem value="24">
+                  🌿 Daily (24 Hours) — Evergreen & credit-saving
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground mt-2">
+              Higher frequency uses more credits. Choose based on how fast your niche moves.
+            </p>
+          </CardContent>
+        </Card>
+
         {/* Platforms */}
         <Card>
           <CardHeader>

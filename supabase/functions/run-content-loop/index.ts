@@ -291,6 +291,12 @@ Respond ONLY with valid JSON, no markdown.`;
           })
           .eq("user_id", settings.user_id);
 
+        // Update last_run_at for smart heartbeat
+        await supabase
+          .from("agent_settings")
+          .update({ last_run_at: new Date().toISOString() })
+          .eq("user_id", settings.user_id);
+
         userEntry.campaigns.push({
           user_id: settings.user_id,
           status: "success",
