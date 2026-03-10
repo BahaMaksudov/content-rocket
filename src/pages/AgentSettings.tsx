@@ -62,6 +62,7 @@ export default function AgentSettings() {
         platforms,
         is_active: isActive,
         email_notifications: emailNotifications,
+        frequency_hours: frequencyHours,
       } as any;
 
       if (settings) {
