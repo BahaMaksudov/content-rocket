@@ -155,19 +155,19 @@ export default function AgentSettings() {
 
         {/* Master Toggle – Global Stop Switch */}
         <Card className={`border-2 transition-colors ${isActive ? "border-green-500/50 bg-green-500/5" : "border-destructive/50 bg-destructive/5"}`}>
-          <CardContent className="flex items-center justify-between p-6">
-            <div className="flex items-center gap-4">
-              <div className={`flex h-14 w-14 items-center justify-center rounded-xl ${isActive ? "bg-green-500/20" : "bg-destructive/20"}`}>
-                <Bot className={`h-7 w-7 ${isActive ? "text-green-500" : "text-destructive"}`} />
+          <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-6">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className={`flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-xl ${isActive ? "bg-green-500/20" : "bg-destructive/20"}`}>
+                <Bot className={`h-6 w-6 sm:h-7 sm:w-7 ${isActive ? "text-green-500" : "text-destructive"}`} />
               </div>
               <div>
-                <h3 className="font-semibold text-lg">Content Agent</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="font-semibold text-base sm:text-lg">Content Agent</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   {isActive ? "Agent is actively scanning for content" : "Agent is OFF — no runs will be processed"}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 self-end sm:self-auto">
               <Badge variant={isActive ? "default" : "destructive"} className={`text-sm px-3 py-1 ${isActive ? "bg-green-500/20 text-green-400 border-green-500/30" : ""}`}>
                 {isActive ? "Active" : "OFF"}
               </Badge>
