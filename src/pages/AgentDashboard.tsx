@@ -744,17 +744,18 @@ export default function AgentDashboard() {
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               {(pendingCount > 0 || batchGenerating) && (
                 <Button
                   onClick={handleBatchGenerate}
                   disabled={batchGenerating}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-[0_0_20px_rgba(6,182,212,0.3)]"
+                  size="sm"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-[0_0_20px_rgba(6,182,212,0.3)] text-xs sm:text-sm"
                 >
                   {batchGenerating ? (
-                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating {batchProgress}/{batchTotal}...</>
+                    <><Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> {batchProgress}/{batchTotal}</>
                   ) : (
-                    <><Rocket className="h-4 w-4 mr-2" /> Generate Entire Week ({pendingCount})</>
+                    <><Rocket className="h-4 w-4 mr-1.5" /> Generate Week ({pendingCount})</>
                   )}
                 </Button>
               )}
@@ -763,7 +764,7 @@ export default function AgentDashboard() {
                 variant="outline"
                 size="icon"
                 onClick={() => setShowHistory(true)}
-                className="border-border text-muted-foreground hover:text-foreground"
+                className="border-border text-muted-foreground hover:text-foreground h-9 w-9"
                 title="Plan History"
               >
                 <History className="h-4 w-4" />
@@ -776,7 +777,7 @@ export default function AgentDashboard() {
                   setShowOnboarding(true);
                   setNiche("");
                 }}
-                className="border-border text-muted-foreground hover:text-foreground"
+                className="border-border text-muted-foreground hover:text-foreground text-xs sm:text-sm"
               >
                 <Zap className="h-4 w-4 mr-1" /> New Plan
               </Button>
