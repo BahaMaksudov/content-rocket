@@ -610,7 +610,7 @@ function SolutionSection() {
   ];
 
   return (
-    <section id="features" className="py-20 lg:py-32 bg-card/30 relative">
+    <section id="features" className="py-20 lg:py-32 bg-card/30 relative" style={{ contentVisibility: 'auto', containIntrinsicSize: '0 800px' }}>
       {/* Background accent */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/5 rounded-full blur-[100px]" />
 
