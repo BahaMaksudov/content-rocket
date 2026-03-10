@@ -142,32 +142,32 @@ export default function AgentSettings() {
 
   return (
     <AppLayout>
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-2xl mx-auto space-y-6 px-0 sm:px-0">
         <div>
-          <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
-            <Settings className="h-8 w-8 text-primary" />
+          <h1 className="text-2xl md:text-3xl font-bold mb-2 flex items-center gap-3">
+            <Settings className="h-7 w-7 md:h-8 md:w-8 text-primary" />
             Content Agent Settings
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm md:text-base">
             Configure your automated content discovery and generation engine.
           </p>
         </div>
 
         {/* Master Toggle – Global Stop Switch */}
         <Card className={`border-2 transition-colors ${isActive ? "border-green-500/50 bg-green-500/5" : "border-destructive/50 bg-destructive/5"}`}>
-          <CardContent className="flex items-center justify-between p-6">
-            <div className="flex items-center gap-4">
-              <div className={`flex h-14 w-14 items-center justify-center rounded-xl ${isActive ? "bg-green-500/20" : "bg-destructive/20"}`}>
-                <Bot className={`h-7 w-7 ${isActive ? "text-green-500" : "text-destructive"}`} />
+          <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-6">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className={`flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-xl ${isActive ? "bg-green-500/20" : "bg-destructive/20"}`}>
+                <Bot className={`h-6 w-6 sm:h-7 sm:w-7 ${isActive ? "text-green-500" : "text-destructive"}`} />
               </div>
               <div>
-                <h3 className="font-semibold text-lg">Content Agent</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="font-semibold text-base sm:text-lg">Content Agent</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   {isActive ? "Agent is actively scanning for content" : "Agent is OFF — no runs will be processed"}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 self-end sm:self-auto">
               <Badge variant={isActive ? "default" : "destructive"} className={`text-sm px-3 py-1 ${isActive ? "bg-green-500/20 text-green-400 border-green-500/30" : ""}`}>
                 {isActive ? "Active" : "OFF"}
               </Badge>
@@ -264,28 +264,28 @@ export default function AgentSettings() {
 
         {/* Email Notifications */}
         <Card>
-          <CardContent className="flex items-center justify-between p-6">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-                <Mail className="h-6 w-6 text-primary" />
+          <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-6">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                <Mail className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
               </div>
               <div>
-                <h3 className="font-semibold text-lg">Email Notifications</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="font-semibold text-base sm:text-lg">Email Notifications</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Get a digest email when your agent discovers new trending videos.
                 </p>
               </div>
             </div>
-            <Switch checked={emailNotifications} onCheckedChange={setEmailNotifications} />
+            <Switch checked={emailNotifications} onCheckedChange={setEmailNotifications} className="self-end sm:self-auto" />
           </CardContent>
         </Card>
 
         {/* Actions */}
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <Button
             onClick={() => saveMutation.mutate()}
             disabled={saveMutation.isPending || !topic.trim()}
-            className="flex-1"
+            className="flex-1 w-full sm:w-auto"
           >
             {saveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
             Save Settings
@@ -294,7 +294,7 @@ export default function AgentSettings() {
             variant="outline"
             onClick={() => runNowMutation.mutate()}
             disabled={runNowMutation.isPending || !topic.trim() || !isActive}
-            className="border-primary/30 text-primary hover:bg-primary/10"
+            className="w-full sm:w-auto border-primary/30 text-primary hover:bg-primary/10"
           >
             {runNowMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Play className="h-4 w-4 mr-2" />}
             Run Now
