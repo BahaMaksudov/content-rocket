@@ -133,6 +133,17 @@ Deno.serve(async (req) => {
       }
       const userEntry = userResults.get(settings.user_id)!;
 
+      // Smart Heartbeat: skip if not enough time has elapsed since last run
+      const frequencyHours = (settings as any).frequency_hours ?? 12;
+      const lastRunAt = (settings as any).last_run_at ? new Date((settings as any).last_run_at).getTime() : 0;
+      const hoursSinceLastRun = (Date.now() - lastRunAt) / (1000 * 60 * 60);
+
+      if (lastRunAt > 0 && hoursSinceLastRun < frequencyHours) {
+        console.log(`Skipping run: Only ${hoursSinceLastRun.toFixed(1)}h since last run for user ${settings.user_id} (frequency: ${frequencyHours}h)`);
+        userEntry.campaigns.push({ user_id: settings.user_id, status: "skipped_frequency" });
+        continue;
+      }
+
       try {
         const { data: profile } = await supabase
           .from("profiles")
