@@ -735,8 +735,8 @@ export default function AgentDashboard() {
             className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
           >
             <div>
-              <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-                <CalendarDays className="h-6 w-6 text-primary" />
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
+                <CalendarDays className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                 Your Content Week
               </h1>
               <p className="text-sm text-muted-foreground mt-1">

@@ -264,19 +264,19 @@ export default function AgentSettings() {
 
         {/* Email Notifications */}
         <Card>
-          <CardContent className="flex items-center justify-between p-6">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-                <Mail className="h-6 w-6 text-primary" />
+          <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-6">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                <Mail className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
               </div>
               <div>
-                <h3 className="font-semibold text-lg">Email Notifications</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="font-semibold text-base sm:text-lg">Email Notifications</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Get a digest email when your agent discovers new trending videos.
                 </p>
               </div>
             </div>
-            <Switch checked={emailNotifications} onCheckedChange={setEmailNotifications} />
+            <Switch checked={emailNotifications} onCheckedChange={setEmailNotifications} className="self-end sm:self-auto" />
           </CardContent>
         </Card>
 

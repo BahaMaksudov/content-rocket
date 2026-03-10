@@ -319,27 +319,27 @@ function CampaignCard({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2 pt-2 border-t border-border">
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border">
           {isEditing ? (
             <>
-              <Button size="sm" onClick={onSaveEdit} disabled={isPending}>
+              <Button size="sm" onClick={onSaveEdit} disabled={isPending} className="flex-1 sm:flex-none">
                 Save Edits
               </Button>
-              <Button size="sm" variant="ghost" onClick={onCancelEdit}>
+              <Button size="sm" variant="ghost" onClick={onCancelEdit} className="flex-1 sm:flex-none">
                 Cancel
               </Button>
             </>
           ) : (
             <>
-              <Button size="sm" onClick={onApprove} disabled={isPending} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Button size="sm" onClick={onApprove} disabled={isPending} className="flex-1 sm:flex-none bg-primary hover:bg-primary/90 text-primary-foreground">
                 <CheckCircle className="h-4 w-4 mr-1" />
-                Approve & Publish
+                Approve
               </Button>
-              <Button size="sm" variant="outline" onClick={onEdit}>
+              <Button size="sm" variant="outline" onClick={onEdit} className="flex-1 sm:flex-none">
                 <Pencil className="h-4 w-4 mr-1" />
                 Edit
               </Button>
-              <Button size="sm" variant="ghost" onClick={onReject} disabled={isPending} className="text-destructive hover:text-destructive">
+              <Button size="sm" variant="ghost" onClick={onReject} disabled={isPending} className="flex-1 sm:flex-none text-destructive hover:text-destructive">
                 <XCircle className="h-4 w-4 mr-1" />
                 Reject
               </Button>

@@ -45,7 +45,7 @@ export function MobileBottomNav() {
   return (
     <>
       <nav className="fixed bottom-0 inset-x-0 z-50 md:hidden border-t border-border bg-background/95 backdrop-blur-xl pb-[env(safe-area-inset-bottom)]">
-        <div className="flex items-center justify-around h-14">
+        <div className="flex items-center justify-around h-16">
           {tabs.map((tab) => {
             const isMore = tab.path === "__more__";
             const isActive = isMore ? drawerOpen : location.pathname === tab.path;
