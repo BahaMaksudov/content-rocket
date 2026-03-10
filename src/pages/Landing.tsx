@@ -667,7 +667,7 @@ function SolutionSection() {
 // Interactive Demo Section
 function DemoSection() {
   return (
-    <section id="demo" className="py-20 lg:py-32 relative overflow-hidden">
+    <section id="demo" className="py-20 lg:py-32 relative overflow-hidden" style={{ contentVisibility: 'auto', containIntrinsicSize: '0 700px' }}>
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
