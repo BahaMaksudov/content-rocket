@@ -142,13 +142,13 @@ export default function AgentSettings() {
 
   return (
     <AppLayout>
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-2xl mx-auto space-y-6 px-0 sm:px-0">
         <div>
-          <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
-            <Settings className="h-8 w-8 text-primary" />
+          <h1 className="text-2xl md:text-3xl font-bold mb-2 flex items-center gap-3">
+            <Settings className="h-7 w-7 md:h-8 md:w-8 text-primary" />
             Content Agent Settings
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm md:text-base">
             Configure your automated content discovery and generation engine.
           </p>
         </div>
