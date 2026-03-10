@@ -157,10 +157,10 @@ export function AppLayout({ children }: AppLayoutProps) {
         <main className="flex-1 flex flex-col min-h-0 overflow-hidden" style={{ height: '100%' }}>
           <header className="h-14 flex items-center justify-between border-b border-border px-4 bg-background/95 backdrop-blur-lg sticky top-0 z-50 shrink-0">
             {/* Left side: Sidebar trigger + Breadcrumbs */}
-            <div className="flex items-center">
+            <div className="flex items-center min-h-[44px]">
               {!isMobile && <SidebarTrigger className="mr-4" />}
               <Breadcrumb>
-                <BreadcrumbList>
+                <BreadcrumbList className="flex-nowrap text-xs sm:text-sm">
                   <BreadcrumbItem>
                     <BreadcrumbLink asChild>
                       <Link to="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
@@ -172,21 +172,23 @@ export function AppLayout({ children }: AppLayoutProps) {
                     <>
                       <BreadcrumbSeparator />
                       <BreadcrumbItem>
-                        {agentSubTitle ? (
+                        {agentSubTitle || location.pathname.startsWith("/agent/") ? (
                           <BreadcrumbLink asChild>
                             <Link to="/agent" className="text-muted-foreground hover:text-foreground transition-colors">
-                              {currentTitle}
+                              {location.pathname === "/agent" ? currentTitle : routeTitles["/agent"] || "Content Agent"}
                             </Link>
                           </BreadcrumbLink>
                         ) : (
                           <BreadcrumbPage className="font-medium">{currentTitle}</BreadcrumbPage>
                         )}
                       </BreadcrumbItem>
-                      {agentSubTitle && (
+                      {(agentSubTitle || (location.pathname.startsWith("/agent/") && location.pathname !== "/agent")) && (
                         <>
                           <BreadcrumbSeparator />
                           <BreadcrumbItem>
-                            <BreadcrumbPage className="font-medium">{agentSubTitle}</BreadcrumbPage>
+                            <BreadcrumbPage className="font-medium">
+                              {agentSubTitle || currentTitle}
+                            </BreadcrumbPage>
                           </BreadcrumbItem>
                         </>
                       )}
