@@ -55,20 +55,23 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { CanonicalHead } from "@/components/seo/CanonicalHead";
 
-// Animation variants
+// Animation variants — lightweight for mobile
 const fadeInUp = {
-  initial: { opacity: 0, y: 30 },
+  initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.5 },
+  transition: { duration: 0.35 },
 };
 
 const staggerContainer = {
   animate: {
     transition: {
-      staggerChildren: 0.1,
+      staggerChildren: 0.08,
     },
   },
 };
+
+// Shared viewport config — trigger early at 10%
+const earlyViewport = { once: true, amount: 0.1 } as const;
 
 // Sticky Navigation
 function StickyNav() {
