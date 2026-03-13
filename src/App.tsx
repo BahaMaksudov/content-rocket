@@ -38,6 +38,7 @@ import AgentQueue from "./pages/AgentQueue";
 import Blog from "./pages/Blog";
 import HowToRepurposeYouTubeVideos from "./pages/blog/HowToRepurposeYouTubeVideos";
 import NicheLanding from "./pages/NicheLanding";
+import OAuthSocialCallback from "./pages/OAuthSocialCallback";
 
 const queryClient = new QueryClient();
 
@@ -156,6 +157,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <AgentQueue />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/oauth/social/callback"
+              element={
+                <ProtectedRoute>
+                  <OAuthSocialCallback />
                 </ProtectedRoute>
               }
             />

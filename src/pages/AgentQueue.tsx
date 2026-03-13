@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, XCircle, Pencil, ExternalLink, Inbox, Sparkles } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Pencil, ExternalLink, Inbox, Sparkles, Send, AlertCircle, Settings } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 type Campaign = {
   id: string;
@@ -19,6 +20,7 @@ type Campaign = {
   insights: string[] | null;
   x_thread: string[] | null;
   linkedin_post: string | null;
+  published_to: any[] | null;
   created_at: string;
 };
 
@@ -26,6 +28,7 @@ export default function AgentQueue() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editThread, setEditThread] = useState<string[]>([]);
   const [editLinkedin, setEditLinkedin] = useState("");
@@ -44,6 +47,24 @@ export default function AgentQueue() {
     enabled: !!user,
   });
 
+  // Check social connections
+  const { data: agentSettings } = useQuery({
+    queryKey: ["agent-settings-connections", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("agent_settings")
+        .select("x_refresh_token, x_username, linkedin_access_token, linkedin_name")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const xConnected = !!(agentSettings as any)?.x_refresh_token;
+  const linkedinConnected = !!(agentSettings as any)?.linkedin_access_token;
+
   const updateMutation = useMutation({
     mutationFn: async ({ id, status, x_thread, linkedin_post }: { id: string; status: string; x_thread?: string[]; linkedin_post?: string }) => {
       const update: Record<string, unknown> = { status };
@@ -61,13 +82,87 @@ export default function AgentQueue() {
     },
   });
 
-  const handleApprove = (id: string) => {
-    // For now, mark as published (actual API publishing will be added later)
+  const publishMutation = useMutation({
+    mutationFn: async ({ campaignId, platforms }: { campaignId: string; platforms: string[] }) => {
+      const results: { platform: string; success: boolean; error?: string; reconnect?: boolean }[] = [];
+
+      for (const platform of platforms) {
+        const fnName = platform === "x" ? "publish-to-x" : "publish-to-linkedin";
+        const { data, error } = await supabase.functions.invoke(fnName, {
+          body: { campaign_id: campaignId, user_id: user!.id },
+        });
+
+        if (error || data?.error) {
+          results.push({
+            platform,
+            success: false,
+            error: data?.error || error?.message || "Unknown error",
+            reconnect: data?.reconnect === true,
+          });
+        } else {
+          results.push({ platform, success: true });
+        }
+      }
+
+      return results;
+    },
+    onSuccess: (results, { campaignId }) => {
+      queryClient.invalidateQueries({ queryKey: ["agent-campaigns"] });
+
+      const successes = results.filter((r) => r.success);
+      const failures = results.filter((r) => !r.success);
+
+      if (successes.length > 0 && failures.length === 0) {
+        toast({ title: "🚀 Published!", description: `Content published to ${successes.map((r) => r.platform).join(" & ")}.` });
+      } else if (successes.length > 0) {
+        toast({
+          title: "Partially published",
+          description: `Published to ${successes.map((r) => r.platform).join(", ")}. Failed: ${failures.map((r) => `${r.platform} (${r.error})`).join(", ")}`,
+          variant: "destructive",
+        });
+      } else {
+        const reconnect = failures.some((r) => r.reconnect);
+        toast({
+          title: "Publishing failed",
+          description: reconnect
+            ? "Token expired or invalid. Please reconnect in Agent Settings."
+            : failures.map((r) => `${r.platform}: ${r.error}`).join("; "),
+          variant: "destructive",
+        });
+      }
+    },
+    onError: (err: Error) => {
+      toast({ variant: "destructive", title: "Publish Error", description: err.message });
+    },
+  });
+
+  const handleApproveAndPublish = (campaign: Campaign) => {
+    const platformsToPublish: string[] = [];
+    if (xConnected) platformsToPublish.push("x");
+    if (linkedinConnected) platformsToPublish.push("linkedin");
+
+    if (platformsToPublish.length === 0) {
+      // No social connections - just approve
+      updateMutation.mutate(
+        { id: campaign.id, status: "approved" },
+        {
+          onSuccess: () => {
+            toast({
+              title: "Campaign approved",
+              description: "Connect your social accounts in Agent Settings to enable direct publishing.",
+            });
+          },
+        }
+      );
+      return;
+    }
+
+    // Approve and publish
     updateMutation.mutate(
-      { id, status: "published" },
+      { id: campaign.id, status: "publishing" },
       {
         onSuccess: () => {
-          toast({ title: "Campaign approved!", description: "Content has been marked as published. Social API integration coming soon." });
+          publishMutation.mutate({ campaignId: campaign.id, platforms: platformsToPublish });
         },
       }
     );
@@ -128,10 +223,25 @@ export default function AgentQueue() {
           </p>
         </div>
 
+        {/* Connection status banner */}
+        {!xConnected && !linkedinConnected && (
+          <Card className="border-amber-500/30 bg-amber-500/5">
+            <CardContent className="flex items-center justify-between p-4">
+              <div className="flex items-center gap-2 text-sm">
+                <AlertCircle className="h-4 w-4 text-amber-500" />
+                <span>No social accounts connected. Approving will save without publishing.</span>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => navigate("/agent/settings")}>
+                <Settings className="h-3.5 w-3.5 mr-1" /> Connect
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Pending count */}
         {pendingCampaigns.length > 0 && (
           <div className="flex items-center gap-2">
-          <Badge className="bg-accent/20 text-accent-foreground border-accent/30">
+            <Badge className="bg-accent/20 text-accent-foreground border-accent/30">
               {pendingCampaigns.length} pending
             </Badge>
             <span className="text-sm text-muted-foreground">campaigns awaiting your review</span>
@@ -161,12 +271,15 @@ export default function AgentQueue() {
             editLinkedin={editLinkedin}
             onEditThread={setEditThread}
             onEditLinkedin={setEditLinkedin}
-            onApprove={() => handleApprove(campaign.id)}
+            onApprove={() => handleApproveAndPublish(campaign)}
             onReject={() => handleReject(campaign.id)}
             onEdit={() => handleEdit(campaign)}
             onSaveEdit={() => handleSaveEdit(campaign.id)}
             onCancelEdit={() => setEditingId(null)}
-            isPending={updateMutation.isPending}
+            isPending={updateMutation.isPending || publishMutation.isPending}
+            xConnected={xConnected}
+            linkedinConnected={linkedinConnected}
+            onReconnect={() => navigate("/agent/settings")}
           />
         ))}
 
@@ -175,24 +288,67 @@ export default function AgentQueue() {
           <>
             <h2 className="text-xl font-semibold mt-8 pt-4 border-t border-border">History</h2>
             {otherCampaigns.map((campaign) => (
-              <Card key={campaign.id} className="opacity-60">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">{campaign.video_title || "Untitled"}</CardTitle>
-                    <Badge variant={campaign.status === "published" ? "default" : "secondary"}>
-                      {campaign.status}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(campaign.created_at).toLocaleDateString()}
-                  </p>
-                </CardHeader>
-              </Card>
+              <HistoryCard key={campaign.id} campaign={campaign} onReconnect={() => navigate("/agent/settings")} />
             ))}
           </>
         )}
       </div>
     </AppLayout>
+  );
+}
+
+function getPublishStatusBadges(publishedTo: any[] | null) {
+  if (!publishedTo || !Array.isArray(publishedTo) || publishedTo.length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-1">
+      {publishedTo.map((entry: any, i: number) => {
+        if (entry.status === "success") {
+          return (
+            <Badge key={i} className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
+              ✅ {entry.platform}
+            </Badge>
+          );
+        }
+        return (
+          <Badge key={i} variant="destructive" className="text-xs">
+            🔴 {entry.platform}
+          </Badge>
+        );
+      })}
+    </div>
+  );
+}
+
+function HistoryCard({ campaign, onReconnect }: { campaign: Campaign; onReconnect: () => void }) {
+  const publishedTo = Array.isArray((campaign as any).published_to) ? (campaign as any).published_to : [];
+  const hasErrors = publishedTo.some((e: any) => e.status !== "success");
+
+  return (
+    <Card className="opacity-60">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex-1 min-w-0">
+            <CardTitle className="text-base">{campaign.video_title || "Untitled"}</CardTitle>
+            <div className="flex items-center gap-2 mt-1">
+              {getPublishStatusBadges(publishedTo)}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant={campaign.status === "published" ? "default" : "secondary"}>
+              {campaign.status}
+            </Badge>
+            {hasErrors && (
+              <Button size="sm" variant="ghost" className="text-destructive text-xs h-7" onClick={onReconnect}>
+                Reconnect
+              </Button>
+            )}
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {new Date(campaign.created_at).toLocaleDateString()}
+        </p>
+      </CardHeader>
+    </Card>
   );
 }
 
@@ -209,6 +365,9 @@ function CampaignCard({
   onSaveEdit,
   onCancelEdit,
   isPending,
+  xConnected,
+  linkedinConnected,
+  onReconnect,
 }: {
   campaign: Campaign;
   isEditing: boolean;
@@ -222,10 +381,17 @@ function CampaignCard({
   onSaveEdit: () => void;
   onCancelEdit: () => void;
   isPending: boolean;
+  xConnected: boolean;
+  linkedinConnected: boolean;
+  onReconnect: () => void;
 }) {
   const thread = isEditing ? editThread : (Array.isArray(campaign.x_thread) ? campaign.x_thread : []);
   const linkedin = isEditing ? editLinkedin : (campaign.linkedin_post || "");
   const insights = Array.isArray(campaign.insights) ? campaign.insights : [];
+  const publishedTo = Array.isArray((campaign as any).published_to) ? (campaign as any).published_to : [];
+  const hasPublishErrors = publishedTo.some((e: any) => e.status !== "success");
+
+  const approveLabel = xConnected || linkedinConnected ? "Approve & Publish" : "Approve";
 
   return (
     <Card className="border-primary/20">
@@ -245,7 +411,15 @@ function CampaignCard({
               </a>
             )}
           </div>
-          <Badge className="bg-accent/20 text-accent-foreground border-accent/30">Pending Review</Badge>
+          <div className="flex items-center gap-2">
+            {hasPublishErrors && (
+              <Badge variant="destructive" className="text-xs">
+                🔴 Connection Error
+              </Badge>
+            )}
+            {getPublishStatusBadges(publishedTo)}
+            <Badge className="bg-accent/20 text-accent-foreground border-accent/30">Pending Review</Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -270,6 +444,7 @@ function CampaignCard({
           <div className="space-y-2">
             <h4 className="text-sm font-semibold flex items-center gap-2">
               <span className="font-mono">𝕏</span> Thread
+              {!xConnected && <Badge variant="outline" className="text-xs text-muted-foreground">Not connected</Badge>}
             </h4>
             {isEditing ? (
               <div className="space-y-2">
@@ -303,6 +478,7 @@ function CampaignCard({
           <div className="space-y-2">
             <h4 className="text-sm font-semibold flex items-center gap-2">
               <span className="font-mono text-blue-400">in</span> LinkedIn Post
+              {!linkedinConnected && <Badge variant="outline" className="text-xs text-muted-foreground">Not connected</Badge>}
             </h4>
             {isEditing ? (
               <Textarea
@@ -332,8 +508,8 @@ function CampaignCard({
           ) : (
             <>
               <Button size="sm" onClick={onApprove} disabled={isPending} className="flex-1 sm:flex-none bg-primary hover:bg-primary/90 text-primary-foreground">
-                <CheckCircle className="h-4 w-4 mr-1" />
-                Approve
+                {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}
+                {approveLabel}
               </Button>
               <Button size="sm" variant="outline" onClick={onEdit} className="flex-1 sm:flex-none">
                 <Pencil className="h-4 w-4 mr-1" />
@@ -343,6 +519,12 @@ function CampaignCard({
                 <XCircle className="h-4 w-4 mr-1" />
                 Reject
               </Button>
+              {hasPublishErrors && (
+                <Button size="sm" variant="outline" onClick={onReconnect} className="text-destructive border-destructive/30">
+                  <AlertCircle className="h-4 w-4 mr-1" />
+                  Reconnect
+                </Button>
+              )}
             </>
           )}
         </div>

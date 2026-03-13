@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,12 +13,26 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Settings, Bot, Zap, Globe, Loader2, Play, Mail, Clock, Gauge, RefreshCw, Youtube } from "lucide-react";
+import { Settings, Bot, Zap, Globe, Loader2, Play, Mail, Clock, Gauge, RefreshCw, Youtube, LinkIcon, CheckCircle, ExternalLink } from "lucide-react";
 
 const PLATFORM_OPTIONS = [
   { id: "x", label: "X (Twitter)", icon: "𝕏" },
   { id: "linkedin", label: "LinkedIn", icon: "in" },
 ];
+
+// PKCE helpers
+function generateCodeVerifier() {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return btoa(String.fromCharCode(...array)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+async function generateCodeChallenge(verifier: string) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(verifier);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
 
 export default function AgentSettings() {
   const { user } = useAuth();
@@ -48,6 +62,11 @@ export default function AgentSettings() {
     },
     enabled: !!user,
   });
+
+  const xConnected = !!(settings as any)?.x_refresh_token;
+  const xUsername = (settings as any)?.x_username || "";
+  const linkedinConnected = !!(settings as any)?.linkedin_access_token;
+  const linkedinName = (settings as any)?.linkedin_name || "";
 
   useEffect(() => {
     if (settings) {
@@ -138,6 +157,40 @@ export default function AgentSettings() {
     },
   });
 
+  const connectX = useCallback(async () => {
+    const codeVerifier = generateCodeVerifier();
+    const codeChallenge = await generateCodeChallenge(codeVerifier);
+    const redirectUri = `${window.location.origin}/oauth/social/callback`;
+    const state = btoa(JSON.stringify({ platform: "x", code_verifier: codeVerifier }));
+    const clientId = import.meta.env.VITE_X_CLIENT_ID || "";
+
+    if (!clientId) {
+      toast({ variant: "destructive", title: "Configuration Error", description: "X Client ID not configured." });
+      return;
+    }
+
+    const scopes = "tweet.read tweet.write users.read offline.access";
+    const authUrl = `https://x.com/i/oauth2/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}&state=${state}&code_challenge=${codeChallenge}&code_challenge_method=S256`;
+
+    window.location.href = authUrl;
+  }, [toast]);
+
+  const connectLinkedIn = useCallback(() => {
+    const redirectUri = `${window.location.origin}/oauth/social/callback`;
+    const state = btoa(JSON.stringify({ platform: "linkedin" }));
+    const clientId = import.meta.env.VITE_LINKEDIN_CLIENT_ID || "";
+
+    if (!clientId) {
+      toast({ variant: "destructive", title: "Configuration Error", description: "LinkedIn Client ID not configured." });
+      return;
+    }
+
+    const scopes = "openid profile w_member_social";
+    const authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}&state=${state}`;
+
+    window.location.href = authUrl;
+  }, [toast]);
+
   const togglePlatform = (id: string) => {
     setPlatforms((prev) =>
       prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
@@ -186,6 +239,64 @@ export default function AgentSettings() {
                 {isActive ? "Active" : "OFF"}
               </Badge>
               <Switch checked={isActive} onCheckedChange={setIsActive} className="scale-125" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Social Connections */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <LinkIcon className="h-5 w-5 text-primary" />
+              Social Connections
+            </CardTitle>
+            <CardDescription>
+              Connect your social accounts to enable direct publishing from the Agent Queue.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {/* X Connection */}
+            <div className="flex items-center justify-between p-3 rounded-lg border border-border">
+              <div className="flex items-center gap-3">
+                <span className="text-lg font-mono w-6 text-center">𝕏</span>
+                <div>
+                  <span className="font-medium">X (Twitter)</span>
+                  {xConnected && xUsername && (
+                    <p className="text-xs text-muted-foreground">@{xUsername}</p>
+                  )}
+                </div>
+              </div>
+              {xConnected ? (
+                <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+                  <CheckCircle className="h-3 w-3 mr-1" /> Connected
+                </Badge>
+              ) : (
+                <Button size="sm" variant="outline" onClick={connectX}>
+                  <ExternalLink className="h-3.5 w-3.5 mr-1" /> Connect
+                </Button>
+              )}
+            </div>
+
+            {/* LinkedIn Connection */}
+            <div className="flex items-center justify-between p-3 rounded-lg border border-border">
+              <div className="flex items-center gap-3">
+                <span className="text-lg font-mono w-6 text-center text-blue-400">in</span>
+                <div>
+                  <span className="font-medium">LinkedIn</span>
+                  {linkedinConnected && linkedinName && (
+                    <p className="text-xs text-muted-foreground">{linkedinName}</p>
+                  )}
+                </div>
+              </div>
+              {linkedinConnected ? (
+                <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+                  <CheckCircle className="h-3 w-3 mr-1" /> Connected
+                </Badge>
+              ) : (
+                <Button size="sm" variant="outline" onClick={connectLinkedIn}>
+                  <ExternalLink className="h-3.5 w-3.5 mr-1" /> Connect
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
