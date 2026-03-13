@@ -429,6 +429,44 @@ Respond ONLY with valid JSON, no markdown.`;
           auto_published: shouldAutoPublish,
           confidence_score: confidenceScore,
         });
+
+        // Send low-confidence email if auto-pilot is on but score was too low
+        if (autoPilotEnabled && !shouldAutoPublish && resendKey) {
+          try {
+            const { data: userProfile } = await supabase
+              .from("profiles")
+              .select("email, full_name")
+              .eq("user_id", settings.user_id)
+              .maybeSingle();
+
+            if (userProfile?.email) {
+              await fetch("https://api.resend.com/emails", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${resendKey}`,
+                },
+                body: JSON.stringify({
+                  from: "notifications@vidlogicai.com",
+                  to: userProfile.email,
+                  subject: `⚠️ Draft needs review: ${videoTitle}`,
+                  html: `
+                  <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:40px 24px;">
+                    <img src="${siteUrl}/vidlogic-logo.png" alt="VidLogic AI" style="height:40px;margin-bottom:24px;" />
+                    <h1 style="color:#111;font-size:20px;">Manual Approval Required</h1>
+                    <p style="color:#555;">Hey ${userProfile.full_name || "there"},</p>
+                    <p style="color:#555;">The Agent created a new draft for "<strong>${videoTitle}</strong>", but it requires your manual approval due to a low confidence score (${confidenceScore}% — threshold: ${confidenceThreshold}%).</p>
+                    <div style="text-align:center;margin:28px 0;">
+                      <a href="${siteUrl}/agent/queue" style="display:inline-block;background:#6366f1;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600;">Review Draft</a>
+                    </div>
+                  </div>`,
+                }),
+              });
+            }
+          } catch (lowConfEmailErr) {
+            console.error("Low-confidence email error:", lowConfEmailErr);
+          }
+        }
       } catch (userError: unknown) {
         console.error(`Error processing user ${settings.user_id}:`, userError);
         userEntry.campaigns.push({ user_id: settings.user_id, status: "error" });
