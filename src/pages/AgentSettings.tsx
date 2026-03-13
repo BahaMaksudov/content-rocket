@@ -649,10 +649,20 @@ export default function AgentSettings() {
             <CardTitle className="flex items-center gap-2 text-lg">
               <Clock className="h-5 w-5 text-primary" />
               Discovery Frequency
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs text-xs leading-relaxed">
+                    This controls how often the agent wakes up to check your YouTube channel and news sources. It will only post if it finds content that matches your quality settings.
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </CardTitle>
             <CardDescription>How often should the agent scan for new trending videos?</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3">
             <Select value={String(frequencyHours)} onValueChange={(v) => setFrequencyHours(Number(v))}>
               <SelectTrigger>
                 <SelectValue />
@@ -663,7 +673,37 @@ export default function AgentSettings() {
                 <SelectItem value="24">🌿 Daily (24 Hours) — Evergreen & credit-saving</SelectItem>
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground mt-2">
+
+            {/* Next Scan Indicator */}
+            {isActive && settings?.last_run_at && (
+              <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2">
+                <Clock className="h-3.5 w-3.5 text-primary shrink-0" />
+                <p className="text-xs text-muted-foreground">
+                  <span className="font-medium text-foreground">Next scan:</span>{" "}
+                  {(() => {
+                    const nextRun = new Date(new Date(settings.last_run_at).getTime() + frequencyHours * 60 * 60 * 1000);
+                    const now = new Date();
+                    if (nextRun <= now) return "Due now — will run on next heartbeat";
+                    const diffMs = nextRun.getTime() - now.getTime();
+                    const diffH = Math.floor(diffMs / (1000 * 60 * 60));
+                    const diffM = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                    const timeStr = diffH > 0 ? `${diffH}h ${diffM}m` : `${diffM}m`;
+                    return `~${timeStr} (${nextRun.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })})`;
+                  })()}
+                </p>
+              </div>
+            )}
+
+            {/* Schedule Preview */}
+            <div className="rounded-lg border border-dashed border-border bg-muted/30 px-3 py-2">
+              <p className="text-xs text-muted-foreground">
+                {frequencyHours === 6 && "📊 Estimated posts: ~4 per day (if high-confidence content is found)."}
+                {frequencyHours === 12 && "📊 Estimated posts: ~2 per day (if high-confidence content is found)."}
+                {frequencyHours === 24 && "📊 Estimated posts: ~1 per day (if high-confidence content is found)."}
+              </p>
+            </div>
+
+            <p className="text-xs text-muted-foreground">
               Higher frequency uses more credits. Choose based on how fast your niche moves.
             </p>
           </CardContent>
