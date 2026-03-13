@@ -1,5 +1,7 @@
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect, forwardRef, lazy } from "react";
+import { MiniRepurposer } from "@/components/landing/MiniRepurposer";
+import { ALL_NICHES, NICHE_DATA } from "@/pages/NicheLanding";
 import { motion } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
