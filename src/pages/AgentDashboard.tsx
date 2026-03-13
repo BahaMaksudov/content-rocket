@@ -66,6 +66,7 @@ export default function AgentDashboard() {
   const { user } = useAuth();
   const { isPaid, openCheckout } = useSubscription();
   const { useCredit, getLatestCredits, refreshCredits, canUseCredits, creditsAvailable } = useCredits();
+  const { streak, recordApproval } = useStreak();
   const navigate = useNavigate();
   const [goal, setGoal] = useState<AgentGoal | null>(null);
   const [plans, setPlans] = useState<ContentPlan[]>([]);
