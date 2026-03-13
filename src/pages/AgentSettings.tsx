@@ -89,11 +89,10 @@ export default function AgentSettings() {
       setIsActive(settings.is_active || false);
       setEmailNotifications((settings as any).email_notifications !== false);
       setFrequencyHours((settings as any).frequency_hours ?? 12);
-      setAutoPilotEnabled((settings as any).auto_pilot_enabled === true);
-      setConfidenceThreshold((settings as any).confidence_threshold ?? 80);
+      setAutoPilotEnabled((settings as any).auto_pilot_enabled === true || (settings as any).auto_post_enabled === true);
+      setConfidenceThreshold((settings as any).confidence_threshold ?? 85);
       setRemixChannelEnabled((settings as any).remix_channel_enabled === true);
       setYoutubeChannelId((settings as any).youtube_channel_id || "");
-      setAutoPostEnabled((settings as any).auto_post_enabled === true);
     }
   }, [settings]);
 
