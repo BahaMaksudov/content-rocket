@@ -37,6 +37,7 @@ import AgentSettings from "./pages/AgentSettings";
 import AgentQueue from "./pages/AgentQueue";
 import Blog from "./pages/Blog";
 import HowToRepurposeYouTubeVideos from "./pages/blog/HowToRepurposeYouTubeVideos";
+import NicheLanding from "./pages/NicheLanding";
 
 const queryClient = new QueryClient();
 
