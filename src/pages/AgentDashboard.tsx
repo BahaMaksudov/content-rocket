@@ -69,6 +69,21 @@ export default function AgentDashboard() {
   const { useCredit, getLatestCredits, refreshCredits, canUseCredits, creditsAvailable } = useCredits();
   const { streak, recordApproval } = useStreak();
   const navigate = useNavigate();
+
+  // Fetch agent settings for auto-pilot badge
+  const { data: agentSettings } = useQuery({
+    queryKey: ["agent-settings", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("agent_settings")
+        .select("auto_post_enabled")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
+
   const [goal, setGoal] = useState<AgentGoal | null>(null);
   const [plans, setPlans] = useState<ContentPlan[]>([]);
   const [scripts, setScripts] = useState<Record<string, AgentScript>>({});
