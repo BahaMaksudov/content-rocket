@@ -34,6 +34,10 @@ async function generateCodeChallenge(verifier: string) {
   return btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
+function encodeOAuthState(payload: Record<string, string>) {
+  return btoa(JSON.stringify(payload)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
 export default function AgentSettings() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -177,7 +181,7 @@ export default function AgentSettings() {
         client_id: clientId,
         redirect_uri: redirectUri,
         scope: scopes,
-        state: btoa(JSON.stringify({ platform: "x", code_verifier: codeVerifier })),
+        state: encodeOAuthState({ platform: "x", code_verifier: codeVerifier }),
         code_challenge: codeChallenge,
         code_challenge_method: "S256",
       });
@@ -200,7 +204,7 @@ export default function AgentSettings() {
       }
 
       const redirectUri = `${window.location.origin}/oauth/social/callback`;
-      const state = btoa(JSON.stringify({ platform: "linkedin" }));
+      const state = encodeOAuthState({ platform: "linkedin" });
       const scopes = "openid profile w_member_social";
       const authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}&state=${state}`;
       window.location.href = authUrl;
