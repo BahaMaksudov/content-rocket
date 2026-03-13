@@ -754,6 +754,7 @@ export default function AgentDashboard() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              {streak && <StreakBadge currentStreak={streak.current_streak} />}
               {(pendingCount > 0 || batchGenerating) && (
                 <Button
                   onClick={handleBatchGenerate}
