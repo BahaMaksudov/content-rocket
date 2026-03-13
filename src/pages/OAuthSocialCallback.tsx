@@ -32,11 +32,13 @@ export default function OAuthSocialCallback() {
       }
 
       try {
-        // Parse URL-safe base64 state to get platform and code_verifier
-        const normalizedState = state.replace(/-/g, "+").replace(/_/g, "/");
-        const paddedState = normalizedState + "=".repeat((4 - (normalizedState.length % 4)) % 4);
-        const stateData = JSON.parse(atob(paddedState));
-        const { platform, code_verifier } = stateData;
+        // Retrieve OAuth state from localStorage using the short ref ID
+        const stored = localStorage.getItem(`oauth_state_${state}`);
+        if (!stored) {
+          throw new Error("OAuth session expired. Please try connecting again.");
+        }
+        localStorage.removeItem(`oauth_state_${state}`);
+        const { platform, code_verifier } = JSON.parse(stored);
         const redirectUri = `${window.location.origin}/oauth/social/callback`;
 
         if (platform === "x") {
