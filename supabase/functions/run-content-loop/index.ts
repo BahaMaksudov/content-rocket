@@ -179,6 +179,7 @@ Deno.serve(async (req) => {
         }
 
         const autoPilotEnabled = (settings as any).auto_pilot_enabled === true;
+        const autoPostEnabled = (settings as any).auto_post_enabled === true;
         const confidenceThreshold = (settings as any).confidence_threshold ?? 80;
         const remixChannelEnabled = (settings as any).remix_channel_enabled === true;
         const youtubeChannelId = (settings as any).youtube_channel_id || "";
