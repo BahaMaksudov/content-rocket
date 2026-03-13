@@ -480,6 +480,12 @@ export default function AgentDashboard() {
       if (error) throw error;
       setFeedback((prev) => ({ ...prev, [planId]: { rating, comment } }));
       setDownvoteOpen(null);
+      
+      // Record streak on approval (thumbs up)
+      if (rating === "up") {
+        await recordApproval();
+      }
+      
       toast.success(rating === "up" ? "Thanks for the feedback!" : "Feedback saved");
     } catch {
       toast.error("Failed to save feedback");
