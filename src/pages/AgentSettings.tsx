@@ -178,12 +178,16 @@ export default function AgentSettings() {
       const redirectUri = `${window.location.origin}/oauth/social/callback`;
       const scopes = "tweet.read tweet.write users.read offline.access";
 
+      // Store code_verifier in sessionStorage (not in URL state) to keep state tiny
+      sessionStorage.setItem("x_code_verifier", codeVerifier);
+      const stateId = storeOAuthState({ platform: "x" });
+
       const params = new URLSearchParams({
         response_type: "code",
         client_id: clientId,
         redirect_uri: redirectUri,
         scope: scopes,
-        state: storeOAuthState({ platform: "x", code_verifier: codeVerifier }),
+        state: stateId,
         code_challenge: codeChallenge,
         code_challenge_method: "S256",
       });
