@@ -342,9 +342,9 @@ export default function AgentSettings() {
                 </div>
               </div>
               {xConnected ? (
-                <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-                  <CheckCircle className="h-3 w-3 mr-1" /> Connected
-                </Badge>
+                <Button size="sm" variant="destructive" onClick={() => setDisconnectTarget("x")} disabled={disconnectMutation.isPending}>
+                  <Unlink className="h-3.5 w-3.5 mr-1" /> Disconnect
+                </Button>
               ) : (
                 <Button size="sm" variant="outline" onClick={connectX}>
                   <ExternalLink className="h-3.5 w-3.5 mr-1" /> Connect
@@ -364,9 +364,9 @@ export default function AgentSettings() {
                 </div>
               </div>
               {linkedinConnected ? (
-                <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-                  <CheckCircle className="h-3 w-3 mr-1" /> Connected
-                </Badge>
+                <Button size="sm" variant="destructive" onClick={() => setDisconnectTarget("linkedin")} disabled={disconnectMutation.isPending}>
+                  <Unlink className="h-3.5 w-3.5 mr-1" /> Disconnect
+                </Button>
               ) : (
                 <Button size="sm" variant="outline" onClick={connectLinkedIn}>
                   <ExternalLink className="h-3.5 w-3.5 mr-1" /> Connect
@@ -375,6 +375,24 @@ export default function AgentSettings() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Disconnect Confirmation Dialog */}
+        <AlertDialog open={!!disconnectTarget} onOpenChange={(open) => !open && setDisconnectTarget(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Disconnect {disconnectTarget === "x" ? "X (Twitter)" : "LinkedIn"}?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to disconnect? This will stop all scheduled posts to this platform.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDisconnectConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Disconnect
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Auto-Pilot Mode */}
         <Card className={`border-2 transition-colors ${autoPilotEnabled ? "border-amber-500/50 bg-amber-500/5" : ""}`}>
