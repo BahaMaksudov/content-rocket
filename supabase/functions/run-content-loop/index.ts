@@ -506,6 +506,23 @@ Respond ONLY with valid JSON, no markdown.`;
       }
     }
 
+    // Trigger auto-publish for any queued campaigns
+    const hasQueued = allResults.some((r) => r.status === "auto_published");
+    if (hasQueued) {
+      try {
+        await fetch(`${supabaseUrl}/functions/v1/execute-auto-publish`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${serviceKey}`,
+          },
+          body: JSON.stringify({}),
+        });
+      } catch (pubErr) {
+        console.error("execute-auto-publish trigger error:", pubErr);
+      }
+    }
+
     return new Response(JSON.stringify({ results: allResults }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
