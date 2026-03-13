@@ -40,6 +40,12 @@ function storeOAuthState(payload: Record<string, string>): string {
   return id;
 }
 
+function markPendingOAuth(platform: "x" | "linkedin", stateId: string) {
+  localStorage.setItem("oauth_pending_platform", platform);
+  localStorage.setItem("oauth_pending_state", stateId);
+  localStorage.setItem("oauth_pending_started_at", String(Date.now()));
+}
+
 export default function AgentSettings() {
   const { user } = useAuth();
   const { toast } = useToast();
