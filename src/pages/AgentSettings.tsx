@@ -13,7 +13,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Settings, Bot, Zap, Globe, Loader2, Play, Mail, Clock, Gauge, RefreshCw, Youtube, LinkIcon, CheckCircle, ExternalLink } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Settings, Bot, Zap, Globe, Loader2, Play, Mail, Clock, Gauge, RefreshCw, Youtube, LinkIcon, CheckCircle, ExternalLink, Unlink } from "lucide-react";
 
 const PLATFORM_OPTIONS = [
   { id: "x", label: "X (Twitter)", icon: "𝕏" },
