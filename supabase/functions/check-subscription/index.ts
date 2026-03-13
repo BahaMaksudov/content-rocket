@@ -106,7 +106,7 @@ serve(async (req) => {
     });
 
     // Filter to relevant statuses
-    const relevantSubs = subscriptions.data.filter(s => 
+    const relevantSubs = subscriptions.data.filter((s: { status: string }) => 
       ["active", "past_due", "unpaid", "trialing"].includes(s.status)
     );
 

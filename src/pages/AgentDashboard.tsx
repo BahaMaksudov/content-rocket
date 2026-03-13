@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useCredits } from "@/hooks/use-credits";
+import { useStreak } from "@/hooks/use-streak";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ import { AgentScriptDrawer } from "@/components/dashboard/AgentScriptDrawer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { StreakBadge } from "@/components/dashboard/StreakBadge";
 import { 
   Sparkles, Rocket, Check, Eye, Loader2, Target, CalendarDays, Zap, 
   ThumbsUp, ThumbsDown, ArrowLeft, History, Archive, ChevronRight, Lock
@@ -64,6 +66,7 @@ export default function AgentDashboard() {
   const { user } = useAuth();
   const { isPaid, openCheckout } = useSubscription();
   const { useCredit, getLatestCredits, refreshCredits, canUseCredits, creditsAvailable } = useCredits();
+  const { streak, recordApproval } = useStreak();
   const navigate = useNavigate();
   const [goal, setGoal] = useState<AgentGoal | null>(null);
   const [plans, setPlans] = useState<ContentPlan[]>([]);
@@ -477,6 +480,12 @@ export default function AgentDashboard() {
       if (error) throw error;
       setFeedback((prev) => ({ ...prev, [planId]: { rating, comment } }));
       setDownvoteOpen(null);
+      
+      // Record streak on approval (thumbs up)
+      if (rating === "up") {
+        await recordApproval();
+      }
+      
       toast.success(rating === "up" ? "Thanks for the feedback!" : "Feedback saved");
     } catch {
       toast.error("Failed to save feedback");
@@ -561,7 +570,7 @@ export default function AgentDashboard() {
               <Skeleton className="h-9 w-28 rounded-md" />
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
             {Array.from({ length: 7 }).map((_, i) => (
               <Card key={i} className="border-border bg-card">
                 <CardHeader className="pb-2 space-y-3">
@@ -735,8 +744,8 @@ export default function AgentDashboard() {
             className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
           >
             <div>
-              <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-                <CalendarDays className="h-6 w-6 text-primary" />
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
+                <CalendarDays className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                 Your Content Week
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
@@ -744,17 +753,19 @@ export default function AgentDashboard() {
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              {streak && <StreakBadge currentStreak={streak.current_streak} />}
               {(pendingCount > 0 || batchGenerating) && (
                 <Button
                   onClick={handleBatchGenerate}
                   disabled={batchGenerating}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-[0_0_20px_rgba(6,182,212,0.3)]"
+                  size="sm"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-[0_0_20px_rgba(6,182,212,0.3)] text-xs sm:text-sm"
                 >
                   {batchGenerating ? (
-                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating {batchProgress}/{batchTotal}...</>
+                    <><Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> {batchProgress}/{batchTotal}</>
                   ) : (
-                    <><Rocket className="h-4 w-4 mr-2" /> Generate Entire Week ({pendingCount})</>
+                    <><Rocket className="h-4 w-4 mr-1.5" /> Generate Week ({pendingCount})</>
                   )}
                 </Button>
               )}
@@ -763,7 +774,7 @@ export default function AgentDashboard() {
                 variant="outline"
                 size="icon"
                 onClick={() => setShowHistory(true)}
-                className="border-border text-muted-foreground hover:text-foreground"
+                className="border-border text-muted-foreground hover:text-foreground h-9 w-9"
                 title="Plan History"
               >
                 <History className="h-4 w-4" />
@@ -776,7 +787,7 @@ export default function AgentDashboard() {
                   setShowOnboarding(true);
                   setNiche("");
                 }}
-                className="border-border text-muted-foreground hover:text-foreground"
+                className="border-border text-muted-foreground hover:text-foreground text-xs sm:text-sm"
               >
                 <Zap className="h-4 w-4 mr-1" /> New Plan
               </Button>
@@ -790,7 +801,7 @@ export default function AgentDashboard() {
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
             <AnimatePresence mode="popLayout">
               {displayPlans.map((plan, i) => {
                 const isCompleted = plan.status === "completed";

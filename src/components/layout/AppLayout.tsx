@@ -46,6 +46,8 @@ const routeTitles: Record<string, string> = {
   "/social-proof": "Wall of Love",
   "/team": "Team Workspace",
   "/agent": "Content Agent",
+  "/agent/queue": "Agent Queue",
+  "/agent/settings": "Agent Settings",
 };
 
 const agentSubTitles: Record<string, string> = {

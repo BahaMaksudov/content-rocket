@@ -33,8 +33,12 @@ import EmbedWall from "./pages/EmbedWall";
 import NotFound from "./pages/NotFound";
 import YouTubeToLinkedIn from "./pages/tools/YouTubeToLinkedIn";
 import AgentDashboard from "./pages/AgentDashboard";
+import AgentSettings from "./pages/AgentSettings";
+import AgentQueue from "./pages/AgentQueue";
 import Blog from "./pages/Blog";
 import HowToRepurposeYouTubeVideos from "./pages/blog/HowToRepurposeYouTubeVideos";
+import NicheLanding from "./pages/NicheLanding";
+import OAuthSocialCallback from "./pages/OAuthSocialCallback";
 
 const queryClient = new QueryClient();
 
@@ -140,10 +144,35 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/agent/settings"
+              element={
+                <ProtectedRoute>
+                  <AgentSettings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/agent/queue"
+              element={
+                <ProtectedRoute>
+                  <AgentQueue />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/oauth/social/callback"
+              element={
+                <ProtectedRoute>
+                  <OAuthSocialCallback />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/embed/:userId" element={<EmbedWall />} />
             <Route path="/tools/youtube-to-linkedin" element={<YouTubeToLinkedIn />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/how-to-repurpose-youtube-videos" element={<HowToRepurposeYouTubeVideos />} />
+            <Route path="/for/:niche" element={<NicheLanding />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <CookieConsentBanner />

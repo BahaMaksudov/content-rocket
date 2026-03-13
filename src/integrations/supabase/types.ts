@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_campaigns: {
+        Row: {
+          created_at: string
+          id: string
+          insights: Json | null
+          linkedin_post: string | null
+          published_to: Json | null
+          status: string
+          updated_at: string
+          user_id: string
+          video_title: string | null
+          x_thread: Json | null
+          youtube_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          insights?: Json | null
+          linkedin_post?: string | null
+          published_to?: Json | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          video_title?: string | null
+          x_thread?: Json | null
+          youtube_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          insights?: Json | null
+          linkedin_post?: string | null
+          published_to?: Json | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          video_title?: string | null
+          x_thread?: Json | null
+          youtube_url?: string | null
+        }
+        Relationships: []
+      }
       agent_goals: {
         Row: {
           batch_progress: number
@@ -99,6 +141,75 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      agent_settings: {
+        Row: {
+          auto_pilot_enabled: boolean
+          confidence_threshold: number
+          created_at: string
+          email_notifications: boolean
+          frequency: string
+          frequency_hours: number
+          id: string
+          is_active: boolean
+          last_run_at: string | null
+          linkedin_access_token: string | null
+          linkedin_expires_at: string | null
+          linkedin_name: string | null
+          platforms: string[]
+          remix_channel_enabled: boolean
+          topic: string
+          updated_at: string
+          user_id: string
+          x_refresh_token: string | null
+          x_username: string | null
+          youtube_channel_id: string | null
+        }
+        Insert: {
+          auto_pilot_enabled?: boolean
+          confidence_threshold?: number
+          created_at?: string
+          email_notifications?: boolean
+          frequency?: string
+          frequency_hours?: number
+          id?: string
+          is_active?: boolean
+          last_run_at?: string | null
+          linkedin_access_token?: string | null
+          linkedin_expires_at?: string | null
+          linkedin_name?: string | null
+          platforms?: string[]
+          remix_channel_enabled?: boolean
+          topic?: string
+          updated_at?: string
+          user_id: string
+          x_refresh_token?: string | null
+          x_username?: string | null
+          youtube_channel_id?: string | null
+        }
+        Update: {
+          auto_pilot_enabled?: boolean
+          confidence_threshold?: number
+          created_at?: string
+          email_notifications?: boolean
+          frequency?: string
+          frequency_hours?: number
+          id?: string
+          is_active?: boolean
+          last_run_at?: string | null
+          linkedin_access_token?: string | null
+          linkedin_expires_at?: string | null
+          linkedin_name?: string | null
+          platforms?: string[]
+          remix_channel_enabled?: boolean
+          topic?: string
+          updated_at?: string
+          user_id?: string
+          x_refresh_token?: string | null
+          x_username?: string | null
+          youtube_channel_id?: string | null
+        }
+        Relationships: []
       }
       batch_jobs: {
         Row: {
@@ -731,6 +842,39 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           service?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_streaks: {
+        Row: {
+          bonus_credits_awarded: number
+          created_at: string
+          current_streak: number
+          id: string
+          last_approval_date: string | null
+          longest_streak: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bonus_credits_awarded?: number
+          created_at?: string
+          current_streak?: number
+          id?: string
+          last_approval_date?: string | null
+          longest_streak?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bonus_credits_awarded?: number
+          created_at?: string
+          current_streak?: number
+          id?: string
+          last_approval_date?: string | null
+          longest_streak?: number
           updated_at?: string
           user_id?: string
         }

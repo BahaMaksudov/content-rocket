@@ -430,8 +430,8 @@ export default function Dashboard() {
         <WelcomeBanner onScrollToInput={scrollToYouTubeInput} />
 
         <div>
-          <h1 className="text-3xl font-bold mb-2">VidLogic AI Dashboard</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl md:text-3xl font-bold mb-2">VidLogic AI Dashboard</h1>
+          <p className="text-muted-foreground text-sm md:text-base">
             Transform your YouTube videos into multi-platform content with batch processing
           </p>
         </div>

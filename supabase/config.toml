@@ -74,3 +74,21 @@ verify_jwt = false
 
 [functions.agent-planner]
 verify_jwt = false
+
+[functions.run-content-loop]
+verify_jwt = false
+
+[functions.auth-callback-x]
+verify_jwt = false
+
+[functions.auth-callback-linkedin]
+verify_jwt = false
+
+[functions.publish-to-x]
+verify_jwt = false
+
+[functions.publish-to-linkedin]
+verify_jwt = false
+
+[functions.get-oauth-config]
+verify_jwt = false

@@ -85,6 +85,7 @@
   html {
     scroll-behavior: smooth;
     max-width: 100vw;
+    overflow-x: hidden;
     height: 100dvh;
   }
 
@@ -92,6 +93,7 @@
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
     max-width: 100vw;
+    overflow-x: hidden;
     height: 100dvh;
     position: relative;
     padding-top: env(safe-area-inset-top);
@@ -107,6 +109,18 @@
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
+  }
+
+  /* Mobile touch targets: minimum 44px */
+  @media (max-width: 767px) {
+    button, a, [role="button"], [role="tab"], [role="menuitem"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
+
+    /* Responsive heading scaling */
+    h1 { font-size: 1.5rem !important; line-height: 2rem !important; }
+    h2 { font-size: 1.25rem !important; line-height: 1.75rem !important; }
   }
 
   /* Premium Scrollbar */
@@ -179,6 +193,7 @@
 
   .animate-glow {
     animation: glow 3s ease-in-out infinite alternate;
+    will-change: box-shadow;
   }
 
   .animate-shimmer {
