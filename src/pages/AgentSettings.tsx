@@ -183,7 +183,7 @@ export default function AgentSettings() {
         client_id: clientId,
         redirect_uri: redirectUri,
         scope: scopes,
-        state: encodeOAuthState({ platform: "x", code_verifier: codeVerifier }),
+        state: storeOAuthState({ platform: "x", code_verifier: codeVerifier }),
         code_challenge: codeChallenge,
         code_challenge_method: "S256",
       });
