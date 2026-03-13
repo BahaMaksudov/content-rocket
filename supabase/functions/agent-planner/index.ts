@@ -164,28 +164,32 @@ serve(async (req) => {
               name: "return_content_plan",
               description: "Return the content plan as a structured JSON array of topics.",
               parameters: {
-                type: "object",
-                properties: {
-                  topics: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        day_number: { type: "integer", description: "Day number (1-based)" },
-                        topic: { type: "string", description: "The video topic / title" },
-                        hook_type: {
-                          type: "string",
-                          enum: ["question", "statistic", "story", "contrarian", "challenge"],
-                          description: "The hook style to use",
+                    type: "object",
+                    properties: {
+                      topics: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            day_number: { type: "integer", description: "Day number (1-based)" },
+                            topic: { type: "string", description: "The video topic / title" },
+                            hook_type: {
+                              type: "string",
+                              enum: ["question", "statistic", "story", "contrarian", "challenge"],
+                              description: "The hook style to use",
+                            },
+                            confidence_score: {
+                              type: "integer",
+                              description: "0-100 confidence score based on viral potential and brand alignment. 85+ = high confidence, below 85 = needs review.",
+                            },
+                          },
+                          required: ["day_number", "topic", "hook_type", "confidence_score"],
+                          additionalProperties: false,
                         },
                       },
-                      required: ["day_number", "topic", "hook_type"],
-                      additionalProperties: false,
                     },
-                  },
-                },
-                required: ["topics"],
-                additionalProperties: false,
+                    required: ["topics"],
+                    additionalProperties: false,
               },
             },
           },
