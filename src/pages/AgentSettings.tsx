@@ -10,9 +10,10 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Settings, Bot, Zap, Globe, Loader2, Play, Mail, Clock } from "lucide-react";
+import { Settings, Bot, Zap, Globe, Loader2, Play, Mail, Clock, Gauge, RefreshCw, Youtube } from "lucide-react";
 
 const PLATFORM_OPTIONS = [
   { id: "x", label: "X (Twitter)", icon: "𝕏" },
@@ -29,6 +30,10 @@ export default function AgentSettings() {
   const [isActive, setIsActive] = useState(false);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [frequencyHours, setFrequencyHours] = useState(12);
+  const [autoPilotEnabled, setAutoPilotEnabled] = useState(false);
+  const [confidenceThreshold, setConfidenceThreshold] = useState(80);
+  const [remixChannelEnabled, setRemixChannelEnabled] = useState(false);
+  const [youtubeChannelId, setYoutubeChannelId] = useState("");
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ["agent-settings", user?.id],
@@ -51,6 +56,10 @@ export default function AgentSettings() {
       setIsActive(settings.is_active || false);
       setEmailNotifications((settings as any).email_notifications !== false);
       setFrequencyHours((settings as any).frequency_hours ?? 12);
+      setAutoPilotEnabled((settings as any).auto_pilot_enabled === true);
+      setConfidenceThreshold((settings as any).confidence_threshold ?? 80);
+      setRemixChannelEnabled((settings as any).remix_channel_enabled === true);
+      setYoutubeChannelId((settings as any).youtube_channel_id || "");
     }
   }, [settings]);
 
@@ -63,6 +72,10 @@ export default function AgentSettings() {
         is_active: isActive,
         email_notifications: emailNotifications,
         frequency_hours: frequencyHours,
+        auto_pilot_enabled: autoPilotEnabled,
+        confidence_threshold: confidenceThreshold,
+        remix_channel_enabled: remixChannelEnabled,
+        youtube_channel_id: youtubeChannelId.trim() || null,
       } as any;
 
       if (settings) {
@@ -94,7 +107,6 @@ export default function AgentSettings() {
         body: { user_id: user!.id },
       });
       if (error) {
-        // Try to extract a meaningful message from the error
         const msg = typeof error === "object" && "message" in error ? error.message : String(error);
         throw new Error(msg || "Failed to invoke the content loop");
       }
@@ -107,6 +119,8 @@ export default function AgentSettings() {
       const result = data?.results?.[0];
       if (result?.status === "success") {
         toast({ title: "Campaign created!", description: "Check your Agent Queue for the new draft." });
+      } else if (result?.status === "auto_published") {
+        toast({ title: "🚀 Auto-Published!", description: `Confidence: ${result?.confidence_score}% — Content was auto-approved.` });
       } else if (result?.status === "insufficient_credits") {
         toast({ variant: "destructive", title: "Insufficient credits", description: "You need at least 1 credit to run the agent." });
       } else if (result?.status === "no_videos_found") {
@@ -153,7 +167,7 @@ export default function AgentSettings() {
           </p>
         </div>
 
-        {/* Master Toggle – Global Stop Switch */}
+        {/* Master Toggle */}
         <Card className={`border-2 transition-colors ${isActive ? "border-green-500/50 bg-green-500/5" : "border-destructive/50 bg-destructive/5"}`}>
           <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-6">
             <div className="flex items-center gap-3 sm:gap-4">
@@ -176,6 +190,44 @@ export default function AgentSettings() {
           </CardContent>
         </Card>
 
+        {/* Auto-Pilot Mode */}
+        <Card className={`border-2 transition-colors ${autoPilotEnabled ? "border-amber-500/50 bg-amber-500/5" : ""}`}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Gauge className="h-5 w-5 text-amber-500" />
+              Auto-Pilot Mode
+              <Badge variant="outline" className="text-xs text-amber-500 border-amber-500/30">NEW</Badge>
+            </CardTitle>
+            <CardDescription>
+              When enabled, high-confidence content is auto-approved without waiting for manual review.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="auto-pilot" className="cursor-pointer">Enable Auto-Pilot</Label>
+              <Switch id="auto-pilot" checked={autoPilotEnabled} onCheckedChange={setAutoPilotEnabled} />
+            </div>
+            {autoPilotEnabled && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label>Confidence Threshold</Label>
+                  <span className="text-sm font-mono font-semibold text-primary">{confidenceThreshold}%</span>
+                </div>
+                <Slider
+                  value={[confidenceThreshold]}
+                  onValueChange={(v) => setConfidenceThreshold(v[0])}
+                  min={50}
+                  max={100}
+                  step={5}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Content scoring ≥ {confidenceThreshold}% will be auto-published. Lower = more auto-publishes, higher = stricter quality gate.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Topic */}
         <Card>
           <CardHeader>
@@ -194,8 +246,45 @@ export default function AgentSettings() {
               onChange={(e) => setTopic(e.target.value)}
             />
             <p className="text-xs text-muted-foreground mt-2">
-              Be specific for better results. The agent searches YouTube for trending videos in this niche every 6 hours.
+              Be specific for better results. The agent searches YouTube for trending videos in this niche.
             </p>
+          </CardContent>
+        </Card>
+
+        {/* Channel Remixer */}
+        <Card className={`border-2 transition-colors ${remixChannelEnabled ? "border-red-500/50 bg-red-500/5" : ""}`}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <RefreshCw className="h-5 w-5 text-red-500" />
+              Channel Remixer
+              <Badge variant="outline" className="text-xs text-red-500 border-red-500/30">NEW</Badge>
+            </CardTitle>
+            <CardDescription>
+              Remix your own top-performing YouTube videos into fresh X and LinkedIn content.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="remix-channel" className="cursor-pointer">Enable Remix My Channel</Label>
+              <Switch id="remix-channel" checked={remixChannelEnabled} onCheckedChange={setRemixChannelEnabled} />
+            </div>
+            {remixChannelEnabled && (
+              <div className="space-y-2">
+                <Label htmlFor="yt-channel-id" className="flex items-center gap-2">
+                  <Youtube className="h-4 w-4 text-red-500" />
+                  YouTube Channel ID
+                </Label>
+                <Input
+                  id="yt-channel-id"
+                  placeholder="e.g., UCxxxxxxxxxxxxxxxxxxxxxxx"
+                  value={youtubeChannelId}
+                  onChange={(e) => setYoutubeChannelId(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Find your Channel ID at YouTube Studio → Settings → Channel → Advanced settings. The agent will scan your top 3 videos from the last 90 days.
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
 

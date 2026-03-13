@@ -12,6 +12,8 @@ interface CampaignResult {
   video_title?: string;
   first_tweet?: string;
   linkedin_intro?: string;
+  auto_published?: boolean;
+  confidence_score?: number;
   error?: string;
 }
 
@@ -23,7 +25,7 @@ async function sendDigestEmail(
   campaigns: CampaignResult[],
   siteUrl: string
 ) {
-  const successCampaigns = campaigns.filter((c) => c.status === "success");
+  const successCampaigns = campaigns.filter((c) => c.status === "success" || c.status === "auto_published");
   if (successCampaigns.length === 0) return;
 
   const isMultiple = successCampaigns.length > 1;
@@ -37,7 +39,8 @@ async function sendDigestEmail(
     .map(
       (c) => `
       <div style="background:#f8f9fa;border-radius:12px;padding:20px;margin-bottom:16px;border-left:4px solid #6366f1;">
-        <h3 style="margin:0 0 8px;color:#111;font-size:16px;">${c.video_title || "Untitled"}</h3>
+        <h3 style="margin:0 0 8px;color:#111;font-size:16px;">${c.video_title || "Untitled"}${c.auto_published ? ' <span style="color:#22c55e;font-size:12px;">✅ Auto-Published</span>' : ""}</h3>
+        ${c.confidence_score ? `<p style="margin:0 0 8px;color:#888;font-size:12px;">Confidence: ${c.confidence_score}%</p>` : ""}
         ${c.first_tweet ? `<p style="margin:0 0 8px;color:#555;font-size:14px;"><strong>Tweet preview:</strong> "${c.first_tweet}"</p>` : ""}
         ${c.linkedin_intro ? `<p style="margin:0;color:#555;font-size:14px;"><strong>LinkedIn intro:</strong> "${c.linkedin_intro}"</p>` : ""}
       </div>`
@@ -77,6 +80,26 @@ async function sendDigestEmail(
       html,
     }),
   });
+}
+
+async function discoverChannelRemixVideos(
+  youtubeApiKey: string,
+  channelId: string
+) {
+  // Get top videos from the user's own channel in the last 90 days
+  const publishedAfter = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+  const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${encodeURIComponent(channelId)}&type=video&order=viewCount&maxResults=3&publishedAfter=${publishedAfter}&key=${youtubeApiKey}`;
+
+  const res = await fetch(searchUrl);
+  const data = await res.json();
+
+  if (data.error || !data.items?.length) return [];
+
+  return data.items.map((item: any) => ({
+    videoId: item.id.videoId,
+    title: item.snippet.title,
+    url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
+  }));
 }
 
 Deno.serve(async (req) => {
@@ -124,7 +147,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Group results by user for digest emails
     const userResults = new Map<string, { settings: typeof activeSettings[0]; campaigns: CampaignResult[] }>();
 
     for (const settings of activeSettings) {
@@ -133,7 +155,6 @@ Deno.serve(async (req) => {
       }
       const userEntry = userResults.get(settings.user_id)!;
 
-      // Smart Heartbeat: skip if not enough time has elapsed since last run
       const frequencyHours = (settings as any).frequency_hours ?? 12;
       const lastRunAt = (settings as any).last_run_at ? new Date((settings as any).last_run_at).getTime() : 0;
       const hoursSinceLastRun = (Date.now() - lastRunAt) / (1000 * 60 * 60);
@@ -157,6 +178,105 @@ Deno.serve(async (req) => {
           continue;
         }
 
+        const autoPilotEnabled = (settings as any).auto_pilot_enabled === true;
+        const confidenceThreshold = (settings as any).confidence_threshold ?? 80;
+        const remixChannelEnabled = (settings as any).remix_channel_enabled === true;
+        const youtubeChannelId = (settings as any).youtube_channel_id || "";
+
+        // --- Channel Remixer: discover top videos from user's own channel ---
+        if (remixChannelEnabled && youtubeChannelId) {
+          try {
+            const topVideos = await discoverChannelRemixVideos(youtubeApiKey, youtubeChannelId);
+            for (const video of topVideos) {
+              // Check if already remixed
+              const { data: existing } = await supabase
+                .from("agent_campaigns")
+                .select("id")
+                .eq("user_id", settings.user_id)
+                .eq("youtube_url", video.url)
+                .maybeSingle();
+
+              if (existing) continue;
+
+              // Fetch transcript
+              let transcript = "";
+              try {
+                const tRes = await fetch(`${supabaseUrl}/functions/v1/fetch-transcript`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${serviceKey}` },
+                  body: JSON.stringify({ url: video.url }),
+                });
+                const tData = await tRes.json();
+                transcript = (tData.transcript || tData.text || "").slice(0, 8000);
+              } catch { /* use title */ }
+
+              if (!transcript || transcript.length < 50) transcript = video.title;
+
+              const remixPrompt = `You are a content remixer. This is the user's OWN high-performing YouTube video. Create fresh "Refresh" content for X/Twitter and LinkedIn that gives the same topic a NEW angle.
+
+VIDEO TITLE: ${video.title}
+TRANSCRIPT: ${transcript}
+
+Return JSON:
+{
+  "insights": ["5 key points"],
+  "x_thread": ["5 tweets under 280 chars each, first is a hook"],
+  "linkedin_post": "800-1200 char LinkedIn post with hashtags",
+  "confidence_score": <0-100 quality score>
+}
+Respond ONLY with valid JSON.`;
+
+              const aiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${openaiKey}` },
+                body: JSON.stringify({ model: "gpt-4o-mini", messages: [{ role: "user", content: remixPrompt }], temperature: 0.7, max_tokens: 2000 }),
+              });
+              const aiData = await aiRes.json();
+              const rawContent = aiData.choices?.[0]?.message?.content || "";
+              let parsed: any;
+              try { parsed = JSON.parse(rawContent); } catch { const m = rawContent.match(/```(?:json)?\s*([\s\S]*?)```/); parsed = m ? JSON.parse(m[1]) : { insights: [], x_thread: [], linkedin_post: "", confidence_score: 50 }; }
+
+              const score = parsed.confidence_score ?? 50;
+              const shouldAutoPublish = autoPilotEnabled && score >= confidenceThreshold;
+
+              const { data: campaign } = await supabase
+                .from("agent_campaigns")
+                .insert({
+                  user_id: settings.user_id,
+                  status: shouldAutoPublish ? "approved" : "pending",
+                  youtube_url: video.url,
+                  video_title: `🔄 Remix: ${video.title}`,
+                  insights: parsed.insights || [],
+                  x_thread: parsed.x_thread || [],
+                  linkedin_post: parsed.linkedin_post || "",
+                })
+                .select("id")
+                .single();
+
+              if (campaign) {
+                await supabase.from("profiles").update({
+                  credits_available: (profile.credits_available ?? 0) - 1,
+                  credits_used: (profile.credits_used ?? 0) + 1,
+                }).eq("user_id", settings.user_id);
+
+                userEntry.campaigns.push({
+                  user_id: settings.user_id,
+                  status: shouldAutoPublish ? "auto_published" : "success",
+                  campaign_id: campaign.id,
+                  video_title: `🔄 Remix: ${video.title}`,
+                  first_tweet: parsed.x_thread?.[0] || "",
+                  linkedin_intro: (parsed.linkedin_post || "").slice(0, 150),
+                  auto_published: shouldAutoPublish,
+                  confidence_score: score,
+                });
+              }
+            }
+          } catch (remixErr) {
+            console.error("Channel remix error:", remixErr);
+          }
+        }
+
+        // --- Standard Discovery ---
         const publishedAfter = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
         const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(settings.topic)}&type=video&order=viewCount&maxResults=3&publishedAfter=${publishedAfter}&key=${youtubeApiKey}`;
 
@@ -182,7 +302,6 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Smart Discovery: iterate through results to find the first non-duplicate video (limit: 1 per run)
         let bestVideo: any = null;
         for (const item of ytData.items) {
           const candidateUrl = `https://www.youtube.com/watch?v=${item.id.videoId}`;
@@ -197,11 +316,9 @@ Deno.serve(async (req) => {
             bestVideo = item;
             break;
           }
-          console.log(`Skipping duplicate video ${candidateUrl} for user ${settings.user_id}`);
         }
 
         if (!bestVideo) {
-          console.log(`Skipping run: All discovered videos already processed for user ${settings.user_id}`);
           userEntry.campaigns.push({ user_id: settings.user_id, status: "already_processed" });
           continue;
         }
@@ -228,8 +345,8 @@ Deno.serve(async (req) => {
         }
 
         const truncatedTranscript = transcript.slice(0, 8000);
-        const platforms = settings.platforms || ["x", "linkedin"];
 
+        // Enhanced AI prompt with confidence score
         const aiPrompt = `You are a content strategist. Analyze this video transcript and create repurposed content.
 
 VIDEO TITLE: ${videoTitle}
@@ -239,6 +356,7 @@ Return a JSON object with:
 1. "insights": An array of exactly 5 key insight strings summarizing the video's main points.
 2. "x_thread": A JSON array of 5 tweet strings for an X/Twitter thread (each under 280 chars). First tweet is a hook.
 3. "linkedin_post": A professional LinkedIn post (800-1200 chars) with hashtags.
+4. "confidence_score": An integer from 0-100 rating your confidence in the overall quality and virality potential of the generated content. 90+ means exceptional, 70-89 is good, below 70 needs human review.
 
 Respond ONLY with valid JSON, no markdown.`;
 
@@ -259,19 +377,22 @@ Respond ONLY with valid JSON, no markdown.`;
         const aiData = await aiRes.json();
         const content = aiData.choices?.[0]?.message?.content || "";
 
-        let parsed: { insights: string[]; x_thread: string[]; linkedin_post: string };
+        let parsed: { insights: string[]; x_thread: string[]; linkedin_post: string; confidence_score?: number };
         try {
           parsed = JSON.parse(content);
         } catch {
           const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-          parsed = jsonMatch ? JSON.parse(jsonMatch[1]) : { insights: [], x_thread: [], linkedin_post: "" };
+          parsed = jsonMatch ? JSON.parse(jsonMatch[1]) : { insights: [], x_thread: [], linkedin_post: "", confidence_score: 50 };
         }
+
+        const confidenceScore = parsed.confidence_score ?? 50;
+        const shouldAutoPublish = autoPilotEnabled && confidenceScore >= confidenceThreshold;
 
         const { data: campaign, error: insertError } = await supabase
           .from("agent_campaigns")
           .insert({
             user_id: settings.user_id,
-            status: "pending",
+            status: shouldAutoPublish ? "approved" : "pending",
             youtube_url: youtubeUrl,
             video_title: videoTitle,
             insights: parsed.insights || [],
@@ -291,7 +412,6 @@ Respond ONLY with valid JSON, no markdown.`;
           })
           .eq("user_id", settings.user_id);
 
-        // Update last_run_at for smart heartbeat
         await supabase
           .from("agent_settings")
           .update({ last_run_at: new Date().toISOString() })
@@ -299,11 +419,13 @@ Respond ONLY with valid JSON, no markdown.`;
 
         userEntry.campaigns.push({
           user_id: settings.user_id,
-          status: "success",
+          status: shouldAutoPublish ? "auto_published" : "success",
           campaign_id: campaign.id,
           video_title: videoTitle,
           first_tweet: parsed.x_thread?.[0] || "",
           linkedin_intro: (parsed.linkedin_post || "").slice(0, 150),
+          auto_published: shouldAutoPublish,
+          confidence_score: confidenceScore,
         });
       } catch (userError: unknown) {
         console.error(`Error processing user ${settings.user_id}:`, userError);
@@ -311,13 +433,13 @@ Respond ONLY with valid JSON, no markdown.`;
       }
     }
 
-    // Send digest emails (one per user, batched)
+    // Send digest emails
     const allResults: CampaignResult[] = [];
 
     for (const [userId, entry] of userResults) {
       allResults.push(...entry.campaigns);
 
-      const hasSuccess = entry.campaigns.some((c) => c.status === "success");
+      const hasSuccess = entry.campaigns.some((c) => c.status === "success" || c.status === "auto_published");
       const emailEnabled = entry.settings.email_notifications !== false;
 
       if (hasSuccess && emailEnabled && resendKey) {

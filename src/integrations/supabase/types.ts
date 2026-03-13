@@ -141,6 +141,8 @@ export type Database = {
       }
       agent_settings: {
         Row: {
+          auto_pilot_enabled: boolean
+          confidence_threshold: number
           created_at: string
           email_notifications: boolean
           frequency: string
@@ -149,11 +151,15 @@ export type Database = {
           is_active: boolean
           last_run_at: string | null
           platforms: string[]
+          remix_channel_enabled: boolean
           topic: string
           updated_at: string
           user_id: string
+          youtube_channel_id: string | null
         }
         Insert: {
+          auto_pilot_enabled?: boolean
+          confidence_threshold?: number
           created_at?: string
           email_notifications?: boolean
           frequency?: string
@@ -162,11 +168,15 @@ export type Database = {
           is_active?: boolean
           last_run_at?: string | null
           platforms?: string[]
+          remix_channel_enabled?: boolean
           topic?: string
           updated_at?: string
           user_id: string
+          youtube_channel_id?: string | null
         }
         Update: {
+          auto_pilot_enabled?: boolean
+          confidence_threshold?: number
           created_at?: string
           email_notifications?: boolean
           frequency?: string
@@ -175,9 +185,11 @@ export type Database = {
           is_active?: boolean
           last_run_at?: string | null
           platforms?: string[]
+          remix_channel_enabled?: boolean
           topic?: string
           updated_at?: string
           user_id?: string
+          youtube_channel_id?: string | null
         }
         Relationships: []
       }
