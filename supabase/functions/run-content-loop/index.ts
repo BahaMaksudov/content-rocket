@@ -394,7 +394,7 @@ Respond ONLY with valid JSON, no markdown.`;
           .from("agent_campaigns")
           .insert({
             user_id: settings.user_id,
-            status: shouldAutoPublish ? "approved" : "pending",
+            status: campaignStatus,
             youtube_url: youtubeUrl,
             video_title: videoTitle,
             insights: parsed.insights || [],
