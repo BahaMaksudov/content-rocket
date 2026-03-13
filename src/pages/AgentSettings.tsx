@@ -34,6 +34,10 @@ async function generateCodeChallenge(verifier: string) {
   return btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
+function encodeOAuthState(payload: Record<string, string>) {
+  return btoa(JSON.stringify(payload)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
 export default function AgentSettings() {
   const { user } = useAuth();
   const { toast } = useToast();
