@@ -20,6 +20,7 @@ export type Database = {
           id: string
           insights: Json | null
           linkedin_post: string | null
+          published_to: Json | null
           status: string
           updated_at: string
           user_id: string
@@ -32,6 +33,7 @@ export type Database = {
           id?: string
           insights?: Json | null
           linkedin_post?: string | null
+          published_to?: Json | null
           status?: string
           updated_at?: string
           user_id: string
@@ -44,6 +46,7 @@ export type Database = {
           id?: string
           insights?: Json | null
           linkedin_post?: string | null
+          published_to?: Json | null
           status?: string
           updated_at?: string
           user_id?: string
@@ -150,11 +153,16 @@ export type Database = {
           id: string
           is_active: boolean
           last_run_at: string | null
+          linkedin_access_token: string | null
+          linkedin_expires_at: string | null
+          linkedin_name: string | null
           platforms: string[]
           remix_channel_enabled: boolean
           topic: string
           updated_at: string
           user_id: string
+          x_refresh_token: string | null
+          x_username: string | null
           youtube_channel_id: string | null
         }
         Insert: {
@@ -167,11 +175,16 @@ export type Database = {
           id?: string
           is_active?: boolean
           last_run_at?: string | null
+          linkedin_access_token?: string | null
+          linkedin_expires_at?: string | null
+          linkedin_name?: string | null
           platforms?: string[]
           remix_channel_enabled?: boolean
           topic?: string
           updated_at?: string
           user_id: string
+          x_refresh_token?: string | null
+          x_username?: string | null
           youtube_channel_id?: string | null
         }
         Update: {
@@ -184,11 +197,16 @@ export type Database = {
           id?: string
           is_active?: boolean
           last_run_at?: string | null
+          linkedin_access_token?: string | null
+          linkedin_expires_at?: string | null
+          linkedin_name?: string | null
           platforms?: string[]
           remix_channel_enabled?: boolean
           topic?: string
           updated_at?: string
           user_id?: string
+          x_refresh_token?: string | null
+          x_username?: string | null
           youtube_channel_id?: string | null
         }
         Relationships: []
