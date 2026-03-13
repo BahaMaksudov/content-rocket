@@ -38,10 +38,17 @@ export default function OAuthSocialCallback() {
           throw new Error("OAuth session expired. Please try connecting again.");
         }
         localStorage.removeItem(`oauth_state_${state}`);
-        const { platform, code_verifier } = JSON.parse(stored);
+        const { platform } = JSON.parse(stored);
         const redirectUri = `${window.location.origin}/oauth/social/callback`;
 
         if (platform === "x") {
+          // Retrieve code_verifier from sessionStorage (stored before redirect)
+          const code_verifier = sessionStorage.getItem("x_code_verifier");
+          sessionStorage.removeItem("x_code_verifier");
+          if (!code_verifier) {
+            throw new Error("PKCE session expired. Please try connecting again.");
+          }
+
           const { data, error: fnError } = await supabase.functions.invoke("auth-callback-x", {
             body: { code, code_verifier, redirect_uri: redirectUri, user_id: user.id },
           });
