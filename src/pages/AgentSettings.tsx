@@ -57,11 +57,10 @@ export default function AgentSettings() {
   const [isActive, setIsActive] = useState(false);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [frequencyHours, setFrequencyHours] = useState(12);
-  const [autoPilotEnabled, setAutoPilotEnabled] = useState(false);
-  const [confidenceThreshold, setConfidenceThreshold] = useState(80);
-  const [remixChannelEnabled, setRemixChannelEnabled] = useState(false);
-  const [youtubeChannelId, setYoutubeChannelId] = useState("");
-  const [autoPostEnabled, setAutoPostEnabled] = useState(false);
+    const [autoPilotEnabled, setAutoPilotEnabled] = useState(false);
+    const [confidenceThreshold, setConfidenceThreshold] = useState(85);
+    const [remixChannelEnabled, setRemixChannelEnabled] = useState(false);
+    const [youtubeChannelId, setYoutubeChannelId] = useState("");
   const [disconnectTarget, setDisconnectTarget] = useState<"x" | "linkedin" | null>(null);
 
   const { data: settings, isLoading } = useQuery({
@@ -90,11 +89,10 @@ export default function AgentSettings() {
       setIsActive(settings.is_active || false);
       setEmailNotifications((settings as any).email_notifications !== false);
       setFrequencyHours((settings as any).frequency_hours ?? 12);
-      setAutoPilotEnabled((settings as any).auto_pilot_enabled === true);
-      setConfidenceThreshold((settings as any).confidence_threshold ?? 80);
+      setAutoPilotEnabled((settings as any).auto_pilot_enabled === true || (settings as any).auto_post_enabled === true);
+      setConfidenceThreshold((settings as any).confidence_threshold ?? 85);
       setRemixChannelEnabled((settings as any).remix_channel_enabled === true);
       setYoutubeChannelId((settings as any).youtube_channel_id || "");
-      setAutoPostEnabled((settings as any).auto_post_enabled === true);
     }
   }, [settings]);
 
@@ -108,7 +106,7 @@ export default function AgentSettings() {
         email_notifications: emailNotifications,
         frequency_hours: frequencyHours,
         auto_pilot_enabled: autoPilotEnabled,
-        auto_post_enabled: autoPostEnabled,
+        auto_post_enabled: autoPilotEnabled,
         confidence_threshold: confidenceThreshold,
         remix_channel_enabled: remixChannelEnabled,
         youtube_channel_id: youtubeChannelId.trim() || null,
@@ -350,7 +348,12 @@ export default function AgentSettings() {
                       )}
                     </div>
                     {xConnected && xUsername ? (
-                      <p className="text-sm text-muted-foreground truncate">@{xUsername}</p>
+                      <div>
+                        <p className="text-sm text-muted-foreground truncate">@{xUsername}</p>
+                        {autoPilotEnabled && (
+                          <p className="text-[11px] text-amber-500 mt-0.5">Active: High-confidence posts will be sent automatically.</p>
+                        )}
+                      </div>
                     ) : (
                       <p className="text-xs text-muted-foreground">Post threads and tweets automatically</p>
                     )}
@@ -385,7 +388,12 @@ export default function AgentSettings() {
                       )}
                     </div>
                     {linkedinConnected && linkedinName ? (
-                      <p className="text-sm text-muted-foreground truncate">{linkedinName}</p>
+                      <div>
+                        <p className="text-sm text-muted-foreground truncate">{linkedinName}</p>
+                        {autoPilotEnabled && (
+                          <p className="text-[11px] text-amber-500 mt-0.5">Active: High-confidence posts will be sent automatically.</p>
+                        )}
+                      </div>
                     ) : (
                       <p className="text-xs text-muted-foreground">Share posts to your LinkedIn profile</p>
                     )}
@@ -439,16 +447,11 @@ export default function AgentSettings() {
             <div className="flex items-center justify-between">
               <div>
                 <Label htmlFor="auto-pilot" className="cursor-pointer">Auto-Pilot Mode</Label>
-                <p className="text-xs text-muted-foreground mt-0.5">Automatically publish content that scores above your confidence threshold.</p>
+                <p className="text-xs text-muted-foreground mt-0.5 max-w-sm">
+                  When enabled, the agent will automatically publish content that scores above the {confidenceThreshold}% confidence threshold directly to your connected social accounts.
+                </p>
               </div>
               <Switch id="auto-pilot" checked={autoPilotEnabled} onCheckedChange={setAutoPilotEnabled} />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="auto-post" className="cursor-pointer">Enable Auto-Posting</Label>
-                <p className="text-xs text-muted-foreground mt-0.5">Allow the agent to post directly to connected social accounts without manual approval.</p>
-              </div>
-              <Switch id="auto-post" checked={autoPostEnabled} onCheckedChange={setAutoPostEnabled} />
             </div>
             {autoPilotEnabled && (
               <div className="space-y-3">
