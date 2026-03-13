@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useCredits } from "@/hooks/use-credits";
+import { useStreak } from "@/hooks/use-streak";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ import { AgentScriptDrawer } from "@/components/dashboard/AgentScriptDrawer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { StreakBadge } from "@/components/dashboard/StreakBadge";
 import { 
   Sparkles, Rocket, Check, Eye, Loader2, Target, CalendarDays, Zap, 
   ThumbsUp, ThumbsDown, ArrowLeft, History, Archive, ChevronRight, Lock
