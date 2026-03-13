@@ -106,7 +106,7 @@ export default function AgentSettings() {
         email_notifications: emailNotifications,
         frequency_hours: frequencyHours,
         auto_pilot_enabled: autoPilotEnabled,
-        auto_post_enabled: autoPostEnabled,
+        auto_post_enabled: autoPilotEnabled,
         confidence_threshold: confidenceThreshold,
         remix_channel_enabled: remixChannelEnabled,
         youtube_channel_id: youtubeChannelId.trim() || null,
