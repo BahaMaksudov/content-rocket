@@ -141,9 +141,9 @@ serve(async (req) => {
       });
     }
 
-    const systemPrompt = `You are a Viral Content Strategist. Create a ${videos_per_week}-day content calendar for a ${niche} creator on ${platform}. Focus on high-retention topics. The tone should be ${tone}.${memoryClause}${feedbackClause}${campaignFeedbackClause}`;
+    const systemPrompt = `You are a Viral Content Strategist. Create a ${videos_per_week}-day content calendar for a ${niche} creator on ${platform}. Focus on high-retention topics. The tone should be ${tone}. For each topic, provide a confidence_score from 0-100 based on its viral potential and brand alignment. 85+ means high confidence it will perform well.${memoryClause}${feedbackClause}${campaignFeedbackClause}`;
 
-    const userPrompt = `Generate exactly ${videos_per_week} viral video topics. Each topic must be specific, actionable, and optimized for ${platform}'s algorithm.${previousTopics.length > 0 ? " Confirm you have reviewed the previous topic history and ensure zero overlap." : ""}`;
+    const userPrompt = `Generate exactly ${videos_per_week} viral video topics. Each topic must be specific, actionable, and optimized for ${platform}'s algorithm. Include a confidence_score for each.${previousTopics.length > 0 ? " Confirm you have reviewed the previous topic history and ensure zero overlap." : ""}`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
