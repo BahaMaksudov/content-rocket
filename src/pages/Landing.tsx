@@ -1321,6 +1321,18 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
             </div>
           </div>
 
+          {/* Niche Pages */}
+          <div className="space-y-4 sm:col-span-2 lg:col-span-1">
+            <h4 className="font-semibold text-sm">AI Scripts by Niche</h4>
+            <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+              {ALL_NICHES.map((n) => (
+                <Link key={n} to={`/for/${n}`} className="hover:text-foreground transition-colors capitalize">
+                  {n.replace(/-/g, " ")}
+                </Link>
+              ))}
+            </div>
+          </div>
+
           {/* Support */}
           <div className="space-y-4">
             <h4 className="font-semibold text-sm">Support</h4>
