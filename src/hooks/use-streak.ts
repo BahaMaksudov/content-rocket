@@ -16,7 +16,7 @@ export function useStreak() {
 
   const fetchStreak = useCallback(async () => {
     if (!user) return;
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from("user_streaks")
       .select("*")
       .eq("user_id", user.id)
@@ -38,24 +38,21 @@ export function useStreak() {
     if (!user) return;
 
     const today = new Date().toISOString().split("T")[0];
-    const { data: existing } = await supabase
+    const { data: existing } = await (supabase as any)
       .from("user_streaks")
       .select("*")
       .eq("user_id", user.id)
       .maybeSingle();
 
     if (!existing) {
-      // Create new streak record
-      await supabase.from("user_streaks").insert({
+      await (supabase as any).from("user_streaks").insert({
         user_id: user.id,
         current_streak: 1,
         longest_streak: 1,
         last_approval_date: today,
-      } as any);
+      });
     } else {
-      const lastDate = (existing as any).last_approval_date;
-      
-      // Already approved today
+      const lastDate = existing.last_approval_date;
       if (lastDate === today) return;
 
       const yesterday = new Date();
@@ -64,16 +61,14 @@ export function useStreak() {
 
       let newStreak: number;
       if (lastDate === yesterdayStr) {
-        // Continue streak
-        newStreak = ((existing as any).current_streak || 0) + 1;
+        newStreak = (existing.current_streak || 0) + 1;
       } else {
-        // Reset streak
         newStreak = 1;
       }
 
-      const newLongest = Math.max(newStreak, (existing as any).longest_streak || 0);
+      const newLongest = Math.max(newStreak, existing.longest_streak || 0);
       
-      const updatePayload: any = {
+      const updatePayload: Record<string, any> = {
         current_streak: newStreak,
         longest_streak: newLongest,
         last_approval_date: today,
@@ -82,9 +77,8 @@ export function useStreak() {
 
       // Award 5 bonus credits at every 7-day milestone
       if (newStreak > 0 && newStreak % 7 === 0) {
-        updatePayload.bonus_credits_awarded = ((existing as any).bonus_credits_awarded || 0) + 5;
+        updatePayload.bonus_credits_awarded = (existing.bonus_credits_awarded || 0) + 5;
         
-        // Grant bonus credits to profile
         const { data: profile } = await supabase
           .from("profiles")
           .select("credits_available")
@@ -99,7 +93,7 @@ export function useStreak() {
         }
       }
 
-      await supabase
+      await (supabase as any)
         .from("user_streaks")
         .update(updatePayload)
         .eq("user_id", user.id);

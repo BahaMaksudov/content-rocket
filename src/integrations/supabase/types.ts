@@ -817,6 +817,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_streaks: {
+        Row: {
+          bonus_credits_awarded: number
+          created_at: string
+          current_streak: number
+          id: string
+          last_approval_date: string | null
+          longest_streak: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bonus_credits_awarded?: number
+          created_at?: string
+          current_streak?: number
+          id?: string
+          last_approval_date?: string | null
+          longest_streak?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bonus_credits_awarded?: number
+          created_at?: string
+          current_streak?: number
+          id?: string
+          last_approval_date?: string | null
+          longest_streak?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       welcome_email_tracking: {
         Row: {
           created_at: string
