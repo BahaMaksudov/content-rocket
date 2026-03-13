@@ -388,6 +388,7 @@ Respond ONLY with valid JSON, no markdown.`;
 
         const confidenceScore = parsed.confidence_score ?? 50;
         const shouldAutoPublish = autoPilotEnabled && confidenceScore >= confidenceThreshold;
+        const campaignStatus = shouldAutoPublish && autoPostEnabled ? "queued_for_publish" : (shouldAutoPublish ? "approved" : "pending");
 
         const { data: campaign, error: insertError } = await supabase
           .from("agent_campaigns")
