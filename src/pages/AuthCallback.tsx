@@ -161,11 +161,23 @@ export default function AuthCallback() {
               navigate("/dashboard", { replace: true });
             }, 2000);
           } else {
-            console.error("[AuthCallback] No session found - invalid verification link");
+            console.error("[AuthCallback] No session found - retrying after sync delay");
             console.log("[AuthCallback] Hash params:", Object.fromEntries(hashParams));
             console.log("[AuthCallback] Query params:", Object.fromEntries(queryParams));
-            setStatus("error");
-            setErrorMessage("Invalid or expired verification link. Please try signing up again.");
+
+            await new Promise((resolve) => setTimeout(resolve, 500));
+            const { data: { session: retrySession } } = await supabase.auth.getSession();
+
+            if (retrySession) {
+              console.log("[AuthCallback] Session appeared after delay - redirecting to dashboard");
+              setStatus("success");
+              setTimeout(() => {
+                navigate("/dashboard", { replace: true });
+              }, 2000);
+            } else {
+              setStatus("error");
+              setErrorMessage("Invalid or expired verification link. Please try signing up again.");
+            }
           }
         }
       } catch (err) {

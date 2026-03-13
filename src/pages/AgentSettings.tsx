@@ -40,6 +40,12 @@ function storeOAuthState(payload: Record<string, string>): string {
   return id;
 }
 
+function markPendingOAuth(platform: "x" | "linkedin", stateId: string) {
+  localStorage.setItem("oauth_pending_platform", platform);
+  localStorage.setItem("oauth_pending_state", stateId);
+  localStorage.setItem("oauth_pending_started_at", String(Date.now()));
+}
+
 export default function AgentSettings() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -175,12 +181,18 @@ export default function AgentSettings() {
 
       const codeVerifier = generateCodeVerifier();
       const codeChallenge = await generateCodeChallenge(codeVerifier);
+      if (codeChallenge.length !== 43) {
+        throw new Error("Invalid PKCE challenge length.");
+      }
+
       const redirectUri = `${window.location.origin}/oauth/social/callback`;
       const scopes = "tweet.read tweet.write users.read offline.access";
-
-      // Store code_verifier in sessionStorage (not in URL state) to keep state tiny
-      sessionStorage.setItem("x_code_verifier", codeVerifier);
       const stateId = storeOAuthState({ platform: "x" });
+
+      // Use localStorage for better resilience across new tabs/windows.
+      localStorage.setItem(`oauth_x_verifier_${stateId}`, codeVerifier);
+      localStorage.setItem("x_code_verifier", codeVerifier); // backward-compatible fallback
+      markPendingOAuth("x", stateId);
 
       const params = new URLSearchParams({
         response_type: "code",
@@ -211,6 +223,7 @@ export default function AgentSettings() {
 
       const redirectUri = `${window.location.origin}/oauth/social/callback`;
       const state = storeOAuthState({ platform: "linkedin" });
+      markPendingOAuth("linkedin", state);
       const scopes = "openid profile w_member_social";
       const authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}&state=${state}`;
       window.location.href = authUrl;
