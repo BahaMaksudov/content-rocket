@@ -89,3 +89,6 @@ verify_jwt = false
 
 [functions.publish-to-linkedin]
 verify_jwt = false
+
+[functions.get-oauth-config]
+verify_jwt = false
