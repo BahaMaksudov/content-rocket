@@ -34,8 +34,10 @@ async function generateCodeChallenge(verifier: string) {
   return btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-function encodeOAuthState(payload: Record<string, string>) {
-  return btoa(JSON.stringify(payload)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+function storeOAuthState(payload: Record<string, string>): string {
+  const id = crypto.randomUUID().slice(0, 8);
+  localStorage.setItem(`oauth_state_${id}`, JSON.stringify(payload));
+  return id;
 }
 
 export default function AgentSettings() {
