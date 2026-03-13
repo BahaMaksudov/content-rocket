@@ -332,49 +332,75 @@ export default function AgentSettings() {
               Connect your social accounts to enable direct publishing from the Agent Queue.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {/* X Connection */}
-            <div className="flex items-center justify-between p-3 rounded-lg border border-border">
-              <div className="flex items-center gap-3">
-                <span className="text-lg font-mono w-6 text-center">𝕏</span>
-                <div>
-                  <span className="font-medium">X (Twitter)</span>
-                  {xConnected && xUsername && (
-                    <p className="text-xs text-muted-foreground">@{xUsername}</p>
-                  )}
+          <CardContent className="space-y-4">
+            {/* X Connection Card */}
+            <div className={`relative p-4 rounded-xl border-2 transition-all ${xConnected ? "border-green-500/40 bg-green-500/5" : "border-border bg-card"}`}>
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${xConnected ? "bg-green-500/15" : "bg-muted"}`}>
+                    <span className="text-lg font-bold font-mono">𝕏</span>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold">X (Twitter)</span>
+                      {xConnected && (
+                        <Badge variant="secondary" className="bg-green-500/15 text-green-500 border-green-500/30 text-[11px] px-2 py-0">
+                          <span className="mr-1 text-green-400">●</span> Connected
+                        </Badge>
+                      )}
+                    </div>
+                    {xConnected && xUsername ? (
+                      <p className="text-sm text-muted-foreground truncate">@{xUsername}</p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">Post threads and tweets automatically</p>
+                    )}
+                  </div>
                 </div>
+                {xConnected ? (
+                  <Button size="sm" variant="ghost" onClick={() => setDisconnectTarget("x")} disabled={disconnectMutation.isPending} className="text-muted-foreground hover:text-destructive shrink-0">
+                    <Unlink className="h-4 w-4 mr-1.5" /> Disconnect
+                  </Button>
+                ) : (
+                  <Button size="sm" onClick={connectX} className="bg-foreground text-background hover:bg-foreground/90 shrink-0">
+                    <ExternalLink className="h-3.5 w-3.5 mr-1.5" /> Connect
+                  </Button>
+                )}
               </div>
-              {xConnected ? (
-                <Button size="sm" variant="destructive" onClick={() => setDisconnectTarget("x")} disabled={disconnectMutation.isPending}>
-                  <Unlink className="h-3.5 w-3.5 mr-1" /> Disconnect
-                </Button>
-              ) : (
-                <Button size="sm" variant="outline" onClick={connectX}>
-                  <ExternalLink className="h-3.5 w-3.5 mr-1" /> Connect
-                </Button>
-              )}
             </div>
 
-            {/* LinkedIn Connection */}
-            <div className="flex items-center justify-between p-3 rounded-lg border border-border">
-              <div className="flex items-center gap-3">
-                <span className="text-lg font-mono w-6 text-center text-blue-400">in</span>
-                <div>
-                  <span className="font-medium">LinkedIn</span>
-                  {linkedinConnected && linkedinName && (
-                    <p className="text-xs text-muted-foreground">{linkedinName}</p>
-                  )}
+            {/* LinkedIn Connection Card */}
+            <div className={`relative p-4 rounded-xl border-2 transition-all ${linkedinConnected ? "border-green-500/40 bg-green-500/5" : "border-border bg-card"}`}>
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${linkedinConnected ? "bg-green-500/15" : "bg-muted"}`}>
+                    <span className="text-lg font-bold text-[#0A66C2]">in</span>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold">LinkedIn</span>
+                      {linkedinConnected && (
+                        <Badge variant="secondary" className="bg-green-500/15 text-green-500 border-green-500/30 text-[11px] px-2 py-0">
+                          <span className="mr-1 text-green-400">●</span> Connected
+                        </Badge>
+                      )}
+                    </div>
+                    {linkedinConnected && linkedinName ? (
+                      <p className="text-sm text-muted-foreground truncate">{linkedinName}</p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">Share posts to your LinkedIn profile</p>
+                    )}
+                  </div>
                 </div>
+                {linkedinConnected ? (
+                  <Button size="sm" variant="ghost" onClick={() => setDisconnectTarget("linkedin")} disabled={disconnectMutation.isPending} className="text-muted-foreground hover:text-destructive shrink-0">
+                    <Unlink className="h-4 w-4 mr-1.5" /> Disconnect
+                  </Button>
+                ) : (
+                  <Button size="sm" onClick={connectLinkedIn} className="bg-[#0A66C2] text-white hover:bg-[#0A66C2]/90 shrink-0">
+                    <ExternalLink className="h-3.5 w-3.5 mr-1.5" /> Connect
+                  </Button>
+                )}
               </div>
-              {linkedinConnected ? (
-                <Button size="sm" variant="destructive" onClick={() => setDisconnectTarget("linkedin")} disabled={disconnectMutation.isPending}>
-                  <Unlink className="h-3.5 w-3.5 mr-1" /> Disconnect
-                </Button>
-              ) : (
-                <Button size="sm" variant="outline" onClick={connectLinkedIn}>
-                  <ExternalLink className="h-3.5 w-3.5 mr-1" /> Connect
-                </Button>
-              )}
             </div>
           </CardContent>
         </Card>
