@@ -158,37 +158,45 @@ export default function AgentSettings() {
   });
 
   const connectX = useCallback(async () => {
-    const codeVerifier = generateCodeVerifier();
-    const codeChallenge = await generateCodeChallenge(codeVerifier);
-    const redirectUri = `${window.location.origin}/oauth/social/callback`;
-    const state = btoa(JSON.stringify({ platform: "x", code_verifier: codeVerifier }));
-    const clientId = import.meta.env.VITE_X_CLIENT_ID || "";
+    try {
+      const { data: config, error: cfgError } = await supabase.functions.invoke("get-oauth-config");
+      if (cfgError) throw cfgError;
+      const clientId = config?.x_client_id || "";
+      if (!clientId) {
+        toast({ variant: "destructive", title: "Configuration Error", description: "X Client ID not configured on the server." });
+        return;
+      }
 
-    if (!clientId) {
-      toast({ variant: "destructive", title: "Configuration Error", description: "X Client ID not configured." });
-      return;
+      const codeVerifier = generateCodeVerifier();
+      const codeChallenge = await generateCodeChallenge(codeVerifier);
+      const redirectUri = `${window.location.origin}/oauth/social/callback`;
+      const state = btoa(JSON.stringify({ platform: "x", code_verifier: codeVerifier }));
+      const scopes = "tweet.read tweet.write users.read offline.access";
+      const authUrl = `https://x.com/i/oauth2/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}&state=${state}&code_challenge=${codeChallenge}&code_challenge_method=S256`;
+      window.location.href = authUrl;
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Error", description: e.message || "Failed to start X connection." });
     }
-
-    const scopes = "tweet.read tweet.write users.read offline.access";
-    const authUrl = `https://x.com/i/oauth2/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}&state=${state}&code_challenge=${codeChallenge}&code_challenge_method=S256`;
-
-    window.location.href = authUrl;
   }, [toast]);
 
-  const connectLinkedIn = useCallback(() => {
-    const redirectUri = `${window.location.origin}/oauth/social/callback`;
-    const state = btoa(JSON.stringify({ platform: "linkedin" }));
-    const clientId = import.meta.env.VITE_LINKEDIN_CLIENT_ID || "";
+  const connectLinkedIn = useCallback(async () => {
+    try {
+      const { data: config, error: cfgError } = await supabase.functions.invoke("get-oauth-config");
+      if (cfgError) throw cfgError;
+      const clientId = config?.linkedin_client_id || "";
+      if (!clientId) {
+        toast({ variant: "destructive", title: "Configuration Error", description: "LinkedIn Client ID not configured on the server." });
+        return;
+      }
 
-    if (!clientId) {
-      toast({ variant: "destructive", title: "Configuration Error", description: "LinkedIn Client ID not configured." });
-      return;
+      const redirectUri = `${window.location.origin}/oauth/social/callback`;
+      const state = btoa(JSON.stringify({ platform: "linkedin" }));
+      const scopes = "openid profile w_member_social";
+      const authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}&state=${state}`;
+      window.location.href = authUrl;
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Error", description: e.message || "Failed to start LinkedIn connection." });
     }
-
-    const scopes = "openid profile w_member_social";
-    const authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}&state=${state}`;
-
-    window.location.href = authUrl;
   }, [toast]);
 
   const togglePlatform = (id: string) => {
