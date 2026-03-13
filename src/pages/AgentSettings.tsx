@@ -13,7 +13,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Settings, Bot, Zap, Globe, Loader2, Play, Mail, Clock, Gauge, RefreshCw, Youtube, LinkIcon, CheckCircle, ExternalLink } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Settings, Bot, Zap, Globe, Loader2, Play, Mail, Clock, Gauge, RefreshCw, Youtube, LinkIcon, CheckCircle, ExternalLink, Unlink } from "lucide-react";
 
 const PLATFORM_OPTIONS = [
   { id: "x", label: "X (Twitter)", icon: "𝕏" },
@@ -60,6 +61,7 @@ export default function AgentSettings() {
   const [confidenceThreshold, setConfidenceThreshold] = useState(80);
   const [remixChannelEnabled, setRemixChannelEnabled] = useState(false);
   const [youtubeChannelId, setYoutubeChannelId] = useState("");
+  const [disconnectTarget, setDisconnectTarget] = useState<"x" | "linkedin" | null>(null);
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ["agent-settings", user?.id],
@@ -232,6 +234,38 @@ export default function AgentSettings() {
     }
   }, [toast]);
 
+  const disconnectMutation = useMutation({
+    mutationFn: async (platform: "x" | "linkedin") => {
+      const updates: Record<string, null> =
+        platform === "x"
+          ? { x_refresh_token: null, x_username: null }
+          : { linkedin_access_token: null, linkedin_name: null, linkedin_expires_at: null };
+
+      const { error } = await supabase
+        .from("agent_settings")
+        .update(updates as any)
+        .eq("user_id", user!.id);
+      if (error) throw error;
+      return platform;
+    },
+    onSuccess: (platform) => {
+      queryClient.invalidateQueries({ queryKey: ["agent-settings"] });
+      toast({
+        title: `${platform === "x" ? "X (Twitter)" : "LinkedIn"} disconnected successfully.`,
+      });
+    },
+    onError: (err: Error) => {
+      toast({ variant: "destructive", title: "Error", description: err.message });
+    },
+  });
+
+  const handleDisconnectConfirm = () => {
+    if (disconnectTarget) {
+      disconnectMutation.mutate(disconnectTarget);
+    }
+    setDisconnectTarget(null);
+  };
+
   const togglePlatform = (id: string) => {
     setPlatforms((prev) =>
       prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
@@ -308,9 +342,9 @@ export default function AgentSettings() {
                 </div>
               </div>
               {xConnected ? (
-                <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-                  <CheckCircle className="h-3 w-3 mr-1" /> Connected
-                </Badge>
+                <Button size="sm" variant="destructive" onClick={() => setDisconnectTarget("x")} disabled={disconnectMutation.isPending}>
+                  <Unlink className="h-3.5 w-3.5 mr-1" /> Disconnect
+                </Button>
               ) : (
                 <Button size="sm" variant="outline" onClick={connectX}>
                   <ExternalLink className="h-3.5 w-3.5 mr-1" /> Connect
@@ -330,9 +364,9 @@ export default function AgentSettings() {
                 </div>
               </div>
               {linkedinConnected ? (
-                <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-                  <CheckCircle className="h-3 w-3 mr-1" /> Connected
-                </Badge>
+                <Button size="sm" variant="destructive" onClick={() => setDisconnectTarget("linkedin")} disabled={disconnectMutation.isPending}>
+                  <Unlink className="h-3.5 w-3.5 mr-1" /> Disconnect
+                </Button>
               ) : (
                 <Button size="sm" variant="outline" onClick={connectLinkedIn}>
                   <ExternalLink className="h-3.5 w-3.5 mr-1" /> Connect
@@ -341,6 +375,24 @@ export default function AgentSettings() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Disconnect Confirmation Dialog */}
+        <AlertDialog open={!!disconnectTarget} onOpenChange={(open) => !open && setDisconnectTarget(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Disconnect {disconnectTarget === "x" ? "X (Twitter)" : "LinkedIn"}?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to disconnect? This will stop all scheduled posts to this platform.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDisconnectConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Disconnect
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Auto-Pilot Mode */}
         <Card className={`border-2 transition-colors ${autoPilotEnabled ? "border-amber-500/50 bg-amber-500/5" : ""}`}>
