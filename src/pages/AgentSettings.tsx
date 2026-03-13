@@ -170,9 +170,19 @@ export default function AgentSettings() {
       const codeVerifier = generateCodeVerifier();
       const codeChallenge = await generateCodeChallenge(codeVerifier);
       const redirectUri = `${window.location.origin}/oauth/social/callback`;
-      const state = btoa(JSON.stringify({ platform: "x", code_verifier: codeVerifier }));
       const scopes = "tweet.read tweet.write users.read offline.access";
-      const authUrl = `https://x.com/i/oauth2/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}&state=${state}&code_challenge=${codeChallenge}&code_challenge_method=S256`;
+
+      const params = new URLSearchParams({
+        response_type: "code",
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        scope: scopes,
+        state: btoa(JSON.stringify({ platform: "x", code_verifier: codeVerifier })),
+        code_challenge: codeChallenge,
+        code_challenge_method: "S256",
+      });
+
+      const authUrl = `https://twitter.com/i/oauth2/authorize?${params.toString()}`;
       window.location.href = authUrl;
     } catch (e: any) {
       toast({ variant: "destructive", title: "Error", description: e.message || "Failed to start X connection." });
