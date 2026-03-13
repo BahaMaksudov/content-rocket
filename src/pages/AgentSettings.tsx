@@ -57,11 +57,10 @@ export default function AgentSettings() {
   const [isActive, setIsActive] = useState(false);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [frequencyHours, setFrequencyHours] = useState(12);
-  const [autoPilotEnabled, setAutoPilotEnabled] = useState(false);
-  const [confidenceThreshold, setConfidenceThreshold] = useState(80);
-  const [remixChannelEnabled, setRemixChannelEnabled] = useState(false);
-  const [youtubeChannelId, setYoutubeChannelId] = useState("");
-  const [autoPostEnabled, setAutoPostEnabled] = useState(false);
+    const [autoPilotEnabled, setAutoPilotEnabled] = useState(false);
+    const [confidenceThreshold, setConfidenceThreshold] = useState(85);
+    const [remixChannelEnabled, setRemixChannelEnabled] = useState(false);
+    const [youtubeChannelId, setYoutubeChannelId] = useState("");
   const [disconnectTarget, setDisconnectTarget] = useState<"x" | "linkedin" | null>(null);
 
   const { data: settings, isLoading } = useQuery({
