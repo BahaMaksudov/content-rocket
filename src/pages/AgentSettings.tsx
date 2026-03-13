@@ -61,6 +61,7 @@ export default function AgentSettings() {
   const [confidenceThreshold, setConfidenceThreshold] = useState(80);
   const [remixChannelEnabled, setRemixChannelEnabled] = useState(false);
   const [youtubeChannelId, setYoutubeChannelId] = useState("");
+  const [autoPostEnabled, setAutoPostEnabled] = useState(false);
   const [disconnectTarget, setDisconnectTarget] = useState<"x" | "linkedin" | null>(null);
 
   const { data: settings, isLoading } = useQuery({
@@ -93,6 +94,7 @@ export default function AgentSettings() {
       setConfidenceThreshold((settings as any).confidence_threshold ?? 80);
       setRemixChannelEnabled((settings as any).remix_channel_enabled === true);
       setYoutubeChannelId((settings as any).youtube_channel_id || "");
+      setAutoPostEnabled((settings as any).auto_post_enabled === true);
     }
   }, [settings]);
 
@@ -106,6 +108,7 @@ export default function AgentSettings() {
         email_notifications: emailNotifications,
         frequency_hours: frequencyHours,
         auto_pilot_enabled: autoPilotEnabled,
+        auto_post_enabled: autoPostEnabled,
         confidence_threshold: confidenceThreshold,
         remix_channel_enabled: remixChannelEnabled,
         youtube_channel_id: youtubeChannelId.trim() || null,
@@ -403,13 +406,23 @@ export default function AgentSettings() {
               <Badge variant="outline" className="text-xs text-amber-500 border-amber-500/30">NEW</Badge>
             </CardTitle>
             <CardDescription>
-              When enabled, high-confidence content is auto-approved without waiting for manual review.
+              When enabled, the agent will automatically publish high-confidence content to your connected social accounts.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="flex items-center justify-between">
-              <Label htmlFor="auto-pilot" className="cursor-pointer">Enable Auto-Pilot</Label>
+              <div>
+                <Label htmlFor="auto-pilot" className="cursor-pointer">Auto-Pilot Mode</Label>
+                <p className="text-xs text-muted-foreground mt-0.5">Automatically publish content that scores above your confidence threshold.</p>
+              </div>
               <Switch id="auto-pilot" checked={autoPilotEnabled} onCheckedChange={setAutoPilotEnabled} />
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="auto-post" className="cursor-pointer">Enable Auto-Posting</Label>
+                <p className="text-xs text-muted-foreground mt-0.5">Allow the agent to post directly to connected social accounts without manual approval.</p>
+              </div>
+              <Switch id="auto-post" checked={autoPostEnabled} onCheckedChange={setAutoPostEnabled} />
             </div>
             {autoPilotEnabled && (
               <div className="space-y-3">

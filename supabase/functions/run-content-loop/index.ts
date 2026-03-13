@@ -179,6 +179,7 @@ Deno.serve(async (req) => {
         }
 
         const autoPilotEnabled = (settings as any).auto_pilot_enabled === true;
+        const autoPostEnabled = (settings as any).auto_post_enabled === true;
         const confidenceThreshold = (settings as any).confidence_threshold ?? 80;
         const remixChannelEnabled = (settings as any).remix_channel_enabled === true;
         const youtubeChannelId = (settings as any).youtube_channel_id || "";
@@ -238,12 +239,12 @@ Respond ONLY with valid JSON.`;
 
               const score = parsed.confidence_score ?? 50;
               const shouldAutoPublish = autoPilotEnabled && score >= confidenceThreshold;
-
+              const campaignStatus = shouldAutoPublish && autoPostEnabled ? "queued_for_publish" : (shouldAutoPublish ? "approved" : "pending");
               const { data: campaign } = await supabase
                 .from("agent_campaigns")
                 .insert({
                   user_id: settings.user_id,
-                  status: shouldAutoPublish ? "approved" : "pending",
+                  status: campaignStatus,
                   youtube_url: video.url,
                   video_title: `🔄 Remix: ${video.title}`,
                   insights: parsed.insights || [],
@@ -387,12 +388,13 @@ Respond ONLY with valid JSON, no markdown.`;
 
         const confidenceScore = parsed.confidence_score ?? 50;
         const shouldAutoPublish = autoPilotEnabled && confidenceScore >= confidenceThreshold;
+        const campaignStatus = shouldAutoPublish && autoPostEnabled ? "queued_for_publish" : (shouldAutoPublish ? "approved" : "pending");
 
         const { data: campaign, error: insertError } = await supabase
           .from("agent_campaigns")
           .insert({
             user_id: settings.user_id,
-            status: shouldAutoPublish ? "approved" : "pending",
+            status: campaignStatus,
             youtube_url: youtubeUrl,
             video_title: videoTitle,
             insights: parsed.insights || [],
@@ -427,6 +429,44 @@ Respond ONLY with valid JSON, no markdown.`;
           auto_published: shouldAutoPublish,
           confidence_score: confidenceScore,
         });
+
+        // Send low-confidence email if auto-pilot is on but score was too low
+        if (autoPilotEnabled && !shouldAutoPublish && resendKey) {
+          try {
+            const { data: userProfile } = await supabase
+              .from("profiles")
+              .select("email, full_name")
+              .eq("user_id", settings.user_id)
+              .maybeSingle();
+
+            if (userProfile?.email) {
+              await fetch("https://api.resend.com/emails", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${resendKey}`,
+                },
+                body: JSON.stringify({
+                  from: "notifications@vidlogicai.com",
+                  to: userProfile.email,
+                  subject: `⚠️ Draft needs review: ${videoTitle}`,
+                  html: `
+                  <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:40px 24px;">
+                    <img src="${siteUrl}/vidlogic-logo.png" alt="VidLogic AI" style="height:40px;margin-bottom:24px;" />
+                    <h1 style="color:#111;font-size:20px;">Manual Approval Required</h1>
+                    <p style="color:#555;">Hey ${userProfile.full_name || "there"},</p>
+                    <p style="color:#555;">The Agent created a new draft for "<strong>${videoTitle}</strong>", but it requires your manual approval due to a low confidence score (${confidenceScore}% — threshold: ${confidenceThreshold}%).</p>
+                    <div style="text-align:center;margin:28px 0;">
+                      <a href="${siteUrl}/agent/queue" style="display:inline-block;background:#6366f1;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600;">Review Draft</a>
+                    </div>
+                  </div>`,
+                }),
+              });
+            }
+          } catch (lowConfEmailErr) {
+            console.error("Low-confidence email error:", lowConfEmailErr);
+          }
+        }
       } catch (userError: unknown) {
         console.error(`Error processing user ${settings.user_id}:`, userError);
         userEntry.campaigns.push({ user_id: settings.user_id, status: "error" });
@@ -463,6 +503,23 @@ Respond ONLY with valid JSON, no markdown.`;
         } catch (emailErr) {
           console.error(`Failed to send digest email for user ${userId}:`, emailErr);
         }
+      }
+    }
+
+    // Trigger auto-publish for any queued campaigns
+    const hasQueued = allResults.some((r) => r.status === "auto_published");
+    if (hasQueued) {
+      try {
+        await fetch(`${supabaseUrl}/functions/v1/execute-auto-publish`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${serviceKey}`,
+          },
+          body: JSON.stringify({}),
+        });
+      } catch (pubErr) {
+        console.error("execute-auto-publish trigger error:", pubErr);
       }
     }
 

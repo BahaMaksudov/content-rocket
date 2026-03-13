@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -68,6 +69,21 @@ export default function AgentDashboard() {
   const { useCredit, getLatestCredits, refreshCredits, canUseCredits, creditsAvailable } = useCredits();
   const { streak, recordApproval } = useStreak();
   const navigate = useNavigate();
+
+  // Fetch agent settings for auto-pilot badge
+  const { data: agentSettings } = useQuery({
+    queryKey: ["agent-settings", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("agent_settings")
+        .select("auto_post_enabled")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
+
   const [goal, setGoal] = useState<AgentGoal | null>(null);
   const [plans, setPlans] = useState<ContentPlan[]>([]);
   const [scripts, setScripts] = useState<Record<string, AgentScript>>({});
@@ -747,6 +763,11 @@ export default function AgentDashboard() {
               <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
                 <CalendarDays className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                 Your Content Week
+                {(agentSettings as any)?.auto_post_enabled && (
+                  <Badge variant="outline" className="text-xs border-amber-500/30 text-amber-500 ml-2">
+                    ✨ Auto-Pilot Active
+                  </Badge>
+                )}
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
                 {goal.niche} · {goal.platform} · {goal.tone}
