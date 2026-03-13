@@ -160,6 +160,14 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/oauth/social/callback"
+              element={
+                <ProtectedRoute>
+                  <OAuthSocialCallback />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/embed/:userId" element={<EmbedWall />} />
             <Route path="/tools/youtube-to-linkedin" element={<YouTubeToLinkedIn />} />
             <Route path="/blog" element={<Blog />} />
