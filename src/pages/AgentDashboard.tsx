@@ -747,6 +747,11 @@ export default function AgentDashboard() {
               <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
                 <CalendarDays className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                 Your Content Week
+                {(settings as any)?.auto_post_enabled && (
+                  <Badge variant="outline" className="text-xs border-amber-500/30 text-amber-500 ml-2">
+                    ✨ Auto-Pilot Active
+                  </Badge>
+                )}
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
                 {goal.niche} · {goal.platform} · {goal.tone}
