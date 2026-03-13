@@ -92,3 +92,6 @@ verify_jwt = false
 
 [functions.get-oauth-config]
 verify_jwt = false
+
+[functions.execute-auto-publish]
+verify_jwt = false

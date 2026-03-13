@@ -101,6 +101,41 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_logs: {
+        Row: {
+          action: string
+          campaign_id: string | null
+          created_at: string
+          details: Json | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          campaign_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          campaign_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_logs_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "agent_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_scripts: {
         Row: {
           caption: string | null
@@ -145,6 +180,7 @@ export type Database = {
       agent_settings: {
         Row: {
           auto_pilot_enabled: boolean
+          auto_post_enabled: boolean
           confidence_threshold: number
           created_at: string
           email_notifications: boolean
@@ -167,6 +203,7 @@ export type Database = {
         }
         Insert: {
           auto_pilot_enabled?: boolean
+          auto_post_enabled?: boolean
           confidence_threshold?: number
           created_at?: string
           email_notifications?: boolean
@@ -189,6 +226,7 @@ export type Database = {
         }
         Update: {
           auto_pilot_enabled?: boolean
+          auto_post_enabled?: boolean
           confidence_threshold?: number
           created_at?: string
           email_notifications?: boolean
