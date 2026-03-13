@@ -348,7 +348,12 @@ export default function AgentSettings() {
                       )}
                     </div>
                     {xConnected && xUsername ? (
-                      <p className="text-sm text-muted-foreground truncate">@{xUsername}</p>
+                      <div>
+                        <p className="text-sm text-muted-foreground truncate">@{xUsername}</p>
+                        {autoPilotEnabled && (
+                          <p className="text-[11px] text-amber-500 mt-0.5">Active: High-confidence posts will be sent automatically.</p>
+                        )}
+                      </div>
                     ) : (
                       <p className="text-xs text-muted-foreground">Post threads and tweets automatically</p>
                     )}
