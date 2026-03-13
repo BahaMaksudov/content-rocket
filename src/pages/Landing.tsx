@@ -1249,7 +1249,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
     <footer ref={ref} className="py-12 border-t border-border bg-card/30">
       <div className="container mx-auto px-4">
         {/* Main footer grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-8 mb-10">
           {/* Brand & Company Info */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
