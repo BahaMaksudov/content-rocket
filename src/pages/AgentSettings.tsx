@@ -94,6 +94,7 @@ export default function AgentSettings() {
       setConfidenceThreshold((settings as any).confidence_threshold ?? 80);
       setRemixChannelEnabled((settings as any).remix_channel_enabled === true);
       setYoutubeChannelId((settings as any).youtube_channel_id || "");
+      setAutoPostEnabled((settings as any).auto_post_enabled === true);
     }
   }, [settings]);
 
