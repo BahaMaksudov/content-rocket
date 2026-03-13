@@ -32,8 +32,10 @@ export default function OAuthSocialCallback() {
       }
 
       try {
-        // Parse state to get platform and code_verifier
-        const stateData = JSON.parse(atob(state));
+        // Parse URL-safe base64 state to get platform and code_verifier
+        const normalizedState = state.replace(/-/g, "+").replace(/_/g, "/");
+        const paddedState = normalizedState + "=".repeat((4 - (normalizedState.length % 4)) % 4);
+        const stateData = JSON.parse(atob(paddedState));
         const { platform, code_verifier } = stateData;
         const redirectUri = `${window.location.origin}/oauth/social/callback`;
 

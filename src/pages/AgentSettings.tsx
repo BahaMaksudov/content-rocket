@@ -204,7 +204,7 @@ export default function AgentSettings() {
       }
 
       const redirectUri = `${window.location.origin}/oauth/social/callback`;
-      const state = btoa(JSON.stringify({ platform: "linkedin" }));
+      const state = encodeOAuthState({ platform: "linkedin" });
       const scopes = "openid profile w_member_social";
       const authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}&state=${state}`;
       window.location.href = authUrl;
