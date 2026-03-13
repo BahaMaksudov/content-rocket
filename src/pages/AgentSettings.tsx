@@ -234,6 +234,38 @@ export default function AgentSettings() {
     }
   }, [toast]);
 
+  const disconnectMutation = useMutation({
+    mutationFn: async (platform: "x" | "linkedin") => {
+      const updates: Record<string, null> =
+        platform === "x"
+          ? { x_refresh_token: null, x_username: null }
+          : { linkedin_access_token: null, linkedin_name: null, linkedin_expires_at: null };
+
+      const { error } = await supabase
+        .from("agent_settings")
+        .update(updates as any)
+        .eq("user_id", user!.id);
+      if (error) throw error;
+      return platform;
+    },
+    onSuccess: (platform) => {
+      queryClient.invalidateQueries({ queryKey: ["agent-settings"] });
+      toast({
+        title: `${platform === "x" ? "X (Twitter)" : "LinkedIn"} disconnected successfully.`,
+      });
+    },
+    onError: (err: Error) => {
+      toast({ variant: "destructive", title: "Error", description: err.message });
+    },
+  });
+
+  const handleDisconnectConfirm = () => {
+    if (disconnectTarget) {
+      disconnectMutation.mutate(disconnectTarget);
+    }
+    setDisconnectTarget(null);
+  };
+
   const togglePlatform = (id: string) => {
     setPlatforms((prev) =>
       prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
