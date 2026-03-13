@@ -361,8 +361,13 @@ function HeroSection() {
             </Button>
           </motion.div>
 
+          {/* Mini Repurposer */}
+          <motion.div variants={fadeInUp}>
+            <MiniRepurposer />
+          </motion.div>
+
           {/* Trust caption */}
-          <motion.p variants={fadeInUp} className="text-sm text-muted-foreground mb-6">
+          <motion.p variants={fadeInUp} className="text-sm text-muted-foreground mb-6 mt-6">
             No credit card required • Free forever plan available
           </motion.p>
 
