@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useCredits } from "@/hooks/use-credits";
+import { useStreak } from "@/hooks/use-streak";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ import { AgentScriptDrawer } from "@/components/dashboard/AgentScriptDrawer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { StreakBadge } from "@/components/dashboard/StreakBadge";
 import { 
   Sparkles, Rocket, Check, Eye, Loader2, Target, CalendarDays, Zap, 
   ThumbsUp, ThumbsDown, ArrowLeft, History, Archive, ChevronRight, Lock
@@ -64,6 +66,7 @@ export default function AgentDashboard() {
   const { user } = useAuth();
   const { isPaid, openCheckout } = useSubscription();
   const { useCredit, getLatestCredits, refreshCredits, canUseCredits, creditsAvailable } = useCredits();
+  const { streak, recordApproval } = useStreak();
   const navigate = useNavigate();
   const [goal, setGoal] = useState<AgentGoal | null>(null);
   const [plans, setPlans] = useState<ContentPlan[]>([]);
@@ -477,6 +480,12 @@ export default function AgentDashboard() {
       if (error) throw error;
       setFeedback((prev) => ({ ...prev, [planId]: { rating, comment } }));
       setDownvoteOpen(null);
+      
+      // Record streak on approval (thumbs up)
+      if (rating === "up") {
+        await recordApproval();
+      }
+      
       toast.success(rating === "up" ? "Thanks for the feedback!" : "Feedback saved");
     } catch {
       toast.error("Failed to save feedback");
@@ -745,6 +754,7 @@ export default function AgentDashboard() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              {streak && <StreakBadge currentStreak={streak.current_streak} />}
               {(pendingCount > 0 || batchGenerating) && (
                 <Button
                   onClick={handleBatchGenerate}

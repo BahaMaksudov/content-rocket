@@ -23,6 +23,7 @@ Disallow: /embed/
 Allow: /
 Allow: /blog/
 Allow: /tools/
+Allow: /for/
 Allow: /contact
 Allow: /privacy
 Allow: /terms

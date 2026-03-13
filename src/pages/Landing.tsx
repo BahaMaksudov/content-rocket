@@ -1,5 +1,7 @@
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect, forwardRef, lazy } from "react";
+import { MiniRepurposer } from "@/components/landing/MiniRepurposer";
+import { ALL_NICHES, NICHE_DATA } from "@/pages/NicheLanding";
 import { motion } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -359,8 +361,13 @@ function HeroSection() {
             </Button>
           </motion.div>
 
+          {/* Mini Repurposer */}
+          <motion.div variants={fadeInUp}>
+            <MiniRepurposer />
+          </motion.div>
+
           {/* Trust caption */}
-          <motion.p variants={fadeInUp} className="text-sm text-muted-foreground mb-6">
+          <motion.p variants={fadeInUp} className="text-sm text-muted-foreground mb-6 mt-6">
             No credit card required • Free forever plan available
           </motion.p>
 
@@ -1242,7 +1249,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
     <footer ref={ref} className="py-12 border-t border-border bg-card/30">
       <div className="container mx-auto px-4">
         {/* Main footer grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-8 mb-10">
           {/* Brand & Company Info */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
@@ -1311,6 +1318,18 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
               <Link to="/tools/youtube-to-linkedin" className="hover:text-foreground transition-colors">
                 YouTube to LinkedIn
               </Link>
+            </div>
+          </div>
+
+          {/* Niche Pages */}
+          <div className="space-y-4 sm:col-span-2 lg:col-span-1">
+            <h4 className="font-semibold text-sm">AI Scripts by Niche</h4>
+            <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+              {ALL_NICHES.map((n) => (
+                <Link key={n} to={`/for/${n}`} className="hover:text-foreground transition-colors capitalize">
+                  {n.replace(/-/g, " ")}
+                </Link>
+              ))}
             </div>
           </div>
 

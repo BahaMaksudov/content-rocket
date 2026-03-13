@@ -37,6 +37,7 @@ import AgentSettings from "./pages/AgentSettings";
 import AgentQueue from "./pages/AgentQueue";
 import Blog from "./pages/Blog";
 import HowToRepurposeYouTubeVideos from "./pages/blog/HowToRepurposeYouTubeVideos";
+import NicheLanding from "./pages/NicheLanding";
 
 const queryClient = new QueryClient();
 
@@ -162,6 +163,7 @@ const App = () => (
             <Route path="/tools/youtube-to-linkedin" element={<YouTubeToLinkedIn />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/how-to-repurpose-youtube-videos" element={<HowToRepurposeYouTubeVideos />} />
+            <Route path="/for/:niche" element={<NicheLanding />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <CookieConsentBanner />
