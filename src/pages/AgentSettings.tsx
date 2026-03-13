@@ -388,7 +388,12 @@ export default function AgentSettings() {
                       )}
                     </div>
                     {linkedinConnected && linkedinName ? (
-                      <p className="text-sm text-muted-foreground truncate">{linkedinName}</p>
+                      <div>
+                        <p className="text-sm text-muted-foreground truncate">{linkedinName}</p>
+                        {autoPilotEnabled && (
+                          <p className="text-[11px] text-amber-500 mt-0.5">Active: High-confidence posts will be sent automatically.</p>
+                        )}
+                      </div>
                     ) : (
                       <p className="text-xs text-muted-foreground">Share posts to your LinkedIn profile</p>
                     )}
