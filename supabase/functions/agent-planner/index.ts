@@ -77,7 +77,7 @@ serve(async (req) => {
       ? `\n\nIMPORTANT — TOPIC MEMORY: The user has already covered these topics. Do NOT repeat or closely duplicate any of them. Provide fresh angles and entirely new ideas:\n${previousTopics.map((t, i) => `${i + 1}. ${t}`).join("\n")}`
       : "";
 
-    // --- 2b. Fetch positive feedback for preference learning ---
+    // --- 2b. Fetch positive feedback from content_feedback ---
     const { data: positiveFeedback } = await supabase
       .from("content_feedback")
       .select("comment, plan_id")
@@ -86,7 +86,6 @@ serve(async (req) => {
       .order("created_at", { ascending: false })
       .limit(10);
 
-    // Enrich feedback with the plan topics they liked
     let feedbackClause = "";
     if (positiveFeedback && positiveFeedback.length > 0) {
       const planIds = positiveFeedback.map((f: any) => f.plan_id);
@@ -108,6 +107,31 @@ serve(async (req) => {
       feedbackClause = `\n\nUSER PREFERENCE SIGNAL — The user gave positive feedback (👍) to these previous content pieces. Analyze the patterns (hook styles, topic angles, formats) and strongly prioritize similar approaches in the new plan:\n${feedbackSummaries}`;
     }
 
+    // --- 2c. Fetch campaign feedback (Thumbs Up / Thumbs Down from agent_campaigns) ---
+    const { data: approvedCampaigns } = await supabase
+      .from("agent_campaigns")
+      .select("video_title, linkedin_post")
+      .eq("user_id", userId)
+      .eq("status", "approved")
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    const { data: rejectedCampaigns } = await supabase
+      .from("agent_campaigns")
+      .select("video_title, linkedin_post")
+      .eq("user_id", userId)
+      .eq("status", "rejected")
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    let campaignFeedbackClause = "";
+    if ((approvedCampaigns && approvedCampaigns.length > 0) || (rejectedCampaigns && rejectedCampaigns.length > 0)) {
+      const likedSummaries = (approvedCampaigns || []).map((c: any) => `- LIKED: "${c.video_title}" — intro: "${(c.linkedin_post || "").slice(0, 100)}"`).join("\n");
+      const dislikedSummaries = (rejectedCampaigns || []).map((c: any) => `- DISLIKED: "${c.video_title}" — intro: "${(c.linkedin_post || "").slice(0, 100)}"`).join("\n");
+
+      campaignFeedbackClause = `\n\nCAMPAIGN HISTORY ANALYSIS — The user has approved and rejected agent-generated campaigns. Analyze these patterns to understand their preferences:\n${likedSummaries ? `\nApproved campaigns:\n${likedSummaries}` : ""}${dislikedSummaries ? `\nRejected campaigns (AVOID similar topics/angles):\n${dislikedSummaries}` : ""}`;
+    }
+
     // --- 3. Call AI to generate content plan ---
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -117,7 +141,7 @@ serve(async (req) => {
       });
     }
 
-    const systemPrompt = `You are a Viral Content Strategist. Create a ${videos_per_week}-day content calendar for a ${niche} creator on ${platform}. Focus on high-retention topics. The tone should be ${tone}.${memoryClause}${feedbackClause}`;
+    const systemPrompt = `You are a Viral Content Strategist. Create a ${videos_per_week}-day content calendar for a ${niche} creator on ${platform}. Focus on high-retention topics. The tone should be ${tone}.${memoryClause}${feedbackClause}${campaignFeedbackClause}`;
 
     const userPrompt = `Generate exactly ${videos_per_week} viral video topics. Each topic must be specific, actionable, and optimized for ${platform}'s algorithm.${previousTopics.length > 0 ? " Confirm you have reviewed the previous topic history and ensure zero overlap." : ""}`;
 
