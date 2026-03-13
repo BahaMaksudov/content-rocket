@@ -437,16 +437,11 @@ export default function AgentSettings() {
             <div className="flex items-center justify-between">
               <div>
                 <Label htmlFor="auto-pilot" className="cursor-pointer">Auto-Pilot Mode</Label>
-                <p className="text-xs text-muted-foreground mt-0.5">Automatically publish content that scores above your confidence threshold.</p>
+                <p className="text-xs text-muted-foreground mt-0.5 max-w-sm">
+                  When enabled, the agent will automatically publish content that scores above the {confidenceThreshold}% confidence threshold directly to your connected social accounts.
+                </p>
               </div>
               <Switch id="auto-pilot" checked={autoPilotEnabled} onCheckedChange={setAutoPilotEnabled} />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="auto-post" className="cursor-pointer">Enable Auto-Posting</Label>
-                <p className="text-xs text-muted-foreground mt-0.5">Allow the agent to post directly to connected social accounts without manual approval.</p>
-              </div>
-              <Switch id="auto-post" checked={autoPostEnabled} onCheckedChange={setAutoPostEnabled} />
             </div>
             {autoPilotEnabled && (
               <div className="space-y-3">
