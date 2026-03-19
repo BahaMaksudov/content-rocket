@@ -306,6 +306,9 @@ export default function AgentQueue() {
             xConnected={xConnected}
             linkedinConnected={linkedinConnected}
             onReconnect={() => navigate("/agent/settings")}
+            isPublishing={publishingCampaignId === campaign.id}
+            publishingPlatform={publishingCampaignId === campaign.id ? publishingPlatform : null}
+            publishingThreadInfo={publishingCampaignId === campaign.id ? publishingThreadInfo : null}
           />
         ))}
 
