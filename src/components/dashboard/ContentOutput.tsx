@@ -108,6 +108,75 @@ function EditableContent({
   );
 }
 
+// Strip internal labels like "Hook 1:", "Hook 2:", "1.", "2)" etc.
+function cleanHookLabel(text: string): string {
+  return text
+    .replace(/^(Hook\s*\d+\s*[:.\-–—]\s*)/i, "")
+    .replace(/^(\d+[.):\-–—]\s*)/i, "")
+    .trim();
+}
+
+function PublishAsThreadButton({ hooks, youtubeUrl }: { hooks: string[]; youtubeUrl?: string | null }) {
+  const { toast } = useToast();
+  const [isPublishing, setIsPublishing] = useState(false);
+
+  const handlePublishAsThread = async () => {
+    if (hooks.length < 2) return;
+
+    // Build thread: Hook 1 = lead, Hooks 2-4 = body, Hook 5 + link = CTA
+    const thread: string[] = [];
+    
+    // Lead tweet (first hook, cleaned)
+    thread.push(cleanHookLabel(hooks[0]));
+    
+    // Body tweets (hooks 2-4, cleaned)
+    for (let i = 1; i < hooks.length - 1; i++) {
+      thread.push(cleanHookLabel(hooks[i]));
+    }
+    
+    // CTA tweet (last hook + YouTube link)
+    const lastHook = cleanHookLabel(hooks[hooks.length - 1]);
+    const ctaTweet = youtubeUrl
+      ? `${lastHook}\n\n🎬 Watch the full video: ${youtubeUrl}`
+      : lastHook;
+    thread.push(ctaTweet);
+
+    // Copy thread to clipboard
+    const threadText = thread.map((t, i) => `${i + 1}/${thread.length}\n${t}`).join("\n\n---\n\n");
+    await navigator.clipboard.writeText(threadText);
+
+    // Open Twitter with the first tweet
+    const params = new URLSearchParams();
+    params.set("text", thread[0]);
+    const url = `https://twitter.com/intent/tweet?${params.toString()}`;
+
+    toast({
+      title: `Thread copied (${thread.length} tweets)`,
+      description: "Full thread copied to clipboard. First tweet opened in X.",
+    });
+
+    window.open(url, "_blank", "width=550,height=420");
+  };
+
+  if (hooks.length < 2) return null;
+
+  return (
+    <div className="pt-2">
+      <Button
+        onClick={handlePublishAsThread}
+        disabled={isPublishing}
+        className="w-full gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white"
+      >
+        <Send className="h-4 w-4" />
+        Publish as Thread ({hooks.length} tweets)
+      </Button>
+      <p className="text-xs text-muted-foreground text-center mt-2">
+        Hook 1 → Lead tweet · Hooks 2–{hooks.length - 1} → Body · Hook {hooks.length} + YouTube link → CTA
+      </p>
+    </div>
+  );
+}
+
 export function ContentOutput({ content, isGenerating, onUpdateContent, targetLanguage, youtubeUrl, activeTab: externalActiveTab, onActiveTabChange }: ContentOutputProps) {
   const { toast } = useToast();
   const [internalActiveTab, setInternalActiveTab] = useState("twitter");
