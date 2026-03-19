@@ -163,10 +163,10 @@ function PublishAsThreadButton({ hooks, youtubeUrl }: { hooks: string[]; youtube
         .from("agent_campaigns")
         .insert([{
           user_id: user.id,
-          x_thread: thread as unknown as import("@/integrations/supabase/types").Json,
+          x_thread: thread as unknown as null,
           status: "publishing",
           video_title: "Thread from Dashboard",
-        })
+        }])
         .select("id")
         .single();
 
