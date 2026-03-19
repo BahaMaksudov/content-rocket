@@ -207,7 +207,7 @@ Available customer testimonials:
 ${quotes}
 
 MANDATORY RULES (failure to follow = invalid output):
-- For TWITTER HOOKS: At least 1 of the 5 hooks MUST reference or quote a testimonial (e.g., "One user said it best: '...'"). Keep within 280 chars.
+- For X VALUE THREAD: At least 1 of the 5 thread tweets MUST reference or quote a testimonial (e.g., "One user said it best: '...'"). Keep within 280 chars.
 - For LINKEDIN POST: You MUST weave at least 1-2 testimonial quotes naturally into the post body. Add a "What our users say" section if needed. Attribute each quote with exact name and title.
 - For BLOG POST: You MUST integrate at least 2 of these exact quotes as supporting evidence. Use formats like "As [Name] puts it: '...'" or dedicated testimonial callout sections.
 - For TIKTOK SCRIPTS: At least 1 script MUST reference a customer success point or quote.
@@ -286,12 +286,18 @@ TARGET AUDIENCE: ${audience || "general"}
 
 Generate the following content based STRICTLY on the transcript:
 
-1. **FIVE VIRAL X (TWITTER) HOOKS** - Craft opening lines using actual insights from the transcript:
-   - Be under 280 characters
-   - Use power words, curiosity gaps, or contrarian takes FROM THE TRANSCRIPT
-   - Must reflect the actual topic discussed
-   - Do NOT prefix hooks with labels like "Hook 1:", "Hook 2:", etc. — write them as clean, natural standalone tweets
-   - IMPORTANT: After generating all 5 hooks, score each one for viral potential based on: curiosity gap strength, bold claim power, emotional trigger, and shareability. Return the 0-based index of the strongest hook as "primaryHookIndex"
+1. **5-PART VALUE-FIRST X (TWITTER) THREAD** - Generate a cohesive thread designed to maximize reach and drive YouTube traffic:
+   - **Tweet 1 (The Scroll-Stopper):** A high-tension hook that identifies a problem or a shocking insight from the video. NO link here. Use power words, curiosity gaps, or contrarian takes FROM THE TRANSCRIPT.
+   - **Tweets 2-4 (The Value Nuggets):** Three distinct, standalone insights or 'lessons' from the video transcript. Each tweet MUST provide genuine value even if the reader never clicks the link. Each should be a complete thought.
+   - **Tweet 5 (The Bridge & CTA):** A summary sentence followed by a clear Call to Action. Format: "[Summary insight]. I break down the full [Topic] strategy in my latest video. Watch the deep dive here: [YOUTUBE_LINK]" — the placeholder [YOUTUBE_LINK] will be replaced with the actual URL automatically.
+   - RULES FOR ALL TWEETS:
+     * Each tweet MUST be under 280 characters
+     * Do NOT prefix tweets with labels like "Hook 1:", "Part 1/5:", "Tweet 1:", etc. — write them as clean, natural standalone tweets
+     * Do NOT include hashtags in tweets 1-4
+     * Add 1-2 relevant hashtags ONLY at the very end of Tweet 5 (before the link)
+     * Use professional spacing with line breaks where appropriate
+     * The thread should read as a cohesive narrative, not disconnected thoughts
+   - IMPORTANT: After generating all 5 tweets, score Tweet 1 (the scroll-stopper) for viral potential based on: curiosity gap strength, bold claim power, emotional trigger, and shareability. Return 0 as "primaryHookIndex" (the scroll-stopper is always the lead)
 
 2. **ONE PROFESSIONAL LINKEDIN POST** - Create a post using the Problem-Agitation-Solution framework:
    - Hook: Start with a bold statement or question FROM THE TRANSCRIPT (1-2 lines)
@@ -336,7 +342,7 @@ Generate the following content based STRICTLY on the transcript:
 
 CRITICAL: Return ONLY a valid JSON object with NO markdown code fences. The response must be parseable JSON.
 {
-  "twitterHooks": ["hook1", "hook2", "hook3", "hook4", "hook5"],
+  "twitterHooks": ["scroll-stopper tweet", "value nugget 1", "value nugget 2", "value nugget 3", "bridge and CTA tweet with [YOUTUBE_LINK]"],
   "primaryHookIndex": 0,
   "linkedinPost": "full linkedin post text with line breaks",
   "shortFormScripts": [
@@ -439,6 +445,13 @@ Extract the most compelling insights, stories, and actionable advice FROM THIS T
       if (!generatedContent.twitterHooks || !generatedContent.linkedinPost || 
           !generatedContent.shortFormScripts || !generatedContent.blogPost) {
         throw new Error("Missing required fields in generated content");
+      }
+
+      // Replace [YOUTUBE_LINK] placeholder in the last tweet with actual URL
+      if (youtubeUrl && generatedContent.twitterHooks?.length > 0) {
+        const lastIdx = generatedContent.twitterHooks.length - 1;
+        generatedContent.twitterHooks[lastIdx] = generatedContent.twitterHooks[lastIdx]
+          .replace(/\[YOUTUBE_LINK\]/gi, youtubeUrl);
       }
 
       console.log("Successfully generated content");
