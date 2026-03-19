@@ -342,7 +342,7 @@ Generate the following content based STRICTLY on the transcript:
 
 CRITICAL: Return ONLY a valid JSON object with NO markdown code fences. The response must be parseable JSON.
 {
-  "twitterHooks": ["hook1", "hook2", "hook3", "hook4", "hook5"],
+  "twitterHooks": ["scroll-stopper tweet", "value nugget 1", "value nugget 2", "value nugget 3", "bridge and CTA tweet with [YOUTUBE_LINK]"],
   "primaryHookIndex": 0,
   "linkedinPost": "full linkedin post text with line breaks",
   "shortFormScripts": [
