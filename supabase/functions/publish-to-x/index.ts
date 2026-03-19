@@ -103,9 +103,16 @@ Deno.serve(async (req) => {
     // Support both single string and array of strings
     let tweets: string[];
     if (Array.isArray(campaign.x_thread)) {
-      tweets = campaign.x_thread.map((t: unknown) => String(t));
+      tweets = campaign.x_thread.map((t: unknown) => {
+        let text = String(t);
+        // Strip internal labels like "Hook 1:", "1.", "2)" etc.
+        text = text.replace(/^(Hook\s*\d+\s*[:.\-–—]\s*)/i, "").replace(/^(\d+[.):\-–—]\s*)/i, "").trim();
+        return text;
+      });
     } else if (typeof campaign.x_thread === "string") {
-      tweets = [campaign.x_thread];
+      let text = campaign.x_thread;
+      text = text.replace(/^(Hook\s*\d+\s*[:.\-–—]\s*)/i, "").replace(/^(\d+[.):\-–—]\s*)/i, "").trim();
+      tweets = [text];
     } else {
       tweets = [];
     }

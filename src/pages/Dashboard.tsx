@@ -63,6 +63,7 @@ function savePersistedState(state: PersistedDashboardState) {
 
 export interface GeneratedContent {
   twitterHooks: string[];
+  primaryHookIndex?: number;
   linkedinPost: string;
   shortFormScripts: Array<{ title: string; script: string; duration: string }>;
   blogPost: string;

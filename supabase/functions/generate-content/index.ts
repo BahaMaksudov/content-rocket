@@ -290,6 +290,8 @@ Generate the following content based STRICTLY on the transcript:
    - Be under 280 characters
    - Use power words, curiosity gaps, or contrarian takes FROM THE TRANSCRIPT
    - Must reflect the actual topic discussed
+   - Do NOT prefix hooks with labels like "Hook 1:", "Hook 2:", etc. — write them as clean, natural standalone tweets
+   - IMPORTANT: After generating all 5 hooks, score each one for viral potential based on: curiosity gap strength, bold claim power, emotional trigger, and shareability. Return the 0-based index of the strongest hook as "primaryHookIndex"
 
 2. **ONE PROFESSIONAL LINKEDIN POST** - Create a post using the Problem-Agitation-Solution framework:
    - Hook: Start with a bold statement or question FROM THE TRANSCRIPT (1-2 lines)
@@ -335,6 +337,7 @@ Generate the following content based STRICTLY on the transcript:
 CRITICAL: Return ONLY a valid JSON object with NO markdown code fences. The response must be parseable JSON.
 {
   "twitterHooks": ["hook1", "hook2", "hook3", "hook4", "hook5"],
+  "primaryHookIndex": 0,
   "linkedinPost": "full linkedin post text with line breaks",
   "shortFormScripts": [
     {"title": "Script 1 Title", "script": "full timestamped script with visual cues", "duration": "45-60s"},
