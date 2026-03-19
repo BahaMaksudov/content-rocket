@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -118,44 +120,97 @@ function cleanHookLabel(text: string): string {
 
 function PublishAsThreadButton({ hooks, youtubeUrl }: { hooks: string[]; youtubeUrl?: string | null }) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isPublishing, setIsPublishing] = useState(false);
+  const [progress, setProgress] = useState<string | null>(null);
 
   const handlePublishAsThread = async () => {
-    if (hooks.length < 2) return;
+    if (hooks.length < 2 || !user) return;
 
-    // Build thread: Hook 1 = lead, Hooks 2-4 = body, Hook 5 + link = CTA
-    const thread: string[] = [];
-    
-    // Lead tweet (first hook, cleaned)
-    thread.push(cleanHookLabel(hooks[0]));
-    
-    // Body tweets (hooks 2-4, cleaned)
-    for (let i = 1; i < hooks.length - 1; i++) {
-      thread.push(cleanHookLabel(hooks[i]));
+    setIsPublishing(true);
+    setProgress("Preparing thread...");
+
+    try {
+      // Build the thread array with cleaned labels
+      const thread: string[] = [];
+      thread.push(cleanHookLabel(hooks[0]));
+      for (let i = 1; i < hooks.length - 1; i++) {
+        thread.push(cleanHookLabel(hooks[i]));
+      }
+      const lastHook = cleanHookLabel(hooks[hooks.length - 1]);
+      const ctaTweet = youtubeUrl && !lastHook.includes(youtubeUrl)
+        ? `${lastHook}\n\n🎬 ${youtubeUrl}`
+        : lastHook;
+      thread.push(ctaTweet);
+
+      // Validate character counts
+      const overLimit = thread.findIndex(t => t.length > 280);
+      if (overLimit !== -1) {
+        toast({
+          title: "Tweet too long",
+          description: `Tweet ${overLimit + 1} is ${thread[overLimit].length} characters (max 280).`,
+          variant: "destructive",
+        });
+        setIsPublishing(false);
+        setProgress(null);
+        return;
+      }
+
+      setProgress(`Posting 1/${thread.length}...`);
+
+      // Create a temporary campaign for the edge function
+      const { data: campaign, error: insertErr } = await supabase
+        .from("agent_campaigns")
+        .insert([{
+          user_id: user.id,
+          x_thread: thread as string[],
+          status: "publishing",
+          video_title: "Thread from Dashboard",
+        }])
+        .select("id")
+        .single();
+
+      if (insertErr || !campaign) {
+        throw new Error(insertErr?.message || "Failed to create campaign");
+      }
+
+      const { data, error } = await supabase.functions.invoke("publish-to-x", {
+        body: { campaign_id: campaign.id, user_id: user.id },
+      });
+
+      if (error || data?.error) {
+        const errMsg = data?.error || error?.message || "Publishing failed";
+        await supabase.from("agent_campaigns").delete().eq("id", campaign.id);
+
+        toast({
+          title: data?.reconnect ? "X Account Disconnected" : "Publishing failed",
+          description: data?.reconnect ? errMsg + " Go to Agent Settings to reconnect." : errMsg,
+          variant: "destructive",
+        });
+        setIsPublishing(false);
+        setProgress(null);
+        return;
+      }
+
+      const totalPosted = data?.total_tweets || thread.length;
+      setProgress(`Done! ${totalPosted} tweets posted ✓`);
+
+      toast({
+        title: "🎉 Thread published!",
+        description: `${totalPosted} tweets posted as a thread on X.`,
+      });
+
+      setTimeout(() => {
+        setProgress(null);
+        setIsPublishing(false);
+      }, 3000);
+
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      toast({ title: "Error", description: msg, variant: "destructive" });
+      setIsPublishing(false);
+      setProgress(null);
     }
-    
-    // CTA tweet (last hook + YouTube link)
-    const lastHook = cleanHookLabel(hooks[hooks.length - 1]);
-    const ctaTweet = youtubeUrl
-      ? `${lastHook}\n\n🎬 Watch the full video: ${youtubeUrl}`
-      : lastHook;
-    thread.push(ctaTweet);
-
-    // Copy thread to clipboard
-    const threadText = thread.map((t, i) => `${i + 1}/${thread.length}\n${t}`).join("\n\n---\n\n");
-    await navigator.clipboard.writeText(threadText);
-
-    // Open Twitter with the first tweet
-    const params = new URLSearchParams();
-    params.set("text", thread[0]);
-    const url = `https://twitter.com/intent/tweet?${params.toString()}`;
-
-    toast({
-      title: `Thread copied (${thread.length} tweets)`,
-      description: "Full thread copied to clipboard. First tweet opened in X.",
-    });
-
-    window.open(url, "_blank", "width=550,height=420");
   };
 
   if (hooks.length < 2) return null;
@@ -167,11 +222,20 @@ function PublishAsThreadButton({ hooks, youtubeUrl }: { hooks: string[]; youtube
         disabled={isPublishing}
         className="w-full gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white"
       >
-        <Send className="h-4 w-4" />
-        Publish as Thread ({hooks.length} tweets)
+        {isPublishing ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            {progress}
+          </>
+        ) : (
+          <>
+            <Send className="h-4 w-4" />
+            Publish as Thread ({hooks.length} tweets)
+          </>
+        )}
       </Button>
       <p className="text-xs text-muted-foreground text-center mt-2">
-        Hook 1 → Lead tweet · Hooks 2–{hooks.length - 1} → Body · Hook {hooks.length} + YouTube link → CTA
+        Posts directly to X as a sequential thread via your connected account
       </p>
     </div>
   );
