@@ -298,29 +298,51 @@ ${content.blogPost}
                 onImageDismissed={() => handleImageDismissed("twitter")}
               />
             </div>
-            {content.twitterHooks.map((hook, index) => (
-              <div
-                key={index}
-                className="p-4 rounded-lg bg-muted/50 border border-border group"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1">
-                    <Badge variant="secondary" className="mb-2">
-                      Hook {index + 1}
-                    </Badge>
-                    <EditableContent
-                      content={hook}
-                      onSave={(value) => {
-                        const updated = [...content.twitterHooks];
-                        updated[index] = value;
-                        onUpdateContent({ ...content, twitterHooks: updated });
-                      }}
-                    />
+            {content.twitterHooks.map((hook, index) => {
+              const isPrimary = index === (content.primaryHookIndex ?? 0);
+              return (
+                <div
+                  key={index}
+                  className={`p-4 rounded-lg border group ${
+                    isPrimary
+                      ? "bg-primary/5 border-primary/30 ring-1 ring-primary/20"
+                      : "bg-muted/50 border-border"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant="secondary">
+                          Hook {index + 1}
+                        </Badge>
+                        {isPrimary && (
+                          <Badge className="bg-primary/20 text-primary border-primary/30 gap-1">
+                            <Zap className="h-3 w-3" />
+                            Primary Hook
+                          </Badge>
+                        )}
+                      </div>
+                      <EditableContent
+                        content={hook}
+                        onSave={(value) => {
+                          const updated = [...content.twitterHooks];
+                          updated[index] = value;
+                          onUpdateContent({ ...content, twitterHooks: updated });
+                        }}
+                      />
+                    </div>
+                    <CopyButton text={hook} contentType="twitter_hook" platform="twitter" />
                   </div>
-                  <CopyButton text={hook} contentType="twitter_hook" platform="twitter" />
                 </div>
-              </div>
-            ))}
+              );
+            })}
+
+            {/* Publish as Thread button */}
+            <PublishAsThreadButton
+              hooks={content.twitterHooks}
+              youtubeUrl={youtubeUrl}
+            />
+
             <SocialActionBar 
               content={content.twitterHooks.join("\n\n")} 
               platform="twitter" 
