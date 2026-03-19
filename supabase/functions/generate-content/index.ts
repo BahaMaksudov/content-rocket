@@ -112,7 +112,7 @@ serve(async (req) => {
   }
 
   try {
-    const { transcript, tone, audience, brandVoice, translateTo, videoTitle, userId } = await req.json();
+    const { transcript, tone, audience, brandVoice, translateTo, videoTitle, userId, youtubeUrl } = await req.json();
 
     if (!transcript) {
       return new Response(
