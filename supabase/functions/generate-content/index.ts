@@ -286,12 +286,18 @@ TARGET AUDIENCE: ${audience || "general"}
 
 Generate the following content based STRICTLY on the transcript:
 
-1. **FIVE VIRAL X (TWITTER) HOOKS** - Craft opening lines using actual insights from the transcript:
-   - Be under 280 characters
-   - Use power words, curiosity gaps, or contrarian takes FROM THE TRANSCRIPT
-   - Must reflect the actual topic discussed
-   - Do NOT prefix hooks with labels like "Hook 1:", "Hook 2:", etc. — write them as clean, natural standalone tweets
-   - IMPORTANT: After generating all 5 hooks, score each one for viral potential based on: curiosity gap strength, bold claim power, emotional trigger, and shareability. Return the 0-based index of the strongest hook as "primaryHookIndex"
+1. **5-PART VALUE-FIRST X (TWITTER) THREAD** - Generate a cohesive thread designed to maximize reach and drive YouTube traffic:
+   - **Tweet 1 (The Scroll-Stopper):** A high-tension hook that identifies a problem or a shocking insight from the video. NO link here. Use power words, curiosity gaps, or contrarian takes FROM THE TRANSCRIPT.
+   - **Tweets 2-4 (The Value Nuggets):** Three distinct, standalone insights or 'lessons' from the video transcript. Each tweet MUST provide genuine value even if the reader never clicks the link. Each should be a complete thought.
+   - **Tweet 5 (The Bridge & CTA):** A summary sentence followed by a clear Call to Action. Format: "[Summary insight]. I break down the full [Topic] strategy in my latest video. Watch the deep dive here: [YOUTUBE_LINK]" — the placeholder [YOUTUBE_LINK] will be replaced with the actual URL automatically.
+   - RULES FOR ALL TWEETS:
+     * Each tweet MUST be under 280 characters
+     * Do NOT prefix tweets with labels like "Hook 1:", "Part 1/5:", "Tweet 1:", etc. — write them as clean, natural standalone tweets
+     * Do NOT include hashtags in tweets 1-4
+     * Add 1-2 relevant hashtags ONLY at the very end of Tweet 5 (before the link)
+     * Use professional spacing with line breaks where appropriate
+     * The thread should read as a cohesive narrative, not disconnected thoughts
+   - IMPORTANT: After generating all 5 tweets, score Tweet 1 (the scroll-stopper) for viral potential based on: curiosity gap strength, bold claim power, emotional trigger, and shareability. Return 0 as "primaryHookIndex" (the scroll-stopper is always the lead)
 
 2. **ONE PROFESSIONAL LINKEDIN POST** - Create a post using the Problem-Agitation-Solution framework:
    - Hook: Start with a bold statement or question FROM THE TRANSCRIPT (1-2 lines)
