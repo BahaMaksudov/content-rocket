@@ -163,7 +163,7 @@ function PublishAsThreadButton({ hooks, youtubeUrl }: { hooks: string[]; youtube
         .from("agent_campaigns")
         .insert([{
           user_id: user.id,
-          x_thread: thread as unknown as null,
+          x_thread: thread as string[],
           status: "publishing",
           video_title: "Thread from Dashboard",
         }])
