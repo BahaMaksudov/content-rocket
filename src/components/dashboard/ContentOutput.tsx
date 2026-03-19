@@ -303,7 +303,7 @@ ${content.blogPost}
                     <span className="hidden sm:inline">𝕏 Value Thread</span>
                   </TabsTrigger>
                 </TooltipTrigger>
-                <TooltipContent>X Thread</TooltipContent>
+                <TooltipContent>𝕏 Value Thread</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
