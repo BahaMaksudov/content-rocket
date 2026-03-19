@@ -32,6 +32,9 @@ export default function AgentQueue() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editThread, setEditThread] = useState<string[]>([]);
   const [editLinkedin, setEditLinkedin] = useState("");
+  const [publishingCampaignId, setPublishingCampaignId] = useState<string | null>(null);
+  const [publishingPlatform, setPublishingPlatform] = useState<string | null>(null);
+  const [publishingThreadInfo, setPublishingThreadInfo] = useState<{ total: number } | null>(null);
 
   const { data: campaigns, isLoading } = useQuery({
     queryKey: ["agent-campaigns", user?.id],
