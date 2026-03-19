@@ -552,9 +552,9 @@ function CampaignCard({
             </>
           ) : (
             <>
-              <Button size="sm" onClick={onApprove} disabled={isPending} className="flex-1 sm:flex-none bg-primary hover:bg-primary/90 text-primary-foreground">
-                {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}
-                {approveLabel}
+              <Button size="sm" onClick={onApprove} disabled={isPending || isPublishing} className="flex-1 sm:flex-none bg-primary hover:bg-primary/90 text-primary-foreground">
+                {isPending || isPublishing ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}
+                {getPublishButtonLabel()}
               </Button>
               <Button size="sm" variant="outline" onClick={onEdit} className="flex-1 sm:flex-none">
                 <Pencil className="h-4 w-4 mr-1" />
