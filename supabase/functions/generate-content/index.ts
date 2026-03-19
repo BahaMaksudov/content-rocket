@@ -207,7 +207,7 @@ Available customer testimonials:
 ${quotes}
 
 MANDATORY RULES (failure to follow = invalid output):
-- For TWITTER HOOKS: At least 1 of the 5 hooks MUST reference or quote a testimonial (e.g., "One user said it best: '...'"). Keep within 280 chars.
+- For X VALUE THREAD: At least 1 of the 5 thread tweets MUST reference or quote a testimonial (e.g., "One user said it best: '...'"). Keep within 280 chars.
 - For LINKEDIN POST: You MUST weave at least 1-2 testimonial quotes naturally into the post body. Add a "What our users say" section if needed. Attribute each quote with exact name and title.
 - For BLOG POST: You MUST integrate at least 2 of these exact quotes as supporting evidence. Use formats like "As [Name] puts it: '...'" or dedicated testimonial callout sections.
 - For TIKTOK SCRIPTS: At least 1 script MUST reference a customer success point or quote.
