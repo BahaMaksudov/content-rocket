@@ -300,7 +300,7 @@ ${content.blogPost}
                     }`}
                   >
                     <Twitter className="h-4 w-4" />
-                    <span className="hidden sm:inline">X Hooks</span>
+                    <span className="hidden sm:inline">𝕏 Value Thread</span>
                   </TabsTrigger>
                 </TooltipTrigger>
                 <TooltipContent>X Thread</TooltipContent>
