@@ -397,6 +397,9 @@ function CampaignCard({
   xConnected,
   linkedinConnected,
   onReconnect,
+  isPublishing,
+  publishingPlatform,
+  publishingThreadInfo,
 }: {
   campaign: Campaign;
   isEditing: boolean;
@@ -413,6 +416,9 @@ function CampaignCard({
   xConnected: boolean;
   linkedinConnected: boolean;
   onReconnect: () => void;
+  isPublishing: boolean;
+  publishingPlatform: string | null;
+  publishingThreadInfo: { total: number } | null;
 }) {
   const thread = isEditing ? editThread : (Array.isArray(campaign.x_thread) ? campaign.x_thread : []);
   const linkedin = isEditing ? editLinkedin : (campaign.linkedin_post || "");
