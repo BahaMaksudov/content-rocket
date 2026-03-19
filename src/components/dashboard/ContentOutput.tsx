@@ -382,7 +382,7 @@ ${content.blogPost}
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <Badge variant="secondary">
-                          Hook {index + 1}
+                          {index === 0 ? "🎯 Scroll-Stopper" : index <= 3 ? `💡 Value Nugget ${index}` : "🔗 Bridge & CTA"}
                         </Badge>
                         {isPrimary && (
                           <Badge className="bg-primary/20 text-primary border-primary/30 gap-1">

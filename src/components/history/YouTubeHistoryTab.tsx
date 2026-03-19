@@ -150,7 +150,7 @@ export function YouTubeHistoryTab({ generations, isLoading, refetch }: YouTubeHi
                     <TooltipTrigger asChild>
                       <TabsTrigger value="twitter" className={`rounded-lg transition-all duration-200 ${historyTab === "twitter" ? "bg-cyan-500 text-slate-950 shadow-[0_0_15px_rgba(6,182,212,0.4)]" : "bg-slate-800/50 text-slate-400 hover:text-slate-200"}`}><Twitter className="h-4 w-4" /></TabsTrigger>
                     </TooltipTrigger>
-                    <TooltipContent>X Thread</TooltipContent>
+                    <TooltipContent>𝕏 Value Thread</TooltipContent>
                   </Tooltip>
                   <Tooltip>
                     <TooltipTrigger asChild>
