@@ -426,7 +426,17 @@ function CampaignCard({
   const publishedTo = Array.isArray((campaign as any).published_to) ? (campaign as any).published_to : [];
   const hasPublishErrors = publishedTo.some((e: any) => e.status !== "success");
 
-  const approveLabel = xConnected || linkedinConnected ? "Approve & Publish" : "Approve";
+  const getPublishButtonLabel = () => {
+    if (isPublishing) {
+      if (publishingPlatform === "x" && publishingThreadInfo) {
+        return `Publishing thread (${publishingThreadInfo.total} tweets) to 𝕏…`;
+      }
+      if (publishingPlatform === "x") return "Publishing to 𝕏…";
+      if (publishingPlatform === "linkedin") return "Publishing to LinkedIn…";
+      return "Publishing…";
+    }
+    return xConnected || linkedinConnected ? "Approve & Publish" : "Approve";
+  };
 
   return (
     <Card className="border-primary/20">
