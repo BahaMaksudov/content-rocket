@@ -166,8 +166,9 @@ export default function AgentQueue() {
     if (xConnected) platformsToPublish.push("x");
     if (linkedinConnected) platformsToPublish.push("linkedin");
 
+    const threadCount = Array.isArray(campaign.x_thread) ? campaign.x_thread.length : 1;
+
     if (platformsToPublish.length === 0) {
-      // No social connections - just approve
       updateMutation.mutate(
         { id: campaign.id, status: "approved" },
         {
@@ -187,7 +188,7 @@ export default function AgentQueue() {
       { id: campaign.id, status: "publishing" },
       {
         onSuccess: () => {
-          publishMutation.mutate({ campaignId: campaign.id, platforms: platformsToPublish });
+          publishMutation.mutate({ campaignId: campaign.id, platforms: platformsToPublish, threadCount });
         },
       }
     );
