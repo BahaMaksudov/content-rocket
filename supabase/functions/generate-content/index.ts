@@ -447,6 +447,13 @@ Extract the most compelling insights, stories, and actionable advice FROM THIS T
         throw new Error("Missing required fields in generated content");
       }
 
+      // Replace [YOUTUBE_LINK] placeholder in the last tweet with actual URL
+      if (youtubeUrl && generatedContent.twitterHooks?.length > 0) {
+        const lastIdx = generatedContent.twitterHooks.length - 1;
+        generatedContent.twitterHooks[lastIdx] = generatedContent.twitterHooks[lastIdx]
+          .replace(/\[YOUTUBE_LINK\]/gi, youtubeUrl);
+      }
+
       console.log("Successfully generated content");
 
       // If translation is requested, translate the content
