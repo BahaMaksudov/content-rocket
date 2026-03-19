@@ -100,13 +100,54 @@ Deno.serve(async (req) => {
       );
     }
 
-    const tweets = Array.isArray(campaign.x_thread) ? campaign.x_thread : [];
+    // Support both single string and array of strings
+    let tweets: string[];
+    if (Array.isArray(campaign.x_thread)) {
+      tweets = campaign.x_thread.map((t: unknown) => String(t));
+    } else if (typeof campaign.x_thread === "string") {
+      tweets = [campaign.x_thread];
+    } else {
+      tweets = [];
+    }
+
+    const totalTweets = tweets.length;
     const publishedTweetIds: string[] = [];
     let lastTweetId: string | null = null;
 
-    // Post thread
-    for (const tweet of tweets) {
-      const body: Record<string, unknown> = { text: String(tweet) };
+    // Post thread sequentially, chaining replies
+    for (let idx = 0; idx < tweets.length; idx++) {
+      const tweet = tweets[idx];
+
+      // Validate character count before posting
+      if (tweet.length > 280) {
+        const publishedTo = Array.isArray(campaign.published_to) ? campaign.published_to : [];
+        publishedTo.push({
+          platform: "x",
+          status: "partial_failure",
+          error: `Tweet ${idx + 1}/${totalTweets} exceeds 280 characters (${tweet.length})`,
+          failed_at_index: idx,
+          total_tweets: totalTweets,
+          tweet_ids: publishedTweetIds,
+          attempted_at: new Date().toISOString(),
+        });
+        await supabase
+          .from("agent_campaigns")
+          .update({ published_to: publishedTo })
+          .eq("id", campaign_id);
+
+        return new Response(
+          JSON.stringify({
+            error: `Tweet ${idx + 1}/${totalTweets} exceeds 280 characters (${tweet.length} chars)`,
+            failed_at_index: idx,
+            total_tweets: totalTweets,
+            published_count: publishedTweetIds.length,
+            partial: true,
+          }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const body: Record<string, unknown> = { text: tweet };
       if (lastTweetId) {
         body.reply = { in_reply_to_tweet_id: lastTweetId };
       }
@@ -123,13 +164,14 @@ Deno.serve(async (req) => {
       const postData = await postRes.json();
 
       if (!postRes.ok) {
-        console.error("X post failed:", postData);
-        // Log partial publish
+        console.error(`X post failed at tweet ${idx + 1}/${totalTweets}:`, postData);
         const publishedTo = Array.isArray(campaign.published_to) ? campaign.published_to : [];
         publishedTo.push({
           platform: "x",
           status: "partial_failure",
-          error: postData.detail || "Post failed",
+          error: postData.detail || postData.title || "Post failed",
+          failed_at_index: idx,
+          total_tweets: totalTweets,
           tweet_ids: publishedTweetIds,
           attempted_at: new Date().toISOString(),
         });
@@ -139,7 +181,13 @@ Deno.serve(async (req) => {
           .eq("id", campaign_id);
 
         return new Response(
-          JSON.stringify({ error: `Failed to post tweet ${publishedTweetIds.length + 1}: ${postData.detail || "Unknown error"}`, partial: true }),
+          JSON.stringify({
+            error: `Failed at tweet ${idx + 1}/${totalTweets}: ${postData.detail || postData.title || "Unknown error"}`,
+            failed_at_index: idx,
+            total_tweets: totalTweets,
+            published_count: publishedTweetIds.length,
+            partial: true,
+          }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
@@ -154,6 +202,8 @@ Deno.serve(async (req) => {
       platform: "x",
       status: "success",
       tweet_ids: publishedTweetIds,
+      total_tweets: totalTweets,
+      is_thread: totalTweets > 1,
       published_at: new Date().toISOString(),
     });
     await supabase
@@ -162,7 +212,7 @@ Deno.serve(async (req) => {
       .eq("id", campaign_id);
 
     return new Response(
-      JSON.stringify({ success: true, tweet_ids: publishedTweetIds }),
+      JSON.stringify({ success: true, tweet_ids: publishedTweetIds, total_tweets: totalTweets, is_thread: totalTweets > 1 }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
