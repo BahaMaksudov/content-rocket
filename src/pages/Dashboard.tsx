@@ -288,6 +288,8 @@ export default function Dashboard() {
             brandVoice: brandVoiceData,
             translateTo: targetLanguage !== "english" ? targetLanguage : null,
             userId: socialProofUserId,
+            youtubeUrl: youtubeUrl || null,
+            videoTitle: videoTitle || null,
           },
         });
 
