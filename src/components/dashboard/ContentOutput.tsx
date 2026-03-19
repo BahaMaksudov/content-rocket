@@ -161,9 +161,9 @@ function PublishAsThreadButton({ hooks, youtubeUrl }: { hooks: string[]; youtube
       // Create a temporary campaign for the edge function
       const { data: campaign, error: insertErr } = await supabase
         .from("agent_campaigns")
-        .insert({
+        .insert([{
           user_id: user.id,
-          x_thread: thread as unknown as Record<string, unknown>,
+          x_thread: thread as unknown as import("@/integrations/supabase/types").Json,
           status: "publishing",
           video_title: "Thread from Dashboard",
         })
