@@ -35,7 +35,7 @@ function getEmail1Html(userName: string, unsubscribeUrl: string): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to Rocket Content!</title>
+  <title>Welcome to VidLogic AI!</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: ${baseStyles.backgroundColor}; font-family: ${baseStyles.fontFamily};">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color: ${baseStyles.backgroundColor}; padding: 40px 20px;">
@@ -58,7 +58,7 @@ function getEmail1Html(userName: string, unsubscribeUrl: string): string {
                 ${greeting}, 🎉
               </p>
               <p style="color: ${mutedText}; font-size: 16px; line-height: 1.6; margin: 0 0 25px;">
-                Welcome to <strong style="color: ${baseStyles.color};">Rocket Content</strong>! You've just joined thousands of creators who are turning their videos into viral content across every platform.
+                Welcome to <strong style="color: ${baseStyles.color};">VidLogic AI</strong>! You've just joined thousands of creators who are turning their videos into viral content across every platform.
               </p>
               
               <!-- Pro Tip Box -->
@@ -97,7 +97,7 @@ function getEmail1Html(userName: string, unsubscribeUrl: string): string {
                 Questions? Just reply to this email—we read every message.
               </p>
               <p style="color: ${mutedText}; font-size: 12px; margin: 0;">
-                Rocket Content • Transform your content, amplify your reach
+                VidLogic AI • Transform your content, amplify your reach
               </p>
               <p style="margin: 15px 0 0;">
                 <a href="${unsubscribeUrl}" style="color: ${mutedText}; font-size: 12px; text-decoration: underline;">Unsubscribe from emails</a>
@@ -155,7 +155,7 @@ function getEmail2Html(userName: string, unsubscribeUrl: string): string {
                   <td style="padding: 25px;">
                     <p style="color: #22c55e; font-size: 14px; font-weight: 600; margin: 0 0 15px; text-transform: uppercase; letter-spacing: 0.5px;">🌐 Global Reach Feature</p>
                     <p style="color: ${baseStyles.color}; font-size: 15px; line-height: 1.6; margin: 0 0 15px;">
-                      With Rocket Content's <strong>Global Reach</strong> toggle, you can instantly translate all your generated content into:
+                      With VidLogic AI's <strong>Global Reach</strong> toggle, you can instantly translate all your generated content into:
                     </p>
                     <table width="100%" cellpadding="0" cellspacing="0">
                       <tr>
@@ -197,7 +197,7 @@ function getEmail2Html(userName: string, unsubscribeUrl: string): string {
                 Have a language request? Reply and let us know!
               </p>
               <p style="color: ${mutedText}; font-size: 12px; margin: 0;">
-                Rocket Content • Transform your content, amplify your reach
+                VidLogic AI • Transform your content, amplify your reach
               </p>
               <p style="margin: 15px 0 0;">
                 <a href="${unsubscribeUrl}" style="color: ${mutedText}; font-size: 12px; text-decoration: underline;">Unsubscribe from emails</a>
@@ -235,7 +235,7 @@ function getEmail3Html(userName: string, unsubscribeUrl: string): string {
             <td style="padding: 40px 40px 20px; text-align: center; background: linear-gradient(135deg, ${rocketOrange}20, ${primaryColor}10);">
               <div style="display: inline-block; width: 60px; height: 60px; background: linear-gradient(135deg, ${rocketOrange}, #fb923c); border-radius: 16px; line-height: 60px; font-size: 28px; margin-bottom: 20px;">⭐</div>
               <h1 style="color: ${baseStyles.color}; font-size: 28px; margin: 0 0 10px; font-weight: 700;">How Sarah Saved 20 Hours This Week</h1>
-              <p style="color: ${mutedText}; font-size: 16px; margin: 0;">A real creator's story with Rocket Content</p>
+              <p style="color: ${mutedText}; font-size: 16px; margin: 0;">A real creator's story with VidLogic AI</p>
             </td>
           </tr>
           
@@ -267,7 +267,7 @@ function getEmail3Html(userName: string, unsubscribeUrl: string): string {
                       <tr><td style="padding: 4px 0; color: ${baseStyles.color}; font-size: 14px;">✅ 1 SEO-optimized blog post</td></tr>
                     </table>
                     <p style="color: #22c55e; font-size: 16px; font-weight: 600; margin: 20px 0 0;">
-                      "I got my Sundays back. Rocket Content literally changed my life." — Sarah
+                      "I got my Sundays back. VidLogic AI literally changed my life." — Sarah
                     </p>
                   </td>
                 </tr>
@@ -306,10 +306,10 @@ function getEmail3Html(userName: string, unsubscribeUrl: string): string {
           <tr>
             <td style="padding: 30px 40px; border-top: 1px solid ${borderColor}; text-align: center;">
               <p style="color: ${mutedText}; font-size: 13px; margin: 0 0 15px;">
-                Thanks for being part of the Rocket Content community!
+                Thanks for being part of the VidLogic AI community!
               </p>
               <p style="color: ${mutedText}; font-size: 12px; margin: 0;">
-                Rocket Content • Transform your content, amplify your reach
+                VidLogic AI • Transform your content, amplify your reach
               </p>
               <p style="margin: 15px 0 0;">
                 <a href="${unsubscribeUrl}" style="color: ${mutedText}; font-size: 12px; text-decoration: underline;">Unsubscribe from emails</a>
