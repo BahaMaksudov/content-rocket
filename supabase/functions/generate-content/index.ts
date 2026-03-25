@@ -294,9 +294,10 @@ Generate the following content based STRICTLY on the transcript:
      * Each tweet MUST be under 280 characters
      * Do NOT prefix tweets with labels like "Hook 1:", "Part 1/5:", "Tweet 1:", etc. — write them as clean, natural standalone tweets
      * Do NOT include hashtags in tweets 1-4
-     * Add 1-2 relevant hashtags ONLY at the very end of Tweet 5 (before the link)
-     * Use professional spacing with line breaks where appropriate
-     * The thread should read as a cohesive narrative, not disconnected thoughts
+      * Add 1-2 relevant hashtags ONLY at the very end of Tweet 5 (before the link), always include #VidLogicAI as the final hashtag
+      * After the hashtags, include the website link: vidlogicai.com
+      * Use professional spacing with line breaks where appropriate
+      * The thread should read as a cohesive narrative, not disconnected thoughts
    - IMPORTANT: After generating all 5 tweets, score Tweet 1 (the scroll-stopper) for viral potential based on: curiosity gap strength, bold claim power, emotional trigger, and shareability. Return 0 as "primaryHookIndex" (the scroll-stopper is always the lead)
 
 2. **ONE PROFESSIONAL LINKEDIN POST** - Create a post using the Problem-Agitation-Solution framework:
