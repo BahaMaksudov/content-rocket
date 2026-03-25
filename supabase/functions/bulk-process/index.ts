@@ -80,7 +80,7 @@ async function sendBatchCompletionEmail(
         </head>
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #6366f1; margin: 0;">🚀 Rocket Content Pro</h1>
+            <h1 style="color: #6366f1; margin: 0;">🚀 VidLogic AI Pro</h1>
           </div>
           
           <div style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border-radius: 12px; padding: 30px; color: white; text-align: center; margin-bottom: 30px;">
@@ -129,7 +129,7 @@ async function sendBatchCompletionEmail(
           <div style="text-align: center; padding-top: 20px; border-top: 1px solid #e2e8f0;">
             <p style="margin: 0; font-size: 14px; color: #64748b;">
               Happy creating! 🎉<br>
-              The Rocket Content Pro Team
+              The VidLogic AI Pro Team
             </p>
           </div>
         </body>
