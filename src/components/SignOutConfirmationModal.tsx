@@ -32,7 +32,7 @@ export function SignOutConfirmationModal({
             Are you sure you want to log out?
           </AlertDialogTitle>
           <AlertDialogDescription className="text-center text-muted-foreground">
-            You will need to sign back in to access your Rocket Content dashboard and AI tools.
+            You will need to sign back in to access your VidLogic AI dashboard and AI tools.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="flex-col gap-2 sm:flex-row sm:gap-2 mt-4">

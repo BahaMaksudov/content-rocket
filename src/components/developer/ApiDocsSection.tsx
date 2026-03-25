@@ -13,7 +13,7 @@ export function ApiDocsSection() {
           Developer API: Getting Started
         </CardTitle>
         <CardDescription className="text-xs sm:text-sm">
-          Learn how to integrate Rocket Content into your applications
+          Learn how to integrate VidLogic AI into your applications
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

@@ -30,7 +30,7 @@ export function UpgradeGate() {
               API Keys Require a Pro Plan
             </h3>
             <p className="text-sm text-muted-foreground">
-              Upgrade to Pro or Agency to generate API keys and integrate Rocket Content into your workflows programmatically.
+              Upgrade to Pro or Agency to generate API keys and integrate VidLogic AI into your workflows programmatically.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs">

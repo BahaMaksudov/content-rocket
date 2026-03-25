@@ -51,9 +51,9 @@ function extractChannelAttribution(content: string, youtubeUrl?: string | null):
   // Try to extract channel name from common patterns in the content
   // For now, we'll use a generic attribution that includes the URL
   if (youtubeUrl) {
-    return `\n\n---\nSource: Inspired by YouTube creator via Rocket Content`;
+    return `\n\n---\nSource: Inspired by YouTube creator via VidLogic AI`;
   }
-  return `\n\n---\nSource: Content generated via Rocket Content`;
+  return `\n\n---\nSource: Content generated via VidLogic AI`;
 }
 
 // Append credit line to content for sharing

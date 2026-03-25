@@ -150,7 +150,7 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         from: "VidLogic AI <notifications@vidlogicai.com>",
         to: ["bmaksudov@gmail.com"],
-        subject: `New Rocket Content Inquiry from ${safeName}`,
+        subject: `New VidLogic AI Inquiry from ${safeName}`,
         html: `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: linear-gradient(135deg, #3B82F6, #8B5CF6); padding: 20px; border-radius: 12px 12px 0 0;">
@@ -166,7 +166,7 @@ const handler = async (req: Request): Promise<Response> => {
               </div>
               <hr style="border: none; border-top: 1px solid #333; margin: 30px 0;" />
               <p style="color: #888; font-size: 12px; margin: 0;">
-                This email was sent from the Rocket Content contact form.
+                This email was sent from the VidLogic AI contact form.
               </p>
             </div>
           </div>

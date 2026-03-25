@@ -71,8 +71,8 @@ export default function Developer() {
           </div>
           <p className="text-sm sm:text-base text-muted-foreground mt-1">
             {canManageKeys
-              ? "Manage your API keys and integrate Rocket Content into your workflows"
-              : "Explore how to integrate Rocket Content into your workflows"}
+              ? "Manage your API keys and integrate VidLogic AI into your workflows"
+              : "Explore how to integrate VidLogic AI into your workflows"}
           </p>
         </div>
 
