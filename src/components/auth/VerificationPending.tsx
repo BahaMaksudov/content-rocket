@@ -61,7 +61,7 @@ export function VerificationPending({ email, onBack }: VerificationPendingProps)
             <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-rocket flex items-center justify-center">
               <Rocket className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="font-bold text-lg">Rocket Content</span>
+            <span className="font-bold text-lg">VidLogic AI</span>
           </Link>
           <Button variant="ghost" onClick={onBack} className="flex items-center gap-2">
             <ArrowLeft className="h-4 w-4" />
