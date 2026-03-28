@@ -92,6 +92,40 @@ function truncateForTwitter(text: string): string {
   return result.trim();
 }
 
+async function copyTextToClipboard(text: string): Promise<boolean> {
+  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // Fall through to legacy copy for browsers with flaky async clipboard support.
+    }
+  }
+
+  if (typeof document === "undefined") {
+    return false;
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.top = "0";
+  textarea.style.left = "0";
+  textarea.style.opacity = "0";
+  textarea.style.pointerEvents = "none";
+
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  textarea.setSelectionRange(0, textarea.value.length);
+
+  const didCopy = document.execCommand("copy");
+  document.body.removeChild(textarea);
+
+  return didCopy;
+}
+
 export function SocialActionBar({ content, platform, youtubeUrl }: SocialActionBarProps) {
   const { toast } = useToast();
   const { tier } = useSubscription();
@@ -152,23 +186,28 @@ export function SocialActionBar({ content, platform, youtubeUrl }: SocialActionB
   };
   
   const handleShareLinkedIn = async () => {
-    // Copy full content WITH credit to clipboard first
     const contentWithCredit = appendCreditLine(content, youtubeUrl);
-    await navigator.clipboard.writeText(contentWithCredit);
-    
+    const shareUrl = youtubeUrl
+      ? `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(youtubeUrl)}`
+      : "https://www.linkedin.com/feed/?shareActive=true";
+
+    const popup = window.open("", "_blank");
+    const copied = await copyTextToClipboard(contentWithCredit);
+
     toast({
-      title: "Content copied!",
-      description: "Just paste (Cmd+V / Ctrl+V) it into the LinkedIn window.",
+      title: copied ? "Content copied!" : "LinkedIn opened",
+      description: copied
+        ? "Just paste (Cmd+V / Ctrl+V) it into the LinkedIn window."
+        : "Your browser blocked clipboard access, so please copy the post manually after LinkedIn opens.",
     });
-    
-    // Only pass the YouTube URL as the share link — never fall back to dashboard URL
-    if (youtubeUrl) {
-      const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(youtubeUrl)}`;
-      window.open(url, "_blank", "noopener,noreferrer");
-    } else {
-      // No YouTube URL — open LinkedIn compose directly
-      window.open("https://www.linkedin.com/feed/?shareActive=true", "_blank", "noopener,noreferrer");
+
+    if (popup) {
+      popup.opener = null;
+      popup.location.replace(shareUrl);
+      return;
     }
+
+    window.open(shareUrl, "_blank", "noopener,noreferrer");
   };
   
   const handleBufferShare = async () => {
