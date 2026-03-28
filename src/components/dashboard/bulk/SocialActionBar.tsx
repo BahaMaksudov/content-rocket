@@ -156,16 +156,19 @@ export function SocialActionBar({ content, platform, youtubeUrl }: SocialActionB
     const contentWithCredit = appendCreditLine(content, youtubeUrl);
     await navigator.clipboard.writeText(contentWithCredit);
     
-    // LinkedIn share - URL only (LinkedIn scrapes the URL for preview)
-    const shareUrl = youtubeUrl || window.location.href;
-    const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
-    
     toast({
-      title: "Text copied & opening LinkedIn...",
-      description: "AI summary with source credit copied - paste it in the post box.",
+      title: "Content copied!",
+      description: "Just paste (Cmd+V / Ctrl+V) it into the LinkedIn window.",
     });
     
-    window.open(url, "_blank", "width=550,height=520");
+    // Only pass the YouTube URL as the share link — never fall back to dashboard URL
+    if (youtubeUrl) {
+      const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(youtubeUrl)}`;
+      window.open(url, "_blank", "noopener,noreferrer");
+    } else {
+      // No YouTube URL — open LinkedIn compose directly
+      window.open("https://www.linkedin.com/feed/?shareActive=true", "_blank", "noopener,noreferrer");
+    }
   };
   
   const handleBufferShare = async () => {
