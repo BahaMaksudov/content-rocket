@@ -32,6 +32,9 @@ export default function AgentQueue() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editThread, setEditThread] = useState<string[]>([]);
   const [editLinkedin, setEditLinkedin] = useState("");
+  const [publishingCampaignId, setPublishingCampaignId] = useState<string | null>(null);
+  const [publishingPlatform, setPublishingPlatform] = useState<string | null>(null);
+  const [publishingThreadInfo, setPublishingThreadInfo] = useState<{ total: number } | null>(null);
 
   const { data: campaigns, isLoading } = useQuery({
     queryKey: ["agent-campaigns", user?.id],
@@ -83,10 +86,19 @@ export default function AgentQueue() {
   });
 
   const publishMutation = useMutation({
-    mutationFn: async ({ campaignId, platforms }: { campaignId: string; platforms: string[] }) => {
-      const results: { platform: string; success: boolean; error?: string; reconnect?: boolean }[] = [];
+    mutationFn: async ({ campaignId, platforms, threadCount }: { campaignId: string; platforms: string[]; threadCount: number }) => {
+      const results: { platform: string; success: boolean; error?: string; reconnect?: boolean; failedAtIndex?: number; totalTweets?: number }[] = [];
+
+      setPublishingCampaignId(campaignId);
 
       for (const platform of platforms) {
+        setPublishingPlatform(platform);
+        if (platform === "x" && threadCount > 1) {
+          setPublishingThreadInfo({ total: threadCount });
+        } else {
+          setPublishingThreadInfo(null);
+        }
+
         const fnName = platform === "x" ? "publish-to-x" : "publish-to-linkedin";
         const { data, error } = await supabase.functions.invoke(fnName, {
           body: { campaign_id: campaignId, user_id: user!.id },
@@ -98,22 +110,32 @@ export default function AgentQueue() {
             success: false,
             error: data?.error || error?.message || "Unknown error",
             reconnect: data?.reconnect === true,
+            failedAtIndex: data?.failed_at_index,
+            totalTweets: data?.total_tweets,
           });
         } else {
-          results.push({ platform, success: true });
+          results.push({ platform, success: true, totalTweets: data?.total_tweets });
         }
       }
 
+      setPublishingCampaignId(null);
+      setPublishingPlatform(null);
+      setPublishingThreadInfo(null);
+
       return results;
     },
-    onSuccess: (results, { campaignId }) => {
+    onSuccess: (results) => {
       queryClient.invalidateQueries({ queryKey: ["agent-campaigns"] });
 
       const successes = results.filter((r) => r.success);
       const failures = results.filter((r) => !r.success);
 
       if (successes.length > 0 && failures.length === 0) {
-        toast({ title: "🚀 Published!", description: `Content published to ${successes.map((r) => r.platform).join(" & ")}.` });
+        const threadInfo = successes.find((r) => r.platform === "x" && (r.totalTweets || 0) > 1);
+        const desc = threadInfo
+          ? `Thread (${threadInfo.totalTweets} tweets) published to X${successes.length > 1 ? " & " + successes.filter(r => r.platform !== "x").map(r => r.platform).join(", ") : ""}.`
+          : `Content published to ${successes.map((r) => r.platform).join(" & ")}.`;
+        toast({ title: "🚀 Published!", description: desc });
       } else if (successes.length > 0) {
         toast({
           title: "Partially published",
@@ -132,6 +154,9 @@ export default function AgentQueue() {
       }
     },
     onError: (err: Error) => {
+      setPublishingCampaignId(null);
+      setPublishingPlatform(null);
+      setPublishingThreadInfo(null);
       toast({ variant: "destructive", title: "Publish Error", description: err.message });
     },
   });
@@ -141,8 +166,9 @@ export default function AgentQueue() {
     if (xConnected) platformsToPublish.push("x");
     if (linkedinConnected) platformsToPublish.push("linkedin");
 
+    const threadCount = Array.isArray(campaign.x_thread) ? campaign.x_thread.length : 1;
+
     if (platformsToPublish.length === 0) {
-      // No social connections - just approve
       updateMutation.mutate(
         { id: campaign.id, status: "approved" },
         {
@@ -162,7 +188,7 @@ export default function AgentQueue() {
       { id: campaign.id, status: "publishing" },
       {
         onSuccess: () => {
-          publishMutation.mutate({ campaignId: campaign.id, platforms: platformsToPublish });
+          publishMutation.mutate({ campaignId: campaign.id, platforms: platformsToPublish, threadCount });
         },
       }
     );
@@ -280,6 +306,9 @@ export default function AgentQueue() {
             xConnected={xConnected}
             linkedinConnected={linkedinConnected}
             onReconnect={() => navigate("/agent/settings")}
+            isPublishing={publishingCampaignId === campaign.id}
+            publishingPlatform={publishingCampaignId === campaign.id ? publishingPlatform : null}
+            publishingThreadInfo={publishingCampaignId === campaign.id ? publishingThreadInfo : null}
           />
         ))}
 
@@ -368,6 +397,9 @@ function CampaignCard({
   xConnected,
   linkedinConnected,
   onReconnect,
+  isPublishing,
+  publishingPlatform,
+  publishingThreadInfo,
 }: {
   campaign: Campaign;
   isEditing: boolean;
@@ -384,6 +416,9 @@ function CampaignCard({
   xConnected: boolean;
   linkedinConnected: boolean;
   onReconnect: () => void;
+  isPublishing: boolean;
+  publishingPlatform: string | null;
+  publishingThreadInfo: { total: number } | null;
 }) {
   const thread = isEditing ? editThread : (Array.isArray(campaign.x_thread) ? campaign.x_thread : []);
   const linkedin = isEditing ? editLinkedin : (campaign.linkedin_post || "");
@@ -391,7 +426,17 @@ function CampaignCard({
   const publishedTo = Array.isArray((campaign as any).published_to) ? (campaign as any).published_to : [];
   const hasPublishErrors = publishedTo.some((e: any) => e.status !== "success");
 
-  const approveLabel = xConnected || linkedinConnected ? "Approve & Publish" : "Approve";
+  const getPublishButtonLabel = () => {
+    if (isPublishing) {
+      if (publishingPlatform === "x" && publishingThreadInfo) {
+        return `Publishing thread (${publishingThreadInfo.total} tweets) to 𝕏…`;
+      }
+      if (publishingPlatform === "x") return "Publishing to 𝕏…";
+      if (publishingPlatform === "linkedin") return "Publishing to LinkedIn…";
+      return "Publishing…";
+    }
+    return xConnected || linkedinConnected ? "Approve & Publish" : "Approve";
+  };
 
   return (
     <Card className="border-primary/20">
@@ -507,9 +552,9 @@ function CampaignCard({
             </>
           ) : (
             <>
-              <Button size="sm" onClick={onApprove} disabled={isPending} className="flex-1 sm:flex-none bg-primary hover:bg-primary/90 text-primary-foreground">
-                {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}
-                {approveLabel}
+              <Button size="sm" onClick={onApprove} disabled={isPending || isPublishing} className="flex-1 sm:flex-none bg-primary hover:bg-primary/90 text-primary-foreground">
+                {isPending || isPublishing ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}
+                {getPublishButtonLabel()}
               </Button>
               <Button size="sm" variant="outline" onClick={onEdit} className="flex-1 sm:flex-none">
                 <Pencil className="h-4 w-4 mr-1" />

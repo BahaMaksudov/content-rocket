@@ -1,11 +1,13 @@
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Check, Edit2, Save, Twitter, Linkedin, Film, FileText, Download, Loader2 } from "lucide-react";
+import { Copy, Check, Edit2, Save, Twitter, Linkedin, Film, FileText, Download, Loader2, Zap, Send } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { GeneratedContent } from "@/pages/Dashboard";
 import { ImageGenerator } from "./ImageGenerator";
@@ -104,6 +106,137 @@ function EditableContent({
       >
         <Edit2 className="h-4 w-4" />
       </Button>
+    </div>
+  );
+}
+
+// Strip internal labels like "Hook 1:", "Hook 2:", "1.", "2)" etc.
+function cleanHookLabel(text: string): string {
+  return text
+    .replace(/^(Hook\s*\d+\s*[:.\-–—]\s*)/i, "")
+    .replace(/^(\d+[.):\-–—]\s*)/i, "")
+    .trim();
+}
+
+function PublishAsThreadButton({ hooks, youtubeUrl }: { hooks: string[]; youtubeUrl?: string | null }) {
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [progress, setProgress] = useState<string | null>(null);
+
+  const handlePublishAsThread = async () => {
+    if (hooks.length < 2 || !user) return;
+
+    setIsPublishing(true);
+    setProgress("Preparing thread...");
+
+    try {
+      // Build the thread array with cleaned labels
+      const thread: string[] = [];
+      thread.push(cleanHookLabel(hooks[0]));
+      for (let i = 1; i < hooks.length - 1; i++) {
+        thread.push(cleanHookLabel(hooks[i]));
+      }
+      const lastHook = cleanHookLabel(hooks[hooks.length - 1]);
+      const ctaTweet = youtubeUrl && !lastHook.includes(youtubeUrl)
+        ? `${lastHook}\n\n🎬 ${youtubeUrl}`
+        : lastHook;
+      thread.push(ctaTweet);
+
+      // Validate character counts
+      const overLimit = thread.findIndex(t => t.length > 280);
+      if (overLimit !== -1) {
+        toast({
+          title: "Tweet too long",
+          description: `Tweet ${overLimit + 1} is ${thread[overLimit].length} characters (max 280).`,
+          variant: "destructive",
+        });
+        setIsPublishing(false);
+        setProgress(null);
+        return;
+      }
+
+      setProgress(`Posting 1/${thread.length}...`);
+
+      // Create a temporary campaign for the edge function
+      const { data: campaign, error: insertErr } = await supabase
+        .from("agent_campaigns")
+        .insert([{
+          user_id: user.id,
+          x_thread: thread as string[],
+          status: "publishing",
+          video_title: "Thread from Dashboard",
+        }])
+        .select("id")
+        .single();
+
+      if (insertErr || !campaign) {
+        throw new Error(insertErr?.message || "Failed to create campaign");
+      }
+
+      const { data, error } = await supabase.functions.invoke("publish-to-x", {
+        body: { campaign_id: campaign.id, user_id: user.id },
+      });
+
+      if (error || data?.error) {
+        const errMsg = data?.error || error?.message || "Publishing failed";
+        await supabase.from("agent_campaigns").delete().eq("id", campaign.id);
+
+        toast({
+          title: data?.reconnect ? "X Account Disconnected" : "Publishing failed",
+          description: data?.reconnect ? errMsg + " Go to Agent Settings to reconnect." : errMsg,
+          variant: "destructive",
+        });
+        setIsPublishing(false);
+        setProgress(null);
+        return;
+      }
+
+      const totalPosted = data?.total_tweets || thread.length;
+      setProgress(`Done! ${totalPosted} tweets posted ✓`);
+
+      toast({
+        title: "🎉 Thread published!",
+        description: `${totalPosted} tweets posted as a thread on X.`,
+      });
+
+      setTimeout(() => {
+        setProgress(null);
+        setIsPublishing(false);
+      }, 3000);
+
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      toast({ title: "Error", description: msg, variant: "destructive" });
+      setIsPublishing(false);
+      setProgress(null);
+    }
+  };
+
+  if (hooks.length < 2) return null;
+
+  return (
+    <div className="pt-2">
+      <Button
+        onClick={handlePublishAsThread}
+        disabled={isPublishing}
+        className="w-full gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white"
+      >
+        {isPublishing ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            {progress}
+          </>
+        ) : (
+          <>
+            <Send className="h-4 w-4" />
+            Publish as Thread ({hooks.length} tweets)
+          </>
+        )}
+      </Button>
+      <p className="text-xs text-muted-foreground text-center mt-2">
+        Posts directly to X as a sequential thread via your connected account
+      </p>
     </div>
   );
 }
@@ -231,10 +364,10 @@ ${content.blogPost}
                     }`}
                   >
                     <Twitter className="h-4 w-4" />
-                    <span className="hidden sm:inline">X Hooks</span>
+                    <span className="hidden sm:inline">𝕏 Value Thread</span>
                   </TabsTrigger>
                 </TooltipTrigger>
-                <TooltipContent>X Thread</TooltipContent>
+                <TooltipContent>𝕏 Value Thread</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -298,29 +431,51 @@ ${content.blogPost}
                 onImageDismissed={() => handleImageDismissed("twitter")}
               />
             </div>
-            {content.twitterHooks.map((hook, index) => (
-              <div
-                key={index}
-                className="p-4 rounded-lg bg-muted/50 border border-border group"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1">
-                    <Badge variant="secondary" className="mb-2">
-                      Hook {index + 1}
-                    </Badge>
-                    <EditableContent
-                      content={hook}
-                      onSave={(value) => {
-                        const updated = [...content.twitterHooks];
-                        updated[index] = value;
-                        onUpdateContent({ ...content, twitterHooks: updated });
-                      }}
-                    />
+            {content.twitterHooks.map((hook, index) => {
+              const isPrimary = index === (content.primaryHookIndex ?? 0);
+              return (
+                <div
+                  key={index}
+                  className={`p-4 rounded-lg border group ${
+                    isPrimary
+                      ? "bg-primary/5 border-primary/30 ring-1 ring-primary/20"
+                      : "bg-muted/50 border-border"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant="secondary">
+                          {index === 0 ? "🎯 Scroll-Stopper" : index <= 3 ? `💡 Value Nugget ${index}` : "🔗 Bridge & CTA"}
+                        </Badge>
+                        {isPrimary && (
+                          <Badge className="bg-primary/20 text-primary border-primary/30 gap-1">
+                            <Zap className="h-3 w-3" />
+                            Primary Hook
+                          </Badge>
+                        )}
+                      </div>
+                      <EditableContent
+                        content={hook}
+                        onSave={(value) => {
+                          const updated = [...content.twitterHooks];
+                          updated[index] = value;
+                          onUpdateContent({ ...content, twitterHooks: updated });
+                        }}
+                      />
+                    </div>
+                    <CopyButton text={hook} contentType="twitter_hook" platform="twitter" />
                   </div>
-                  <CopyButton text={hook} contentType="twitter_hook" platform="twitter" />
                 </div>
-              </div>
-            ))}
+              );
+            })}
+
+            {/* Publish as Thread button */}
+            <PublishAsThreadButton
+              hooks={content.twitterHooks}
+              youtubeUrl={youtubeUrl}
+            />
+
             <SocialActionBar 
               content={content.twitterHooks.join("\n\n")} 
               platform="twitter" 
