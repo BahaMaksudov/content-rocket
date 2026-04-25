@@ -28,8 +28,6 @@ import Terms from "./pages/Terms";
 import Contact from "./pages/Contact";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
-import SocialProof from "./pages/SocialProof";
-import EmbedWall from "./pages/EmbedWall";
 import NotFound from "./pages/NotFound";
 import YouTubeToLinkedIn from "./pages/tools/YouTubeToLinkedIn";
 import AgentDashboard from "./pages/AgentDashboard";
@@ -129,14 +127,6 @@ const App = () => (
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route
-              path="/social-proof"
-              element={
-                <ProtectedRoute>
-                  <SocialProof />
-                </ProtectedRoute>
-              }
-            />
-            <Route
               path="/agent"
               element={
                 <ProtectedRoute>
@@ -168,7 +158,6 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
-            <Route path="/embed/:userId" element={<EmbedWall />} />
             <Route path="/tools/youtube-to-linkedin" element={<YouTubeToLinkedIn />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/how-to-repurpose-youtube-videos" element={<HowToRepurposeYouTubeVideos />} />

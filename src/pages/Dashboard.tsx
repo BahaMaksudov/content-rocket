@@ -20,7 +20,6 @@ import { DEFAULT_BRAND_VOICES, isDefaultVoiceId, getDefaultVoiceById } from "@/l
 import { useSyncPaymentHistoryOnce } from "@/hooks/use-sync-payment-history";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Video, Layers, Lock, Flame } from "lucide-react";
-import { TopTestimonialsWidget } from "@/components/social-proof/TopTestimonialsWidget";
 import { ViralScriptGenerator } from "@/components/dashboard/ViralScriptGenerator";
 
 const STORAGE_KEY = "vidlogic_dashboard_state";
@@ -96,7 +95,6 @@ export default function Dashboard() {
   const [showBulkUpgradeModal, setShowBulkUpgradeModal] = useState(false);
   const [upgradeProcessed, setUpgradeProcessed] = useState(false);
   const [activeTab, setActiveTab] = useState<"single" | "viral" | "bulk">("single");
-  const [includeSocialProof, setIncludeSocialProof] = useState(false);
   const [fairUseConfirmed, setFairUseConfirmed] = useState(false);
   const [contentActiveTab, setContentActiveTab] = useState(persisted.current?.contentActiveTab ?? "twitter");
 
@@ -184,7 +182,6 @@ export default function Dashboard() {
     setAudience("general");
     setSelectedBrandVoice("default_friendly_peer");
     setTargetLanguage("english");
-    setIncludeSocialProof(false);
     setFairUseConfirmed(false);
   };
 
@@ -277,9 +274,6 @@ export default function Dashboard() {
           }
         }
 
-        const socialProofUserId = includeSocialProof ? user?.id : undefined;
-        console.log("Social Proof toggle:", includeSocialProof, "| userId sent to AI:", socialProofUserId);
-
         const { data, error } = await supabase.functions.invoke("generate-content", {
           body: {
             transcript,
@@ -287,7 +281,6 @@ export default function Dashboard() {
             audience,
             brandVoice: brandVoiceData,
             translateTo: targetLanguage !== "english" ? targetLanguage : null,
-            userId: socialProofUserId,
             youtubeUrl: youtubeUrl || null,
             videoTitle: videoTitle || null,
           },
@@ -364,7 +357,6 @@ export default function Dashboard() {
           short_form_scripts: data.shortFormScripts,
           blog_post: data.blogPost,
           target_language: targetLanguage !== "english" ? targetLanguage : null,
-          social_proof_used: includeSocialProof,
         } as any);
 
         await useCredit();
@@ -508,14 +500,9 @@ export default function Dashboard() {
                   hasTranscript={!!transcript}
                   targetLanguage={targetLanguage}
                   setTargetLanguage={setTargetLanguage}
-                  includeSocialProof={includeSocialProof}
-                  setIncludeSocialProof={setIncludeSocialProof}
                   fairUseConfirmed={fairUseConfirmed}
                   setFairUseConfirmed={setFairUseConfirmed}
                 />
-
-                {/* Social Proof Widget */}
-                <TopTestimonialsWidget />
               </div>
 
               {/* Right column - Output */}

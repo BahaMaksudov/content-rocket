@@ -8,8 +8,32 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, XCircle, Pencil, ExternalLink, Inbox, Sparkles, Send, AlertCircle, Settings } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Pencil, ExternalLink, Inbox, Sparkles, Send, AlertCircle, Settings, Copy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
+function CopyIconButton({ text, label }: { text: string; label: string }) {
+  const { toast } = useToast();
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({ title: "Copied!", description: `${label} copied to clipboard.` });
+    } catch {
+      toast({ variant: "destructive", title: "Copy failed", description: "Please copy manually." });
+    }
+  };
+  return (
+    <Button
+      type="button"
+      size="icon"
+      variant="ghost"
+      onClick={handleCopy}
+      aria-label={`Copy ${label}`}
+      className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted/60"
+    >
+      <Copy className="h-3.5 w-3.5" />
+    </Button>
+  );
+}
 
 type Campaign = {
   id: string;
@@ -487,10 +511,18 @@ function CampaignCard({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* X Thread */}
           <div className="space-y-2">
-            <h4 className="text-sm font-semibold flex items-center gap-2">
-              <span className="font-mono">𝕏</span> Thread
-              {!xConnected && <Badge variant="outline" className="text-xs text-muted-foreground">Not connected</Badge>}
-            </h4>
+            <div className="flex items-center justify-between gap-2">
+              <h4 className="text-sm font-semibold flex items-center gap-2">
+                <span className="font-mono">𝕏</span> Thread
+                {!xConnected && <Badge variant="outline" className="text-xs text-muted-foreground">Not connected</Badge>}
+              </h4>
+              {!isEditing && thread.length > 0 && (
+                <CopyIconButton
+                  text={thread.map((t, i) => `${i + 1}/${thread.length} ${String(t)}`).join("\n\n")}
+                  label="X thread"
+                />
+              )}
+            </div>
             {isEditing ? (
               <div className="space-y-2">
                 {editThread.map((tweet, i) => (
@@ -521,10 +553,15 @@ function CampaignCard({
 
           {/* LinkedIn Post */}
           <div className="space-y-2">
-            <h4 className="text-sm font-semibold flex items-center gap-2">
-              <span className="font-mono text-blue-400">in</span> LinkedIn Post
-              {!linkedinConnected && <Badge variant="outline" className="text-xs text-muted-foreground">Not connected</Badge>}
-            </h4>
+            <div className="flex items-center justify-between gap-2">
+              <h4 className="text-sm font-semibold flex items-center gap-2">
+                <span className="font-mono text-blue-400">in</span> LinkedIn Post
+                {!linkedinConnected && <Badge variant="outline" className="text-xs text-muted-foreground">Not connected</Badge>}
+              </h4>
+              {!isEditing && linkedin && (
+                <CopyIconButton text={linkedin} label="LinkedIn post" />
+              )}
+            </div>
             {isEditing ? (
               <Textarea
                 value={editLinkedin}

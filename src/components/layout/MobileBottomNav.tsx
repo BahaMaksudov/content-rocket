@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, History, Mic, User, MoreHorizontal, Code, Heart, Crown, Rocket, ArrowUpRight, Zap, Bot, Inbox, Settings } from "lucide-react";
+import { Home, History, Mic, User, MoreHorizontal, Code, Crown, Rocket, ArrowUpRight, Zap, Bot, Inbox, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -121,15 +121,6 @@ export function MobileBottomNav() {
             >
               <Settings className="h-5 w-5 text-primary" />
               <span className="font-medium">Agent Settings</span>
-            </button>
-
-            {/* Social Proof */}
-            <button
-              onClick={() => goTo("/social-proof")}
-              className="flex items-center gap-3 w-full rounded-lg px-3 py-3 text-foreground hover:bg-muted transition-colors"
-            >
-              <Heart className="h-5 w-5 text-primary" />
-              <span className="font-medium">Social Proof</span>
             </button>
 
             {/* Developer API */}
