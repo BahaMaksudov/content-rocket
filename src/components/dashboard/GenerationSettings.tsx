@@ -383,18 +383,8 @@ export function GenerationSettings({
         feature={isCreditsExhausted ? "generation-limit" : "brand-voice"}
       />
 
-      <PremiumModal
-        open={showSocialProofGate}
-        onOpenChange={setShowSocialProofGate}
-        feature="social-proof"
-      />
 
-      <PremiumModal
-        open={showSocialProofLimitGate}
-        onOpenChange={setShowSocialProofLimitGate}
-        feature="social-proof-limit"
-      />
-      
+
       <CreateBrandVoiceModal
         open={showCreateVoiceModal}
         onOpenChange={setShowCreateVoiceModal}
