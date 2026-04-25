@@ -20,7 +20,6 @@ import { DEFAULT_BRAND_VOICES, isDefaultVoiceId, getDefaultVoiceById } from "@/l
 import { useSyncPaymentHistoryOnce } from "@/hooks/use-sync-payment-history";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Video, Layers, Lock, Flame } from "lucide-react";
-import { TopTestimonialsWidget } from "@/components/social-proof/TopTestimonialsWidget";
 import { ViralScriptGenerator } from "@/components/dashboard/ViralScriptGenerator";
 
 const STORAGE_KEY = "vidlogic_dashboard_state";
@@ -96,7 +95,6 @@ export default function Dashboard() {
   const [showBulkUpgradeModal, setShowBulkUpgradeModal] = useState(false);
   const [upgradeProcessed, setUpgradeProcessed] = useState(false);
   const [activeTab, setActiveTab] = useState<"single" | "viral" | "bulk">("single");
-  const [includeSocialProof, setIncludeSocialProof] = useState(false);
   const [fairUseConfirmed, setFairUseConfirmed] = useState(false);
   const [contentActiveTab, setContentActiveTab] = useState(persisted.current?.contentActiveTab ?? "twitter");
 
