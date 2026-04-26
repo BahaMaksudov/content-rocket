@@ -355,6 +355,7 @@ export default function Dashboard() {
           audience: audience || null,
           twitter_hooks: data.twitterHooks,
           linkedin_post: data.linkedinPost,
+          facebook_post: data.facebookPost ?? null,
           short_form_scripts: data.shortFormScripts,
           blog_post: data.blogPost,
           target_language: targetLanguage !== "english" ? targetLanguage : null,
