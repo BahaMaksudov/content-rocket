@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, History, Mic, User, MoreHorizontal, Code, Crown, Rocket, ArrowUpRight, Zap, Bot, Inbox, Settings } from "lucide-react";
+import { Home, History, Mic, User, MoreHorizontal, Code, Crown, Rocket, ArrowUpRight, Zap, Inbox, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -95,15 +95,8 @@ export function MobileBottomNav() {
               <span className="font-medium">Profile & Settings</span>
             </button>
 
-            {/* Content Agent */}
-            <button
-              onClick={() => goTo("/agent")}
-              className="flex items-center gap-3 w-full rounded-lg px-3 py-3 text-foreground hover:bg-muted transition-colors"
-            >
-              <Bot className="h-5 w-5 text-primary" />
-              <span className="font-medium">Content Agent</span>
-              <Badge variant="secondary" className="ml-auto text-xs bg-primary/20 text-primary border-0">New</Badge>
-            </button>
+            {/* Content Agent removed */}
+
 
             {/* Agent Queue */}
             <button

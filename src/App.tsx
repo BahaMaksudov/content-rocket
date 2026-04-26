@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -30,7 +30,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import YouTubeToLinkedIn from "./pages/tools/YouTubeToLinkedIn";
-import AgentDashboard from "./pages/AgentDashboard";
+
 import AgentSettings from "./pages/AgentSettings";
 import AgentQueue from "./pages/AgentQueue";
 import Blog from "./pages/Blog";
@@ -126,14 +126,7 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route
-              path="/agent"
-              element={
-                <ProtectedRoute>
-                  <AgentDashboard />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/agent" element={<Navigate to="/agent/queue" replace />} />
             <Route
               path="/agent/settings"
               element={
