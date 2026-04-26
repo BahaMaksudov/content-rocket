@@ -342,6 +342,25 @@ Generate the following content based STRICTLY on the transcript:
    - Conclusion with CTA
    - Approximately 500 words
 
+5. **ONE FACEBOOK POST** - Write a community-focused, conversational Facebook post derived FROM THE TRANSCRIPT:
+   - Tone: warm, community-focused, conversational, and encouraging — like talking to friends in a group
+   - Structure (in order, separated by single line breaks):
+     a) ONE scroll-stopping headline as the first line (a bold statement, surprising fact, or relatable hook from the transcript)
+     b) 2-3 short value-driven bullet points (each starting with an emoji like ✅, 💡, 🔥, or 👉) summarizing the most useful takeaways
+     c) ONE mandatory engagement question on its own line at the end designed to drive comments (e.g., "Which of these surprised you most?", "What would you add?")
+   - HARD CONSTRAINTS (must follow strictly):
+     * The MAIN BODY (headline + bullets + question) MUST be under 250 characters total to avoid Facebook's "See More" truncation
+     * EXACTLY 2 hashtags total, and one of them MUST be #VidLogicAI — placed on a new line AFTER the engagement question
+     * Do NOT include the YouTube link in the main text. Instead, append on the final line: [Link in First Comment]
+   - Final layout (use real line breaks):
+     <Headline>
+     <Bullet 1>
+     <Bullet 2>
+     [optional <Bullet 3>]
+     <Engagement question>
+     #<RelevantTopicTag> #VidLogicAI
+     [Link in First Comment]
+
 CRITICAL: Return ONLY a valid JSON object with NO markdown code fences. The response must be parseable JSON.
 {
   "twitterHooks": ["scroll-stopper tweet", "value nugget 1", "value nugget 2", "value nugget 3", "bridge and CTA tweet with [YOUTUBE_LINK]"],
@@ -352,7 +371,8 @@ CRITICAL: Return ONLY a valid JSON object with NO markdown code fences. The resp
     {"title": "Script 2 Title", "script": "full timestamped script with visual cues", "duration": "30-45s"},
     {"title": "Script 3 Title", "script": "full timestamped script with visual cues", "duration": "45-60s"}
   ],
-  "blogPost": "full blog post with markdown headings"
+  "blogPost": "full blog post with markdown headings",
+  "facebookPost": "full facebook post following the structure above (headline, bullets, engagement question, 2 hashtags, [Link in First Comment])"
 }`;
 
     // Smart transcript truncation for long videos

@@ -46,6 +46,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 const PLATFORM_OPTIONS = [
   { id: "x", label: "X (Twitter)", icon: "𝕏" },
   { id: "linkedin", label: "LinkedIn", icon: "in" },
+  { id: "facebook", label: "Facebook", icon: "f" },
 ];
 
 // PKCE helpers
@@ -504,6 +505,38 @@ export default function AgentSettings() {
                     <ExternalLink className="h-3.5 w-3.5 mr-1.5" /> Connect
                   </Button>
                 )}
+              </div>
+            </div>
+
+            {/* Facebook Connection Card (Coming Soon) */}
+            <div className="relative p-4 rounded-xl border-2 border-border bg-card opacity-90">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#1877F2]/15">
+                    <span className="text-lg font-bold text-[#1877F2]">f</span>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold">Facebook</span>
+                      <Badge
+                        variant="outline"
+                        className="text-[11px] px-2 py-0 border-amber-500/40 text-amber-500"
+                      >
+                        Coming Soon
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Auto-publish community-focused posts to your Facebook Page
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  disabled
+                  className="bg-[#1877F2]/40 text-white shrink-0 cursor-not-allowed"
+                >
+                  Coming Soon
+                </Button>
               </div>
             </div>
           </CardContent>

@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -24,15 +24,14 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCanceled from "./pages/PaymentCanceled";
 import Unsubscribe from "./pages/Unsubscribe";
 import Privacy from "./pages/Privacy";
+import DataDeletion from "./pages/DataDeletion";
 import Terms from "./pages/Terms";
 import Contact from "./pages/Contact";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
-import SocialProof from "./pages/SocialProof";
-import EmbedWall from "./pages/EmbedWall";
 import NotFound from "./pages/NotFound";
 import YouTubeToLinkedIn from "./pages/tools/YouTubeToLinkedIn";
-import AgentDashboard from "./pages/AgentDashboard";
+
 import AgentSettings from "./pages/AgentSettings";
 import AgentQueue from "./pages/AgentQueue";
 import Blog from "./pages/Blog";
@@ -124,26 +123,12 @@ const App = () => (
             <Route path="/payment-canceled" element={<PaymentCanceled />} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/privacy" element={<Privacy />} />
+            <Route path="/data-deletion" element={<DataDeletion />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route
-              path="/social-proof"
-              element={
-                <ProtectedRoute>
-                  <SocialProof />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/agent"
-              element={
-                <ProtectedRoute>
-                  <AgentDashboard />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/agent" element={<Navigate to="/agent/queue" replace />} />
             <Route
               path="/agent/settings"
               element={
@@ -168,7 +153,6 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
-            <Route path="/embed/:userId" element={<EmbedWall />} />
             <Route path="/tools/youtube-to-linkedin" element={<YouTubeToLinkedIn />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/how-to-repurpose-youtube-videos" element={<HowToRepurposeYouTubeVideos />} />

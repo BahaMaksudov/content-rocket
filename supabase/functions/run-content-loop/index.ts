@@ -213,7 +213,7 @@ Deno.serve(async (req) => {
 
               if (!transcript || transcript.length < 50) transcript = video.title;
 
-              const remixPrompt = `You are a content remixer. This is the user's OWN high-performing YouTube video. Create fresh "Refresh" content for X/Twitter and LinkedIn that gives the same topic a NEW angle.
+              const remixPrompt = `You are a content remixer. This is the user's OWN high-performing YouTube video. Create fresh "Refresh" content for X/Twitter, LinkedIn, and Facebook that gives the same topic a NEW angle.
 
 VIDEO TITLE: ${video.title}
 TRANSCRIPT: ${transcript}
@@ -223,6 +223,7 @@ Return JSON:
   "insights": ["5 key points"],
   "x_thread": ["5 tweets under 280 chars each, first is a hook"],
   "linkedin_post": "800-1200 char LinkedIn post with hashtags",
+  "facebook_post": "Community-focused Facebook post: a scroll-stopping headline, 2-3 emoji bullet points, an engagement question on its own line, then a new line with EXACTLY 2 hashtags (one MUST be #VidLogicAI), then a final line: [Link in First Comment]. The body (headline + bullets + question) MUST be under 250 characters total.",
   "confidence_score": <0-100 quality score>
 }
 Respond ONLY with valid JSON.`;
@@ -235,7 +236,7 @@ Respond ONLY with valid JSON.`;
               const aiData = await aiRes.json();
               const rawContent = aiData.choices?.[0]?.message?.content || "";
               let parsed: any;
-              try { parsed = JSON.parse(rawContent); } catch { const m = rawContent.match(/```(?:json)?\s*([\s\S]*?)```/); parsed = m ? JSON.parse(m[1]) : { insights: [], x_thread: [], linkedin_post: "", confidence_score: 50 }; }
+              try { parsed = JSON.parse(rawContent); } catch { const m = rawContent.match(/```(?:json)?\s*([\s\S]*?)```/); parsed = m ? JSON.parse(m[1]) : { insights: [], x_thread: [], linkedin_post: "", facebook_post: "", confidence_score: 50 }; }
 
               const score = parsed.confidence_score ?? 50;
               const shouldAutoPublish = autoPilotEnabled && score >= confidenceThreshold;
@@ -250,6 +251,7 @@ Respond ONLY with valid JSON.`;
                   insights: parsed.insights || [],
                   x_thread: parsed.x_thread || [],
                   linkedin_post: parsed.linkedin_post || "",
+                  facebook_post: parsed.facebook_post || "",
                 })
                 .select("id")
                 .single();
@@ -357,7 +359,8 @@ Return a JSON object with:
 1. "insights": An array of exactly 5 key insight strings summarizing the video's main points.
 2. "x_thread": A JSON array of 5 tweet strings for an X/Twitter thread (each under 280 chars). First tweet is a hook.
 3. "linkedin_post": A professional LinkedIn post (800-1200 chars) with hashtags.
-4. "confidence_score": An integer from 0-100 rating your confidence in the overall quality and virality potential of the generated content. 90+ means exceptional, 70-89 is good, below 70 needs human review.
+4. "facebook_post": A community-focused, conversational Facebook post. Structure: a scroll-stopping headline, then 2-3 emoji-led value bullet points (✅, 💡, 🔥, 👉), then ONE engagement question on its own line. The body (headline + bullets + question) MUST be under 250 characters total. After that, add a new line with EXACTLY 2 hashtags (one MUST be #VidLogicAI). Final line: [Link in First Comment]. Tone: warm, conversational, encouraging.
+5. "confidence_score": An integer from 0-100 rating your confidence in the overall quality and virality potential of the generated content. 90+ means exceptional, 70-89 is good, below 70 needs human review.
 
 Respond ONLY with valid JSON, no markdown.`;
 
@@ -378,12 +381,12 @@ Respond ONLY with valid JSON, no markdown.`;
         const aiData = await aiRes.json();
         const content = aiData.choices?.[0]?.message?.content || "";
 
-        let parsed: { insights: string[]; x_thread: string[]; linkedin_post: string; confidence_score?: number };
+        let parsed: { insights: string[]; x_thread: string[]; linkedin_post: string; facebook_post?: string; confidence_score?: number };
         try {
           parsed = JSON.parse(content);
         } catch {
           const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-          parsed = jsonMatch ? JSON.parse(jsonMatch[1]) : { insights: [], x_thread: [], linkedin_post: "", confidence_score: 50 };
+          parsed = jsonMatch ? JSON.parse(jsonMatch[1]) : { insights: [], x_thread: [], linkedin_post: "", facebook_post: "", confidence_score: 50 };
         }
 
         const confidenceScore = parsed.confidence_score ?? 50;
@@ -400,6 +403,7 @@ Respond ONLY with valid JSON, no markdown.`;
             insights: parsed.insights || [],
             x_thread: parsed.x_thread || [],
             linkedin_post: parsed.linkedin_post || "",
+            facebook_post: parsed.facebook_post || "",
           })
           .select("id")
           .single();

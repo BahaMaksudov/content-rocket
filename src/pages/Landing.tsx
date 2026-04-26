@@ -850,8 +850,6 @@ function PricingSection({
           tooltip: "Automated weekly content planning and batch script generation.",
         },
         "1 brand voice",
-        "Social Proof Tools — Unlimited Testimonials",
-        "Embeddable Wall of Love Widget",
         "Email support",
       ],
       cta: "Get Starter",
@@ -877,8 +875,6 @@ function PricingSection({
         "Priority processing",
         "No watermarks",
         "3 brand voices",
-        "Social Proof Tools — Unlimited Testimonials",
-        "Embeddable Wall of Love Widget",
         "API access",
       ],
       cta: "Go Pro",
@@ -904,8 +900,6 @@ function PricingSection({
         "Team workspace (5 members)",
         "Bulk export",
         "Style Mimicking",
-        "Social Proof Tools — Unlimited Testimonials",
-        "Embeddable Wall of Love Widget",
         "Priority support",
         "Custom integrations",
       ],
@@ -988,10 +982,7 @@ function PricingSection({
                           const isLocked = isObj && feature.locked;
                           const isNew = isObj && feature.isNew;
                           const tooltipText = isObj ? feature.tooltip : null;
-                          const isSocialProof =
-                            text.includes("Social Proof") ||
-                            text.includes("Wall of Love") ||
-                            text.includes("testimonials");
+                          const isSocialProof = false;
                           return (
                             <li key={fi} className="flex items-start gap-3">
                               {isLocked ? (
@@ -1273,6 +1264,9 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
             <div className="flex flex-col gap-2 text-sm text-muted-foreground">
               <Link to="/privacy" className="hover:text-foreground transition-colors">
                 Privacy Policy
+              </Link>
+              <Link to="/data-deletion" className="hover:text-foreground transition-colors">
+                Data Deletion
               </Link>
               <Link to="/terms" className="hover:text-foreground transition-colors">
                 Terms of Service
