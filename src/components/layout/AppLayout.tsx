@@ -57,10 +57,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
 
   const currentTitle = routeTitles[location.pathname] || "Dashboard";
-  const agentView = location.pathname === "/agent"
-    ? new URLSearchParams(location.search).get("view") || ""
-    : "";
-  const agentSubTitle = agentSubTitles[agentView] || null;
+  const agentSubTitle: string | null = null;
   const tierConfig = SUBSCRIPTION_TIERS[tier];
 
   // Fetch user profile in real-time
