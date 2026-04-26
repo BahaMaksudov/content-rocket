@@ -126,14 +126,7 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route
-              path="/agent"
-              element={
-                <ProtectedRoute>
-                  <AgentDashboard />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/agent" element={<Navigate to="/agent/queue" replace />} />
             <Route
               path="/agent/settings"
               element={
