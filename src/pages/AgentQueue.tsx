@@ -44,6 +44,7 @@ type Campaign = {
   insights: string[] | null;
   x_thread: string[] | null;
   linkedin_post: string | null;
+  facebook_post: string | null;
   published_to: any[] | null;
   created_at: string;
 };
@@ -574,6 +575,22 @@ function CampaignCard({
               </div>
             )}
           </div>
+
+          {/* Facebook Post */}
+          {(campaign as any).facebook_post && (
+            <div className="space-y-2 md:col-span-2">
+              <div className="flex items-center justify-between gap-2">
+                <h4 className="text-sm font-semibold flex items-center gap-2">
+                  <span className="font-mono text-[#1877F2]">f</span> Facebook Post
+                  <Badge variant="outline" className="text-xs text-muted-foreground">Coming soon: direct publishing</Badge>
+                </h4>
+                <CopyIconButton text={(campaign as any).facebook_post} label="Facebook post" />
+              </div>
+              <div className="p-3 rounded-lg bg-muted/50 border border-border text-sm whitespace-pre-wrap">
+                {(campaign as any).facebook_post}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Actions */}
