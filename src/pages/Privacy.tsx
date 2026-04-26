@@ -150,7 +150,22 @@ export default function Privacy() {
           </section>
 
           <section className="mb-10">
-            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">8. Cookies</h2>
+            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">
+              8. Data Deletion &amp; Retention
+            </h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Users may request the deletion of their personal data at any time by following the
+              instructions on our{" "}
+              <Link to="/data-deletion" className="text-primary hover:underline">
+                Data Deletion page
+              </Link>{" "}
+              or by contacting support. Once requested, all stored user data will be purged from
+              our databases within 30 days.
+            </p>
+          </section>
+
+          <section className="mb-10">
+            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">9. Cookies</h2>
             <p className="text-muted-foreground leading-relaxed">
               We use cookies and similar technologies to maintain your session, remember preferences, and analyze usage
               patterns. You can control cookie settings through your browser preferences.
@@ -159,7 +174,7 @@ export default function Privacy() {
 
           <section className="mb-10">
             <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">
-              9. Changes to This Policy
+              10. Changes to This Policy
             </h2>
             <p className="text-muted-foreground leading-relaxed">
               We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new
@@ -168,7 +183,7 @@ export default function Privacy() {
           </section>
 
           <section className="mb-10">
-            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">10. Contact Us</h2>
+            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">11. Contact Us</h2>
             <p className="text-muted-foreground leading-relaxed">
               If you have questions about this Privacy Policy or our data practices, please contact us at{" "}
               <a href="mailto:support@vidlogicai.com" className="text-primary hover:underline">
