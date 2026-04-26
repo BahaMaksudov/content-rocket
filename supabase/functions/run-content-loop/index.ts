@@ -213,7 +213,7 @@ Deno.serve(async (req) => {
 
               if (!transcript || transcript.length < 50) transcript = video.title;
 
-              const remixPrompt = `You are a content remixer. This is the user's OWN high-performing YouTube video. Create fresh "Refresh" content for X/Twitter and LinkedIn that gives the same topic a NEW angle.
+              const remixPrompt = `You are a content remixer. This is the user's OWN high-performing YouTube video. Create fresh "Refresh" content for X/Twitter, LinkedIn, and Facebook that gives the same topic a NEW angle.
 
 VIDEO TITLE: ${video.title}
 TRANSCRIPT: ${transcript}
@@ -223,6 +223,7 @@ Return JSON:
   "insights": ["5 key points"],
   "x_thread": ["5 tweets under 280 chars each, first is a hook"],
   "linkedin_post": "800-1200 char LinkedIn post with hashtags",
+  "facebook_post": "Community-focused Facebook post: a scroll-stopping headline, 2-3 emoji bullet points, an engagement question on its own line, then a new line with EXACTLY 2 hashtags (one MUST be #VidLogicAI), then a final line: [Link in First Comment]. The body (headline + bullets + question) MUST be under 250 characters total.",
   "confidence_score": <0-100 quality score>
 }
 Respond ONLY with valid JSON.`;
