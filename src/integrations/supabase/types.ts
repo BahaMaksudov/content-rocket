@@ -17,6 +17,7 @@ export type Database = {
       agent_campaigns: {
         Row: {
           created_at: string
+          facebook_post: string | null
           id: string
           insights: Json | null
           linkedin_post: string | null
@@ -30,6 +31,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          facebook_post?: string | null
           id?: string
           insights?: Json | null
           linkedin_post?: string | null
@@ -43,6 +45,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          facebook_post?: string | null
           id?: string
           insights?: Json | null
           linkedin_post?: string | null
@@ -429,6 +432,7 @@ export type Database = {
           blog_post: string | null
           brand_voice_id: string | null
           created_at: string
+          facebook_post: string | null
           id: string
           linkedin_post: string | null
           organization_id: string | null
@@ -449,6 +453,7 @@ export type Database = {
           blog_post?: string | null
           brand_voice_id?: string | null
           created_at?: string
+          facebook_post?: string | null
           id?: string
           linkedin_post?: string | null
           organization_id?: string | null
@@ -469,6 +474,7 @@ export type Database = {
           blog_post?: string | null
           brand_voice_id?: string | null
           created_at?: string
+          facebook_post?: string | null
           id?: string
           linkedin_post?: string | null
           organization_id?: string | null
