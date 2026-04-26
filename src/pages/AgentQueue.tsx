@@ -44,6 +44,7 @@ type Campaign = {
   insights: string[] | null;
   x_thread: string[] | null;
   linkedin_post: string | null;
+  facebook_post: string | null;
   published_to: any[] | null;
   created_at: string;
 };
