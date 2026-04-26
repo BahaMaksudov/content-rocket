@@ -236,7 +236,7 @@ Respond ONLY with valid JSON.`;
               const aiData = await aiRes.json();
               const rawContent = aiData.choices?.[0]?.message?.content || "";
               let parsed: any;
-              try { parsed = JSON.parse(rawContent); } catch { const m = rawContent.match(/```(?:json)?\s*([\s\S]*?)```/); parsed = m ? JSON.parse(m[1]) : { insights: [], x_thread: [], linkedin_post: "", confidence_score: 50 }; }
+              try { parsed = JSON.parse(rawContent); } catch { const m = rawContent.match(/```(?:json)?\s*([\s\S]*?)```/); parsed = m ? JSON.parse(m[1]) : { insights: [], x_thread: [], linkedin_post: "", facebook_post: "", confidence_score: 50 }; }
 
               const score = parsed.confidence_score ?? 50;
               const shouldAutoPublish = autoPilotEnabled && score >= confidenceThreshold;
