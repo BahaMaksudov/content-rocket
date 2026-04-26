@@ -251,6 +251,7 @@ Respond ONLY with valid JSON.`;
                   insights: parsed.insights || [],
                   x_thread: parsed.x_thread || [],
                   linkedin_post: parsed.linkedin_post || "",
+                  facebook_post: parsed.facebook_post || "",
                 })
                 .select("id")
                 .single();
