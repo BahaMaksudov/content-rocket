@@ -46,6 +46,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 const PLATFORM_OPTIONS = [
   { id: "x", label: "X (Twitter)", icon: "𝕏" },
   { id: "linkedin", label: "LinkedIn", icon: "in" },
+  { id: "facebook", label: "Facebook", icon: "f" },
 ];
 
 // PKCE helpers
