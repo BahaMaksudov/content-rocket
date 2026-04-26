@@ -44,15 +44,8 @@ const routeTitles: Record<string, string> = {
   "/billing": "Billing",
   "/developer": "Developer API",
   "/team": "Team Workspace",
-  "/agent": "Content Agent",
   "/agent/queue": "Agent Queue",
   "/agent/settings": "Agent Settings",
-};
-
-const agentSubTitles: Record<string, string> = {
-  "setup": "Setup",
-  "weekly": "Weekly Plan",
-  "history": "History",
 };
 
 export function AppLayout({ children }: AppLayoutProps) {
