@@ -381,12 +381,12 @@ Respond ONLY with valid JSON, no markdown.`;
         const aiData = await aiRes.json();
         const content = aiData.choices?.[0]?.message?.content || "";
 
-        let parsed: { insights: string[]; x_thread: string[]; linkedin_post: string; confidence_score?: number };
+        let parsed: { insights: string[]; x_thread: string[]; linkedin_post: string; facebook_post?: string; confidence_score?: number };
         try {
           parsed = JSON.parse(content);
         } catch {
           const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-          parsed = jsonMatch ? JSON.parse(jsonMatch[1]) : { insights: [], x_thread: [], linkedin_post: "", confidence_score: 50 };
+          parsed = jsonMatch ? JSON.parse(jsonMatch[1]) : { insights: [], x_thread: [], linkedin_post: "", facebook_post: "", confidence_score: 50 };
         }
 
         const confidenceScore = parsed.confidence_score ?? 50;
@@ -403,6 +403,7 @@ Respond ONLY with valid JSON, no markdown.`;
             insights: parsed.insights || [],
             x_thread: parsed.x_thread || [],
             linkedin_post: parsed.linkedin_post || "",
+            facebook_post: parsed.facebook_post || "",
           })
           .select("id")
           .single();
