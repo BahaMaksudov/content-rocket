@@ -150,7 +150,22 @@ export default function Privacy() {
           </section>
 
           <section className="mb-10">
-            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">8. Cookies</h2>
+            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">
+              8. Data Deletion &amp; Retention
+            </h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Users may request the deletion of their personal data at any time by following the
+              instructions on our{" "}
+              <Link to="/data-deletion" className="text-primary hover:underline">
+                Data Deletion page
+              </Link>{" "}
+              or by contacting support. Once requested, all stored user data will be purged from
+              our databases within 30 days.
+            </p>
+          </section>
+
+          <section className="mb-10">
+            <h2 className="text-2xl font-semibold text-foreground border-b border-border pb-2 mb-4">9. Cookies</h2>
             <p className="text-muted-foreground leading-relaxed">
               We use cookies and similar technologies to maintain your session, remember preferences, and analyze usage
               patterns. You can control cookie settings through your browser preferences.
