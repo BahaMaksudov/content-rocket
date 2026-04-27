@@ -11,9 +11,14 @@ Deno.serve(async (req) => {
 
   const xClientId = Deno.env.get("X_CLIENT_ID") || "";
   const linkedinClientId = Deno.env.get("LINKEDIN_CLIENT_ID") || "";
+  const facebookAppId = Deno.env.get("FACEBOOK_APP_ID") || "";
 
   return new Response(
-    JSON.stringify({ x_client_id: xClientId, linkedin_client_id: linkedinClientId }),
+    JSON.stringify({
+      x_client_id: xClientId,
+      linkedin_client_id: linkedinClientId,
+      facebook_app_id: facebookAppId,
+    }),
     { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
   );
 });

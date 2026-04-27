@@ -187,6 +187,9 @@ export type Database = {
           confidence_threshold: number
           created_at: string
           email_notifications: boolean
+          facebook_page_access_token: string | null
+          facebook_page_id: string | null
+          facebook_page_name: string | null
           frequency: string
           frequency_hours: number
           id: string
@@ -210,6 +213,9 @@ export type Database = {
           confidence_threshold?: number
           created_at?: string
           email_notifications?: boolean
+          facebook_page_access_token?: string | null
+          facebook_page_id?: string | null
+          facebook_page_name?: string | null
           frequency?: string
           frequency_hours?: number
           id?: string
@@ -233,6 +239,9 @@ export type Database = {
           confidence_threshold?: number
           created_at?: string
           email_notifications?: boolean
+          facebook_page_access_token?: string | null
+          facebook_page_id?: string | null
+          facebook_page_name?: string | null
           frequency?: string
           frequency_hours?: number
           id?: string
