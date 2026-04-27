@@ -5,6 +5,17 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Shared LinkedIn post formatting spec — keeps mobile-first structure + branding consistent
+const LINKEDIN_POST_SPEC = `A professional LinkedIn post (800-1200 chars) following these STRICT rules:
+   - STRUCTURE (mobile-first):
+     • HOOK: First 2 lines must be a punchy statement or question that makes readers click "See more". No fluff, no preamble.
+     • BODY: 3-4 short paragraphs, each MAX 2 sentences.
+     • WHITE SPACE: Use a DOUBLE line break (\\n\\n) between every paragraph for readability.
+     • BULLETS: When listing key takeaways, use professional symbols 🔹, ✅, or • (one per line).
+   - BRANDING & HASHTAGS: The post MUST end with a hashtag line on its own at the very bottom (preceded by \\n\\n). Include EXACTLY #VidLogicAI plus 2 relevant niche hashtags (e.g. #AIAutomation #ContentStrategy). You may add more relevant tags only if they add value, but #VidLogicAI is mandatory and must be one of the first three.
+   - TONE: Professional yet conversational. No corporate jargon, no buzzword soup.
+   - OUTPUT: Return as a single string with explicit \\n\\n between paragraphs so spacing is preserved exactly when copied. Do NOT wrap in markdown.`;
+
 interface CampaignResult {
   user_id: string;
   status: string;
