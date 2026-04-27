@@ -128,6 +128,8 @@ export default function AgentSettings() {
   const xUsername = (settings as any)?.x_username || "";
   const linkedinConnected = !!(settings as any)?.linkedin_access_token;
   const linkedinName = (settings as any)?.linkedin_name || "";
+  const facebookConnected = !!(settings as any)?.facebook_page_access_token;
+  const facebookPageName = (settings as any)?.facebook_page_name || "";
 
   useEffect(() => {
     if (settings) {
