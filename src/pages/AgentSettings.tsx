@@ -1007,15 +1007,28 @@ export default function AgentSettings() {
             {PLATFORM_OPTIONS.map((platform) => (
               <div
                 key={platform.id}
-                className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer"
-                onClick={() => togglePlatform(platform.id)}
+                className={`flex items-center gap-3 p-3 rounded-lg border border-border transition-colors ${
+                  platform.comingSoon
+                    ? "opacity-60 cursor-not-allowed"
+                    : "hover:bg-muted/50 cursor-pointer"
+                }`}
+                onClick={() => !platform.comingSoon && togglePlatform(platform.id)}
               >
                 <Checkbox
-                  checked={platforms.includes(platform.id)}
-                  onCheckedChange={() => togglePlatform(platform.id)}
+                  checked={!platform.comingSoon && platforms.includes(platform.id)}
+                  disabled={platform.comingSoon}
+                  onCheckedChange={() => !platform.comingSoon && togglePlatform(platform.id)}
                 />
                 <span className="text-lg font-mono w-6 text-center">{platform.icon}</span>
-                <span className="font-medium">{platform.label}</span>
+                <span className="font-medium flex-1">{platform.label}</span>
+                {platform.comingSoon && (
+                  <Badge
+                    variant="secondary"
+                    className="bg-amber-500/15 text-amber-500 border-amber-500/30 text-[11px] px-2 py-0"
+                  >
+                    Coming Soon
+                  </Badge>
+                )}
               </div>
             ))}
           </CardContent>
