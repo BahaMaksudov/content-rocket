@@ -52,9 +52,9 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const PLATFORM_OPTIONS = [
-  { id: "x", label: "X (Twitter)", icon: "𝕏" },
-  { id: "linkedin", label: "LinkedIn", icon: "in" },
-  { id: "facebook", label: "Facebook", icon: "f" },
+  { id: "x", label: "X (Twitter)", icon: "𝕏", comingSoon: false },
+  { id: "linkedin", label: "LinkedIn", icon: "in", comingSoon: false },
+  { id: "facebook", label: "Facebook", icon: "f", comingSoon: true },
 ];
 
 // PKCE helpers
@@ -674,70 +674,36 @@ export default function AgentSettings() {
               </div>
             </div>
 
-            {/* Facebook Connection Card */}
-            <div
-              className={`relative p-4 rounded-xl border-2 transition-all ${facebookConnected ? "border-green-500/40 bg-green-500/5" : "border-border bg-card"}`}
-            >
+            {/* Facebook Connection Card — Coming Soon */}
+            <div className="relative p-4 rounded-xl border-2 border-border bg-card opacity-75">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${facebookConnected ? "bg-green-500/15" : "bg-[#1877F2]/15"}`}
-                  >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#1877F2]/15">
                     <span className="text-lg font-bold text-[#1877F2]">f</span>
                   </div>
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-semibold">Facebook</span>
-                      {facebookConnected && (
-                        <Badge
-                          variant="secondary"
-                          className="bg-green-500/15 text-green-500 border-green-500/30 text-[11px] px-2 py-0"
-                        >
-                          <CheckCircle className="h-3 w-3 mr-1" /> Connected
-                        </Badge>
-                      )}
+                      <Badge
+                        variant="secondary"
+                        className="bg-amber-500/15 text-amber-500 border-amber-500/30 text-[11px] px-2 py-0"
+                      >
+                        Coming Soon
+                      </Badge>
                     </div>
-                    {facebookConnected && facebookPageName ? (
-                      <div>
-                        <p className="text-sm text-muted-foreground truncate">{facebookPageName}</p>
-                        {autoPilotEnabled && (
-                          <p className="text-[11px] text-amber-500 mt-0.5">
-                            Active: High-confidence posts will be sent automatically.
-                          </p>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="text-xs text-muted-foreground">
-                        Auto-publish community-focused posts to your Facebook Page
-                      </p>
-                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Auto-publish to your Facebook Page — integration coming soon.
+                    </p>
                   </div>
                 </div>
-                {facebookConnected ? (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setDisconnectTarget("facebook")}
-                    disabled={disconnectMutation.isPending}
-                    className="text-muted-foreground hover:text-destructive shrink-0"
-                  >
-                    <Unlink className="h-4 w-4 mr-1.5" /> Disconnect
-                  </Button>
-                ) : (
-                  <Button
-                    size="sm"
-                    onClick={connectFacebook}
-                    disabled={fbConnecting || !fbSdkReady}
-                    className="bg-[#1877F2] text-white hover:bg-[#1877F2]/90 shrink-0"
-                  >
-                    {fbConnecting ? (
-                      <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                    ) : (
-                      <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-                    )}
-                    Connect
-                  </Button>
-                )}
+                <Button
+                  size="sm"
+                  disabled
+                  className="bg-[#1877F2]/40 text-white shrink-0 cursor-not-allowed"
+                >
+                  <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                  Connect
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -1007,15 +973,28 @@ export default function AgentSettings() {
             {PLATFORM_OPTIONS.map((platform) => (
               <div
                 key={platform.id}
-                className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer"
-                onClick={() => togglePlatform(platform.id)}
+                className={`flex items-center gap-3 p-3 rounded-lg border border-border transition-colors ${
+                  platform.comingSoon
+                    ? "opacity-60 cursor-not-allowed"
+                    : "hover:bg-muted/50 cursor-pointer"
+                }`}
+                onClick={() => !platform.comingSoon && togglePlatform(platform.id)}
               >
                 <Checkbox
-                  checked={platforms.includes(platform.id)}
-                  onCheckedChange={() => togglePlatform(platform.id)}
+                  checked={!platform.comingSoon && platforms.includes(platform.id)}
+                  disabled={platform.comingSoon}
+                  onCheckedChange={() => !platform.comingSoon && togglePlatform(platform.id)}
                 />
                 <span className="text-lg font-mono w-6 text-center">{platform.icon}</span>
-                <span className="font-medium">{platform.label}</span>
+                <span className="font-medium flex-1">{platform.label}</span>
+                {platform.comingSoon && (
+                  <Badge
+                    variant="secondary"
+                    className="bg-amber-500/15 text-amber-500 border-amber-500/30 text-[11px] px-2 py-0"
+                  >
+                    Coming Soon
+                  </Badge>
+                )}
               </div>
             ))}
           </CardContent>
