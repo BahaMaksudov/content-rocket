@@ -790,7 +790,15 @@ export default function AgentSettings() {
         <AlertDialog open={!!disconnectTarget} onOpenChange={(open) => !open && setDisconnectTarget(null)}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Disconnect {disconnectTarget === "x" ? "X (Twitter)" : "LinkedIn"}?</AlertDialogTitle>
+              <AlertDialogTitle>
+                Disconnect{" "}
+                {disconnectTarget === "x"
+                  ? "X (Twitter)"
+                  : disconnectTarget === "linkedin"
+                    ? "LinkedIn"
+                    : "Facebook"}
+                ?
+              </AlertDialogTitle>
               <AlertDialogDescription>
                 Are you sure you want to disconnect? This will stop all scheduled posts to this platform.
               </AlertDialogDescription>
