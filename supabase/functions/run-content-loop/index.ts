@@ -5,17 +5,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Shared LinkedIn post formatting spec — keeps mobile-first structure + branding consistent
-const LINKEDIN_POST_SPEC = `A professional LinkedIn post (800-1200 chars) following these STRICT rules:
-   - STRUCTURE (mobile-first):
-     • HOOK: First 2 lines must be a punchy statement or question that makes readers click "See more". No fluff, no preamble.
-     • BODY: 3-4 short paragraphs, each MAX 2 sentences.
-     • WHITE SPACE: Use a DOUBLE line break (\\n\\n) between every paragraph for readability.
-     • BULLETS: When listing key takeaways, use professional symbols 🔹, ✅, or • (one per line).
-   - BRANDING & HASHTAGS: The post MUST end with a hashtag line on its own at the very bottom (preceded by \\n\\n). Include EXACTLY #VidLogicAI plus 2 relevant niche hashtags (e.g. #AIAutomation #ContentStrategy). You may add more relevant tags only if they add value, but #VidLogicAI is mandatory and must be one of the first three.
-   - TONE: Professional yet conversational. No corporate jargon, no buzzword soup.
-   - OUTPUT: Return as a single string with explicit \\n\\n between paragraphs so spacing is preserved exactly when copied. Do NOT wrap in markdown.`;
-
 interface CampaignResult {
   user_id: string;
   status: string;
@@ -233,7 +222,7 @@ Return JSON:
 {
   "insights": ["5 key points"],
   "x_thread": ["5 tweets under 280 chars each, first is a hook"],
-  "linkedin_post": ${JSON.stringify(LINKEDIN_POST_SPEC)},
+  "linkedin_post": "800-1200 char LinkedIn post with hashtags",
   "facebook_post": "Community-focused Facebook post: a scroll-stopping headline, 2-3 emoji bullet points, an engagement question on its own line, then a new line with EXACTLY 2 hashtags (one MUST be #VidLogicAI), then a final line: [Link in First Comment]. The body (headline + bullets + question) MUST be under 250 characters total.",
   "confidence_score": <0-100 quality score>
 }
@@ -369,7 +358,7 @@ TRANSCRIPT: ${truncatedTranscript}
 Return a JSON object with:
 1. "insights": An array of exactly 5 key insight strings summarizing the video's main points.
 2. "x_thread": A JSON array of 5 tweet strings for an X/Twitter thread (each under 280 chars). First tweet is a hook.
-3. "linkedin_post": ${LINKEDIN_POST_SPEC}
+3. "linkedin_post": A professional LinkedIn post (800-1200 chars) with hashtags.
 4. "facebook_post": A community-focused, conversational Facebook post. Structure: a scroll-stopping headline, then 2-3 emoji-led value bullet points (✅, 💡, 🔥, 👉), then ONE engagement question on its own line. The body (headline + bullets + question) MUST be under 250 characters total. After that, add a new line with EXACTLY 2 hashtags (one MUST be #VidLogicAI). Final line: [Link in First Comment]. Tone: warm, conversational, encouraging.
 5. "confidence_score": An integer from 0-100 rating your confidence in the overall quality and virality potential of the generated content. 90+ means exceptional, 70-89 is good, below 70 needs human review.
 
