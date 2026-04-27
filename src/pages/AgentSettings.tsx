@@ -674,39 +674,117 @@ export default function AgentSettings() {
               </div>
             </div>
 
-            {/* Facebook Connection Card (Coming Soon) */}
-            <div className="relative p-4 rounded-xl border-2 border-border bg-card opacity-90">
+            {/* Facebook Connection Card */}
+            <div
+              className={`relative p-4 rounded-xl border-2 transition-all ${facebookConnected ? "border-green-500/40 bg-green-500/5" : "border-border bg-card"}`}
+            >
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#1877F2]/15">
+                  <div
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${facebookConnected ? "bg-green-500/15" : "bg-[#1877F2]/15"}`}
+                  >
                     <span className="text-lg font-bold text-[#1877F2]">f</span>
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-semibold">Facebook</span>
-                      <Badge
-                        variant="outline"
-                        className="text-[11px] px-2 py-0 border-amber-500/40 text-amber-500"
-                      >
-                        Coming Soon
-                      </Badge>
+                      {facebookConnected && (
+                        <Badge
+                          variant="secondary"
+                          className="bg-green-500/15 text-green-500 border-green-500/30 text-[11px] px-2 py-0"
+                        >
+                          <CheckCircle className="h-3 w-3 mr-1" /> Connected
+                        </Badge>
+                      )}
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      Auto-publish community-focused posts to your Facebook Page
-                    </p>
+                    {facebookConnected && facebookPageName ? (
+                      <div>
+                        <p className="text-sm text-muted-foreground truncate">{facebookPageName}</p>
+                        {autoPilotEnabled && (
+                          <p className="text-[11px] text-amber-500 mt-0.5">
+                            Active: High-confidence posts will be sent automatically.
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        Auto-publish community-focused posts to your Facebook Page
+                      </p>
+                    )}
                   </div>
                 </div>
-                <Button
-                  size="sm"
-                  disabled
-                  className="bg-[#1877F2]/40 text-white shrink-0 cursor-not-allowed"
-                >
-                  Coming Soon
-                </Button>
+                {facebookConnected ? (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setDisconnectTarget("facebook")}
+                    disabled={disconnectMutation.isPending}
+                    className="text-muted-foreground hover:text-destructive shrink-0"
+                  >
+                    <Unlink className="h-4 w-4 mr-1.5" /> Disconnect
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    onClick={connectFacebook}
+                    disabled={fbConnecting || !fbSdkReady}
+                    className="bg-[#1877F2] text-white hover:bg-[#1877F2]/90 shrink-0"
+                  >
+                    {fbConnecting ? (
+                      <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                    ) : (
+                      <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                    )}
+                    Connect
+                  </Button>
+                )}
               </div>
             </div>
           </CardContent>
         </Card>
+
+        {/* Facebook Page Selection Modal */}
+        <Dialog open={fbPagesModalOpen} onOpenChange={setFbPagesModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Select a Facebook Page</DialogTitle>
+              <DialogDescription>
+                Choose the Page that VidLogic AI should publish to. You can change this anytime by disconnecting.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2 max-h-[50vh] overflow-y-auto py-2">
+              {fbPages.map((page) => (
+                <button
+                  key={page.id}
+                  type="button"
+                  onClick={() => selectFacebookPage(page.id)}
+                  disabled={fbSavingPageId !== null}
+                  className="w-full flex items-center justify-between gap-3 p-3 rounded-lg border border-border hover:border-[#1877F2] hover:bg-[#1877F2]/5 transition-colors text-left disabled:opacity-50"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#1877F2]/15">
+                      <span className="text-base font-bold text-[#1877F2]">f</span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">{page.name}</p>
+                      <p className="text-[11px] text-muted-foreground truncate">ID: {page.id}</p>
+                    </div>
+                  </div>
+                  {fbSavingPageId === page.id ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-[#1877F2]" />
+                  ) : (
+                    <span className="text-xs font-medium text-[#1877F2]">Select →</span>
+                  )}
+                </button>
+              ))}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setFbPagesModalOpen(false)}>
+                Cancel
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Disconnect Confirmation Dialog */}
         <AlertDialog open={!!disconnectTarget} onOpenChange={(open) => !open && setDisconnectTarget(null)}>
