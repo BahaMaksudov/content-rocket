@@ -103,7 +103,16 @@ export default function AgentSettings() {
   const [confidenceThreshold, setConfidenceThreshold] = useState(85);
   const [remixChannelEnabled, setRemixChannelEnabled] = useState(false);
   const [youtubeChannelId, setYoutubeChannelId] = useState("");
-  const [disconnectTarget, setDisconnectTarget] = useState<"x" | "linkedin" | null>(null);
+  const [disconnectTarget, setDisconnectTarget] = useState<"x" | "linkedin" | "facebook" | null>(null);
+
+  // Facebook connect state
+  const [fbSdkReady, setFbSdkReady] = useState(false);
+  const [fbAppId, setFbAppId] = useState<string>("");
+  const [fbConnecting, setFbConnecting] = useState(false);
+  const [fbPagesModalOpen, setFbPagesModalOpen] = useState(false);
+  const [fbPages, setFbPages] = useState<Array<{ id: string; name: string }>>([]);
+  const [fbShortLivedToken, setFbShortLivedToken] = useState<string>("");
+  const [fbSavingPageId, setFbSavingPageId] = useState<string | null>(null);
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ["agent-settings", user?.id],
