@@ -52,9 +52,9 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const PLATFORM_OPTIONS = [
-  { id: "x", label: "X (Twitter)", icon: "𝕏" },
-  { id: "linkedin", label: "LinkedIn", icon: "in" },
-  { id: "facebook", label: "Facebook", icon: "f" },
+  { id: "x", label: "X (Twitter)", icon: "𝕏", comingSoon: false },
+  { id: "linkedin", label: "LinkedIn", icon: "in", comingSoon: false },
+  { id: "facebook", label: "Facebook", icon: "f", comingSoon: true },
 ];
 
 // PKCE helpers
