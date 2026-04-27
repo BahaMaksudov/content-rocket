@@ -309,7 +309,16 @@ export default function AgentSettings() {
   }, [toast]);
 
   const disconnectMutation = useMutation({
-    mutationFn: async (platform: "x" | "linkedin") => {
+    mutationFn: async (platform: "x" | "linkedin" | "facebook") => {
+      if (platform === "facebook") {
+        const { data, error } = await supabase.functions.invoke("facebook-connect", {
+          body: { action: "disconnect" },
+        });
+        if (error) throw new Error(error.message || "Failed to disconnect Facebook");
+        if (data?.error) throw new Error(data.error);
+        return platform;
+      }
+
       const updates: Record<string, null> =
         platform === "x"
           ? { x_refresh_token: null, x_username: null }
@@ -324,14 +333,152 @@ export default function AgentSettings() {
     },
     onSuccess: (platform) => {
       queryClient.invalidateQueries({ queryKey: ["agent-settings"] });
-      toast({
-        title: `${platform === "x" ? "X (Twitter)" : "LinkedIn"} disconnected successfully.`,
-      });
+      const label =
+        platform === "x" ? "X (Twitter)" : platform === "linkedin" ? "LinkedIn" : "Facebook";
+      toast({ title: `${label} disconnected successfully.` });
     },
     onError: (err: Error) => {
       toast({ variant: "destructive", title: "Error", description: err.message });
     },
   });
+
+  // Load Facebook App ID + JS SDK lazily, only on this page.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: config } = await supabase.functions.invoke("get-oauth-config");
+        if (cancelled) return;
+        const appId = config?.facebook_app_id || "";
+        setFbAppId(appId);
+        if (!appId) return;
+
+        const w = window as any;
+        if (w.FB) {
+          w.FB.init({ appId, cookie: true, xfbml: false, version: "v21.0" });
+          setFbSdkReady(true);
+          return;
+        }
+        w.fbAsyncInit = () => {
+          w.FB.init({ appId, cookie: true, xfbml: false, version: "v21.0" });
+          if (!cancelled) setFbSdkReady(true);
+        };
+        if (!document.getElementById("facebook-jssdk")) {
+          const s = document.createElement("script");
+          s.id = "facebook-jssdk";
+          s.src = "https://connect.facebook.net/en_US/sdk.js";
+          s.async = true;
+          s.defer = true;
+          s.crossOrigin = "anonymous";
+          document.body.appendChild(s);
+        }
+      } catch (e) {
+        console.warn("Failed to bootstrap Facebook SDK", e);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const connectFacebook = useCallback(() => {
+    const w = window as any;
+    if (!fbSdkReady || !w.FB) {
+      toast({
+        variant: "destructive",
+        title: "Facebook SDK not ready",
+        description: fbAppId
+          ? "Please wait a moment and try again."
+          : "Facebook App ID is not configured on the server.",
+      });
+      return;
+    }
+    setFbConnecting(true);
+    w.FB.login(
+      (response: any) => {
+        if (response?.authResponse?.accessToken) {
+          const userToken = response.authResponse.accessToken as string;
+          setFbShortLivedToken(userToken);
+          w.FB.api(
+            "/me/accounts",
+            { fields: "id,name", access_token: userToken },
+            (pagesRes: any) => {
+              setFbConnecting(false);
+              if (!pagesRes || pagesRes.error) {
+                toast({
+                  variant: "destructive",
+                  title: "Could not load Pages",
+                  description: pagesRes?.error?.message || "Please try again.",
+                });
+                return;
+              }
+              const pages = (pagesRes.data || []) as Array<{ id: string; name: string }>;
+              if (pages.length === 0) {
+                toast({
+                  variant: "destructive",
+                  title: "No Pages found",
+                  description: "You must be an admin of at least one Facebook Page.",
+                });
+                return;
+              }
+              setFbPages(pages);
+              setFbPagesModalOpen(true);
+            },
+          );
+        } else {
+          setFbConnecting(false);
+          toast({
+            variant: "destructive",
+            title: "Facebook login canceled",
+            description: response?.status || "Authorization was not completed.",
+          });
+        }
+      },
+      {
+        scope: "pages_show_list,pages_manage_posts,pages_read_engagement,public_profile",
+        return_scopes: true,
+      },
+    );
+  }, [fbAppId, fbSdkReady, toast]);
+
+  const selectFacebookPage = useCallback(
+    async (pageId: string) => {
+      if (!fbShortLivedToken) {
+        toast({
+          variant: "destructive",
+          title: "Session expired",
+          description: "Please reconnect to Facebook.",
+        });
+        return;
+      }
+      setFbSavingPageId(pageId);
+      try {
+        const { data, error } = await supabase.functions.invoke("facebook-connect", {
+          body: {
+            action: "connect",
+            short_lived_user_token: fbShortLivedToken,
+            page_id: pageId,
+          },
+        });
+        if (error) throw new Error(error.message || "Failed to save Facebook connection");
+        if (data?.error) throw new Error(data.error);
+
+        toast({
+          title: "Facebook connected!",
+          description: `Posting as ${data?.page_name || "your Page"}.`,
+        });
+        setFbPagesModalOpen(false);
+        setFbShortLivedToken("");
+        setFbPages([]);
+        queryClient.invalidateQueries({ queryKey: ["agent-settings"] });
+      } catch (e: any) {
+        toast({ variant: "destructive", title: "Connection failed", description: e.message });
+      } finally {
+        setFbSavingPageId(null);
+      }
+    },
+    [fbShortLivedToken, queryClient, toast],
+  );
 
   const handleDisconnectConfirm = () => {
     if (disconnectTarget) {
