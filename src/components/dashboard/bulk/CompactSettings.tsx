@@ -140,70 +140,8 @@ export function CompactSettings({
         
         <CollapsibleContent>
           <div className="px-4 pb-4 pt-2 border-t border-border">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Writing Style */}
-              <div className="space-y-1.5">
-                <Label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Mic className="h-3 w-3" />
-                  Writing Style
-                </Label>
-                <Select
-                  value={selectedBrandVoice || "default_friendly_peer"}
-                  onValueChange={handleBrandVoiceChange}
-                >
-                  <SelectTrigger className="h-9">
-                    <SelectValue>{getSelectedVoiceName()}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
-                      Preset Styles
-                    </div>
-                    {DEFAULT_BRAND_VOICES.map((voice) => (
-                      <SelectItem key={voice.id} value={voice.id}>
-                        <div className="flex items-center gap-2">
-                          {voice.name}
-                          {voice.isDefault && (
-                            <Badge variant="secondary" className="text-[10px] px-1 py-0">
-                              Default
-                            </Badge>
-                          )}
-                        </div>
-                      </SelectItem>
-                    ))}
-                    
-                    {brandVoices.length > 0 && (
-                      <>
-                        <SelectSeparator />
-                        <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground flex items-center gap-1">
-                          My Custom Voices
-                          {!isPro && <Crown className="h-3 w-3 text-primary" />}
-                        </div>
-                        {brandVoices.map((voice) => (
-                          <SelectItem key={voice.id} value={voice.id}>
-                            <div className="flex items-center gap-2">
-                              {voice.name}
-                              {!isPro && (
-                                <Badge variant="outline" className="text-[10px] px-1 py-0">
-                                  Pro
-                                </Badge>
-                              )}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </>
-                    )}
-                    
-                    <SelectSeparator />
-                    <SelectItem value="create_new" className="text-primary">
-                      <div className="flex items-center gap-2">
-                        <Plus className="h-4 w-4" />
-                        Create New
-                        {!isPro && <Crown className="h-3 w-3" />}
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
 
               {/* Tone */}
               <div className="space-y-1.5">
