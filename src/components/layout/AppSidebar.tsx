@@ -28,7 +28,6 @@ const mainNavItems = [
   { title: "Dashboard", url: "/dashboard", icon: Home, end: true },
   { title: "Agent Queue", url: "/agent/queue", icon: Inbox, end: true },
   { title: "Agent Settings", url: "/agent/settings", icon: Settings, end: true },
-  { title: "Brand Voices", url: "/brand-voices", icon: Mic, end: false },
 ];
 
 const proNavItems = [
