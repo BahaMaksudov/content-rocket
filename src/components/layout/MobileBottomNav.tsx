@@ -17,8 +17,8 @@ import {
 
 const tabs = [
   { label: "Home", icon: Home, path: "/dashboard" },
+  { label: "Agent", icon: Inbox, path: "/agent/queue" },
   { label: "History", icon: History, path: "/history" },
-  { label: "Voices", icon: Mic, path: "/brand-voices" },
   { label: "More", icon: MoreHorizontal, path: "__more__" },
 ];
 
