@@ -16,7 +16,7 @@ import AuthConfirm from "./pages/AuthConfirm";
 import Dashboard from "./pages/Dashboard";
 import History from "./pages/History";
 import Team from "./pages/Team";
-import BrandVoices from "./pages/BrandVoices";
+
 import Billing from "./pages/Billing";
 import Settings from "./pages/Settings";
 import Developer from "./pages/Developer";
@@ -69,14 +69,6 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <History />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/brand-voices"
-              element={
-                <ProtectedRoute>
-                  <BrandVoices />
                 </ProtectedRoute>
               }
             />

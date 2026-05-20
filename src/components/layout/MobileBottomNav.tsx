@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, History, Mic, User, MoreHorizontal, Code, Crown, Rocket, ArrowUpRight, Zap, Inbox, Settings } from "lucide-react";
+import { Home, History, User, MoreHorizontal, Code, Crown, Rocket, ArrowUpRight, Zap, Inbox, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -17,8 +17,8 @@ import {
 
 const tabs = [
   { label: "Home", icon: Home, path: "/dashboard" },
+  { label: "Agent", icon: Inbox, path: "/agent/queue" },
   { label: "History", icon: History, path: "/history" },
-  { label: "Voices", icon: Mic, path: "/brand-voices" },
   { label: "More", icon: MoreHorizontal, path: "__more__" },
 ];
 
