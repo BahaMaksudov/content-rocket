@@ -79,69 +79,10 @@ export function GenerationSettings({
   const { user } = useAuth();
   const { hasCredits, creditsUsed, creditLimit, loading: creditsLoading } = useCredits();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [showCreateVoiceModal, setShowCreateVoiceModal] = useState(false);
-  const [showStyleLab, setShowStyleLab] = useState(false);
   const [internalFairUse, setInternalFairUse] = useState(false);
   const fairUseConfirmed = externalFairUse ?? internalFairUse;
   const setFairUseConfirmed = externalSetFairUse ?? setInternalFairUse;
 
-  // Auto-select default voice on first render if nothing selected
-  useState(() => {
-    if (!selectedBrandVoice) {
-      const defaultVoice = DEFAULT_BRAND_VOICES.find(v => v.isDefault);
-      if (defaultVoice) {
-        setSelectedBrandVoice(defaultVoice.id);
-      }
-    }
-  });
-
-  const handleBrandVoiceChange = (value: string) => {
-    if (value === "create_new") {
-      if (!isPro) {
-        setShowPremiumModal(true);
-        return;
-      }
-      setShowCreateVoiceModal(true);
-      return;
-    }
-
-    if (value === "style_lab") {
-      if (!isPro) {
-        setShowPremiumModal(true);
-        return;
-      }
-      setShowStyleLab(true);
-      return;
-    }
-    
-    // Custom user voices require Pro (unless it's a default voice)
-    if (!isPro && !isDefaultVoiceId(value) && value !== "none") {
-      setShowPremiumModal(true);
-      return;
-    }
-    
-    setSelectedBrandVoice(value === "none" ? null : value);
-  };
-
-  const handleVoiceCreated = (voiceId: string) => {
-    // Auto-select the newly created voice
-    setSelectedBrandVoice(voiceId);
-  };
-
-  // Get the display name for the selected voice
-  const getSelectedVoiceName = () => {
-    if (!selectedBrandVoice) return "Select a writing style";
-    
-    // Check default voices first
-    const defaultVoice = DEFAULT_BRAND_VOICES.find(v => v.id === selectedBrandVoice);
-    if (defaultVoice) return defaultVoice.name;
-    
-    // Check user voices
-    const userVoice = brandVoices.find(v => v.id === selectedBrandVoice);
-    if (userVoice) return userVoice.name;
-    
-    return "Select a writing style";
-  };
 
   // Agency users have unlimited, Pro users have 50, Free users have 5
   const creditsRemaining = isAgency ? Infinity : Math.max(0, creditLimit - creditsUsed);
