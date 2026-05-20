@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, History, Mic, User, MoreHorizontal, Code, Crown, Rocket, ArrowUpRight, Zap, Inbox, Settings } from "lucide-react";
+import { Home, History, User, MoreHorizontal, Code, Crown, Rocket, ArrowUpRight, Zap, Inbox, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useSubscription } from "@/contexts/SubscriptionContext";
