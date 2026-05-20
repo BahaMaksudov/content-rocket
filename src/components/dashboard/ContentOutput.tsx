@@ -547,11 +547,6 @@ ${content.blogPost}
                     onUpdateContent({ ...content, shortFormScripts: updated });
                   }}
                 />
-                
-                {/* Voice Generator for this script */}
-                <div className="pt-3 border-t border-border">
-                  <VoiceGenerator scriptText={script.script} targetLanguage={targetLanguage} />
-                </div>
               </div>
             ))}
             <SocialActionBar 

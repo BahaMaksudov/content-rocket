@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Home, History, Mic, Sparkles, Clock, Code, Users, Rocket, Crown, ArrowUpRight, Zap, Inbox, Settings } from "lucide-react";
+import { Home, History, Sparkles, Clock, Code, Users, Rocket, Crown, ArrowUpRight, Zap, Inbox, Settings } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -28,7 +28,6 @@ const mainNavItems = [
   { title: "Dashboard", url: "/dashboard", icon: Home, end: true },
   { title: "Agent Queue", url: "/agent/queue", icon: Inbox, end: true },
   { title: "Agent Settings", url: "/agent/settings", icon: Settings, end: true },
-  { title: "Brand Voices", url: "/brand-voices", icon: Mic, end: false },
 ];
 
 const proNavItems = [

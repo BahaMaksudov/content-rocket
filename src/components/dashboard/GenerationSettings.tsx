@@ -5,20 +5,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSeparator } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Loader2, Sparkles, Mic, Crown, Rocket, AlertCircle, Plus, Info, FlaskConical } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Loader2, Sparkles, Crown, Rocket, AlertCircle, Info } from "lucide-react";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useCredits } from "@/hooks/use-credits";
 import { PremiumModal } from "@/components/PremiumModal";
 import { GlobalReachSettings } from "./GlobalReachSettings";
-import { CreateBrandVoiceModal } from "./CreateBrandVoiceModal";
-import { StyleLabModal } from "./StyleLabModal";
-import { DEFAULT_BRAND_VOICES, isDefaultVoiceId } from "@/lib/default-brand-voices";
 
 interface BrandVoice {
   id: string;
@@ -79,69 +74,10 @@ export function GenerationSettings({
   const { user } = useAuth();
   const { hasCredits, creditsUsed, creditLimit, loading: creditsLoading } = useCredits();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [showCreateVoiceModal, setShowCreateVoiceModal] = useState(false);
-  const [showStyleLab, setShowStyleLab] = useState(false);
   const [internalFairUse, setInternalFairUse] = useState(false);
   const fairUseConfirmed = externalFairUse ?? internalFairUse;
   const setFairUseConfirmed = externalSetFairUse ?? setInternalFairUse;
 
-  // Auto-select default voice on first render if nothing selected
-  useState(() => {
-    if (!selectedBrandVoice) {
-      const defaultVoice = DEFAULT_BRAND_VOICES.find(v => v.isDefault);
-      if (defaultVoice) {
-        setSelectedBrandVoice(defaultVoice.id);
-      }
-    }
-  });
-
-  const handleBrandVoiceChange = (value: string) => {
-    if (value === "create_new") {
-      if (!isPro) {
-        setShowPremiumModal(true);
-        return;
-      }
-      setShowCreateVoiceModal(true);
-      return;
-    }
-
-    if (value === "style_lab") {
-      if (!isPro) {
-        setShowPremiumModal(true);
-        return;
-      }
-      setShowStyleLab(true);
-      return;
-    }
-    
-    // Custom user voices require Pro (unless it's a default voice)
-    if (!isPro && !isDefaultVoiceId(value) && value !== "none") {
-      setShowPremiumModal(true);
-      return;
-    }
-    
-    setSelectedBrandVoice(value === "none" ? null : value);
-  };
-
-  const handleVoiceCreated = (voiceId: string) => {
-    // Auto-select the newly created voice
-    setSelectedBrandVoice(voiceId);
-  };
-
-  // Get the display name for the selected voice
-  const getSelectedVoiceName = () => {
-    if (!selectedBrandVoice) return "Select a writing style";
-    
-    // Check default voices first
-    const defaultVoice = DEFAULT_BRAND_VOICES.find(v => v.id === selectedBrandVoice);
-    if (defaultVoice) return defaultVoice.name;
-    
-    // Check user voices
-    const userVoice = brandVoices.find(v => v.id === selectedBrandVoice);
-    if (userVoice) return userVoice.name;
-    
-    return "Select a writing style";
-  };
 
   // Agency users have unlimited, Pro users have 50, Free users have 5
   const creditsRemaining = isAgency ? Infinity : Math.max(0, creditLimit - creditsUsed);
@@ -160,88 +96,6 @@ export function GenerationSettings({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Writing Style (Brand Voice) */}
-        <div className="space-y-2">
-          <Label className="flex items-center gap-2">
-            <Mic className="h-4 w-4" />
-            Writing Style
-          </Label>
-          <Select
-            value={selectedBrandVoice || "default_friendly_peer"}
-            onValueChange={handleBrandVoiceChange}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select a writing style">
-                {getSelectedVoiceName()}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {/* Default Pre-populated Options */}
-              <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
-                Preset Styles
-              </div>
-              {DEFAULT_BRAND_VOICES.map((voice) => (
-                <SelectItem key={voice.id} value={voice.id}>
-                  <div className="flex items-center gap-2">
-                    {voice.name}
-                    {voice.isDefault && (
-                      <Badge variant="secondary" className="text-[10px] px-1 py-0">
-                        Default
-                      </Badge>
-                    )}
-                  </div>
-                </SelectItem>
-              ))}
-              
-              {/* User's Custom Voices */}
-              {brandVoices.length > 0 && (
-                <>
-                  <SelectSeparator />
-                  <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground flex items-center gap-1">
-                    My Custom Voices
-                    {!isPro && <Crown className="h-3 w-3 text-primary" />}
-                  </div>
-                  {brandVoices.map((voice) => (
-                    <SelectItem key={voice.id} value={voice.id}>
-                      <div className="flex items-center gap-2">
-                        {voice.name}
-                        {!isPro && (
-                          <Badge variant="outline" className="text-[10px] px-1 py-0">
-                            Pro
-                          </Badge>
-                        )}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </>
-              )}
-              
-              {/* Create / Train Options */}
-              <SelectSeparator />
-              <SelectItem value="style_lab" className="text-primary">
-                <div className="flex items-center gap-2">
-                  <FlaskConical className="h-4 w-4" />
-                  Train from My Writing
-                  {!isPro && <Crown className="h-3 w-3" />}
-                </div>
-              </SelectItem>
-              <SelectItem value="create_new" className="text-primary">
-                <div className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  Create Manually
-                  {!isPro && <Crown className="h-3 w-3" />}
-                </div>
-              </SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Link
-            to="/brand-voices"
-            className="text-xs text-muted-foreground hover:text-primary transition-colors"
-          >
-            Manage all voices →
-          </Link>
-        </div>
 
         {/* Tone */}
         <div className="space-y-2">
@@ -383,19 +237,6 @@ export function GenerationSettings({
         feature={isCreditsExhausted ? "generation-limit" : "brand-voice"}
       />
 
-
-
-      <CreateBrandVoiceModal
-        open={showCreateVoiceModal}
-        onOpenChange={setShowCreateVoiceModal}
-        onVoiceCreated={handleVoiceCreated}
-      />
-
-      <StyleLabModal
-        open={showStyleLab}
-        onOpenChange={setShowStyleLab}
-        onVoiceCreated={handleVoiceCreated}
-      />
     </Card>
   );
 }

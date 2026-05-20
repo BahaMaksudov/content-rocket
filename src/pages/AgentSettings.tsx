@@ -14,6 +14,14 @@ import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -44,9 +52,9 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const PLATFORM_OPTIONS = [
-  { id: "x", label: "X (Twitter)", icon: "𝕏" },
-  { id: "linkedin", label: "LinkedIn", icon: "in" },
-  { id: "facebook", label: "Facebook", icon: "f" },
+  { id: "x", label: "X (Twitter)", icon: "𝕏", comingSoon: false },
+  { id: "linkedin", label: "LinkedIn", icon: "in", comingSoon: false },
+  { id: "facebook", label: "Facebook", icon: "f", comingSoon: true },
 ];
 
 // PKCE helpers
@@ -95,7 +103,16 @@ export default function AgentSettings() {
   const [confidenceThreshold, setConfidenceThreshold] = useState(85);
   const [remixChannelEnabled, setRemixChannelEnabled] = useState(false);
   const [youtubeChannelId, setYoutubeChannelId] = useState("");
-  const [disconnectTarget, setDisconnectTarget] = useState<"x" | "linkedin" | null>(null);
+  const [disconnectTarget, setDisconnectTarget] = useState<"x" | "linkedin" | "facebook" | null>(null);
+
+  // Facebook connect state
+  const [fbSdkReady, setFbSdkReady] = useState(false);
+  const [fbAppId, setFbAppId] = useState<string>("");
+  const [fbConnecting, setFbConnecting] = useState(false);
+  const [fbPagesModalOpen, setFbPagesModalOpen] = useState(false);
+  const [fbPages, setFbPages] = useState<Array<{ id: string; name: string }>>([]);
+  const [fbShortLivedToken, setFbShortLivedToken] = useState<string>("");
+  const [fbSavingPageId, setFbSavingPageId] = useState<string | null>(null);
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ["agent-settings", user?.id],
@@ -111,6 +128,8 @@ export default function AgentSettings() {
   const xUsername = (settings as any)?.x_username || "";
   const linkedinConnected = !!(settings as any)?.linkedin_access_token;
   const linkedinName = (settings as any)?.linkedin_name || "";
+  const facebookConnected = !!(settings as any)?.facebook_page_access_token;
+  const facebookPageName = (settings as any)?.facebook_page_name || "";
 
   useEffect(() => {
     if (settings) {
@@ -290,7 +309,16 @@ export default function AgentSettings() {
   }, [toast]);
 
   const disconnectMutation = useMutation({
-    mutationFn: async (platform: "x" | "linkedin") => {
+    mutationFn: async (platform: "x" | "linkedin" | "facebook") => {
+      if (platform === "facebook") {
+        const { data, error } = await supabase.functions.invoke("facebook-connect", {
+          body: { action: "disconnect" },
+        });
+        if (error) throw new Error(error.message || "Failed to disconnect Facebook");
+        if (data?.error) throw new Error(data.error);
+        return platform;
+      }
+
       const updates: Record<string, null> =
         platform === "x"
           ? { x_refresh_token: null, x_username: null }
@@ -305,14 +333,152 @@ export default function AgentSettings() {
     },
     onSuccess: (platform) => {
       queryClient.invalidateQueries({ queryKey: ["agent-settings"] });
-      toast({
-        title: `${platform === "x" ? "X (Twitter)" : "LinkedIn"} disconnected successfully.`,
-      });
+      const label =
+        platform === "x" ? "X (Twitter)" : platform === "linkedin" ? "LinkedIn" : "Facebook";
+      toast({ title: `${label} disconnected successfully.` });
     },
     onError: (err: Error) => {
       toast({ variant: "destructive", title: "Error", description: err.message });
     },
   });
+
+  // Load Facebook App ID + JS SDK lazily, only on this page.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: config } = await supabase.functions.invoke("get-oauth-config");
+        if (cancelled) return;
+        const appId = config?.facebook_app_id || "";
+        setFbAppId(appId);
+        if (!appId) return;
+
+        const w = window as any;
+        if (w.FB) {
+          w.FB.init({ appId, cookie: true, xfbml: false, version: "v21.0" });
+          setFbSdkReady(true);
+          return;
+        }
+        w.fbAsyncInit = () => {
+          w.FB.init({ appId, cookie: true, xfbml: false, version: "v21.0" });
+          if (!cancelled) setFbSdkReady(true);
+        };
+        if (!document.getElementById("facebook-jssdk")) {
+          const s = document.createElement("script");
+          s.id = "facebook-jssdk";
+          s.src = "https://connect.facebook.net/en_US/sdk.js";
+          s.async = true;
+          s.defer = true;
+          s.crossOrigin = "anonymous";
+          document.body.appendChild(s);
+        }
+      } catch (e) {
+        console.warn("Failed to bootstrap Facebook SDK", e);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const connectFacebook = useCallback(() => {
+    const w = window as any;
+    if (!fbSdkReady || !w.FB) {
+      toast({
+        variant: "destructive",
+        title: "Facebook SDK not ready",
+        description: fbAppId
+          ? "Please wait a moment and try again."
+          : "Facebook App ID is not configured on the server.",
+      });
+      return;
+    }
+    setFbConnecting(true);
+    w.FB.login(
+      (response: any) => {
+        if (response?.authResponse?.accessToken) {
+          const userToken = response.authResponse.accessToken as string;
+          setFbShortLivedToken(userToken);
+          w.FB.api(
+            "/me/accounts",
+            { fields: "id,name", access_token: userToken },
+            (pagesRes: any) => {
+              setFbConnecting(false);
+              if (!pagesRes || pagesRes.error) {
+                toast({
+                  variant: "destructive",
+                  title: "Could not load Pages",
+                  description: pagesRes?.error?.message || "Please try again.",
+                });
+                return;
+              }
+              const pages = (pagesRes.data || []) as Array<{ id: string; name: string }>;
+              if (pages.length === 0) {
+                toast({
+                  variant: "destructive",
+                  title: "No Pages found",
+                  description: "You must be an admin of at least one Facebook Page.",
+                });
+                return;
+              }
+              setFbPages(pages);
+              setFbPagesModalOpen(true);
+            },
+          );
+        } else {
+          setFbConnecting(false);
+          toast({
+            variant: "destructive",
+            title: "Facebook login canceled",
+            description: response?.status || "Authorization was not completed.",
+          });
+        }
+      },
+      {
+        scope: "pages_show_list,pages_manage_posts,pages_read_engagement,public_profile",
+        return_scopes: true,
+      },
+    );
+  }, [fbAppId, fbSdkReady, toast]);
+
+  const selectFacebookPage = useCallback(
+    async (pageId: string) => {
+      if (!fbShortLivedToken) {
+        toast({
+          variant: "destructive",
+          title: "Session expired",
+          description: "Please reconnect to Facebook.",
+        });
+        return;
+      }
+      setFbSavingPageId(pageId);
+      try {
+        const { data, error } = await supabase.functions.invoke("facebook-connect", {
+          body: {
+            action: "connect",
+            short_lived_user_token: fbShortLivedToken,
+            page_id: pageId,
+          },
+        });
+        if (error) throw new Error(error.message || "Failed to save Facebook connection");
+        if (data?.error) throw new Error(data.error);
+
+        toast({
+          title: "Facebook connected!",
+          description: `Posting as ${data?.page_name || "your Page"}.`,
+        });
+        setFbPagesModalOpen(false);
+        setFbShortLivedToken("");
+        setFbPages([]);
+        queryClient.invalidateQueries({ queryKey: ["agent-settings"] });
+      } catch (e: any) {
+        toast({ variant: "destructive", title: "Connection failed", description: e.message });
+      } finally {
+        setFbSavingPageId(null);
+      }
+    },
+    [fbShortLivedToken, queryClient, toast],
+  );
 
   const handleDisconnectConfirm = () => {
     if (disconnectTarget) {
@@ -508,25 +674,25 @@ export default function AgentSettings() {
               </div>
             </div>
 
-            {/* Facebook Connection Card (Coming Soon) */}
-            <div className="relative p-4 rounded-xl border-2 border-border bg-card opacity-90">
+            {/* Facebook Connection Card — Coming Soon */}
+            <div className="relative p-4 rounded-xl border-2 border-border bg-card opacity-75">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#1877F2]/15">
                     <span className="text-lg font-bold text-[#1877F2]">f</span>
                   </div>
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-semibold">Facebook</span>
                       <Badge
-                        variant="outline"
-                        className="text-[11px] px-2 py-0 border-amber-500/40 text-amber-500"
+                        variant="secondary"
+                        className="bg-amber-500/15 text-amber-500 border-amber-500/30 text-[11px] px-2 py-0"
                       >
                         Coming Soon
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Auto-publish community-focused posts to your Facebook Page
+                      Auto-publish to your Facebook Page — integration coming soon.
                     </p>
                   </div>
                 </div>
@@ -535,18 +701,70 @@ export default function AgentSettings() {
                   disabled
                   className="bg-[#1877F2]/40 text-white shrink-0 cursor-not-allowed"
                 >
-                  Coming Soon
+                  <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                  Connect
                 </Button>
               </div>
             </div>
           </CardContent>
         </Card>
 
+        {/* Facebook Page Selection Modal */}
+        <Dialog open={fbPagesModalOpen} onOpenChange={setFbPagesModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Select a Facebook Page</DialogTitle>
+              <DialogDescription>
+                Choose the Page that VidLogic AI should publish to. You can change this anytime by disconnecting.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2 max-h-[50vh] overflow-y-auto py-2">
+              {fbPages.map((page) => (
+                <button
+                  key={page.id}
+                  type="button"
+                  onClick={() => selectFacebookPage(page.id)}
+                  disabled={fbSavingPageId !== null}
+                  className="w-full flex items-center justify-between gap-3 p-3 rounded-lg border border-border hover:border-[#1877F2] hover:bg-[#1877F2]/5 transition-colors text-left disabled:opacity-50"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#1877F2]/15">
+                      <span className="text-base font-bold text-[#1877F2]">f</span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">{page.name}</p>
+                      <p className="text-[11px] text-muted-foreground truncate">ID: {page.id}</p>
+                    </div>
+                  </div>
+                  {fbSavingPageId === page.id ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-[#1877F2]" />
+                  ) : (
+                    <span className="text-xs font-medium text-[#1877F2]">Select →</span>
+                  )}
+                </button>
+              ))}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setFbPagesModalOpen(false)}>
+                Cancel
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         {/* Disconnect Confirmation Dialog */}
         <AlertDialog open={!!disconnectTarget} onOpenChange={(open) => !open && setDisconnectTarget(null)}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Disconnect {disconnectTarget === "x" ? "X (Twitter)" : "LinkedIn"}?</AlertDialogTitle>
+              <AlertDialogTitle>
+                Disconnect{" "}
+                {disconnectTarget === "x"
+                  ? "X (Twitter)"
+                  : disconnectTarget === "linkedin"
+                    ? "LinkedIn"
+                    : "Facebook"}
+                ?
+              </AlertDialogTitle>
               <AlertDialogDescription>
                 Are you sure you want to disconnect? This will stop all scheduled posts to this platform.
               </AlertDialogDescription>
@@ -755,15 +973,28 @@ export default function AgentSettings() {
             {PLATFORM_OPTIONS.map((platform) => (
               <div
                 key={platform.id}
-                className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer"
-                onClick={() => togglePlatform(platform.id)}
+                className={`flex items-center gap-3 p-3 rounded-lg border border-border transition-colors ${
+                  platform.comingSoon
+                    ? "opacity-60 cursor-not-allowed"
+                    : "hover:bg-muted/50 cursor-pointer"
+                }`}
+                onClick={() => !platform.comingSoon && togglePlatform(platform.id)}
               >
                 <Checkbox
-                  checked={platforms.includes(platform.id)}
-                  onCheckedChange={() => togglePlatform(platform.id)}
+                  checked={!platform.comingSoon && platforms.includes(platform.id)}
+                  disabled={platform.comingSoon}
+                  onCheckedChange={() => !platform.comingSoon && togglePlatform(platform.id)}
                 />
                 <span className="text-lg font-mono w-6 text-center">{platform.icon}</span>
-                <span className="font-medium">{platform.label}</span>
+                <span className="font-medium flex-1">{platform.label}</span>
+                {platform.comingSoon && (
+                  <Badge
+                    variant="secondary"
+                    className="bg-amber-500/15 text-amber-500 border-amber-500/30 text-[11px] px-2 py-0"
+                  >
+                    Coming Soon
+                  </Badge>
+                )}
               </div>
             ))}
           </CardContent>
