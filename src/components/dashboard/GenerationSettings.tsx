@@ -242,19 +242,6 @@ export function GenerationSettings({
         feature={isCreditsExhausted ? "generation-limit" : "brand-voice"}
       />
 
-
-
-      <CreateBrandVoiceModal
-        open={showCreateVoiceModal}
-        onOpenChange={setShowCreateVoiceModal}
-        onVoiceCreated={handleVoiceCreated}
-      />
-
-      <StyleLabModal
-        open={showStyleLab}
-        onOpenChange={setShowStyleLab}
-        onVoiceCreated={handleVoiceCreated}
-      />
     </Card>
   );
 }
