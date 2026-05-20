@@ -73,14 +73,6 @@ const App = () => (
               }
             />
             <Route
-              path="/brand-voices"
-              element={
-                <ProtectedRoute>
-                  <BrandVoices />
-                </ProtectedRoute>
-              }
-            />
-            <Route
               path="/team"
               element={
                 <ProtectedRoute>
