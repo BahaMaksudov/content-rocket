@@ -169,15 +169,6 @@ export function HorizontalGenerationSettings({
             </Select>
           </div>
 
-          {/* Manage voices link */}
-          <div className="flex items-end pb-2">
-            <Link
-              to="/brand-voices"
-              className="text-xs text-muted-foreground hover:text-primary transition-colors whitespace-nowrap"
-            >
-              Manage voices →
-            </Link>
-          </div>
         </div>
       </div>
 
