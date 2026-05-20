@@ -203,15 +203,6 @@ export function CompactSettings({
                 </Select>
               </div>
             </div>
-            
-            <div className="mt-3 pt-3 border-t border-border/50">
-              <Link
-                to="/brand-voices"
-                className="text-xs text-muted-foreground hover:text-primary transition-colors"
-              >
-                Manage all voices →
-              </Link>
-            </div>
           </div>
         </CollapsibleContent>
       </Collapsible>
