@@ -967,7 +967,7 @@ function PricingSection({
                   </div>
                 )}
                 <Card
-                  className={`h-full ${plan.popular ? "border-primary ring-2 ring-primary/20" : plan.highlight ? "border-amber-500/50 ring-2 ring-amber-500/20" : "border-border"} transition-all duration-300 hover:border-primary/50`}
+                  className={`h-full ${plan.popular ? "border-primary ring-2 ring-primary/20" : plan.highlight ? "border-amber-500/50 ring-2 ring-amber-500/20" : "border-border"} ${plan.comingSoon ? "opacity-60 cursor-not-allowed" : "transition-all duration-300 hover:border-primary/50"}`}
                 >
                   <CardHeader className="text-center pb-4">
                     <CardTitle className="text-xl">{plan.name}</CardTitle>
