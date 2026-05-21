@@ -37,6 +37,30 @@ export default function Blog() {
   const [activeTag, setActiveTag] = useState("All");
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
+  const [aiPosts, setAiPosts] = useState<PublicPost[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("public_blog_posts" as any)
+        .select("id, slug, title, tl_dr, insights, created_at, youtube_video_id")
+        .eq("published", true)
+        .order("created_at", { ascending: false })
+        .limit(60);
+      if (cancelled || !data) return;
+      setAiPosts(
+        (data as any[]).map((d) => ({
+          ...d,
+          insights: Array.isArray(d.insights) ? d.insights : [],
+        })) as PublicPost[],
+      );
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
 
   const filteredPosts = POSTS.filter(
     (p) => activeTag === "All" || p.tags.includes(activeTag)
