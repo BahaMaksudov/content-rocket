@@ -174,27 +174,45 @@ export function MobileBottomNav() {
 
             {/* Footer links */}
             <div className="border-t border-border mt-3 pt-3">
-              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
-                <button
-                  onClick={() => goTo("/privacy")}
-                  className="hover:text-foreground transition-colors"
-                >
-                  Privacy Policy
-                </button>
-                <button
-                  onClick={() => goTo("/terms")}
-                  className="hover:text-foreground transition-colors"
-                >
-                  Terms of Service
-                </button>
-                <a
-                  href="/blog"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-foreground transition-colors"
-                >
-                  Public Blog
-                </a>
+              <div className="flex flex-col items-center gap-y-2 text-xs text-muted-foreground">
+                {/* Row 1 */}
+                <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+                  <button
+                    onClick={() => goTo("/privacy")}
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Privacy Policy
+                  </button>
+                  <button
+                    onClick={() => goTo("/terms")}
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Terms of Service
+                  </button>
+                  <a
+                    href="/blog"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Public Blog
+                  </a>
+                </div>
+                {/* Row 2 */}
+                <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+                  <button
+                    onClick={() => goTo("/refund-policy")}
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Refund Policy
+                  </button>
+                  <a
+                    href="mailto:support@vidlogicai.com"
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Contact Support
+                  </a>
+                </div>
               </div>
               <p className="text-center text-[10px] text-muted-foreground/60 mt-2">
                 © {new Date().getFullYear()} VidLogic AI
