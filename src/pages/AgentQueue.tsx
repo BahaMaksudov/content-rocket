@@ -489,22 +489,24 @@ function CampaignCard({
   return (
     <Card className="border-primary/20">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-start justify-between flex-wrap gap-2">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg truncate">{campaign.video_title || "Untitled Video"}</CardTitle>
+            <CardTitle className="text-base sm:text-lg break-words leading-snug">
+              {decodeHtml(campaign.video_title) || "Untitled Video"}
+            </CardTitle>
             {campaign.youtube_url && (
               <a
                 href={campaign.youtube_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-primary hover:underline flex items-center gap-1 mt-1"
+                className="text-xs text-primary hover:underline inline-flex items-center gap-1 mt-1 break-all"
               >
-                <ExternalLink className="h-3 w-3" />
+                <ExternalLink className="h-3 w-3 shrink-0" />
                 View source video
               </a>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {hasPublishErrors && (
               <Badge variant="destructive" className="text-xs">
                 🔴 Connection Error
@@ -515,16 +517,16 @@ function CampaignCard({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 overflow-hidden">
         {/* Insights */}
         {insights.length > 0 && (
-          <div>
-            <h4 className="text-sm font-semibold mb-2 text-muted-foreground uppercase tracking-wide">Key Insights</h4>
-            <ul className="space-y-1">
+          <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 sm:p-4">
+            <h4 className="text-xs sm:text-sm font-semibold mb-2 text-primary uppercase tracking-wide">Key Insights</h4>
+            <ul className="space-y-1.5">
               {insights.map((insight, i) => (
-                <li key={i} className="text-sm flex items-start gap-2">
-                  <span className="text-primary font-bold mt-0.5">{i + 1}.</span>
-                  <span>{String(insight)}</span>
+                <li key={i} className="text-xs sm:text-sm flex items-start gap-2 break-words">
+                  <span className="text-primary font-bold mt-0.5 shrink-0">{i + 1}.</span>
+                  <span className="min-w-0 break-words">{decodeHtml(insight)}</span>
                 </li>
               ))}
             </ul>
