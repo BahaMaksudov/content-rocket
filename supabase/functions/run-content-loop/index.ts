@@ -365,6 +365,14 @@ Return JSON:
                   auto_published: shouldAutoPublish,
                   confidence_score: score,
                 });
+
+                await publishBlogPost(supabase, {
+                  campaign_id: campaign.id,
+                  user_id: settings.user_id,
+                  title: video.title,
+                  insights: parsed.insights || [],
+                  youtube_url: video.url,
+                });
               }
             }
           } catch (remixErr) {
