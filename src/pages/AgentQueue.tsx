@@ -544,7 +544,7 @@ function CampaignCard({
               </h4>
               {!isEditing && thread.length > 0 && (
                 <CopyIconButton
-                  text={thread.map((t, i) => `${i + 1}/${thread.length} ${String(t)}`).join("\n\n")}
+                  text={thread.map((t, i) => `${i + 1}/${thread.length} ${decodeHtml(t)}`).join("\n\n")}
                   label="X thread"
                 />
               )}
@@ -568,9 +568,9 @@ function CampaignCard({
             ) : (
               <div className="space-y-2">
                 {thread.map((tweet, i) => (
-                  <div key={i} className="p-3 rounded-lg bg-muted/50 border border-border text-sm">
+                  <div key={i} className="p-3 rounded-lg bg-muted/50 border border-border text-sm break-words">
                     <span className="text-muted-foreground text-xs">{i + 1}/{thread.length}</span>
-                    <p className="mt-1">{String(tweet)}</p>
+                    <p className="mt-1 break-words whitespace-pre-wrap">{decodeHtml(tweet)}</p>
                   </div>
                 ))}
               </div>
@@ -578,14 +578,14 @@ function CampaignCard({
           </div>
 
           {/* LinkedIn Post */}
-          <div className="space-y-2">
+          <div className="space-y-2 min-w-0">
             <div className="flex items-center justify-between gap-2">
               <h4 className="text-sm font-semibold flex items-center gap-2">
                 <span className="font-mono text-blue-400">in</span> LinkedIn Post
                 {!linkedinConnected && <Badge variant="outline" className="text-xs text-muted-foreground">Not connected</Badge>}
               </h4>
               {!isEditing && linkedin && (
-                <CopyIconButton text={linkedin} label="LinkedIn post" />
+                <CopyIconButton text={decodeHtml(linkedin)} label="LinkedIn post" />
               )}
             </div>
             {isEditing ? (
@@ -595,28 +595,29 @@ function CampaignCard({
                 className="text-sm min-h-[200px]"
               />
             ) : (
-              <div className="p-3 rounded-lg bg-muted/50 border border-border text-sm whitespace-pre-wrap">
-                {linkedin}
+              <div className="p-3 rounded-lg bg-muted/50 border border-border text-sm whitespace-pre-wrap break-words">
+                {decodeHtml(linkedin)}
               </div>
             )}
           </div>
 
           {/* Facebook Post */}
           {(campaign as any).facebook_post && (
-            <div className="space-y-2 md:col-span-2">
-              <div className="flex items-center justify-between gap-2">
+            <div className="space-y-2 md:col-span-2 min-w-0">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
                 <h4 className="text-sm font-semibold flex items-center gap-2">
                   <span className="font-mono text-[#1877F2]">f</span> Facebook Post
                   <Badge variant="outline" className="text-xs text-muted-foreground">Coming soon: direct publishing</Badge>
                 </h4>
-                <CopyIconButton text={(campaign as any).facebook_post} label="Facebook post" />
+                <CopyIconButton text={decodeHtml((campaign as any).facebook_post)} label="Facebook post" />
               </div>
-              <div className="p-3 rounded-lg bg-muted/50 border border-border text-sm whitespace-pre-wrap">
-                {(campaign as any).facebook_post}
+              <div className="p-3 rounded-lg bg-muted/50 border border-border text-sm whitespace-pre-wrap break-words">
+                {decodeHtml((campaign as any).facebook_post)}
               </div>
             </div>
           )}
         </div>
+
 
         {/* Actions */}
         <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border">
