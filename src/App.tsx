@@ -36,6 +36,7 @@ import AgentSettings from "./pages/AgentSettings";
 import AgentQueue from "./pages/AgentQueue";
 import Blog from "./pages/Blog";
 import HowToRepurposeYouTubeVideos from "./pages/blog/HowToRepurposeYouTubeVideos";
+import BlogPost from "./pages/BlogPost";
 import NicheLanding from "./pages/NicheLanding";
 import OAuthSocialCallback from "./pages/OAuthSocialCallback";
 
