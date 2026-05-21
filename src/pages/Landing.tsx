@@ -906,10 +906,11 @@ function PricingSection({
         "Priority support",
         "Custom integrations",
       ],
-      cta: "Upgrade to Agency",
+      cta: "Coming Soon",
       ctaAction: "upgrade" as const,
       tier: "agency" as const,
       popular: false,
+      comingSoon: true,
     },
   ];
 
