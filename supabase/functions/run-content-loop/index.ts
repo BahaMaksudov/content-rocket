@@ -229,15 +229,21 @@ Deno.serve(async (req) => {
 VIDEO TITLE: ${video.title}
 TRANSCRIPT: ${transcript}
 
+STEP 1 — Extract exactly 5 "insights" from the transcript. These are the PRIMARY source of truth.
+STEP 2 — Build x_thread, linkedin_post, and facebook_post DIRECTLY from those 5 insights. Each social asset MUST reference / paraphrase the insights so the summary and final social copy stay consistent. Do NOT introduce facts that are absent from the insights array.
+
+OUTPUT RULES:
+- Plain Unicode text only. NEVER emit HTML entities like &#39; &amp; &quot; — use real characters ' & ".
+- Respond ONLY with valid JSON, no markdown fences.
+
 Return JSON:
 {
-  "insights": ["5 key points"],
-  "x_thread": ["5 tweets under 280 chars each, first is a hook"],
+  "insights": ["5 key points — the canonical summary used to derive every other field"],
+  "x_thread": ["5 tweets under 280 chars each, first is a hook, derived from the insights above"],
   "linkedin_post": ${JSON.stringify(LINKEDIN_POST_SPEC)},
-  "facebook_post": "Community-focused Facebook post: a scroll-stopping headline, 2-3 emoji bullet points, an engagement question on its own line, then a new line with EXACTLY 2 hashtags (one MUST be #VidLogicAI), then a final line: [Link in First Comment]. The body (headline + bullets + question) MUST be under 250 characters total.",
+  "facebook_post": "Community-focused Facebook post derived from the insights: a scroll-stopping headline, 2-3 emoji bullet points, an engagement question on its own line, then a new line with EXACTLY 2 hashtags (one MUST be #VidLogicAI), then a final line: [Link in First Comment]. The body (headline + bullets + question) MUST be under 250 characters total.",
   "confidence_score": <0-100 quality score>
-}
-Respond ONLY with valid JSON.`;
+}`;
 
               const aiRes = await fetch("https://api.openai.com/v1/chat/completions", {
                 method: "POST",
