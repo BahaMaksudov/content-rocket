@@ -184,7 +184,7 @@ export default function AgentSettings() {
     mutationFn: async () => {
       await saveMutation.mutateAsync();
       const { data, error } = await supabase.functions.invoke("run-content-loop", {
-        body: { user_id: user!.id },
+        body: { user_id: user!.id, force: true, isManual: true },
       });
       if (error) {
         const msg = typeof error === "object" && "message" in error ? error.message : String(error);
@@ -196,6 +196,10 @@ export default function AgentSettings() {
       return data;
     },
     onSuccess: (data) => {
+      // Refresh the Agent Queue so the new card appears without a manual reload
+      queryClient.invalidateQueries({ queryKey: ["agent-campaigns"] });
+      queryClient.invalidateQueries({ queryKey: ["agent-settings"] });
+
       const result = data?.results?.[0];
       if (result?.status === "success") {
         toast({ title: "Campaign created!", description: "Check your Agent Queue for the new draft." });
