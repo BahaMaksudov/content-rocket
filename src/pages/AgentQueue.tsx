@@ -11,6 +11,29 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle, XCircle, Pencil, ExternalLink, Inbox, Sparkles, Send, AlertCircle, Settings, Copy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+// Decode HTML entities like &#39; -> ' so AI-returned text renders cleanly.
+function decodeHtml(input: unknown): string {
+  const str = input == null ? "" : String(input);
+  if (!str || str.indexOf("&") === -1) return str;
+  if (typeof window !== "undefined" && typeof window.DOMParser !== "undefined") {
+    try {
+      const doc = new DOMParser().parseFromString(str, "text/html");
+      return doc.documentElement.textContent || str;
+    } catch {
+      /* fall through */
+    }
+  }
+  return str
+    .replace(/&#(\d+);/g, (_, d) => String.fromCharCode(parseInt(d, 10)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&nbsp;/g, " ");
+}
+
 function CopyIconButton({ text, label }: { text: string; label: string }) {
   const { toast } = useToast();
   const handleCopy = async () => {
