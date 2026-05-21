@@ -254,6 +254,53 @@ export default function Blog() {
             </div>
           )}
 
+          {/* AI-generated insights from the Content Agent */}
+          {aiPosts.length > 0 && (
+            <div className="mt-16">
+              <div className="mb-6 flex items-center gap-2">
+                <div className="h-px flex-1 bg-border" />
+                <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                  AI-Generated Insights
+                </span>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {aiPosts.map((p) => (
+                  <article
+                    key={p.id}
+                    className="group flex flex-col rounded-xl border border-border bg-card shadow-sm transition-all hover:shadow-md hover:border-primary/30"
+                  >
+                    <Link to={`/blog/${p.slug}`} className="flex flex-1 flex-col gap-3 p-6">
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                        <Badge variant="outline" className="text-[10px] uppercase tracking-wide">
+                          AI Insight
+                        </Badge>
+                        {p.youtube_video_id && (
+                          <span className="flex items-center gap-1">
+                            <Youtube className="h-3 w-3" /> Video
+                          </span>
+                        )}
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />{" "}
+                          {new Date(p.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                        </span>
+                      </div>
+                      <h3 className="text-lg font-semibold leading-snug group-hover:text-primary transition-colors line-clamp-3">
+                        {p.title}
+                      </h3>
+                      {p.tl_dr && (
+                        <p className="flex-1 text-sm text-muted-foreground line-clamp-4">{p.tl_dr}</p>
+                      )}
+                      <span className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-primary">
+                        Read takeaways <ArrowRight className="h-3.5 w-3.5" />
+                      </span>
+                    </Link>
+                  </article>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Empty state when filter has no results */}
           {filteredPosts.length === 0 && (
             <div className="py-20 text-center text-muted-foreground">
