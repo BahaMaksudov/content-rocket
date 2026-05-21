@@ -721,6 +721,57 @@ export type Database = {
         }
         Relationships: []
       }
+      public_blog_posts: {
+        Row: {
+          author_name: string | null
+          campaign_id: string | null
+          created_at: string
+          id: string
+          insights: Json
+          meta_description: string | null
+          published: boolean
+          slug: string
+          title: string
+          tl_dr: string | null
+          updated_at: string
+          user_id: string
+          youtube_url: string | null
+          youtube_video_id: string | null
+        }
+        Insert: {
+          author_name?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          id?: string
+          insights?: Json
+          meta_description?: string | null
+          published?: boolean
+          slug: string
+          title: string
+          tl_dr?: string | null
+          updated_at?: string
+          user_id: string
+          youtube_url?: string | null
+          youtube_video_id?: string | null
+        }
+        Update: {
+          author_name?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          id?: string
+          insights?: Json
+          meta_description?: string | null
+          published?: boolean
+          slug?: string
+          title?: string
+          tl_dr?: string | null
+          updated_at?: string
+          user_id?: string
+          youtube_url?: string | null
+          youtube_video_id?: string | null
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string
