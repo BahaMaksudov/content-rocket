@@ -541,6 +541,17 @@ Return a JSON object with:
           confidence_score: confidenceScore,
         });
 
+        await publishBlogPost(supabase, {
+          campaign_id: campaign.id,
+          user_id: settings.user_id,
+          title: videoTitle,
+          insights: parsed.insights || [],
+          youtube_url: youtubeUrl,
+          author_name: bestVideo?.snippet?.channelTitle ?? null,
+        });
+
+
+
         // Send low-confidence email if auto-pilot is on but score was too low
         if (autoPilotEnabled && !shouldAutoPublish && resendKey) {
           try {
