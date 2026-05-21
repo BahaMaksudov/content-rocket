@@ -17,8 +17,8 @@ import {
 
 const tabs = [
   { label: "Home", icon: Home, path: "/dashboard" },
-  { label: "Agent", icon: Inbox, path: "/agent/queue" },
-  { label: "History", icon: History, path: "/history" },
+  { label: "Agent", icon: Settings, path: "/agent/settings" },
+  { label: "Queue", icon: Inbox, path: "/agent/queue" },
   { label: "More", icon: MoreHorizontal, path: "__more__" },
 ];
 
@@ -81,11 +81,11 @@ export function MobileBottomNav() {
 
       {/* More Drawer */}
       <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-        <DrawerContent>
+        <DrawerContent className="max-h-[85dvh]">
           <DrawerHeader>
             <DrawerTitle>More</DrawerTitle>
           </DrawerHeader>
-          <div className="px-4 pb-6 space-y-1">
+          <div className="px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] space-y-1 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
             {/* Profile / Settings */}
             <button
               onClick={() => goTo("/settings")}
@@ -93,27 +93,6 @@ export function MobileBottomNav() {
             >
               <User className="h-5 w-5 text-muted-foreground" />
               <span className="font-medium">Profile & Settings</span>
-            </button>
-
-            {/* Content Agent removed */}
-
-
-            {/* Agent Queue */}
-            <button
-              onClick={() => goTo("/agent/queue")}
-              className="flex items-center gap-3 w-full rounded-lg px-3 py-3 text-foreground hover:bg-muted transition-colors"
-            >
-              <Inbox className="h-5 w-5 text-primary" />
-              <span className="font-medium">Agent Queue</span>
-            </button>
-
-            {/* Agent Settings */}
-            <button
-              onClick={() => goTo("/agent/settings")}
-              className="flex items-center gap-3 w-full rounded-lg px-3 py-3 text-foreground hover:bg-muted transition-colors"
-            >
-              <Settings className="h-5 w-5 text-primary" />
-              <span className="font-medium">Agent Settings</span>
             </button>
 
             {/* Developer API */}
@@ -124,6 +103,15 @@ export function MobileBottomNav() {
               <Code className="h-5 w-5 text-primary" />
               <span className="font-medium">Developer API</span>
               <Badge variant="secondary" className="ml-auto text-xs bg-primary/20 text-primary border-0">Pro</Badge>
+            </button>
+
+            {/* History (moved from bottom nav) */}
+            <button
+              onClick={() => goTo("/history")}
+              className="flex items-center gap-3 w-full rounded-lg px-3 py-3 text-foreground hover:bg-muted transition-colors"
+            >
+              <History className="h-5 w-5 text-muted-foreground" />
+              <span className="font-medium">History</span>
             </button>
 
             {/* Team — agency only */}
@@ -138,13 +126,13 @@ export function MobileBottomNav() {
               </button>
             )}
 
+            {/* Section divider */}
+            <div className="border-t border-border my-2" />
+
             {/* Monthly Usage */}
             <div className="px-1 py-2">
               <CreditsRemaining />
             </div>
-
-            {/* Divider */}
-            <div className="border-t border-border my-2" />
 
             {/* Upgrade options */}
             {tier !== "agency" && (
@@ -183,6 +171,35 @@ export function MobileBottomNav() {
                 <ArrowUpRight className="h-4 w-4 ml-auto opacity-60" />
               </button>
             )}
+
+            {/* Footer links */}
+            <div className="border-t border-border mt-3 pt-3">
+              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+                <button
+                  onClick={() => goTo("/privacy")}
+                  className="hover:text-foreground transition-colors"
+                >
+                  Privacy Policy
+                </button>
+                <button
+                  onClick={() => goTo("/terms")}
+                  className="hover:text-foreground transition-colors"
+                >
+                  Terms of Service
+                </button>
+                <a
+                  href="/blog"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-foreground transition-colors"
+                >
+                  Public Blog
+                </a>
+              </div>
+              <p className="text-center text-[10px] text-muted-foreground/60 mt-2">
+                © {new Date().getFullYear()} VidLogic AI
+              </p>
+            </div>
           </div>
         </DrawerContent>
       </Drawer>
