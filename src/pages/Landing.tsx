@@ -883,6 +883,7 @@ function PricingSection({
       ctaAction: "upgrade" as const,
       tier: "pro" as const,
       popular: true,
+      comingSoon: false,
     },
     {
       name: "Agency",
