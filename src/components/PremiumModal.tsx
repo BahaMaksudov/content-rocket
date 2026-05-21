@@ -181,14 +181,24 @@ export function PremiumModal({ open, onOpenChange, feature, description, tier: p
       </div>
 
       <div className="mt-6 flex flex-col gap-2">
-        <Button
-          onClick={handleUpgrade}
-          disabled={isLoading}
-          className={`w-full ${buttonGradient}`}
-          size="lg"
-        >
-          {isLoading ? "Redirecting to Stripe..." : `Upgrade to ${tierConfig.name}`}
-        </Button>
+        {tier === "agency" ? (
+          <Button
+            disabled
+            className="w-full bg-secondary text-secondary-foreground cursor-not-allowed"
+            size="lg"
+          >
+            Coming Soon
+          </Button>
+        ) : (
+          <Button
+            onClick={handleUpgrade}
+            disabled={isLoading}
+            className={`w-full ${buttonGradient}`}
+            size="lg"
+          >
+            {isLoading ? "Redirecting to Stripe..." : `Upgrade to ${tierConfig.name}`}
+          </Button>
+        )}
         <Button variant="ghost" onClick={() => onOpenChange(false)} className="w-full">
           Maybe later
         </Button>
