@@ -1,10 +1,22 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, Calendar, Clock, Tag, ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowRight, Calendar, Clock, Tag, ArrowLeft, Sparkles, Youtube } from "lucide-react";
 import { CanonicalHead } from "@/components/seo/CanonicalHead";
+import { supabase } from "@/integrations/supabase/client";
+
+interface PublicPost {
+  id: string;
+  slug: string;
+  title: string;
+  tl_dr: string | null;
+  insights: string[];
+  created_at: string;
+  youtube_video_id: string | null;
+}
+
 
 const POSTS = [
   {
