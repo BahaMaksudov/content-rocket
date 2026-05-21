@@ -372,14 +372,20 @@ Return JSON:
 VIDEO TITLE: ${videoTitle}
 TRANSCRIPT: ${truncatedTranscript}
 
-Return a JSON object with:
-1. "insights": An array of exactly 5 key insight strings summarizing the video's main points.
-2. "x_thread": A JSON array of 5 tweet strings for an X/Twitter thread (each under 280 chars). First tweet is a hook.
-3. "linkedin_post": ${LINKEDIN_POST_SPEC}
-4. "facebook_post": A community-focused, conversational Facebook post. Structure: a scroll-stopping headline, then 2-3 emoji-led value bullet points (✅, 💡, 🔥, 👉), then ONE engagement question on its own line. The body (headline + bullets + question) MUST be under 250 characters total. After that, add a new line with EXACTLY 2 hashtags (one MUST be #VidLogicAI). Final line: [Link in First Comment]. Tone: warm, conversational, encouraging.
-5. "confidence_score": An integer from 0-100 rating your confidence in the overall quality and virality potential of the generated content. 90+ means exceptional, 70-89 is good, below 70 needs human review.
+PROCESS (STRICT):
+- STEP 1: Produce the "insights" array — exactly 5 concise, canonical takeaways from the transcript. This array IS the primary LLM context for everything else.
+- STEP 2: Derive "x_thread", "linkedin_post", and "facebook_post" DIRECTLY from those 5 insights. Each social asset must paraphrase or expand on the insights so the summary and the final social copy stay consistent. Do NOT introduce claims that are not represented in the insights.
 
-Respond ONLY with valid JSON, no markdown.`;
+OUTPUT RULES:
+- Plain Unicode text only. NEVER emit HTML entities like &#39;, &amp;, &quot; — use real characters ' & ".
+- Respond ONLY with valid JSON, no markdown.
+
+Return a JSON object with:
+1. "insights": An array of exactly 5 key insight strings summarizing the video's main points. These are the canonical source for fields 2-4.
+2. "x_thread": A JSON array of 5 tweet strings for an X/Twitter thread (each under 280 chars), derived from the insights. First tweet is a hook.
+3. "linkedin_post": ${LINKEDIN_POST_SPEC} The post MUST be built from the insights array above.
+4. "facebook_post": A community-focused, conversational Facebook post derived from the insights. Structure: a scroll-stopping headline, then 2-3 emoji-led value bullet points (✅, 💡, 🔥, 👉), then ONE engagement question on its own line. The body (headline + bullets + question) MUST be under 250 characters total. After that, add a new line with EXACTLY 2 hashtags (one MUST be #VidLogicAI). Final line: [Link in First Comment]. Tone: warm, conversational, encouraging.
+5. "confidence_score": An integer from 0-100 rating your confidence in the overall quality and virality potential of the generated content. 90+ means exceptional, 70-89 is good, below 70 needs human review.`;
 
         const aiRes = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
