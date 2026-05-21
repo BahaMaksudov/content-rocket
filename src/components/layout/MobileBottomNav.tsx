@@ -176,16 +176,16 @@ export function MobileBottomNav() {
             <div className="border-t border-border mt-3 pt-3">
               <div className="flex flex-col items-center gap-y-2 text-xs text-muted-foreground">
                 {/* Row 1 */}
-                <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+                <div className="grid grid-cols-3 w-full gap-x-2 text-center">
                   <button
                     onClick={() => goTo("/privacy")}
-                    className="hover:text-foreground transition-colors"
+                    className="hover:text-foreground transition-colors whitespace-nowrap"
                   >
                     Privacy Policy
                   </button>
                   <button
                     onClick={() => goTo("/terms")}
-                    className="hover:text-foreground transition-colors"
+                    className="hover:text-foreground transition-colors whitespace-nowrap"
                   >
                     Terms of Service
                   </button>
@@ -193,22 +193,22 @@ export function MobileBottomNav() {
                     href="/blog"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-foreground transition-colors"
+                    className="hover:text-foreground transition-colors whitespace-nowrap"
                   >
                     Public Blog
                   </a>
                 </div>
                 {/* Row 2 */}
-                <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+                <div className="grid grid-cols-2 w-full gap-x-2 text-center">
                   <button
                     onClick={() => goTo("/refund-policy")}
-                    className="hover:text-foreground transition-colors"
+                    className="hover:text-foreground transition-colors whitespace-nowrap"
                   >
                     Refund Policy
                   </button>
                   <a
                     href="mailto:support@vidlogicai.com"
-                    className="hover:text-foreground transition-colors"
+                    className="hover:text-foreground transition-colors whitespace-nowrap"
                   >
                     Contact Support
                   </a>
