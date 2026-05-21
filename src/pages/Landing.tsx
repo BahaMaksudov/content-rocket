@@ -857,6 +857,7 @@ function PricingSection({
       ctaAction: "upgrade" as const,
       tier: "starter" as const,
       popular: false,
+      comingSoon: false,
     },
     {
       name: "Pro",
