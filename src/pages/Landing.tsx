@@ -833,6 +833,7 @@ function PricingSection({
       ctaAction: "auth" as const,
       tier: null,
       popular: false,
+      comingSoon: false,
     },
     {
       name: "Starter",
