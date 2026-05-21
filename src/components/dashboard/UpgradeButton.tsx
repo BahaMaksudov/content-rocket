@@ -31,24 +31,13 @@ export function UpgradeButton() {
     );
   }
 
-  // Pro users - show badge + upgrade to Agency
+  // Pro users - badge only (Agency upgrade coming soon)
   if (tier === "pro") {
     return (
-      <div className="flex flex-col gap-2">
-        <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground border-0 px-3 py-1">
-          <Crown className="h-3 w-3 mr-1" />
-          Pro
-        </Badge>
-        <Button
-          onClick={() => openUpgrade("agency", "sidebar_pro_user")}
-          className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-white"
-          size="sm"
-        >
-          <Rocket className="h-4 w-4 mr-2" />
-          Upgrade to Agency
-        </Button>
-        <PremiumModal open={showModal} onOpenChange={setShowModal} tier={modalTier} />
-      </div>
+      <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground border-0 px-3 py-1">
+        <Crown className="h-3 w-3 mr-1" />
+        Pro
+      </Badge>
     );
   }
 
