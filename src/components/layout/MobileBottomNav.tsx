@@ -174,45 +174,43 @@ export function MobileBottomNav() {
 
             {/* Footer links */}
             <div className="border-t border-border mt-3 pt-3">
-              <div className="flex flex-col items-center gap-y-2 text-xs text-muted-foreground">
-                {/* Row 1 */}
-                <div className="grid grid-cols-3 w-full gap-x-2 text-center">
-                  <button
-                    onClick={() => goTo("/privacy")}
-                    className="hover:text-foreground transition-colors whitespace-nowrap"
-                  >
-                    Privacy Policy
-                  </button>
-                  <button
-                    onClick={() => goTo("/terms")}
-                    className="hover:text-foreground transition-colors whitespace-nowrap"
-                  >
-                    Terms of Service
-                  </button>
-                  <a
-                    href="/blog"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-foreground transition-colors whitespace-nowrap"
-                  >
-                    Public Blog
-                  </a>
-                </div>
-                {/* Row 2 */}
-                <div className="grid grid-cols-2 w-full gap-x-2 text-center">
-                  <button
-                    onClick={() => goTo("/refund-policy")}
-                    className="hover:text-foreground transition-colors whitespace-nowrap"
-                  >
-                    Refund Policy
-                  </button>
-                  <a
-                    href="mailto:support@vidlogicai.com"
-                    className="hover:text-foreground transition-colors whitespace-nowrap"
-                  >
-                    Contact Support
-                  </a>
-                </div>
+              <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-xs text-muted-foreground">
+                <button
+                  onClick={() => goTo("/privacy")}
+                  className="hover:text-foreground transition-colors whitespace-nowrap"
+                >
+                  Privacy Policy
+                </button>
+                <span className="opacity-40">•</span>
+                <button
+                  onClick={() => goTo("/terms")}
+                  className="hover:text-foreground transition-colors whitespace-nowrap"
+                >
+                  Terms of Service
+                </button>
+                <span className="opacity-40">•</span>
+                <a
+                  href="/blog"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-foreground transition-colors whitespace-nowrap"
+                >
+                  Public Blog
+                </a>
+                <span className="opacity-40">•</span>
+                <button
+                  onClick={() => goTo("/refund-policy")}
+                  className="hover:text-foreground transition-colors whitespace-nowrap"
+                >
+                  Refund Policy
+                </button>
+                <span className="opacity-40">•</span>
+                <a
+                  href="mailto:support@vidlogicai.com"
+                  className="hover:text-foreground transition-colors whitespace-nowrap"
+                >
+                  Contact Support
+                </a>
               </div>
               <p className="text-center text-[10px] text-muted-foreground/60 mt-2">
                 © {new Date().getFullYear()} VidLogic AI
