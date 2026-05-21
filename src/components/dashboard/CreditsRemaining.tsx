@@ -30,7 +30,8 @@ export function CreditsRemaining() {
   const getNextTier = () => {
     if (tier === "free") return { name: "Starter", path: "/billing" };
     if (tier === "starter") return { name: "Pro", path: "/billing" };
-    if (tier === "pro") return { name: "Agency", path: "/billing" };
+    // Agency tier upgrade is coming soon — no next tier for Pro users
+    if (tier === "pro") return null;
     return null;
   };
 
