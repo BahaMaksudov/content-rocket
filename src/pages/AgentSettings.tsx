@@ -184,7 +184,7 @@ export default function AgentSettings() {
     mutationFn: async () => {
       await saveMutation.mutateAsync();
       const { data, error } = await supabase.functions.invoke("run-content-loop", {
-        body: { user_id: user!.id },
+        body: { user_id: user!.id, force: true, isManual: true },
       });
       if (error) {
         const msg = typeof error === "object" && "message" in error ? error.message : String(error);
@@ -196,6 +196,10 @@ export default function AgentSettings() {
       return data;
     },
     onSuccess: (data) => {
+      // Refresh the Agent Queue so the new card appears without a manual reload
+      queryClient.invalidateQueries({ queryKey: ["agent-campaigns"] });
+      queryClient.invalidateQueries({ queryKey: ["agent-settings"] });
+
       const result = data?.results?.[0];
       if (result?.status === "success") {
         toast({ title: "Campaign created!", description: "Check your Agent Queue for the new draft." });
@@ -490,6 +494,22 @@ export default function AgentSettings() {
   const togglePlatform = (id: string) => {
     setPlatforms((prev) => (prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]));
   };
+
+  const hasChanges = (() => {
+    if (!settings) return topic.trim().length > 0;
+    if (topic.trim() !== (settings.topic || "")) return true;
+    const originalPlatforms = (settings.platforms as string[]) || ["x", "linkedin"];
+    if (JSON.stringify([...platforms].sort()) !== JSON.stringify([...originalPlatforms].sort())) return true;
+    if (isActive !== (settings.is_active || false)) return true;
+    if (emailNotifications !== ((settings as any).email_notifications !== false)) return true;
+    if (frequencyHours !== ((settings as any).frequency_hours ?? 12)) return true;
+    const origAutoPilot = (settings as any).auto_pilot_enabled === true || (settings as any).auto_post_enabled === true;
+    if (autoPilotEnabled !== origAutoPilot) return true;
+    if (confidenceThreshold !== ((settings as any).confidence_threshold ?? 85)) return true;
+    if (remixChannelEnabled !== ((settings as any).remix_channel_enabled === true)) return true;
+    if (youtubeChannelId.trim() !== ((settings as any).youtube_channel_id || "")) return true;
+    return false;
+  })();
 
   if (isLoading) {
     return (
@@ -1026,7 +1046,7 @@ export default function AgentSettings() {
         <div className="flex flex-col sm:flex-row gap-3">
           <Button
             onClick={() => saveMutation.mutate()}
-            disabled={saveMutation.isPending || !topic.trim()}
+            disabled={saveMutation.isPending || !topic.trim() || !hasChanges}
             className="flex-1 w-full sm:w-auto"
           >
             {saveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}

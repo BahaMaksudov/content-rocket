@@ -274,6 +274,9 @@ export function AppLayout({ children }: AppLayoutProps) {
                 <a href="mailto:support@vidlogicai.com" className="hover:text-foreground transition-colors">
                   Contact Support
                 </a>
+                <a href="/blog" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+                  Public Blog
+                </a>
               </div>
               <span className="text-muted-foreground/70">© {new Date().getFullYear()} VidLogic AI</span>
             </div>

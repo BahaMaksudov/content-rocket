@@ -1,10 +1,22 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, Calendar, Clock, Tag, ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowRight, Calendar, Clock, Tag, ArrowLeft, Sparkles, Youtube } from "lucide-react";
 import { CanonicalHead } from "@/components/seo/CanonicalHead";
+import { supabase } from "@/integrations/supabase/client";
+
+interface PublicPost {
+  id: string;
+  slug: string;
+  title: string;
+  tl_dr: string | null;
+  insights: string[];
+  created_at: string;
+  youtube_video_id: string | null;
+}
+
 
 const POSTS = [
   {
@@ -25,6 +37,30 @@ export default function Blog() {
   const [activeTag, setActiveTag] = useState("All");
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
+  const [aiPosts, setAiPosts] = useState<PublicPost[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("public_blog_posts" as any)
+        .select("id, slug, title, tl_dr, insights, created_at, youtube_video_id")
+        .eq("published", true)
+        .order("created_at", { ascending: false })
+        .limit(60);
+      if (cancelled || !data) return;
+      setAiPosts(
+        (data as any[]).map((d) => ({
+          ...d,
+          insights: Array.isArray(d.insights) ? d.insights : [],
+        })) as PublicPost[],
+      );
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
 
   const filteredPosts = POSTS.filter(
     (p) => activeTag === "All" || p.tags.includes(activeTag)
@@ -215,6 +251,53 @@ export default function Blog() {
                   </div>
                 </article>
               ))}
+            </div>
+          )}
+
+          {/* AI-generated insights from the Content Agent */}
+          {aiPosts.length > 0 && (
+            <div className="mt-16">
+              <div className="mb-6 flex items-center gap-2">
+                <div className="h-px flex-1 bg-border" />
+                <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                  AI-Generated Insights
+                </span>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {aiPosts.map((p) => (
+                  <article
+                    key={p.id}
+                    className="group flex flex-col rounded-xl border border-border bg-card shadow-sm transition-all hover:shadow-md hover:border-primary/30"
+                  >
+                    <Link to={`/blog/${p.slug}`} className="flex flex-1 flex-col gap-3 p-6">
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                        <Badge variant="outline" className="text-[10px] uppercase tracking-wide">
+                          AI Insight
+                        </Badge>
+                        {p.youtube_video_id && (
+                          <span className="flex items-center gap-1">
+                            <Youtube className="h-3 w-3" /> Video
+                          </span>
+                        )}
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />{" "}
+                          {new Date(p.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                        </span>
+                      </div>
+                      <h3 className="text-lg font-semibold leading-snug group-hover:text-primary transition-colors line-clamp-3">
+                        {p.title}
+                      </h3>
+                      {p.tl_dr && (
+                        <p className="flex-1 text-sm text-muted-foreground line-clamp-4">{p.tl_dr}</p>
+                      )}
+                      <span className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-primary">
+                        Read takeaways <ArrowRight className="h-3.5 w-3.5" />
+                      </span>
+                    </Link>
+                  </article>
+                ))}
+              </div>
             </div>
           )}
 

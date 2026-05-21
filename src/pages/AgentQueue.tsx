@@ -11,6 +11,29 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle, XCircle, Pencil, ExternalLink, Inbox, Sparkles, Send, AlertCircle, Settings, Copy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+// Decode HTML entities like &#39; -> ' so AI-returned text renders cleanly.
+function decodeHtml(input: unknown): string {
+  const str = input == null ? "" : String(input);
+  if (!str || str.indexOf("&") === -1) return str;
+  if (typeof window !== "undefined" && typeof window.DOMParser !== "undefined") {
+    try {
+      const doc = new DOMParser().parseFromString(str, "text/html");
+      return doc.documentElement.textContent || str;
+    } catch {
+      /* fall through */
+    }
+  }
+  return str
+    .replace(/&#(\d+);/g, (_, d) => String.fromCharCode(parseInt(d, 10)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&nbsp;/g, " ");
+}
+
 function CopyIconButton({ text, label }: { text: string; label: string }) {
   const { toast } = useToast();
   const handleCopy = async () => {
@@ -466,22 +489,24 @@ function CampaignCard({
   return (
     <Card className="border-primary/20">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-start justify-between flex-wrap gap-2">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg truncate">{campaign.video_title || "Untitled Video"}</CardTitle>
+            <CardTitle className="text-base sm:text-lg break-words leading-snug">
+              {decodeHtml(campaign.video_title) || "Untitled Video"}
+            </CardTitle>
             {campaign.youtube_url && (
               <a
                 href={campaign.youtube_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-primary hover:underline flex items-center gap-1 mt-1"
+                className="text-xs text-primary hover:underline inline-flex items-center gap-1 mt-1 break-all"
               >
-                <ExternalLink className="h-3 w-3" />
+                <ExternalLink className="h-3 w-3 shrink-0" />
                 View source video
               </a>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {hasPublishErrors && (
               <Badge variant="destructive" className="text-xs">
                 🔴 Connection Error
@@ -492,16 +517,16 @@ function CampaignCard({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 overflow-hidden">
         {/* Insights */}
         {insights.length > 0 && (
-          <div>
-            <h4 className="text-sm font-semibold mb-2 text-muted-foreground uppercase tracking-wide">Key Insights</h4>
-            <ul className="space-y-1">
+          <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 sm:p-4">
+            <h4 className="text-xs sm:text-sm font-semibold mb-2 text-primary uppercase tracking-wide">Key Insights</h4>
+            <ul className="space-y-1.5">
               {insights.map((insight, i) => (
-                <li key={i} className="text-sm flex items-start gap-2">
-                  <span className="text-primary font-bold mt-0.5">{i + 1}.</span>
-                  <span>{String(insight)}</span>
+                <li key={i} className="text-xs sm:text-sm flex items-start gap-2 break-words">
+                  <span className="text-primary font-bold mt-0.5 shrink-0">{i + 1}.</span>
+                  <span className="min-w-0 break-words">{decodeHtml(insight)}</span>
                 </li>
               ))}
             </ul>
@@ -519,7 +544,7 @@ function CampaignCard({
               </h4>
               {!isEditing && thread.length > 0 && (
                 <CopyIconButton
-                  text={thread.map((t, i) => `${i + 1}/${thread.length} ${String(t)}`).join("\n\n")}
+                  text={thread.map((t, i) => `${i + 1}/${thread.length} ${decodeHtml(t)}`).join("\n\n")}
                   label="X thread"
                 />
               )}
@@ -543,9 +568,9 @@ function CampaignCard({
             ) : (
               <div className="space-y-2">
                 {thread.map((tweet, i) => (
-                  <div key={i} className="p-3 rounded-lg bg-muted/50 border border-border text-sm">
+                  <div key={i} className="p-3 rounded-lg bg-muted/50 border border-border text-sm break-words">
                     <span className="text-muted-foreground text-xs">{i + 1}/{thread.length}</span>
-                    <p className="mt-1">{String(tweet)}</p>
+                    <p className="mt-1 break-words whitespace-pre-wrap">{decodeHtml(tweet)}</p>
                   </div>
                 ))}
               </div>
@@ -553,14 +578,14 @@ function CampaignCard({
           </div>
 
           {/* LinkedIn Post */}
-          <div className="space-y-2">
+          <div className="space-y-2 min-w-0">
             <div className="flex items-center justify-between gap-2">
               <h4 className="text-sm font-semibold flex items-center gap-2">
                 <span className="font-mono text-blue-400">in</span> LinkedIn Post
                 {!linkedinConnected && <Badge variant="outline" className="text-xs text-muted-foreground">Not connected</Badge>}
               </h4>
               {!isEditing && linkedin && (
-                <CopyIconButton text={linkedin} label="LinkedIn post" />
+                <CopyIconButton text={decodeHtml(linkedin)} label="LinkedIn post" />
               )}
             </div>
             {isEditing ? (
@@ -570,28 +595,29 @@ function CampaignCard({
                 className="text-sm min-h-[200px]"
               />
             ) : (
-              <div className="p-3 rounded-lg bg-muted/50 border border-border text-sm whitespace-pre-wrap">
-                {linkedin}
+              <div className="p-3 rounded-lg bg-muted/50 border border-border text-sm whitespace-pre-wrap break-words">
+                {decodeHtml(linkedin)}
               </div>
             )}
           </div>
 
           {/* Facebook Post */}
           {(campaign as any).facebook_post && (
-            <div className="space-y-2 md:col-span-2">
-              <div className="flex items-center justify-between gap-2">
+            <div className="space-y-2 md:col-span-2 min-w-0">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
                 <h4 className="text-sm font-semibold flex items-center gap-2">
                   <span className="font-mono text-[#1877F2]">f</span> Facebook Post
                   <Badge variant="outline" className="text-xs text-muted-foreground">Coming soon: direct publishing</Badge>
                 </h4>
-                <CopyIconButton text={(campaign as any).facebook_post} label="Facebook post" />
+                <CopyIconButton text={decodeHtml((campaign as any).facebook_post)} label="Facebook post" />
               </div>
-              <div className="p-3 rounded-lg bg-muted/50 border border-border text-sm whitespace-pre-wrap">
-                {(campaign as any).facebook_post}
+              <div className="p-3 rounded-lg bg-muted/50 border border-border text-sm whitespace-pre-wrap break-words">
+                {decodeHtml((campaign as any).facebook_post)}
               </div>
             </div>
           )}
         </div>
+
 
         {/* Actions */}
         <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border">

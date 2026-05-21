@@ -36,6 +36,7 @@ import AgentSettings from "./pages/AgentSettings";
 import AgentQueue from "./pages/AgentQueue";
 import Blog from "./pages/Blog";
 import HowToRepurposeYouTubeVideos from "./pages/blog/HowToRepurposeYouTubeVideos";
+import BlogPost from "./pages/BlogPost";
 import NicheLanding from "./pages/NicheLanding";
 import OAuthSocialCallback from "./pages/OAuthSocialCallback";
 
@@ -148,7 +149,9 @@ const App = () => (
             <Route path="/tools/youtube-to-linkedin" element={<YouTubeToLinkedIn />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/how-to-repurpose-youtube-videos" element={<HowToRepurposeYouTubeVideos />} />
+            <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="/for/:niche" element={<NicheLanding />} />
+
             <Route path="*" element={<NotFound />} />
           </Routes>
           <CookieConsentBanner />

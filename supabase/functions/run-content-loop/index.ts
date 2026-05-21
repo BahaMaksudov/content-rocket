@@ -16,6 +16,82 @@ const LINKEDIN_POST_SPEC = `A professional LinkedIn post (800-1200 chars) follow
    - TONE: Professional yet conversational. No corporate jargon, no buzzword soup.
    - OUTPUT: Return as a single string with explicit \\n\\n between paragraphs so spacing is preserved exactly when copied. Do NOT wrap in markdown.`;
 
+// ---------- Programmatic SEO blog helpers ----------
+function decodeEntities(input: string): string {
+  if (!input) return "";
+  return input
+    .replace(/&#(\d+);/g, (_, d) => String.fromCharCode(parseInt(d, 10)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&nbsp;/g, " ");
+}
+function slugify(input: string): string {
+  return decodeEntities(input)
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 80) || "post";
+}
+function extractYouTubeId(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+async function publishBlogPost(
+  supabase: any,
+  payload: {
+    campaign_id: string;
+    user_id: string;
+    title: string;
+    insights: string[];
+    youtube_url: string | null;
+    author_name?: string | null;
+  },
+) {
+  try {
+    const cleanTitle = decodeEntities(payload.title || "Untitled").trim();
+    const cleanInsights = (payload.insights || []).map((i) => decodeEntities(String(i)).trim()).filter(Boolean);
+    if (cleanInsights.length === 0) return; // nothing to publish
+
+    const baseSlug = slugify(cleanTitle);
+    let slug = baseSlug;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const { data: clash } = await supabase
+        .from("public_blog_posts")
+        .select("id")
+        .eq("slug", slug)
+        .maybeSingle();
+      if (!clash) break;
+      slug = `${baseSlug}-${Math.random().toString(36).slice(2, 7)}`;
+    }
+
+    const tlDr = cleanInsights.slice(0, 2).join(" ").slice(0, 320);
+    const metaBase = cleanInsights[0] || tlDr || cleanTitle;
+    const metaDescription = `${cleanTitle} — ${metaBase}`.slice(0, 160);
+
+    await supabase.from("public_blog_posts").insert({
+      campaign_id: payload.campaign_id,
+      user_id: payload.user_id,
+      slug,
+      title: cleanTitle,
+      tl_dr: tlDr,
+      insights: cleanInsights,
+      youtube_url: payload.youtube_url,
+      youtube_video_id: extractYouTubeId(payload.youtube_url),
+      meta_description: metaDescription,
+      author_name: payload.author_name ?? null,
+      published: true,
+    });
+  } catch (err) {
+    console.error("publishBlogPost failed:", err);
+  }
+}
+// ---------- end blog helpers ----------
+
 interface CampaignResult {
   user_id: string;
   status: string;
@@ -133,9 +209,11 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, serviceKey);
 
     let targetUserId: string | null = null;
+    let forceRun = false;
     try {
       const body = await req.json();
       targetUserId = body.user_id || null;
+      forceRun = body.force === true || body.isManual === true;
     } catch {
       // No body = cron trigger
     }
@@ -170,7 +248,7 @@ Deno.serve(async (req) => {
       const lastRunAt = (settings as any).last_run_at ? new Date((settings as any).last_run_at).getTime() : 0;
       const hoursSinceLastRun = (Date.now() - lastRunAt) / (1000 * 60 * 60);
 
-      if (lastRunAt > 0 && hoursSinceLastRun < frequencyHours) {
+      if (!forceRun && lastRunAt > 0 && hoursSinceLastRun < frequencyHours) {
         console.log(`Skipping run: Only ${hoursSinceLastRun.toFixed(1)}h since last run for user ${settings.user_id} (frequency: ${frequencyHours}h)`);
         userEntry.campaigns.push({ user_id: settings.user_id, status: "skipped_frequency" });
         continue;
@@ -229,15 +307,21 @@ Deno.serve(async (req) => {
 VIDEO TITLE: ${video.title}
 TRANSCRIPT: ${transcript}
 
+STEP 1 — Extract exactly 5 "insights" from the transcript. These are the PRIMARY source of truth.
+STEP 2 — Build x_thread, linkedin_post, and facebook_post DIRECTLY from those 5 insights. Each social asset MUST reference / paraphrase the insights so the summary and final social copy stay consistent. Do NOT introduce facts that are absent from the insights array.
+
+OUTPUT RULES:
+- Plain Unicode text only. NEVER emit HTML entities like &#39; &amp; &quot; — use real characters ' & ".
+- Respond ONLY with valid JSON, no markdown fences.
+
 Return JSON:
 {
-  "insights": ["5 key points"],
-  "x_thread": ["5 tweets under 280 chars each, first is a hook"],
+  "insights": ["5 key points — the canonical summary used to derive every other field"],
+  "x_thread": ["5 tweets under 280 chars each, first is a hook, derived from the insights above"],
   "linkedin_post": ${JSON.stringify(LINKEDIN_POST_SPEC)},
-  "facebook_post": "Community-focused Facebook post: a scroll-stopping headline, 2-3 emoji bullet points, an engagement question on its own line, then a new line with EXACTLY 2 hashtags (one MUST be #VidLogicAI), then a final line: [Link in First Comment]. The body (headline + bullets + question) MUST be under 250 characters total.",
+  "facebook_post": "Community-focused Facebook post derived from the insights: a scroll-stopping headline, 2-3 emoji bullet points, an engagement question on its own line, then a new line with EXACTLY 2 hashtags (one MUST be #VidLogicAI), then a final line: [Link in First Comment]. The body (headline + bullets + question) MUST be under 250 characters total.",
   "confidence_score": <0-100 quality score>
-}
-Respond ONLY with valid JSON.`;
+}`;
 
               const aiRes = await fetch("https://api.openai.com/v1/chat/completions", {
                 method: "POST",
@@ -282,6 +366,14 @@ Respond ONLY with valid JSON.`;
                   linkedin_intro: (parsed.linkedin_post || "").slice(0, 150),
                   auto_published: shouldAutoPublish,
                   confidence_score: score,
+                });
+
+                await publishBlogPost(supabase, {
+                  campaign_id: campaign.id,
+                  user_id: settings.user_id,
+                  title: video.title,
+                  insights: parsed.insights || [],
+                  youtube_url: video.url,
                 });
               }
             }
@@ -366,14 +458,20 @@ Respond ONLY with valid JSON.`;
 VIDEO TITLE: ${videoTitle}
 TRANSCRIPT: ${truncatedTranscript}
 
-Return a JSON object with:
-1. "insights": An array of exactly 5 key insight strings summarizing the video's main points.
-2. "x_thread": A JSON array of 5 tweet strings for an X/Twitter thread (each under 280 chars). First tweet is a hook.
-3. "linkedin_post": ${LINKEDIN_POST_SPEC}
-4. "facebook_post": A community-focused, conversational Facebook post. Structure: a scroll-stopping headline, then 2-3 emoji-led value bullet points (✅, 💡, 🔥, 👉), then ONE engagement question on its own line. The body (headline + bullets + question) MUST be under 250 characters total. After that, add a new line with EXACTLY 2 hashtags (one MUST be #VidLogicAI). Final line: [Link in First Comment]. Tone: warm, conversational, encouraging.
-5. "confidence_score": An integer from 0-100 rating your confidence in the overall quality and virality potential of the generated content. 90+ means exceptional, 70-89 is good, below 70 needs human review.
+PROCESS (STRICT):
+- STEP 1: Produce the "insights" array — exactly 5 concise, canonical takeaways from the transcript. This array IS the primary LLM context for everything else.
+- STEP 2: Derive "x_thread", "linkedin_post", and "facebook_post" DIRECTLY from those 5 insights. Each social asset must paraphrase or expand on the insights so the summary and the final social copy stay consistent. Do NOT introduce claims that are not represented in the insights.
 
-Respond ONLY with valid JSON, no markdown.`;
+OUTPUT RULES:
+- Plain Unicode text only. NEVER emit HTML entities like &#39;, &amp;, &quot; — use real characters ' & ".
+- Respond ONLY with valid JSON, no markdown.
+
+Return a JSON object with:
+1. "insights": An array of exactly 5 key insight strings summarizing the video's main points. These are the canonical source for fields 2-4.
+2. "x_thread": A JSON array of 5 tweet strings for an X/Twitter thread (each under 280 chars), derived from the insights. First tweet is a hook.
+3. "linkedin_post": ${LINKEDIN_POST_SPEC} The post MUST be built from the insights array above.
+4. "facebook_post": A community-focused, conversational Facebook post derived from the insights. Structure: a scroll-stopping headline, then 2-3 emoji-led value bullet points (✅, 💡, 🔥, 👉), then ONE engagement question on its own line. The body (headline + bullets + question) MUST be under 250 characters total. After that, add a new line with EXACTLY 2 hashtags (one MUST be #VidLogicAI). Final line: [Link in First Comment]. Tone: warm, conversational, encouraging.
+5. "confidence_score": An integer from 0-100 rating your confidence in the overall quality and virality potential of the generated content. 90+ means exceptional, 70-89 is good, below 70 needs human review.`;
 
         const aiRes = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
@@ -444,6 +542,17 @@ Respond ONLY with valid JSON, no markdown.`;
           auto_published: shouldAutoPublish,
           confidence_score: confidenceScore,
         });
+
+        await publishBlogPost(supabase, {
+          campaign_id: campaign.id,
+          user_id: settings.user_id,
+          title: videoTitle,
+          insights: parsed.insights || [],
+          youtube_url: youtubeUrl,
+          author_name: bestVideo?.snippet?.channelTitle ?? null,
+        });
+
+
 
         // Send low-confidence email if auto-pilot is on but score was too low
         if (autoPilotEnabled && !shouldAutoPublish && resendKey) {
