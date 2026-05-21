@@ -149,7 +149,9 @@ const App = () => (
             <Route path="/tools/youtube-to-linkedin" element={<YouTubeToLinkedIn />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/how-to-repurpose-youtube-videos" element={<HowToRepurposeYouTubeVideos />} />
+            <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="/for/:niche" element={<NicheLanding />} />
+
             <Route path="*" element={<NotFound />} />
           </Routes>
           <CookieConsentBanner />
