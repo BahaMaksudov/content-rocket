@@ -495,6 +495,22 @@ export default function AgentSettings() {
     setPlatforms((prev) => (prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]));
   };
 
+  const hasChanges = (() => {
+    if (!settings) return topic.trim().length > 0;
+    if (topic.trim() !== (settings.topic || "")) return true;
+    const originalPlatforms = (settings.platforms as string[]) || ["x", "linkedin"];
+    if (JSON.stringify([...platforms].sort()) !== JSON.stringify([...originalPlatforms].sort())) return true;
+    if (isActive !== (settings.is_active || false)) return true;
+    if (emailNotifications !== ((settings as any).email_notifications !== false)) return true;
+    if (frequencyHours !== ((settings as any).frequency_hours ?? 12)) return true;
+    const origAutoPilot = (settings as any).auto_pilot_enabled === true || (settings as any).auto_post_enabled === true;
+    if (autoPilotEnabled !== origAutoPilot) return true;
+    if (confidenceThreshold !== ((settings as any).confidence_threshold ?? 85)) return true;
+    if (remixChannelEnabled !== ((settings as any).remix_channel_enabled === true)) return true;
+    if (youtubeChannelId.trim() !== ((settings as any).youtube_channel_id || "")) return true;
+    return false;
+  })();
+
   if (isLoading) {
     return (
       <AppLayout>
