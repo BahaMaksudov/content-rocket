@@ -187,12 +187,11 @@ export function AppSidebar() {
         {tier !== "agency" && (
           <Button
             variant="outline"
-            onClick={() => openUpgrade("agency")}
-            className="w-full relative overflow-hidden border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 hover:from-primary/20 hover:via-primary/10 hover:to-primary/20 text-foreground hover:text-foreground transition-all duration-300"
+            disabled
+            className="w-full relative overflow-hidden border-border bg-secondary/50 text-muted-foreground cursor-not-allowed opacity-70"
           >
             <Rocket className="h-4 w-4 mr-2" />
-            Upgrade to Agency
-            <ArrowUpRight className="h-3.5 w-3.5 ml-auto opacity-70" />
+            Agency — Coming Soon
           </Button>
         )}
 
