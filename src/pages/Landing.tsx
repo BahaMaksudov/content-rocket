@@ -1024,30 +1024,39 @@ function PricingSection({
                         })}
                       </ul>
                     </TooltipProvider>
-                    {plan.ctaAction === "upgrade" && plan.tier ? (
-                      <Button
-                        onClick={() => onUpgradeClick(plan.tier!)}
-                        className={`w-full ${
-                          plan.tier === "agency"
-                            ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
-                            : "gradient-primary text-primary-foreground"
-                        }`}
-                      >
-                        {plan.cta}
-                        <ChevronRight className="h-4 w-4 ml-1" />
-                      </Button>
-                    ) : (
-                      <Button
-                        asChild
-                        className={`w-full ${plan.popular ? "gradient-primary text-primary-foreground" : ""}`}
-                        variant={plan.popular ? "default" : "outline"}
-                      >
-                        <Link to="/auth">
+                    <div className={plan.comingSoon ? "pointer-events-none" : ""}>
+                      {plan.comingSoon ? (
+                        <Button
+                          disabled
+                          className="w-full bg-secondary text-secondary-foreground cursor-not-allowed"
+                        >
+                          Coming Soon
+                        </Button>
+                      ) : plan.ctaAction === "upgrade" && plan.tier ? (
+                        <Button
+                          onClick={() => onUpgradeClick(plan.tier!)}
+                          className={`w-full ${
+                            plan.tier === "agency"
+                              ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+                              : "gradient-primary text-primary-foreground"
+                          }`}
+                        >
                           {plan.cta}
                           <ChevronRight className="h-4 w-4 ml-1" />
-                        </Link>
-                      </Button>
-                    )}
+                        </Button>
+                      ) : (
+                        <Button
+                          asChild
+                          className={`w-full ${plan.popular ? "gradient-primary text-primary-foreground" : ""}`}
+                          variant={plan.popular ? "default" : "outline"}
+                        >
+                          <Link to="/auth">
+                            {plan.cta}
+                            <ChevronRight className="h-4 w-4 ml-1" />
+                          </Link>
+                        </Button>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               </motion.div>
