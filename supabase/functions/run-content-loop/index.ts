@@ -209,9 +209,11 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, serviceKey);
 
     let targetUserId: string | null = null;
+    let forceRun = false;
     try {
       const body = await req.json();
       targetUserId = body.user_id || null;
+      forceRun = body.force === true || body.isManual === true;
     } catch {
       // No body = cron trigger
     }
