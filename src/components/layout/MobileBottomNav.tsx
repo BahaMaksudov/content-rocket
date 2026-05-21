@@ -173,46 +173,42 @@ export function MobileBottomNav() {
             )}
 
             {/* Footer links */}
-            <div className="border-t border-border mt-3 pt-3">
-              <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-xs text-muted-foreground">
+            <div className="border-t border-border mt-3 pt-4">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs text-muted-foreground text-center">
                 <button
                   onClick={() => goTo("/privacy")}
-                  className="hover:text-foreground transition-colors whitespace-nowrap"
+                  className="hover:text-foreground transition-colors py-1"
                 >
                   Privacy Policy
                 </button>
-                <span className="opacity-40">•</span>
                 <button
                   onClick={() => goTo("/terms")}
-                  className="hover:text-foreground transition-colors whitespace-nowrap"
+                  className="hover:text-foreground transition-colors py-1"
                 >
                   Terms of Service
                 </button>
-                <span className="opacity-40">•</span>
                 <a
                   href="/blog"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-foreground transition-colors whitespace-nowrap"
+                  className="hover:text-foreground transition-colors py-1"
                 >
                   Public Blog
                 </a>
-                <span className="opacity-40">•</span>
                 <button
                   onClick={() => goTo("/refund-policy")}
-                  className="hover:text-foreground transition-colors whitespace-nowrap"
+                  className="hover:text-foreground transition-colors py-1"
                 >
                   Refund Policy
                 </button>
-                <span className="opacity-40">•</span>
                 <a
                   href="mailto:support@vidlogicai.com"
-                  className="hover:text-foreground transition-colors whitespace-nowrap"
+                  className="hover:text-foreground transition-colors py-1 col-span-2"
                 >
                   Contact Support
                 </a>
               </div>
-              <p className="text-center text-[10px] text-muted-foreground/60 mt-2">
+              <p className="text-center text-[10px] text-muted-foreground/60 mt-3">
                 © {new Date().getFullYear()} VidLogic AI
               </p>
             </div>
