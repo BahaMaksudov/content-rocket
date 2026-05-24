@@ -43,13 +43,13 @@ export function UpgradeGate() {
               Upgrade to Pro
             </Button>
             <Button
-              onClick={() => openUpgrade("agency")}
+              disabled
               variant="outline"
-              className="flex-1 gap-2 border-primary/30 text-primary hover:bg-primary/10"
+              className="flex-1 gap-2 cursor-not-allowed opacity-70"
               size="lg"
             >
               <Rocket className="h-4 w-4" />
-              Agency
+              Agency — Soon
             </Button>
           </div>
         </CardContent>

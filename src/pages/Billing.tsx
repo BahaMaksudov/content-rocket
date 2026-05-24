@@ -323,9 +323,9 @@ export default function Billing() {
                     </Button>
                   )}
                   {tier === "pro" && (
-                    <Button variant="outline" onClick={() => handleUpgradeClick("agency")}>
+                    <Button variant="outline" disabled className="cursor-not-allowed opacity-70">
                       <Rocket className="h-4 w-4 mr-2" />
-                      Upgrade to Agency
+                      Agency — Coming Soon
                     </Button>
                   )}
                 </div>
