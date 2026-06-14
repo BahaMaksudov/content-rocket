@@ -424,6 +424,39 @@ export default function Auth() {
     }
   };
 
+  // Environment-aware redirect helper — uses current origin so dev, preview,
+  // and production all callback to the right host.
+  const getOAuthRedirectUrl = () => `${window.location.origin}/dashboard`;
+
+  const handleGoogleSignIn = async () => {
+    setAuthError(null);
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: getOAuthRedirectUrl(),
+        },
+      });
+      if (error) {
+        setAuthError({
+          type: "error",
+          title: "Google Sign-In Failed",
+          message: error.message,
+        });
+        setIsLoading(false);
+      }
+      // On success the browser is redirected to Google.
+    } catch (err) {
+      setAuthError({
+        type: "error",
+        title: "Unexpected Error",
+        message: "Could not start Google sign-in. Please try again.",
+      });
+      setIsLoading(false);
+    }
+  };
+
   // Show verification pending screen if user just signed up
   if (showVerificationPending) {
     return (
