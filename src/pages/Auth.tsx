@@ -193,6 +193,9 @@ export default function Auth() {
   const handleTabChange = (value: string) => {
     setActiveTab(value as "login" | "signup");
     setAuthError(null);
+    // Reset transient loading state so the Google button doesn't appear
+    // stuck when the user toggles between sign-in and sign-up panels.
+    setIsLoading(false);
   };
 
   const handleEmailChange = (value: string) => {
