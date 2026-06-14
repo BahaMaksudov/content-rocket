@@ -434,28 +434,21 @@ export default function Auth() {
     setAuthError(null);
     setIsLoading(true);
     try {
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: getOAuthRedirectUrl(),
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: getOAuthRedirectUrl(),
+        },
       });
-
-      if (result.error) {
+      if (error) {
         setAuthError({
           type: "error",
           title: "Google Sign-In Failed",
-          message: result.error.message || "Could not start Google sign-in.",
+          message: error.message,
         });
         setIsLoading(false);
-        return;
       }
-
-      if (result.redirected) {
-        // Browser will redirect to Google — leave loading state on.
-        return;
-      }
-
-      // Tokens received directly — session is already set.
-      const targetPath = upgradeTier ? `${redirectPath}?upgrade=${upgradeTier}` : redirectPath;
-      navigate(targetPath, { replace: true });
+      // On success the browser is redirected to Google.
     } catch (err) {
       setAuthError({
         type: "error",
