@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Loader2, Rocket, ArrowLeft, RefreshCw, AlertCircle, UserPlus, Info, LogIn, KeyRound, Users, Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 import { VerificationPending } from "@/components/auth/VerificationPending";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 
 
 // Component to handle invite processing when user is already logged in
