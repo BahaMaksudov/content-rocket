@@ -125,11 +125,60 @@ export default function Auth() {
   const { signIn, signUp, user, loading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  
+
   // Get redirect and upgrade params for post-auth navigation
   const redirectPath = searchParams.get("redirect") || "/dashboard";
   const upgradeTier = searchParams.get("upgrade");
   const inviteToken = searchParams.get("invite");
+
+  // Strict session verification on mount: detect cancelled OAuth flows,
+  // surface a friendly toast, and wipe ghost/stale session fragments
+  // that could otherwise trick the app into bypassing the auth gate.
+  useEffect(() => {
+    const search = new URLSearchParams(window.location.search);
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const oauthError = search.get("error") || hash.get("error");
+    const errorDesc =
+      search.get("error_description") || hash.get("error_description") || "";
+
+    const isCancelled =
+      oauthError === "access_denied" ||
+      /cancel|denied|consent/i.test(errorDesc);
+
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        // No valid token — clear any stale cookies / localStorage fragments
+        // left behind by an aborted OAuth round-trip so the app can't be
+        // tricked into bypassing the gate.
+        try {
+          await supabase.auth.signOut({ scope: "local" } as any);
+        } catch {
+          /* no-op */
+        }
+      }
+
+      if (oauthError) {
+        if (isCancelled) {
+          toast.error("Sign-in cancelled.", {
+            description: "You can try again whenever you're ready.",
+          });
+        } else {
+          toast.error("Sign-in failed", {
+            description: errorDesc || "Please try again.",
+          });
+        }
+        // Strip error params so a refresh doesn't re-toast.
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname,
+        );
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Process invite token after successful auth
   const processInviteToken = async (token: string) => {
