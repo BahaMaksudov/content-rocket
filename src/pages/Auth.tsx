@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useNavigate, Navigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +13,7 @@ import { toast } from "sonner";
 import { Loader2, Rocket, ArrowLeft, RefreshCw, AlertCircle, UserPlus, Info, LogIn, KeyRound, Users, Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 import { VerificationPending } from "@/components/auth/VerificationPending";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 
 
 // Component to handle invite processing when user is already logged in
@@ -191,6 +193,9 @@ export default function Auth() {
   const handleTabChange = (value: string) => {
     setActiveTab(value as "login" | "signup");
     setAuthError(null);
+    // Reset transient loading state so the Google button doesn't appear
+    // stuck when the user toggles between sign-in and sign-up panels.
+    setIsLoading(false);
   };
 
   const handleEmailChange = (value: string) => {
@@ -424,6 +429,39 @@ export default function Auth() {
     }
   };
 
+  // Environment-aware redirect helper — uses current origin so dev, preview,
+  // and production all callback to the right host.
+  const getOAuthRedirectUrl = () => `${window.location.origin}/dashboard`;
+
+  const handleGoogleSignIn = async () => {
+    setAuthError(null);
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: getOAuthRedirectUrl(),
+        },
+      });
+      if (error) {
+        setAuthError({
+          type: "error",
+          title: "Google Sign-In Failed",
+          message: error.message,
+        });
+        setIsLoading(false);
+      }
+      // On success the browser is redirected to Google.
+    } catch (err) {
+      setAuthError({
+        type: "error",
+        title: "Unexpected Error",
+        message: "Could not start Google sign-in. Please try again.",
+      });
+      setIsLoading(false);
+    }
+  };
+
   // Show verification pending screen if user just signed up
   if (showVerificationPending) {
     return (
@@ -631,6 +669,22 @@ export default function Auth() {
                     "Sign In"
                   )}
                 </Button>
+
+                <div className="relative my-2">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">
+                      Or continue with
+                    </span>
+                  </div>
+                </div>
+
+                <GoogleSignInButton
+                  onClick={handleGoogleSignIn}
+                  loading={isLoading}
+                />
               </TabsContent>
 
               <TabsContent value="signup" className="space-y-4">
@@ -693,6 +747,23 @@ export default function Auth() {
                     "Create Account"
                   )}
                 </Button>
+
+                <div className="relative my-2">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">
+                      Or sign up with
+                    </span>
+                  </div>
+                </div>
+
+                <GoogleSignInButton
+                  onClick={handleGoogleSignIn}
+                  loading={isLoading}
+                  label="Sign up with Google"
+                />
               </TabsContent>
             </Tabs>
           </CardContent>
