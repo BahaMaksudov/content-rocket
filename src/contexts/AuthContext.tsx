@@ -52,27 +52,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        // Strict guard: only accept a session that is explicitly non-null
+        // AND carries a valid access token. Anything else is treated as
+        // signed-out so a cancelled / aborted OAuth round-trip can't
+        // accidentally hydrate a "logged in" state.
+        const hasValidSession = !!(session && session.access_token && session.user);
+
+        if (event === "SIGNED_OUT" || !hasValidSession) {
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+          hasIdentified = false;
+          return;
+        }
+
         setSession(session);
-        setUser(session?.user ?? null);
+        setUser(session!.user);
         setLoading(false);
-        
+
         // Only identify user once per session to prevent duplicate PostHog calls
-        if (session?.user && !hasIdentified) {
+        if (!hasIdentified) {
           hasIdentified = true;
           // Use setTimeout to avoid calling during render and check profile
           setTimeout(async () => {
-            const profileExists = await checkProfileExists(session.user.id);
+            const profileExists = await checkProfileExists(session!.user.id);
             if (!profileExists) {
               await handleDeletedUser();
               return;
             }
-            identifyUser(session.user.id, session.user.email || "");
+            identifyUser(session!.user.id, session!.user.email || "");
           }, 0);
-        }
-        
-        // Reset if user signs out
-        if (!session?.user) {
-          hasIdentified = false;
         }
       }
     );
