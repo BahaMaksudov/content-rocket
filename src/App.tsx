@@ -39,6 +39,7 @@ import HowToRepurposeYouTubeVideos from "./pages/blog/HowToRepurposeYouTubeVideo
 import BlogPost from "./pages/BlogPost";
 import NicheLanding from "./pages/NicheLanding";
 import OAuthSocialCallback from "./pages/OAuthSocialCallback";
+import OAuthConsent from "./pages/OAuthConsent";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/auth/confirm" element={<AuthConfirm />} />
             <Route

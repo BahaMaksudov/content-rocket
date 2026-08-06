@@ -328,7 +328,7 @@ export default function Auth() {
       setAuthError({
         type: "error",
         title: "Validation Error",
-        message: validation.error.errors[0].message,
+        message: validation.error.issues[0].message,
       });
       return;
     }
@@ -479,8 +479,15 @@ export default function Auth() {
   };
 
   // Environment-aware redirect helper — uses current origin so dev, preview,
-  // and production all callback to the right host.
-  const getOAuthRedirectUrl = () => `${window.location.origin}/dashboard`;
+  // and production all callback to the right host. Preserves an in-app
+  // ?redirect= target (e.g. the OAuth consent screen) after sign-in.
+  const getOAuthRedirectUrl = () => {
+    const safePath =
+      redirectPath.startsWith("/") && !redirectPath.startsWith("//")
+        ? redirectPath
+        : "/dashboard";
+    return `${window.location.origin}${safePath}`;
+  };
 
   const handleGoogleSignIn = async () => {
     setAuthError(null);
