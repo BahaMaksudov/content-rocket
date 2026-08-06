@@ -136,14 +136,11 @@ export function MobileBottomNav() {
 
             {/* Upgrade options */}
             {tier !== "agency" && (
-              <button
-                onClick={() => openUpgrade("agency")}
-                className="flex items-center gap-3 w-full rounded-lg px-3 py-3 text-accent-foreground hover:bg-accent/10 transition-colors"
-              >
+              <div className="flex items-center gap-3 w-full rounded-lg px-3 py-3 text-muted-foreground opacity-60 cursor-not-allowed pointer-events-none">
                 <Rocket className="h-5 w-5" />
-                <span className="font-medium">Upgrade to Agency</span>
-                <ArrowUpRight className="h-4 w-4 ml-auto opacity-60" />
-              </button>
+                <span className="font-medium">Agency</span>
+                <span className="ml-auto text-xs rounded-full bg-secondary px-2 py-0.5">Coming Soon</span>
+              </div>
             )}
 
             {(tier === "free" || tier === "starter") && (
@@ -159,11 +156,7 @@ export function MobileBottomNav() {
 
             {tier === "free" && (
               <button
-                onClick={() => {
-                  trackUpgradeClicked("starter", "mobile_bottom_nav_free_user");
-                  setDrawerOpen(false);
-                  navigate("/?plan=starter");
-                }}
+                onClick={() => openUpgrade("starter")}
                 className="flex items-center gap-3 w-full rounded-lg px-3 py-3 text-muted-foreground hover:bg-muted transition-colors"
               >
                 <Zap className="h-5 w-5" />
