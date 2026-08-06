@@ -42,7 +42,7 @@ export default function Contact() {
     const result = contactSchema.safeParse({ name, email, message });
     if (!result.success) {
       const fieldErrors: typeof errors = {};
-      result.error.errors.forEach((err) => {
+      result.error.issues.forEach((err) => {
         if (err.path[0]) {
           fieldErrors[err.path[0] as keyof typeof errors] = err.message;
         }

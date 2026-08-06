@@ -328,7 +328,7 @@ export default function Auth() {
       setAuthError({
         type: "error",
         title: "Validation Error",
-        message: validation.error.errors[0].message,
+        message: validation.error.issues[0].message,
       });
       return;
     }
