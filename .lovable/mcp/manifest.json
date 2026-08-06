@@ -1,0 +1,149 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.1",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://dhcafytgwolxijdiprdr.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "content-rocket",
+      "version": "0.1.0",
+      "title": "Content Rocket"
+    },
+    "tools": [
+      {
+        "name": "list_generations",
+        "title": "List content generations",
+        "description": "List the signed-in user's recent YouTube content generations (video title, URL, created date).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "default": 10,
+              "description": "Maximum number of generations to return.",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_generation",
+        "title": "Get generated content",
+        "description": "Fetch the full generated content for one generation: LinkedIn post, X hooks, short-form scripts, blog post.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "generation_id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "The generation's UUID."
+            },
+            "include_transcript": {
+              "default": false,
+              "description": "Include the source video transcript (can be long).",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "generation_id"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_agent_campaigns",
+        "title": "List agent campaigns",
+        "description": "List campaigns produced by the autonomous content agent, including key insights and drafted social posts.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "default": 5,
+              "description": "Max campaigns to return.",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 25
+            },
+            "status": {
+              "description": "Optional status filter, e.g. 'pending' or 'published'.",
+              "type": "string"
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_blog_posts",
+        "title": "List published blog posts",
+        "description": "List blog posts published by the content engine, with slug, TL;DR and key insights.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "default": 10,
+              "description": "Max posts to return.",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            },
+            "search": {
+              "description": "Optional title keyword filter.",
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_account_summary",
+        "title": "Get account summary",
+        "description": "Return the signed-in user's plan, remaining credits and agent configuration summary.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
