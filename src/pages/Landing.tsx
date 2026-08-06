@@ -1389,12 +1389,12 @@ export default function Landing() {
   const [searchParams, setSearchParams] = useSearchParams();
   const highlightedPlan = searchParams.get("plan");
 
-  // Redirect authenticated users to dashboard immediately
+  // Redirect authenticated users to dashboard immediately (preserve intended plan)
   useEffect(() => {
     if (!loading && user) {
-      navigate("/dashboard", { replace: true });
+      navigate(highlightedPlan ? `/dashboard?upgrade=${highlightedPlan}` : "/dashboard", { replace: true });
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, highlightedPlan]);
 
   // Auto-scroll to pricing section when ?plan= is present
   useEffect(() => {
